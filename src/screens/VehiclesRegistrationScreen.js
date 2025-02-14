@@ -3,33 +3,34 @@ import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
-const RegisterScreen = ({ navigation }) => {
-  const [model, setModel] = useState('');
+const VehicleRegistrationScreen = () => {
+  const [carModel, setCarModel] = useState('');
   const [price, setPrice] = useState('');
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
 
-  // 차량 등록 함수
-  const registerVehicle = async () => {
-    const currentUser = auth().currentUser;  // 현재 로그인한 사용자 정보
+  const currentUser = auth().currentUser;
 
-    if (!model || !price || !status) {
-      setError('모든 항목을 입력해주세요.');
+  const handleRegisterVehicle = async () => {
+    if (!carModel || !price || !status) {
+      setError('모든 필드를 입력해주세요.');
       return;
     }
 
     try {
+      // Firestore에 차량 정보 등록
       await firestore().collection('vehicles').add({
-        model: model,
-        price: parseInt(price),
+        model: carModel,
+        price: price,
         status: status,
-        sellerName: currentUser.displayName,  // 판매자 이름
-        sellerPhone: currentUser.phoneNumber, // 판매자 전화번호
-        createdAt: firestore.FieldValue.serverTimestamp(),  // 차량 등록 시간
+        sellerName: currentUser.displayName, // Firebase Auth에서 이름 가져오기
+        sellerPhone: currentUser.phoneNumber, // Firebase Auth에서 전화번호 가져오기
+        createdAt: firestore.FieldValue.serverTimestamp(),
       });
-      navigation.navigate('Home');  // 등록 후 홈 화면으로 이동
+
+      alert('차량 등록이 완료되었습니다.');
     } catch (e) {
-      setError('차량 등록 실패: ' + e.message);
+      setError('차량 등록에 실패했습니다: ' + e.message);
     }
   };
 
@@ -38,24 +39,24 @@ const RegisterScreen = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="차량 모델"
-        value={model}
-        onChangeText={setModel}
+        value={carModel}
+        onChangeText={setCarModel}
       />
       <TextInput
         style={styles.input}
         placeholder="가격"
         value={price}
-        keyboardType="numeric"
         onChangeText={setPrice}
+        keyboardType="numeric"
       />
       <TextInput
         style={styles.input}
-        placeholder="상태 (예: 새차, 중고차)"
+        placeholder="상태 (새차/중고차 등)"
         value={status}
         onChangeText={setStatus}
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      <Button title="차량 등록" onPress={registerVehicle} />
+      <Button title="차량 등록" onPress={handleRegisterVehicle} />
     </View>
   );
 };
@@ -79,4 +80,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterScreen;
+export default VehicleRegistrationScreen;
