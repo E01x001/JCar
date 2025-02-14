@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "109498189304",
+    "project_id": "jcarapp",
+    "storage_bucket": "jcarapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109498189304:android:344a828b3b7b9611a0020d",
+        "android_client_info": {
+          "package_name": "com.jcarplatform.jcar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDs3fyAoBteP1o3j5oYRiBJRI7x4YwrXks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
