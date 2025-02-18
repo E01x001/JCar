@@ -1,37 +1,51 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-// Screens
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import VehiclesListScreen from '../screens/VehiclesListScreen';
-import VehiclesRegistrationScreen from '../screens/VehiclesRegistrationScreen';
-import MyPageScreen from '../screens/MyPageScreen'; // 마이페이지 파일 추가 필요
-
-const Tab = createBottomTabNavigator();
+import VehicleRegistrationScreen from '../screens/VehicleRegistrationScreen';
+import MyPageScreen from '../screens/MyPageScreen';
+import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen'; // 관리자 페이지 추가
+import AdminPageScreen from '../screens/AdminPageScreen';
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
-// 🚗 **탭 네비게이션 (차량 목록, 차량 등록, 마이페이지)**
-const TabNavigator = () => (
-  <Tab.Navigator screenOptions={{ headerShown: false }}>
-    <Tab.Screen name="차량 목록" component={VehiclesListScreen} />
-    <Tab.Screen name="차량 등록" component={VehiclesRegistrationScreen} />
-    <Tab.Screen name="마이페이지" component={MyPageScreen} />
+const UserTabs = () => (
+  <Tab.Navigator>
+    <Tab.Screen name="Vehicles" component={VehiclesListScreen} />
+    <Tab.Screen name="Register" component={VehicleRegistrationScreen} />
+    <Tab.Screen name="MyPage" component={MyPageScreen} />
   </Tab.Navigator>
 );
 
-// 🔐 **로그인 상태 확인 후 네비게이션 처리**
-const AppNavigator = () => {
-  const [loading, setLoading] = React.useState(true);
-  const [user, setUser] = React.useState(null);
+const AdminTabs = () => (
+  <Tab.Navigator>
+    <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} />
+    <Tab.Screen name="AdminPage" component={AdminPageScreen} />
+  </Tab.Navigator>
+);
 
-  React.useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged((authUser) => {
-      setUser(authUser);
+const AppNavigator = () => {
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
+        setRole(userDoc.exists ? userDoc.data().role : 'user');
+        setUser(currentUser);
+      } else {
+        setUser(null);
+        setRole(null);
+      }
       setLoading(false);
     });
 
@@ -48,9 +62,13 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator>
         {user ? (
-          <Stack.Screen name="Home" component={TabNavigator} />
+          role === 'admin' ? (
+            <Stack.Screen name="AdminHome" component={AdminTabs} />
+          ) : (
+            <Stack.Screen name="" component={UserTabs} />
+          )
         ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />

@@ -1,43 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, StyleSheet } from 'react-native';
+import { View, FlatList, Text, StyleSheet, Button, TouchableOpacity } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const VehiclesListScreen = () => {
   const [vehicles, setVehicles] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const user = auth().currentUser;
 
-  // Firestore에서 차량 목록을 실시간으로 가져오는 코드
+  // 🔥 Firestore에서 차량 목록 불러오기
   useEffect(() => {
     const unsubscribe = firestore()
       .collection('vehicles')
-      .orderBy('createdAt', 'desc')  // 최신 차량이 위에 나오도록
+      .orderBy('createdAt', 'desc')
       .onSnapshot(snapshot => {
         const vehicleList = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setVehicles(vehicleList);  // 차량 목록을 상태에 저장
+        setVehicles(vehicleList);
       });
 
-    return () => unsubscribe();  // 컴포넌트 언마운트 시 구독 해제
+    return () => unsubscribe();
   }, []);
+
+  // 🔥 Firestore에서 찜한 차량 목록 가져오기
+  useEffect(() => {
+    if (user) {
+      const unsubscribe = firestore()
+        .collection('users')
+        .doc(user.uid)
+        .onSnapshot(doc => {
+          if (doc.exists) {
+            setFavorites(doc.data().favorites || []);
+          }
+        });
+
+      return () => unsubscribe();
+    }
+  }, [user]);
+
+  // ⭐ 차량 찜하기 / 찜 해제
+  const toggleFavorite = async (vehicleId) => {
+    const userRef = firestore().collection('users').doc(user.uid);
+
+    if (favorites.includes(vehicleId)) {
+      // 🚫 찜 해제
+      await userRef.update({
+        favorites: firestore.FieldValue.arrayRemove(vehicleId),
+      });
+    } else {
+      // ⭐ 찜 추가
+      await userRef.set(
+        { favorites: firestore.FieldValue.arrayUnion(vehicleId) },
+        { merge: true }
+      );
+    }
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.vehicleContainer}>
-      <Text style={styles.vehicleText}>모델: {item.model}</Text>
-      <Text style={styles.vehicleText}>가격: {item.price}</Text>
-      <Text style={styles.vehicleText}>상태: {item.status}</Text>
-      <Text style={styles.vehicleText}>판매자: {item.sellerName}</Text>
-      <Text style={styles.vehicleText}>전화번호: {item.sellerPhone}</Text>
+      <Text style={styles.vehicleText}>🚗 모델: {item.model}</Text>
+      <Text style={styles.vehicleText}>💰 가격: {item.price}</Text>
+      <Text style={styles.vehicleText}>📌 상태: {item.status}</Text>
+      <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+        <Text style={[styles.favoriteButton, favorites.includes(item.id) ? styles.favorited : null]}>
+          {favorites.includes(item.id) ? '❤️ 찜 해제' : '🤍 찜하기'}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={vehicles}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-      />
+      <FlatList data={vehicles} renderItem={renderItem} keyExtractor={(item) => item.id} />
     </View>
   );
 };
@@ -55,6 +91,17 @@ const styles = StyleSheet.create({
   },
   vehicleText: {
     fontSize: 16,
+  },
+  favoriteButton: {
+    marginTop: 8,
+    padding: 8,
+    borderRadius: 5,
+    textAlign: 'center',
+    backgroundColor: '#ddd',
+  },
+  favorited: {
+    backgroundColor: 'red',
+    color: 'white',
   },
 });
 
