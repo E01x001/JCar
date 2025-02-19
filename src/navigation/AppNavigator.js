@@ -13,9 +13,12 @@ import VehicleRegistrationScreen from '../screens/VehicleRegistrationScreen';
 import MyPageScreen from '../screens/MyPageScreen';
 import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen'; // 관리자 페이지 추가
 import AdminPageScreen from '../screens/AdminPageScreen';
+import VehicleDetailScreen from '../screens/VehicleDetailScreen'; // 차량 상세 페이지 추가
+
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// 사용자 탭 네비게이션
 const UserTabs = () => (
   <Tab.Navigator>
     <Tab.Screen name="Vehicles" component={VehiclesListScreen} />
@@ -24,6 +27,7 @@ const UserTabs = () => (
   </Tab.Navigator>
 );
 
+// 관리자 탭 네비게이션
 const AdminTabs = () => (
   <Tab.Navigator>
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} />
@@ -62,12 +66,12 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           role === 'admin' ? (
             <Stack.Screen name="AdminHome" component={AdminTabs} />
           ) : (
-            <Stack.Screen name="" component={UserTabs} />
+            <Stack.Screen name="Home" component={UserTabs} />
           )
         ) : (
           <>
@@ -75,6 +79,8 @@ const AppNavigator = () => {
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
         )}
+        {/* 차량 상세 정보 화면 추가 */}
+        <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

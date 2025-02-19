@@ -7,12 +7,12 @@ const MyPageScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
   const user = auth().currentUser;
 
-  // 🔥 내가 등록한 차량 가져오기
+  // 🔥 내가 등록한 차량 가져오기 (실시간 업데이트)
   useEffect(() => {
     if (!user) return;
     const unsubscribe = firestore()
       .collection('vehicles')
-      .where('sellerId', '==', user.uid) // 현재 로그인한 유저의 차량만 가져옴
+      .where('sellerId', '==', user.uid)
       .onSnapshot(snapshot => {
         const vehicleList = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -56,15 +56,15 @@ const MyPageScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await firestore()
+              // 유저가 등록한 차량 삭제
+              const querySnapshot = await firestore()
                 .collection('vehicles')
                 .where('sellerId', '==', user.uid)
-                .get()
-                .then(querySnapshot => {
-                  querySnapshot.forEach(doc => {
-                    doc.ref.delete(); // 유저가 등록한 차량 삭제
-                  });
-                });
+                .get();
+
+              const batch = firestore().batch();
+              querySnapshot.forEach(doc => batch.delete(doc.ref));
+              await batch.commit();
 
               await user.delete(); // Firebase Authentication 계정 삭제
               Alert.alert('탈퇴 완료', '계정이 삭제되었습니다.');
