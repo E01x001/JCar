@@ -3,7 +3,7 @@ import { View, Text, Button, FlatList, Alert, StyleSheet } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
-const MyPageScreen = ({ navigation }) => {
+const AdminPageScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
   const user = auth().currentUser;
 
@@ -125,4 +125,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyPageScreen;
+export default AdminPageScreen;
