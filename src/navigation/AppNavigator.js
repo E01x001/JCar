@@ -12,27 +12,18 @@ import VehiclesListScreen from '../screens/VehiclesListScreen';
 import VehicleRegistrationScreen from '../screens/VehicleRegistrationScreen';
 import MyPageScreen from '../screens/MyPageScreen';
 import VehicleDetailScreen from '../screens/VehicleDetailScreen';
-import ConsultationRequestScreen from '../screens/ConsultationRequestScreen'; // ✅ 구매 상담 신청 화면 추가
+import ConsultationRequestScreen from '../screens/ConsultationRequestScreen';
 
 import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen';
 import AdminPageScreen from '../screens/AdminPageScreen';
 import AdminVehicleDetailScreen from '../screens/AdminVehicleDetailScreen';
-import AdminConsultationScreen from '../screens/AdminConsultationScreen'; // ✅ 관리자 상담 관리 화면 추가
+import AdminConsultationScreen from '../screens/AdminConsultationScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// 사용자 탭 네비게이션 (Stack 사용)
+// 사용자 탭 네비게이션
 const UserTabs = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="UserTabsMain" component={UserBottomTabs} />
-    <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
-    <Stack.Screen name="ConsultationRequest" component={ConsultationRequestScreen} /> {/* ✅ 구매 상담 신청 화면 추가 */}
-  </Stack.Navigator>
-);
-
-// 사용자 바텀 탭 네비게이션
-const UserBottomTabs = () => (
   <Tab.Navigator>
     <Tab.Screen name="Vehicles" component={VehiclesListScreen} />
     <Tab.Screen name="Register" component={VehicleRegistrationScreen} />
@@ -45,7 +36,7 @@ const AdminTabs = () => (
   <Tab.Navigator>
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} />
     <Tab.Screen name="AdminPage" component={AdminPageScreen} />
-    <Tab.Screen name="Consultations" component={AdminConsultationScreen} /> {/* ✅ 관리자 상담 관리 화면 추가 */}
+    <Tab.Screen name="Consultations" component={AdminConsultationScreen} />
   </Tab.Navigator>
 );
 
@@ -88,7 +79,11 @@ const AppNavigator = () => {
               <Stack.Screen name="AdminVehicleDetail" component={AdminVehicleDetailScreen} />
             </>
           ) : (
-            <Stack.Screen name="Home" component={UserTabs} />
+            <>
+              <Stack.Screen name="Home" component={UserTabs} />
+              <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
+              <Stack.Screen name="ConsultationRequest" component={ConsultationRequestScreen} />
+            </>
           )
         ) : (
           <>
