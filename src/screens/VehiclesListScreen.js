@@ -6,20 +6,20 @@ const VehiclesListScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        const snapshot = await firestore().collection('vehicles').get();
+    const unsubscribe = firestore()
+      .collection('vehicles')
+      .onSnapshot((snapshot) => {
         const vehiclesData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         }));
         setVehicles(vehiclesData);
-      } catch (error) {
+      }, (error) => {
         console.error('차량 목록 불러오기 오류:', error);
-      }
-    };
+      });
 
-    fetchVehicles();
+    // Cleanup function to unsubscribe from the snapshot when the component is unmounted
+    return () => unsubscribe();
   }, []);
 
   const renderVehicle = ({ item }) => (
