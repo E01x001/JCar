@@ -134,7 +134,7 @@ const RegisterScreen = ({ navigation }) => {
       });
 
       Alert.alert('회원가입 완료', '로그인 화면으로 이동합니다.');
-      navigation.navigate('Login');
+      navigation.goBack('Login');
     } catch (error) {
       Alert.alert('회원가입 실패', error.message);
     }

@@ -4,9 +4,11 @@ import { Calendar } from "react-native-calendars";
 import DatePicker from "react-native-date-picker";
 import { AuthContext } from "../context/AuthContext"; // 사용자 정보 가져오기
 import firestore from "@react-native-firebase/firestore"; // Firestore 불러오기
+import { useNavigation } from '@react-navigation/native'; // navigation을 useNavigation 훅으로 가져오기
 
 const ConsultationRequestScreen = () => {
   const { user } = useContext(AuthContext);
+  const navigation = useNavigation();  // navigation 훅을 사용하여 navigation 객체 가져오기
   const [selectedDate, setSelectedDate] = useState(""); // 선택된 날짜
   const [time, setTime] = useState(new Date()); // 선택된 시간
   const [open, setOpen] = useState(false); // 시간 선택 모달 상태
@@ -69,6 +71,7 @@ const ConsultationRequestScreen = () => {
   
     if (success) {
       Alert.alert("구매 상담 요청이 완료되었습니다.");
+      navigation.goBack(); // 정상적으로 돌아가게 됨
     } else {
       Alert.alert("상담 요청 저장에 실패했습니다. 다시 시도해주세요.");
     }
