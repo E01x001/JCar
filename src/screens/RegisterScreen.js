@@ -127,7 +127,7 @@ const RegisterScreen = ({ navigation }) => {
       // 🔹 Firestore에 사용자 정보 저장
       await firestore().collection('users').doc(userId).set({
         name,
-        phoneNumber: formatPhoneNumber(phoneNumber),
+        phoneNumber: phoneNumber,
         email,
         createdAt: firestore.FieldValue.serverTimestamp(), // 🔥 서버 시간 저장
         role: 'user',
