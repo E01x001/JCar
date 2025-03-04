@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(null);
   const [sellerName, setSellerName] = useState(null);
   const [sellerPhone, setSellerPhone] = useState(null);
+  const [sellerEmail,setSellerEmail] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,11 +21,13 @@ export const AuthProvider = ({ children }) => {
           const userData = userDoc.data();
           setRole(userData.role || 'user');
           setSellerName(userData.name || 'Unknown');
-          setSellerPhone(userData.phone || 'Unknown');
+          setSellerPhone(userData.phoneNumber || 'Unknown');
+          setSellerEmail(userData.email || 'Unknown');
         } else {
           setRole('user');
           setSellerName('Unknown');
           setSellerPhone('Unknown');
+          setSellerEmail('Unknown');
         }
         setUser(currentUser);
       } else {
@@ -32,6 +35,7 @@ export const AuthProvider = ({ children }) => {
         setRole(null);
         setSellerName(null);
         setSellerPhone(null);
+        setSellerEmail(null);
       }
       setLoading(false);
     });
@@ -40,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, sellerName, sellerPhone, loading }}>
+    <AuthContext.Provider value={{ user, role, sellerName, sellerPhone, sellerEmail, loading }}>
       {children}
     </AuthContext.Provider>
   );
