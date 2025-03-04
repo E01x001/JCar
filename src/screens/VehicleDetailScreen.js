@@ -47,7 +47,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color="#cc" />
         </TouchableOpacity>
 
         <Image source={{ uri: vehicle.imageUrl }} style={styles.image} />
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#555',
     flex: 1,
   },
   consultButton: {
