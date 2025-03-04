@@ -28,7 +28,8 @@ const AdminConsultationScreen = () => {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text>{item.userName} - {item.vehicleModel}</Text>
-            <Text>상담 일정: {new Date(item.consultationDate).toLocaleString()}</Text>
+            {/* Timestamp를 Date로 변환하여 표시 */}
+            <Text>상담 일정: {item.consultationDate?.toDate().toLocaleString()}</Text>
           </View>
         )}
       />

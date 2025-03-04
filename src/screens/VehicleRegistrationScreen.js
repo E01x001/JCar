@@ -5,7 +5,7 @@ import firestore from "@react-native-firebase/firestore";
 import { AuthContext } from "../context/AuthContext";
 
 const VehicleRegistrationScreen = () => {
-  const { user, sellerName, sellerPhone } = useContext(AuthContext);
+  const { user, sellerName, sellerPhone, sellerEmail } = useContext(AuthContext);
 
   const [vehicleName, setVehicleName] = useState("");
   const [manufacturer, setManufacturer] = useState("");
@@ -24,16 +24,17 @@ const VehicleRegistrationScreen = () => {
       Alert.alert("로그인 필요", "로그인이 필요합니다.");
       return;
     }
-
+  
     if (!vehicleName || !manufacturer || !year || !mileage || !fuelType || !transmission || !price || !location) {
       Alert.alert("입력 오류", "모든 필드를 입력하세요.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
-      await firestore().collection("vehicles").add({
+      // Firestore에 차량 등록
+      const docRef = await firestore().collection("vehicles").add({
         vehicleName,
         manufacturer,
         year,
@@ -47,10 +48,16 @@ const VehicleRegistrationScreen = () => {
         sellerId: user.uid,
         sellerName: sellerName || "Unknown",
         sellerPhone: sellerPhone || "Unknown",
+        sellerEmail: sellerEmail || "Unknown",
       });
-
+  
+      // 등록된 문서의 ID를 가져와 필드에 추가
+      await docRef.update({
+        vehicleId: docRef.id,  // 문서 ID를 vehicleId 필드로 추가
+      });
+  
       Alert.alert("성공", "차량이 등록되었습니다.");
-
+  
       // 입력 필드 초기화
       setVehicleName("");
       setManufacturer("");
@@ -68,6 +75,7 @@ const VehicleRegistrationScreen = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <ScrollView style={{ padding: 20 }}>
