@@ -1,134 +1,164 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TextInput, Button, Alert, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { View, Text, TextInput, Button, Alert, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import { AuthContext } from "../context/AuthContext";
 
 const VehicleRegistrationScreen = () => {
   const { user, sellerName, sellerPhone, sellerEmail } = useContext(AuthContext);
 
-  const [vehicleName, setVehicleName] = useState("");
-  const [manufacturer, setManufacturer] = useState("");
-  const [year, setYear] = useState("");
-  const [mileage, setMileage] = useState("");
-  const [fuelType, setFuelType] = useState("");
-  const [transmission, setTransmission] = useState("");
-  const [price, setPrice] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
+  const [regiNumber, setRegiNumber] = useState("");
+  const [ownerName, setOwnerName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [vehicleData, setVehicleData] = useState(null);
 
-  // 차량 등록 처리
-  const handleRegister = async () => {
-    if (!user) {
-      Alert.alert("로그인 필요", "로그인이 필요합니다.");
+  const isValidRegiNumber = (number) => {
+    const regex = /^(\d{2,3}[가-힣]\s?\d{4})$/;
+    return regex.test(number);
+  };
+
+  const fetchVehicleInfo = async () => {
+    if (!regiNumber || !ownerName) {
+      Alert.alert("입력 오류", "차량번호와 소유자명을 입력하세요.");
       return;
     }
 
-    if (!vehicleName || !manufacturer || !year || !mileage || !fuelType || !transmission || !price || !location) {
-      Alert.alert("입력 오류", "모든 필드를 입력하세요.");
+    if (!isValidRegiNumber(regiNumber)) {
+      Alert.alert("입력 오류", "올바른 차량번호 형식이 아닙니다. 예: 12가 3456");
       return;
     }
 
     setLoading(true);
-
+    
     try {
-      // Firestore에 차량 등록
+      const response = await fetch("https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry", {
+        method: "POST",
+        headers: {
+          "Authorization": "7c112786a95c41dd9d3f24895f47e6cbc62c6b48", 
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ REGINUMBER: regiNumber, OWNERNAME: ownerName }),
+      });
+
+      const jsonResponse = await response.json();
+      console.log("API 응답:", jsonResponse);
+
+      if (jsonResponse.errCode !== "0000" || jsonResponse.result !== "SUCCESS" || jsonResponse.data.STATUS !== "200") {
+        Alert.alert("조회 실패", jsonResponse.errMsg || "차량 정보를 찾을 수 없습니다.");
+        return;
+      }
+
+      setVehicleData(jsonResponse.data);
+
+    } catch (error) {
+      console.error("API 요청 실패:", error);
+      Alert.alert("오류", "차량 정보를 조회하는 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveVehicleData = async () => {
+    if (!vehicleData) {
+      Alert.alert("오류", "조회된 차량 정보가 없습니다.");
+      return;
+    }
+  
+    try {
+      // Firestore에 새 문서 추가 (자동 생성 ID 사용)
       const docRef = await firestore().collection("vehicles").add({
-        vehicleName,
-        manufacturer,
-        year,
-        mileage: isNaN(parseInt(mileage)) ? 0 : parseInt(mileage),
-        fuelType,
-        transmission,
-        price: isNaN(parseInt(price)) ? 0 : parseInt(price),
-        location,
-        description,
+        vehicleName: vehicleData.CARNAME,
+        subModel: vehicleData.SUBMODEL,
+        manufacturer: vehicleData.CARVENDER,
+        year: vehicleData.CARYEAR,
+        driveType: vehicleData.DRIVE,
+        fuelType: vehicleData.FUEL,
+        price: vehicleData.PRICE,
+        cc: vehicleData.CC,
+        transmission: vehicleData.MISSION,
+        imageUrl: `https://www.cartory.net/cars/${vehicleData.CARURL}`,
+        vin: vehicleData.VIN,
+        frontTire: vehicleData.FRONTTIRE,
+        rearTire: vehicleData.REARTIRE,
+        engineOilLiter: vehicleData.EOILLITER,
+        wiperInfo: vehicleData.WIPER,
+        seats: vehicleData.SEATS,
+        battery: vehicleData.BATTERYLIST[0]?.MODEL || "정보 없음",
+        fuelEco: vehicleData.FUELECO,
+        fuelTank: vehicleData.FUELTANK,
+        regiNumber,
+        ownerName,
         createdAt: firestore.FieldValue.serverTimestamp(),
         sellerId: user.uid,
         sellerName: sellerName || "Unknown",
         sellerPhone: sellerPhone || "Unknown",
         sellerEmail: sellerEmail || "Unknown",
       });
-
-      // 등록된 문서의 ID를 가져와 필드에 추가
-      await docRef.update({
-        vehicleId: docRef.id,  // 문서 ID를 vehicleId 필드로 추가
-      });
-
-      Alert.alert("성공", "차량이 등록되었습니다.");
-
-      // 입력 필드 초기화
-      setVehicleName("");
-      setManufacturer("");
-      setYear("");
-      setMileage("");
-      setFuelType("");
-      setTransmission("");
-      setPrice("");
-      setLocation("");
-      setDescription("");
+  
+      // 생성된 문서의 ID를 vehicleId 필드에 업데이트
+      await docRef.update({ vehicleId: docRef.id });
+  
+      Alert.alert("성공", "차량 정보가 저장되었습니다.");
+      setRegiNumber("");
+      setOwnerName("");
+      setVehicleData(null);
     } catch (error) {
-      console.error("차량 등록 오류:", error);
-      Alert.alert("오류", error.message || "차량 등록 중 문제가 발생했습니다.");
-    } finally {
-      setLoading(false);
+      console.error("Firestore 저장 오류:", error);
+      Alert.alert("오류", "차량 정보를 저장하는 중 문제가 발생했습니다.");
     }
   };
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.label}>차량명</Text>
-        <TextInput value={vehicleName} onChangeText={setVehicleName} style={styles.input} />
+        <Text style={styles.label}>차량번호</Text>
+        <TextInput
+          value={regiNumber}
+          onChangeText={setRegiNumber}
+          style={styles.input}
+          placeholder="예: 12가 3456"
+          placeholderTextColor="#aaa"
+        />
 
-        <Text style={styles.label}>제조사</Text>
-        <Picker selectedValue={manufacturer} onValueChange={(itemValue) => setManufacturer(itemValue)} style={styles.picker}>
-          <Picker.Item label="제조사를 선택하세요" value="" />
-          <Picker.Item label="현대" value="Hyundai" />
-          <Picker.Item label="기아" value="Kia" />
-          <Picker.Item label="BMW" value="BMW" />
-        </Picker>
-
-        <Text style={styles.label}>연식</Text>
-        <Picker selectedValue={year} onValueChange={(itemValue) => setYear(itemValue)} style={styles.picker}>
-          <Picker.Item label="연식을 선택하세요" value="" />
-          <Picker.Item label="2024" value="2024" />
-          <Picker.Item label="2023" value="2023" />
-          <Picker.Item label="2022" value="2022" />
-        </Picker>
-
-        <Text style={styles.label}>주행거리 (km)</Text>
-        <TextInput value={mileage} onChangeText={setMileage} keyboardType="numeric" style={styles.input} />
-
-        <Text style={styles.label}>연료 종류</Text>
-        <Picker selectedValue={fuelType} onValueChange={(itemValue) => setFuelType(itemValue)} style={styles.picker}>
-          <Picker.Item label="연료를 선택하세요" value="" />
-          <Picker.Item label="휘발유" value="Gasoline" />
-          <Picker.Item label="경유" value="Diesel" />
-          <Picker.Item label="전기" value="Electric" />
-        </Picker>
-
-        <Text style={styles.label}>변속기</Text>
-        <Picker selectedValue={transmission} onValueChange={(itemValue) => setTransmission(itemValue)} style={styles.picker}>
-          <Picker.Item label="변속기를 선택하세요" value="" />
-          <Picker.Item label="자동" value="Automatic" />
-          <Picker.Item label="수동" value="Manual" />
-        </Picker>
-
-        <Text style={styles.label}>가격 (만원)</Text>
-        <TextInput value={price} onChangeText={setPrice} keyboardType="numeric" style={styles.input} />
-
-        <Text style={styles.label}>차량 위치</Text>
-        <TextInput value={location} onChangeText={setLocation} style={styles.input} />
-
-        <Text style={styles.label}>차량 설명</Text>
-        <TextInput value={description} onChangeText={setDescription} style={[styles.input, styles.textArea]} multiline />
+        <Text style={styles.label}>소유자명</Text>
+        <TextInput
+          value={ownerName}
+          onChangeText={setOwnerName}
+          style={styles.input}
+          placeholder="소유자 이름 입력"
+          placeholderTextColor="#aaa"
+        />
 
         <View style={styles.buttonContainer}>
-          <Button title="차량 등록" onPress={handleRegister} disabled={loading} color="#2B4593" />
+          <Button title="차량 정보 조회" onPress={fetchVehicleInfo} disabled={loading} color="#2B4593" />
           {loading && <ActivityIndicator size="large" color="#2B4593" />}
         </View>
+
+        {vehicleData && (
+          <View style={styles.vehiclePreview}>
+            <Text style={styles.previewTitle}>🚗 차량 정보 미리보기</Text>
+            {vehicleData.CARURL && (
+              <Image
+                source={{ uri: `https://www.cartory.net/cars/${vehicleData.CARURL}` }}
+                style={styles.vehicleImage}
+              />
+            )}
+            <Text>🔹 차량번호: {regiNumber}</Text>
+            <Text>🔹 소유자명: {ownerName}</Text>
+            <Text>🔹 차량명: {vehicleData.CARNAME}</Text>
+            <Text>🔹 제조사: {vehicleData.CARVENDER}</Text>
+            <Text>🔹 연식: {vehicleData.CARYEAR}</Text>
+            <Text>🔹 연료: {vehicleData.FUEL}</Text>
+            <Text>🔹 변속기: {vehicleData.MISSION}</Text>
+            <Text>🔹 배기량: {vehicleData.CC} cc</Text>
+            <Text>🔹 연비: {vehicleData.FUELECO} km/L</Text>
+
+            <View style={styles.buttonContainer}>
+              <Button title="차량 정보 저장" onPress={saveVehicleData} color="#2B4593" />
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -141,38 +171,47 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     padding: 20,
-    paddingBottom: 30, // SafeAreaView 여백 확보를 위해 아래쪽 여백 추가
+    paddingBottom: 30,
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#000", // 모든 텍스트 색상 검정으로 변경
-    marginBottom: 5, // 레이블과 입력창 간의 여백을 조정
+    color: "#000",
+    marginBottom: 5,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 12, // 입력칸 패딩을 통일
+    padding: 12,
     marginBottom: 15,
-    borderRadius: 8, // 둥근 모서리 적용
+    borderRadius: 8,
     backgroundColor: "#fff",
-    fontSize: 16, // 텍스트 크기를 통일
-  },
-  picker: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8, // 둥근 모서리 적용
-    marginBottom: 15,
-    backgroundColor: "#fff",
-    fontSize: 16, // 텍스트 크기를 통일
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
+    fontSize: 16,
   },
   buttonContainer: {
     marginTop: 20,
     alignItems: "center",
+  },
+  vehiclePreview: {
+    marginTop: 30,
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  vehicleImage: {
+    width: "100%",
+    height: 200,
+    resizeMode: "contain",
+    marginBottom: 10,
   },
 });
 

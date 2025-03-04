@@ -5,24 +5,13 @@ import firestore from '@react-native-firebase/firestore';
 const AdminVehicleDetailScreen = ({ route, navigation }) => {
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
-  const [owner, setOwner] = useState(null);
 
   useEffect(() => {
     const fetchVehicleDetails = async () => {
       try {
-        // 차량 정보 불러오기
         const vehicleDoc = await firestore().collection('vehicles').doc(vehicleId).get();
         if (vehicleDoc.exists) {
-          const vehicleData = vehicleDoc.data();
-          setVehicle(vehicleData);
-
-          // // 차량 등록자 정보 불러오기
-          // if (vehicleData.ownerId) {
-          //   const ownerDoc = await firestore().collection('users').doc(vehicleData.ownerId).get();
-          //   if (ownerDoc.exists) {
-          //     setOwner(ownerDoc.data());
-          //   }
-          // }
+          setVehicle(vehicleDoc.data());
         }
       } catch (error) {
         console.error('차량 상세정보 불러오기 오류:', error);
@@ -44,14 +33,41 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
     <ScrollView style={styles.container}>
       {/* 차량 정보 */}
       <Text style={styles.title}>{vehicle.vehicleName}</Text>
+      <Text style={styles.subTitle}>{vehicle.subModel}</Text>
       <Text>제조사: {vehicle.manufacturer}</Text>
       <Text>연식: {vehicle.year}</Text>
-      <Text>주행거리: {vehicle.mileage} km</Text>
+      <Text>구동 방식: {vehicle.driveType}</Text>
       <Text>연료 종류: {vehicle.fuelType}</Text>
+      <Text>가격: {parseInt(vehicle.price).toLocaleString()} 원</Text>
+      <Text>배기량: {vehicle.cc} cc</Text>
       <Text>변속기: {vehicle.transmission}</Text>
-      <Text>가격: {vehicle.price} 만원</Text>
-      <Text>위치: {vehicle.location}</Text>
-      <Text>설명: {vehicle.description}</Text>
+      <Text>연비: {vehicle.fuelEco} km/L</Text>
+      <Text>연료탱크 용량: {vehicle.fuelTank} L</Text>
+
+      {/* 차량 번호 및 소유자 정보 */}
+      <View style={styles.section}>
+        <Text style={styles.subtitle}>차량 등록 정보</Text>
+        <Text>차량번호: {vehicle.regiNumber}</Text>
+        <Text>소유자명: {vehicle.ownerName}</Text>
+      </View>
+
+      {/* 차량 부품 정보 */}
+      <View style={styles.section}>
+        <Text style={styles.subtitle}>부품 정보</Text>
+        <Text>앞 타이어: {vehicle.frontTire}</Text>
+        <Text>뒤 타이어: {vehicle.rearTire}</Text>
+        <Text>엔진 오일 용량: {vehicle.engineOilLiter} L</Text>
+        <Text>와이퍼 정보: {vehicle.wiperInfo}</Text>
+        <Text>배터리 모델: {vehicle.battery}</Text>
+      </View>
+
+      {/* 차량 등록자 정보 */}
+      <View style={styles.section}>
+        <Text style={styles.subtitle}>등록자 정보</Text>
+        <Text>이름: {vehicle.sellerName}</Text>
+        <Text>전화번호: {vehicle.sellerPhone}</Text>
+        <Text>이메일: {vehicle.sellerEmail}</Text>
+      </View>
 
       {/* 차량 이미지 */}
       {vehicle.imageUrl ? (
@@ -59,14 +75,6 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
       ) : (
         <Text>이미지 없음</Text>
       )}
-
-      {/* 차량 등록자 정보 */}
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>차량 등록자 정보</Text>
-        <Text>이름: {vehicle.sellerName}</Text>
-        <Text>전화번호: {vehicle.sellerPhone}</Text>
-        <Text>이메일: {vehicle.sellerEmail}</Text>
-      </View>
 
       {/* 뒤로 가기 버튼 */}
       <Button title="뒤로 가기" onPress={() => navigation.goBack()} />
@@ -83,6 +91,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  subTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'gray',
+    marginBottom: 10,
+  },
   subtitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -91,11 +105,15 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
   },
   image: {
-    width: 200,
+    width: 300,
     height: 200,
-    marginBottom: 20,
+    marginVertical: 20,
+    alignSelf: 'center',
   },
   loadingContainer: {
     flex: 1,

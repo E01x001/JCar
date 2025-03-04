@@ -5,6 +5,7 @@ import firestore from '@react-native-firebase/firestore';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -24,19 +25,55 @@ const Tab = createBottomTabNavigator();
 
 // 사용자 탭 네비게이션
 const UserTabs = () => (
-  <Tab.Navigator>
-    <Tab.Screen name="Vehicles" component={VehiclesListScreen} />
-    <Tab.Screen name="Register" component={VehicleRegistrationScreen} />
-    <Tab.Screen name="MyPage" component={MyPageScreen} />
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ color, size }) => {
+        let iconName;
+
+        if (route.name === 'Vehicles') {
+          iconName = 'car';
+        } else if (route.name === 'Register') {
+          iconName = 'car-plus';
+        } else if (route.name === 'MyPage') {
+          iconName = 'account';
+        }
+
+        return <Icon name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: '#2B4593',
+      tabBarInactiveTintColor: 'gray',
+    })}
+  >
+    <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '차량 목록' }} />
+    <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ title: '차량 등록' }} />
+    <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '내 정보' }} />
   </Tab.Navigator>
 );
 
 // 관리자 탭 네비게이션
 const AdminTabs = () => (
-  <Tab.Navigator>
-    <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} />
-    <Tab.Screen name="AdminPage" component={AdminPageScreen} />
-    <Tab.Screen name="Consultations" component={AdminConsultationScreen} />
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ color, size }) => {
+        let iconName;
+
+        if (route.name === 'AdminVehicles') {
+          iconName = 'clipboard-list';
+        } else if (route.name === 'Consultations') {
+          iconName = 'message-text';
+        } else if (route.name === 'AdminPage') {
+          iconName = 'shield-account';
+        }
+
+        return <Icon name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: '#2B4593',
+      tabBarInactiveTintColor: 'gray',
+    })}
+  >
+    <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} options={{ title: '차량 관리' }} />
+    <Tab.Screen name="Consultations" component={AdminConsultationScreen} options={{ title: '상담 관리' }} />
+    <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자 정보' }} />
   </Tab.Navigator>
 );
 

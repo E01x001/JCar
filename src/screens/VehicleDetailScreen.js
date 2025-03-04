@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const { width } = Dimensions.get('window');
 
 const VehicleDetailScreen = ({ route, navigation }) => {
   const { vehicleId } = route.params;
@@ -27,10 +29,6 @@ const VehicleDetailScreen = ({ route, navigation }) => {
     navigation.navigate("ConsultationRequest", { vehicle });
   };
 
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
-
   if (!vehicle) {
     return (
       <View style={styles.loadingContainer}>
@@ -43,16 +41,15 @@ const VehicleDetailScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <ScrollView 
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 50 }} // ✅ 하단 여유 공간 추가
+        contentContainerStyle={{ paddingBottom: 50 }}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#cc" />
-        </TouchableOpacity>
-
+        {/* 차량 이미지 */}
         <Image source={{ uri: vehicle.imageUrl }} style={styles.image} />
         <Text style={styles.title}>{vehicle.vehicleName}</Text>
+        <Text style={styles.subTitle}>{vehicle.subModel}</Text>
 
+        {/* 차량 기본 정보 */}
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>제조사</Text>
           <Text>{vehicle.manufacturer}</Text>
@@ -61,11 +58,6 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>연식</Text>
           <Text>{vehicle.year}</Text>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>주행거리</Text>
-          <Text>{vehicle.mileage} km</Text>
         </View>
 
         <View style={styles.infoCard}>
@@ -79,22 +71,61 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         </View>
 
         <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>구동 방식</Text>
+          <Text>{vehicle.driveType}</Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>배기량</Text>
+          <Text>{vehicle.cc} cc</Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>연비</Text>
+          <Text>{vehicle.fuelEco} km/L</Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>연료탱크 용량</Text>
+          <Text>{vehicle.fuelTank} L</Text>
+        </View>
+
+        <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>가격</Text>
-          <Text>{vehicle.price} 만원</Text>
+          <Text>{parseInt(vehicle.price).toLocaleString()} 원</Text>
+        </View>
+
+        {/* 차량 부품 정보 */}
+        <Text style={styles.sectionTitle}>부품 정보</Text>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>앞 타이어</Text>
+          <Text>{vehicle.frontTire}</Text>
         </View>
 
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>위치</Text>
-          <Text>{vehicle.location}</Text>
+          <Text style={styles.infoTitle}>뒤 타이어</Text>
+          <Text>{vehicle.rearTire}</Text>
         </View>
 
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>설명</Text>
-          <Text>{vehicle.description}</Text>
+          <Text style={styles.infoTitle}>엔진 오일 용량</Text>
+          <Text>{vehicle.engineOilLiter} L</Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>와이퍼 정보</Text>
+          <Text>{vehicle.wiperInfo}</Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>배터리 모델</Text>
+          <Text>{vehicle.battery}</Text>
         </View>
 
       </ScrollView>
 
+      {/* 상담 신청 버튼 */}
       <TouchableOpacity style={styles.consultButton} onPress={handleConsultationRequest}>
         <Text style={styles.consultButtonText}>구매 상담 신청</Text>
       </TouchableOpacity>
@@ -113,26 +144,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   image: {
-    width: '100%',
-    height: 250,
+    width: width - 40, // 화면 너비에 맞춤
+    height: undefined, // 높이를 자동 조절
+    aspectRatio: 16 / 9, // 가로세로 비율 유지
     marginBottom: 20,
     borderRadius: 10,
     resizeMode: 'cover',
+    alignSelf: 'center', // 중앙 정렬
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 5,
     color: '#333',
+  },
+  subTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 15,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    color: '#2B4593',
+  },
   infoCard: {
-    marginBottom: 15,
-    padding: 15,
+    marginBottom: 10,
+    padding: 12,
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
     borderWidth: 1,
@@ -149,9 +195,9 @@ const styles = StyleSheet.create({
   },
   consultButton: {
     marginHorizontal: 20,
-    marginBottom: 10, // ✅ 하단과 겹치지 않도록 추가 여백
+    marginBottom: 20,
     padding: 14,
-    backgroundColor: '#007bff',
+    backgroundColor: '#2B4593', // 버튼 색상 변경
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -165,7 +211,7 @@ const styles = StyleSheet.create({
     top: 20,
     left: 20,
     padding: 10,
-    backgroundColor: '#007bff',
+    backgroundColor: '#2B4593', // 뒤로 가기 버튼 색상도 맞춤
     borderRadius: 50,
     zIndex: 1,
   },
