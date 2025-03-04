@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, FlatList, Alert, StyleSheet } from 'react-native';
+import { View, Text, Button, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
@@ -7,12 +7,11 @@ const AdminPageScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
   const user = auth().currentUser;
 
-  // 🔥 내가 등록한 차량 가져오기
   useEffect(() => {
     if (!user) return;
     const unsubscribe = firestore()
       .collection('vehicles')
-      .where('sellerId', '==', user.uid) // 현재 로그인한 유저의 차량만 가져옴
+      .where('sellerId', '==', user.uid)
       .onSnapshot(snapshot => {
         const vehicleList = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -24,7 +23,6 @@ const AdminPageScreen = ({ navigation }) => {
     return () => unsubscribe();
   }, [user]);
 
-  // 🚗 차량 삭제 기능
   const handleDeleteVehicle = async (vehicleId) => {
     try {
       await firestore().collection('vehicles').doc(vehicleId).delete();
@@ -34,17 +32,15 @@ const AdminPageScreen = ({ navigation }) => {
     }
   };
 
-  // 🔓 로그아웃 기능
   const handleLogout = async () => {
     try {
       await auth().signOut();
-      navigation.replace('Login'); // 로그인 화면으로 이동
+      navigation.replace('Login');
     } catch (error) {
       Alert.alert('로그아웃 실패', error.message);
     }
   };
 
-  // ❌ 회원탈퇴 기능
   const handleDeleteAccount = async () => {
     Alert.alert(
       '회원탈퇴',
@@ -56,19 +52,18 @@ const AdminPageScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await firestore()
+              const querySnapshot = await firestore()
                 .collection('vehicles')
                 .where('sellerId', '==', user.uid)
-                .get()
-                .then(querySnapshot => {
-                  querySnapshot.forEach(doc => {
-                    doc.ref.delete(); // 유저가 등록한 차량 삭제
-                  });
-                });
+                .get();
 
-              await user.delete(); // Firebase Authentication 계정 삭제
+              const batch = firestore().batch();
+              querySnapshot.forEach(doc => batch.delete(doc.ref));
+              await batch.commit();
+
+              await user.delete();
               Alert.alert('탈퇴 완료', '계정이 삭제되었습니다.');
-              navigation.replace('Login'); // 로그인 화면으로 이동
+              navigation.replace('Login');
             } catch (error) {
               Alert.alert('탈퇴 실패', error.message);
             }
@@ -87,16 +82,25 @@ const AdminPageScreen = ({ navigation }) => {
         data={vehicles}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.vehicleContainer}>
-            <Text>모델: {item.model}</Text>
+          <View style={styles.vehicleItem}>
+            <Text style={styles.vehicleName}>모델: {item.model}</Text>
             <Text>가격: {item.price}</Text>
-            <Button title="삭제" onPress={() => handleDeleteVehicle(item.id)} />
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteVehicle(item.id)}>
+              <Text style={styles.deleteButtonText}>삭제</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
 
-      <Button title="로그아웃" onPress={handleLogout} />
-      <Button title="회원탈퇴" color="red" onPress={handleDeleteAccount} />
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.buttonText}>로그아웃</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
+        <Text style={styles.buttonText}>회원탈퇴</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -104,24 +108,64 @@ const AdminPageScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f5f5f5',
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   userInfo: {
     fontSize: 16,
+    color: '#555',
     marginBottom: 20,
   },
-  vehicleContainer: {
-    width: '100%',
+  vehicleItem: {
     padding: 10,
-    borderWidth: 1,
-    borderColor: 'gray',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
     marginBottom: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+  },
+  vehicleName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  deleteButton: {
+    marginTop: 10,
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2B4593',
+  },
+  deleteButtonText: {
+    color: '#2B4593',
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    marginTop: 10,
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2B4593', // 포인트 색상 사용
+  },
+  deleteAccountButton: {
+    marginTop: 10,
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2B4593', // 탈퇴 버튼에 붉은색 테두리
+  },
+  buttonText: {
+    color: '#2B4593',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

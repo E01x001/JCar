@@ -3,19 +3,28 @@ import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import auth from '@react-native-firebase/auth'; // auth 추가
 
 const { width } = Dimensions.get('window');
 
 const VehicleDetailScreen = ({ route, navigation }) => {
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
+  const [isOwnVehicle, setIsOwnVehicle] = useState(false); // 본인 차량 여부 상태 추가
 
   useEffect(() => {
     const fetchVehicleDetails = async () => {
       try {
         const vehicleDoc = await firestore().collection('vehicles').doc(vehicleId).get();
         if (vehicleDoc.exists) {
-          setVehicle(vehicleDoc.data());
+          const vehicleData = vehicleDoc.data();
+          setVehicle(vehicleData);
+
+          // 로그인한 사용자와 판매자 UID 비교
+          const currentUser = auth().currentUser;
+          if (currentUser && currentUser.uid === vehicleData.sellerId) {
+            setIsOwnVehicle(true); // 본인이 등록한 차량인 경우
+          }
         }
       } catch (error) {
         console.error('차량 상세정보 불러오기 오류:', error);
@@ -125,10 +134,15 @@ const VehicleDetailScreen = ({ route, navigation }) => {
 
       </ScrollView>
 
-      {/* 상담 신청 버튼 */}
-      <TouchableOpacity style={styles.consultButton} onPress={handleConsultationRequest}>
-        <Text style={styles.consultButtonText}>구매 상담 신청</Text>
-      </TouchableOpacity>
+      {/* 본인이 등록한 차량이면 상담 신청 버튼 숨기기 */}
+      {!isOwnVehicle && (
+        <TouchableOpacity 
+          style={styles.consultButton}
+          onPress={handleConsultationRequest}
+        >
+          <Text style={styles.consultButtonText}>구매 상담 신청</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
@@ -144,13 +158,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   image: {
-    width: width - 40, // 화면 너비에 맞춤
-    height: undefined, // 높이를 자동 조절
-    aspectRatio: 16 / 9, // 가로세로 비율 유지
+    width: width - 40,
+    height: undefined,
+    aspectRatio: 16 / 9,
     marginBottom: 20,
     borderRadius: 10,
     resizeMode: 'cover',
-    alignSelf: 'center', // 중앙 정렬
+    alignSelf: 'center',
   },
   title: {
     fontSize: 24,
@@ -197,7 +211,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     padding: 14,
-    backgroundColor: '#2B4593', // 버튼 색상 변경
+    backgroundColor: '#2B4593',
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -211,7 +225,7 @@ const styles = StyleSheet.create({
     top: 20,
     left: 20,
     padding: 10,
-    backgroundColor: '#2B4593', // 뒤로 가기 버튼 색상도 맞춤
+    backgroundColor: '#2B4593',
     borderRadius: 50,
     zIndex: 1,
   },
