@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { View, Text, TextInput, Button, Alert, ScrollView, ActivityIndicator } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import firestore from "@react-native-firebase/firestore";
-import auth from "@react-native-firebase/auth";
+import { AuthContext } from "../context/AuthContext";
 
 const VehicleRegistrationScreen = () => {
+  const { user, sellerName, sellerPhone } = useContext(AuthContext);
+
   const [vehicleName, setVehicleName] = useState("");
   const [manufacturer, setManufacturer] = useState("");
   const [year, setYear] = useState("");
@@ -18,6 +20,11 @@ const VehicleRegistrationScreen = () => {
 
   // 차량 등록 처리
   const handleRegister = async () => {
+    if (!user) {
+      Alert.alert("로그인 필요", "로그인이 필요합니다.");
+      return;
+    }
+
     if (!vehicleName || !manufacturer || !year || !mileage || !fuelType || !transmission || !price || !location) {
       Alert.alert("입력 오류", "모든 필드를 입력하세요.");
       return;
@@ -26,12 +33,6 @@ const VehicleRegistrationScreen = () => {
     setLoading(true);
 
     try {
-      const user = auth().currentUser;
-      if (!user) {
-        throw new Error("로그인이 필요합니다.");
-      }
-
-      // Firestore에 차량 데이터 저장
       await firestore().collection("vehicles").add({
         vehicleName,
         manufacturer,
@@ -44,8 +45,8 @@ const VehicleRegistrationScreen = () => {
         description,
         createdAt: firestore.FieldValue.serverTimestamp(),
         sellerId: user.uid,
-        sellerName: user.displayName || "Unknown",
-        sellerPhone: user.phoneNumber || "Unknown",
+        sellerName: sellerName || "Unknown",
+        sellerPhone: sellerPhone || "Unknown",
       });
 
       Alert.alert("성공", "차량이 등록되었습니다.");
