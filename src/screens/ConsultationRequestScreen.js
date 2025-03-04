@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";
 import DatePicker from "react-native-date-picker";
@@ -6,12 +6,15 @@ import { AuthContext } from "../context/AuthContext"; // 사용자 정보 가져
 import firestore from "@react-native-firebase/firestore"; // Firestore 불러오기
 import { useNavigation } from '@react-navigation/native'; // navigation을 useNavigation 훅으로 가져오기
 
-const ConsultationRequestScreen = () => {
+const ConsultationRequestScreen = ({ route }) => {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();  // navigation 훅을 사용하여 navigation 객체 가져오기
   const [selectedDate, setSelectedDate] = useState(""); // 선택된 날짜
   const [time, setTime] = useState(new Date()); // 선택된 시간
   const [open, setOpen] = useState(false); // 시간 선택 모달 상태
+
+  // 차량 정보 (route.params로 차량 정보를 전달받는 경우)
+  const { vehicle } = route.params;
 
   // 10분 단위로 시간을 맞추는 함수
   const adjustToNearestTenMinutes = (date) => {
@@ -41,34 +44,34 @@ const ConsultationRequestScreen = () => {
       Alert.alert("로그인이 필요합니다.");
       return;
     }
-  
+
     if (!selectedDate) {
       Alert.alert("날짜를 선택해주세요.");
       return;
     }
-  
+
     if (!time) {
       Alert.alert("시간을 선택해주세요.");
       return;
     }
-  
+
     // 날짜와 시간 분리
     const formattedDate = selectedDate; // YYYY-MM-DD 형식 그대로 저장
     const formattedTime = `${time.getHours().toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")}`; // HH:mm 형식
-  
+
     const consultationData = {
       user_id: user.uid,
       user_name: user.displayName || "익명",
       user_phone: user.phoneNumber || "미등록",
-      vehicle_id: "알 수 없음", 
-      vehicle_name: "알 수 없음",
+      vehicleId: vehicle.vehicleId,
+      vehicleName: vehicle.vehicleName,
       preferred_date: formattedDate, // 날짜 저장 (YYYY-MM-DD)
       preferred_time: formattedTime, // 시간 저장 (HH:mm)
-      status: "pending",
+      status: "pending", // 상담 상태
     };
-  
+
     const success = await saveConsultationRequest(consultationData);
-  
+
     if (success) {
       Alert.alert("구매 상담 요청이 완료되었습니다.");
       navigation.goBack(); // 정상적으로 돌아가게 됨
@@ -76,7 +79,6 @@ const ConsultationRequestScreen = () => {
       Alert.alert("상담 요청 저장에 실패했습니다. 다시 시도해주세요.");
     }
   };
-  
 
   return (
     <View style={styles.container}>

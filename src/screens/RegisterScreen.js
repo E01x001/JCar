@@ -150,6 +150,7 @@ const RegisterScreen = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="전화번호 입력 (010xxxxxxxx)"
+            placeholderTextColor="#aaa"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
@@ -176,12 +177,14 @@ const RegisterScreen = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="이름 입력"
+            placeholderTextColor="#aaa"
             value={name}
             onChangeText={setName}
           />
           <TextInput
             style={styles.input}
             placeholder="이메일 입력"
+            placeholderTextColor="#aaa"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -189,6 +192,7 @@ const RegisterScreen = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="비밀번호 입력 (8자 이상, 대문자+소문자+숫자 포함)"
+            placeholderTextColor="#aaa"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -196,6 +200,7 @@ const RegisterScreen = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="비밀번호 확인"
+            placeholderTextColor="#aaa"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
