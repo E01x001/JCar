@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatPhone } from '../utils/format';
+import { formatPrice, formatPhone } from '../utils/format';
 
 const { width } = Dimensions.get('window');
 
@@ -52,7 +52,7 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
         <View style={styles.infoCard}><Text style={styles.infoTitle}>배기량</Text><Text>{vehicle.cc} cc</Text></View>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>연비</Text><Text>{vehicle.fuelEco} km/L</Text></View>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>연료탱크 용량</Text><Text>{vehicle.fuelTank} L</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>가격</Text><Text>{parseInt(vehicle.price).toLocaleString()} 원</Text></View>
+        <View style={styles.infoCard}><Text style={styles.infoTitle}>가격</Text><Text>{formatPrice(vehicle.price)}</Text></View>
 
         <Text style={styles.sectionTitle}>부품 정보</Text>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>앞 타이어</Text><Text>{vehicle.frontTire}</Text></View>
