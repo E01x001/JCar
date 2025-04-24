@@ -37,8 +37,7 @@ const AdminPageScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
-      await auth().signOut();
-      navigation.replace('Login');
+      await auth().signOut();  // 이 줄만 있으면 자동으로 Login으로 이동됨
     } catch (error) {
       Alert.alert('로그아웃 실패', error.message);
     }

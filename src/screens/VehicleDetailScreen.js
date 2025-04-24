@@ -4,6 +4,7 @@ import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth'; // auth 추가
+import { formatPrice } from '../utils/format';
 
 const { width } = Dimensions.get('window');
 
@@ -101,7 +102,8 @@ const VehicleDetailScreen = ({ route, navigation }) => {
 
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>가격</Text>
-          <Text>{parseInt(vehicle.price).toLocaleString()} 원</Text>
+          <Text>{formatPrice(vehicle.price)}</Text>
+
         </View>
 
         {/* 차량 부품 정보 */}

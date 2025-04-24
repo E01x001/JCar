@@ -5,6 +5,7 @@ import firestore from '@react-native-firebase/firestore';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -22,14 +23,20 @@ import AdminConsultationScreen from '../screens/AdminConsultationScreen';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// 사용자 탭 네비게이션
 const UserTabs = () => (
   <Tab.Navigator
-    screenOptions={{
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ color, size }) => {
+        let iconName;
+        if (route.name === 'Vehicles') iconName = 'directions-car';
+        else if (route.name === 'Register') iconName = 'add-circle-outline';
+        else if (route.name === 'MyPage') iconName = 'person';
+        return <Icon name={iconName} size={size} color={color} />;
+      },
       tabBarStyle: { backgroundColor: '#2B4593' },
       tabBarLabelStyle: { color: 'black', textAlign: 'center' },
       headerTitleAlign: 'center',
-    }}
+    })}
   >
     <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '차량 목록' }} />
     <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ title: '차량 등록' }} />
@@ -37,21 +44,26 @@ const UserTabs = () => (
   </Tab.Navigator>
 );
 
-// 관리자 탭 네비게이션
 const AdminTabs = () => (
   <Tab.Navigator
-    screenOptions={{
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ color, size }) => {
+        let iconName;
+        if (route.name === 'AdminVehicles') iconName = 'car-repair';
+        else if (route.name === 'Consultations') iconName = 'question-answer';
+        else if (route.name === 'AdminPage') iconName = 'admin-panel-settings';
+        return <Icon name={iconName} size={size} color={color} />;
+      },
       tabBarStyle: { backgroundColor: '#2B4593' },
       tabBarLabelStyle: { color: 'black', textAlign: 'center' },
       headerTitleAlign: 'center',
-    }}
+    })}
   >
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} options={{ title: '차량 관리' }} />
     <Tab.Screen name="Consultations" component={AdminConsultationScreen} options={{ title: '상담 관리' }} />
     <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자 정보' }} />
   </Tab.Navigator>
 );
-
 
 const AppNavigator = () => {
   const [loading, setLoading] = useState(true);
