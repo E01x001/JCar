@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Button, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import { AuthContext } from '../context/AuthContext';
+import { formatPhone } from '../utils/format';
 
 const MyPageScreen = ({ navigation }) => {
+  const { user } = useContext(AuthContext);
   const [vehicles, setVehicles] = useState([]);
-  const user = auth().currentUser;
+  const [consultations, setConsultations] = useState([]);
 
   useEffect(() => {
     if (!user) return;
-    const unsubscribe = firestore()
+
+    const unsubscribeVehicles = firestore()
       .collection('vehicles')
       .where('sellerId', '==', user.uid)
       .onSnapshot(snapshot => {
@@ -20,12 +24,27 @@ const MyPageScreen = ({ navigation }) => {
         setVehicles(vehicleList);
       });
 
-    return () => unsubscribe();
+    const unsubscribeConsultations = firestore()
+      .collection('consultation_requests')
+      .where('userId', '==', user.uid)
+      .onSnapshot(snapshot => {
+        const consultationList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setConsultations(consultationList);
+      });
+
+    return () => {
+      unsubscribeVehicles();
+      unsubscribeConsultations();
+    };
   }, [user]);
 
   const handleDeleteVehicle = async (vehicleId) => {
     try {
       await firestore().collection('vehicles').doc(vehicleId).delete();
+      setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
       Alert.alert('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
       Alert.alert('삭제 실패', error.message);
@@ -78,6 +97,7 @@ const MyPageScreen = ({ navigation }) => {
       <Text style={styles.title}>마이페이지</Text>
       <Text style={styles.userInfo}>이메일: {user?.email}</Text>
 
+      <Text style={styles.sectionTitle}>내 차량</Text>
       <FlatList
         data={vehicles}
         keyExtractor={(item) => item.id}
@@ -90,6 +110,19 @@ const MyPageScreen = ({ navigation }) => {
               onPress={() => handleDeleteVehicle(item.id)}>
               <Text style={styles.deleteButtonText}>삭제</Text>
             </TouchableOpacity>
+          </View>
+        )}
+      />
+
+      <Text style={styles.sectionTitle}>상담 예약 내역</Text>
+      <FlatList
+        data={consultations}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.consultItem}>
+            <Text style={styles.consultText}>차량명: {item.vehicleName}</Text>
+            <Text style={styles.consultText}>상담 일정: {item.preferredDateTime?.toDate().toLocaleString?.() ?? '-'}</Text>
+            <Text style={styles.consultText}>판매자 연락처: {formatPhone(item.sellerPhone)}</Text>
           </View>
         )}
       />
@@ -121,6 +154,12 @@ const styles = StyleSheet.create({
     color: '#555',
     marginBottom: 20,
   },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+  },
   vehicleItem: {
     padding: 10,
     borderBottomWidth: 1,
@@ -146,13 +185,26 @@ const styles = StyleSheet.create({
     color: '#2B4593',
     fontWeight: 'bold',
   },
+  consultItem: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginBottom: 10,
+  },
+  consultText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
   logoutButton: {
     marginTop: 10,
     padding: 8,
     borderRadius: 5,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#2B4593', // 포인트 색상 사용
+    borderColor: '#2B4593',
   },
   deleteAccountButton: {
     marginTop: 10,
@@ -160,7 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#2B4593', // 탈퇴 버튼에 붉은색 테두리
+    borderColor: '#2B4593',
   },
   buttonText: {
     color: '#2B4593',

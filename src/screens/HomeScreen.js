@@ -1,9 +1,12 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
+
 
 const HomeScreen = ({ navigation }) => {
-  const currentUser = auth().currentUser; // 현재 로그인한 사용자 정보
+  const { user } = useContext(AuthContext); // 현재 로그인한 사용자 정보
 
   // 로그아웃 처리
   const handleLogout = () => {

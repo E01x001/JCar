@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 const AdminPageScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
-  const user = auth().currentUser;
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     if (!user) return;
@@ -26,6 +28,7 @@ const AdminPageScreen = ({ navigation }) => {
   const handleDeleteVehicle = async (vehicleId) => {
     try {
       await firestore().collection('vehicles').doc(vehicleId).delete();
+      setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId)); // 🔥 이 줄 추가!
       Alert.alert('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
       Alert.alert('삭제 실패', error.message);

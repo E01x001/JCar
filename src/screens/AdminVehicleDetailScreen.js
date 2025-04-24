@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { formatPhone } from '../utils/format';
 
 const { width } = Dimensions.get('window');
 
@@ -43,7 +44,6 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
         <Text style={styles.title}>{vehicle.vehicleName}</Text>
         <Text style={styles.subTitle}>{vehicle.subModel}</Text>
 
-        {/* 차량 정보 */}
         <View style={styles.infoCard}><Text style={styles.infoTitle}>제조사</Text><Text>{vehicle.manufacturer}</Text></View>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>연식</Text><Text>{vehicle.year}</Text></View>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>연료 종류</Text><Text>{vehicle.fuelType}</Text></View>
@@ -54,42 +54,19 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
         <View style={styles.infoCard}><Text style={styles.infoTitle}>연료탱크 용량</Text><Text>{vehicle.fuelTank} L</Text></View>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>가격</Text><Text>{parseInt(vehicle.price).toLocaleString()} 원</Text></View>
 
-        {/* 차량 부품 정보 */}
         <Text style={styles.sectionTitle}>부품 정보</Text>
+        <View style={styles.infoCard}><Text style={styles.infoTitle}>앞 타이어</Text><Text>{vehicle.frontTire}</Text></View>
+        <View style={styles.infoCard}><Text style={styles.infoTitle}>뒤 타이어</Text><Text>{vehicle.rearTire}</Text></View>
+        <View style={styles.infoCard}><Text style={styles.infoTitle}>엔진 오일 용량</Text><Text>{vehicle.engineOilLiter} L</Text></View>
+        <View style={styles.infoCard}><Text style={styles.infoTitle}>와이퍼 정보</Text><Text>{vehicle.wiperInfo}</Text></View>
+        <View style={styles.infoCard}><Text style={styles.infoTitle}>배터리 모델</Text><Text>{vehicle.battery}</Text></View>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>앞 타이어</Text>
-          <Text>{vehicle.frontTire}</Text>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>뒤 타이어</Text>
-          <Text>{vehicle.rearTire}</Text>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>엔진 오일 용량</Text>
-          <Text>{vehicle.engineOilLiter} L</Text>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>와이퍼 정보</Text>
-          <Text>{vehicle.wiperInfo}</Text>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>배터리 모델</Text>
-          <Text>{vehicle.battery}</Text>
-        </View>
-        
-        {/* 등록자 정보 */}
         <Text style={styles.sectionTitle}>등록자 정보</Text>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>이름</Text><Text>{vehicle.sellerName}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>전화번호</Text><Text>{vehicle.sellerPhone}</Text></View>
+        <View style={styles.infoCard}><Text style={styles.infoTitle}>전화번호</Text><Text>{formatPhone(vehicle.sellerPhone)}</Text></View>
         <View style={styles.infoCard}><Text style={styles.infoTitle}>이메일</Text><Text>{vehicle.sellerEmail}</Text></View>
       </ScrollView>
 
-      {/* 뒤로 가기 버튼 */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Text style={styles.backButtonText}>뒤로 가기</Text>
       </TouchableOpacity>
@@ -98,15 +75,8 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
+  safeArea: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
   image: {
     width: width - 40,
     height: undefined,
@@ -116,30 +86,10 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     alignSelf: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333',
-  },
-  subTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 15,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    color: '#2B4593',
-  },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#333' },
+  subTitle: { fontSize: 18, fontWeight: '600', color: '#666', marginBottom: 15 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10, color: '#2B4593' },
   infoCard: {
     marginBottom: 10,
     padding: 12,
@@ -151,12 +101,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
-    flex: 1,
-  },
+  infoTitle: { fontSize: 16, fontWeight: '600', color: '#555', flex: 1 },
   backButton: {
     marginHorizontal: 20,
     marginBottom: 20,
@@ -165,11 +110,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  backButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
 
 export default AdminVehicleDetailScreen;

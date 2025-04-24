@@ -1,20 +1,24 @@
+// firebaseService.js
 import firestore from "@react-native-firebase/firestore";
 
+// 상담 요청 저장 함수 (모듈화된 공통 버전)
 export const saveConsultationRequest = async (data) => {
   try {
-    // 필드 검증 및 undefined 값을 null로 대체
     const validData = {
-      user_id: data.user_id || null,  // 예: user_id가 없으면 null로 처리
-      vehicle_id: data.vehicle_id || null,  // 예: vehicle_id가 없으면 null로 처리
-      preferred_time: data.preferred_time ? firestore.Timestamp.fromDate(new Date(data.preferred_time)) : null, // preferred_time이 있으면 Timestamp로 변환, 없으면 null로 처리
-      message: data.message || "",  // 메시지가 없으면 빈 문자열로 처리
-      // 필요한 추가 필드가 있으면 이와 같은 방식으로 처리
+      userId: data.userId || null,
+      userName: data.userName || "익명",
+      userPhone: data.userPhone || "미등록",
+      vehicleId: data.vehicleId || null,
+      vehicleName: data.vehicleName || "알 수 없음",
+      preferredDateTime: data.preferredDateTime || null, // ✅ Timestamp
+      status: data.status || "pending",
     };
 
-    // 요청 데이터를 Firestore에 저장
     await firestore().collection("consultation_requests").add(validData);
     console.log("상담 요청이 성공적으로 저장되었습니다.");
+    return true;
   } catch (error) {
     console.error("상담 요청 저장 오류:", error);
+    return false;
   }
 };

@@ -24,7 +24,13 @@ const Tab = createBottomTabNavigator();
 
 // 사용자 탭 네비게이션
 const UserTabs = () => (
-  <Tab.Navigator>
+  <Tab.Navigator
+    screenOptions={{
+      tabBarStyle: { backgroundColor: '#2B4593' },
+      tabBarLabelStyle: { color: 'black', textAlign: 'center' },
+      headerTitleAlign: 'center',
+    }}
+  >
     <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '차량 목록' }} />
     <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ title: '차량 등록' }} />
     <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '내 정보' }} />
@@ -33,12 +39,19 @@ const UserTabs = () => (
 
 // 관리자 탭 네비게이션
 const AdminTabs = () => (
-  <Tab.Navigator>
+  <Tab.Navigator
+    screenOptions={{
+      tabBarStyle: { backgroundColor: '#2B4593' },
+      tabBarLabelStyle: { color: 'black', textAlign: 'center' },
+      headerTitleAlign: 'center',
+    }}
+  >
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} options={{ title: '차량 관리' }} />
     <Tab.Screen name="Consultations" component={AdminConsultationScreen} options={{ title: '상담 관리' }} />
     <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자 정보' }} />
   </Tab.Navigator>
 );
+
 
 const AppNavigator = () => {
   const [loading, setLoading] = useState(true);
