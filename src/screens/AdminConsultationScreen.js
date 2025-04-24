@@ -38,7 +38,7 @@ const AdminConsultationScreen = () => {
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.vehicleId)} style={styles.card}>
               <Text style={styles.text}>이름: {item.user_name}</Text>
-              <Text style={styles.text}>전화번호: {item.user_phone}</Text>
+              <Text style={styles.text}>전화번호: {formatPhone(item.userPhone)}</Text>
               <Text style={styles.text}>차량명: {item.vehicleName}</Text>
               <Text style={styles.text}>
                 상담 일정: {item.preferred_date} {item.preferred_time}

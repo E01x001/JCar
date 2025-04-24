@@ -82,7 +82,7 @@ const VehicleRegistrationScreen = () => {
         engineOilLiter: vehicleData.EOILLITER,
         wiperInfo: vehicleData.WIPER,
         seats: vehicleData.SEATS,
-        battery: vehicleData.BATTERYLIST[0]?.MODEL || "정보 없음",
+        battery: Array.isArray(vehicleData.BATTERYLIST) && vehicleData.BATTERYLIST.length > 0? vehicleData.BATTERYLIST[0].MODEL: "Unknown",
         fuelEco: vehicleData.FUELECO,
         fuelTank: vehicleData.FUELTANK,
         regiNumber,

@@ -14,47 +14,41 @@ const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
 
-  // 📌 대한민국 형식 (+82)으로 전화번호 자동 변환
-  const formatPhoneNumber = (number) => {
-    if (number.startsWith('010')) {
+  // ✅ 인증용 전화번호 포맷 (국제전화 형식)
+  const formatPhoneNumberToE164 = (number) => {
+    if (number.startsWith('0')) {
       return '+82' + number.slice(1);
     }
     return number;
   };
 
-  // 🔹 전화번호 중복 확인 함수
-  const checkPhoneNumberExists = async (formattedPhoneNumber) => {
+  // ✅ 중복 체크는 사용자가 입력한 010 형식으로 수행
+  const checkPhoneNumberExists = async (rawPhoneNumber) => {
     const querySnapshot = await firestore()
       .collection('users')
-      .where('phoneNumber', '==', formattedPhoneNumber)
+      .where('phoneNumber', '==', rawPhoneNumber)
       .get();
 
-    return !querySnapshot.empty; // 존재하면 true 반환
+    return !querySnapshot.empty;
   };
 
-  // 🔹 1단계: 전화번호 인증 요청
   const requestVerification = async () => {
-    const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
-
     try {
-      // 📌 전화번호 중복 확인
-      if (await checkPhoneNumberExists(formattedPhoneNumber)) {
+      if (await checkPhoneNumberExists(phoneNumber)) {
         Alert.alert('가입 불가', '이미 가입된 전화번호입니다.');
         return;
       }
 
-      const confirmation = await auth().signInWithPhoneNumber(formattedPhoneNumber);
+      const formatted = formatPhoneNumberToE164(phoneNumber); // 인증용
+      const confirmation = await auth().signInWithPhoneNumber(formatted);
       setVerificationId(confirmation.verificationId);
       Alert.alert('인증 코드가 전송되었습니다.');
-
-      // 🔥 인증을 위해 로그인되었으므로 즉시 로그아웃 처리
       await auth().signOut();
     } catch (error) {
       Alert.alert('인증 요청 실패', error.message);
     }
   };
 
-  // 🔹 2단계: 인증 코드 확인
   const confirmCode = async () => {
     if (!verificationId || !verificationCode) {
       Alert.alert('오류', '인증 코드를 입력하세요.');
@@ -71,23 +65,20 @@ const RegisterScreen = ({ navigation }) => {
     }
   };
 
-  // 🔹 이메일 중복 체크 함수
   const checkEmailExists = async (email) => {
     try {
       const methods = await auth().fetchSignInMethodsForEmail(email);
-      return methods.length > 0; // 존재하면 true 반환
+      return methods.length > 0;
     } catch (error) {
-      return false; // 에러 발생 시 false 처리
+      return false;
     }
   };
 
-  // 🔹 비밀번호 보안성 검사
   const isValidPassword = (password) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return regex.test(password);
   };
 
-  // 🔹 3단계: 회원가입 (이메일 & 비밀번호)
   const handleRegister = async () => {
     if (!isPhoneVerified) {
       Alert.alert('오류', '전화번호 인증을 먼저 완료해주세요.');
@@ -109,27 +100,23 @@ const RegisterScreen = ({ navigation }) => {
       return;
     }
 
-    // 🔹 이메일 중복 확인
     if (await checkEmailExists(email)) {
       Alert.alert('오류', '이미 존재하는 이메일입니다.');
       return;
     }
 
     try {
-      // 🔹 Firebase Auth에 이메일 계정 생성
       const emailUser = await auth().createUserWithEmailAndPassword(email, password);
       const userId = emailUser.user.uid;
 
-      // 🔹 Firebase Auth에 전화번호 추가 (인증 코드 기반)
       const phoneCredential = auth.PhoneAuthProvider.credential(verificationId, verificationCode);
       await emailUser.user.linkWithCredential(phoneCredential);
 
-      // 🔹 Firestore에 사용자 정보 저장
       await firestore().collection('users').doc(userId).set({
         name,
-        phoneNumber: phoneNumber,
+        phoneNumber,  // 🔥 DB에는 010 형식 그대로 저장
         email,
-        createdAt: firestore.FieldValue.serverTimestamp(), // 🔥 서버 시간 저장
+        createdAt: firestore.FieldValue.serverTimestamp(),
         role: 'user',
       });
 
@@ -144,12 +131,11 @@ const RegisterScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>회원가입</Text>
 
-      {/* 🔹 1단계: 전화번호 인증 */}
       {step === 1 && (
         <>
           <TextInput
             style={styles.input}
-            placeholder="전화번호 입력 (010xxxxxxxx)"
+            placeholder="전화번호 입력 (예: 01012345678)"
             placeholderTextColor="#aaa"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
@@ -171,7 +157,6 @@ const RegisterScreen = ({ navigation }) => {
         </>
       )}
 
-      {/* 🔹 2단계: 이메일 및 비밀번호 입력 */}
       {step === 2 && (
         <>
           <TextInput
@@ -191,7 +176,7 @@ const RegisterScreen = ({ navigation }) => {
           />
           <TextInput
             style={styles.input}
-            placeholder="비밀번호 입력 (8자 이상, 대문자+소문자+숫자 포함)"
+            placeholder="비밀번호 입력 (8자 이상, 대/소문자+숫자)"
             placeholderTextColor="#aaa"
             value={password}
             onChangeText={setPassword}

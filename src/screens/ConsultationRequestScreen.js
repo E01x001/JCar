@@ -5,6 +5,9 @@ import DatePicker from "react-native-date-picker";
 import { AuthContext } from "../context/AuthContext"; // 사용자 정보 가져오기
 import firestore from "@react-native-firebase/firestore"; // Firestore 불러오기
 import { useNavigation } from '@react-navigation/native'; // navigation을 useNavigation 훅으로 가져오기
+import { saveConsultationRequest } from '../services/firebaseService';
+
+
 
 const ConsultationRequestScreen = ({ route }) => {
   const { user } = useContext(AuthContext);
@@ -26,17 +29,6 @@ const ConsultationRequestScreen = ({ route }) => {
     return date;
   };
 
-  // 상담 요청 저장 함수
-  const saveConsultationRequest = async (consultationData) => {
-    try {
-      await firestore().collection("consultation_requests").add(consultationData);
-      console.log("상담 요청이 성공적으로 저장되었습니다.");
-      return true;
-    } catch (error) {
-      console.error("상담 요청 저장 오류:", error);
-      return false;
-    }
-  };
 
   // 상담 요청 제출 핸들러
   const handleSubmit = async () => {
