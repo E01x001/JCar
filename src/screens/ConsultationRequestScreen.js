@@ -34,6 +34,17 @@ const ConsultationRequestScreen = ({ route }) => {
     return !snapshot.empty;
   };
 
+  const checkTimeConflict = async (vehicleId, date, time) => {
+    const snapshot = await firestore()
+      .collection('consultation_requests')
+      .where('vehicleId', '==', vehicleId)
+      .where('preferred_date', '==', date)
+      .where('preferred_time', '==', time)
+      .get();
+
+    return !snapshot.empty;
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       Alert.alert("로그인이 필요합니다.");
@@ -56,6 +67,12 @@ const ConsultationRequestScreen = ({ route }) => {
     const isDuplicate = await checkDuplicateConsultation(user.uid, vehicle.vehicleId);
     if (isDuplicate) {
       Alert.alert("중복 요청", "이미 이 차량에 대한 상담을 신청하셨습니다.");
+      return;
+    }
+
+    const hasConflict = await checkTimeConflict(vehicle.vehicleId, formattedDate, formattedTime);
+    if (hasConflict) {
+      Alert.alert("이미 선택된 시간입니다.", "다른 시간을 선택해주세요.");
       return;
     }
 

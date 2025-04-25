@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import { formatPrice } from '../utils/format';
 
 const AdminVehiclesListScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
 
-  // 차량 목록 불러오기
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
@@ -23,7 +23,6 @@ const AdminVehiclesListScreen = ({ navigation }) => {
     fetchVehicles();
   }, []);
 
-  // 차량 삭제 기능
   const handleDeleteVehicle = async (vehicleId) => {
     Alert.alert(
       "삭제 확인",
@@ -48,7 +47,6 @@ const AdminVehiclesListScreen = ({ navigation }) => {
     );
   };
 
-  // 차량 목록 렌더링
   const renderVehicle = ({ item }) => (
     <View style={styles.vehicleItem}>
       <TouchableOpacity
@@ -56,10 +54,9 @@ const AdminVehiclesListScreen = ({ navigation }) => {
       >
         <Text style={styles.vehicleName}>{item.vehicleName}</Text>
         <Text>제조사: {item.manufacturer}</Text>
-        <Text>가격: {item.price}만원</Text>
+        <Text>가격: {formatPrice(item.price)}</Text>
       </TouchableOpacity>
 
-      {/* 삭제 버튼 */}
       <TouchableOpacity
         style={styles.deleteButton}
         onPress={() => handleDeleteVehicle(item.id)}
