@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import { formatPrice } from '../utils/format';
 
 const VehiclesListScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);

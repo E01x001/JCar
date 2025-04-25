@@ -19,6 +19,7 @@ import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen';
 import AdminPageScreen from '../screens/AdminPageScreen';
 import AdminVehicleDetailScreen from '../screens/AdminVehicleDetailScreen';
 import AdminConsultationScreen from '../screens/AdminConsultationScreen';
+import AdminScheduleScreen from '../screens/AdminScheduleScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -52,6 +53,7 @@ const AdminTabs = () => (
         if (route.name === 'AdminVehicles') iconName = 'car-repair';
         else if (route.name === 'Consultations') iconName = 'question-answer';
         else if (route.name === 'AdminPage') iconName = 'admin-panel-settings';
+        else if (route.name === 'AdminSchedule') iconName = 'calendar-month';
         return <Icon name={iconName} size={size} color={color} />;
       },
       tabBarStyle: { backgroundColor: '#2B4593' },
@@ -61,6 +63,7 @@ const AdminTabs = () => (
   >
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} options={{ title: '차량 관리' }} />
     <Tab.Screen name="Consultations" component={AdminConsultationScreen} options={{ title: '상담 관리' }} />
+    <Tab.Screen name="AdminSchedule" component={AdminScheduleScreen} options={{ title: '일정' }} />
     <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자 정보' }} />
   </Tab.Navigator>
 );
