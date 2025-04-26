@@ -1,7 +1,5 @@
-// firebaseService.js
 import firestore from "@react-native-firebase/firestore";
 
-// 상담 요청 저장 함수 (모듈화된 공통 버전)
 export const saveConsultationRequest = async (data) => {
   try {
     const validData = {
@@ -10,8 +8,10 @@ export const saveConsultationRequest = async (data) => {
       userPhone: data.userPhone || "미등록",
       vehicleId: data.vehicleId || null,
       vehicleName: data.vehicleName || "알 수 없음",
-      preferredDateTime: data.preferredDateTime || null, // ✅ Timestamp
+      preferredDate: data.preferredDate || null,
+      preferredTime: data.preferredTime || null,
       status: data.status || "pending",
+      createdAt: firestore.FieldValue.serverTimestamp(), // ✅ 추가
     };
 
     await firestore().collection("consultation_requests").add(validData);

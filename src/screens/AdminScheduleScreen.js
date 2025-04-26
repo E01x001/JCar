@@ -1,7 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import { Calendar } from 'react-native-calendars';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
+
+// ✅ Calendar 한글 설정
+LocaleConfig.locales['ko'] = {
+  monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+  monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+  dayNames: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
+  dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
+  today: '오늘'
+};
+LocaleConfig.defaultLocale = 'ko';
 
 const AdminScheduleScreen = () => {
   const [markedDates, setMarkedDates] = useState({});
@@ -17,11 +27,11 @@ const AdminScheduleScreen = () => {
 
         snapshot.docs.forEach(doc => {
           const data = doc.data();
-          const date = data.preferred_date;
+          const date = data.preferredDate; // ✅ camelCase 사용
           const color =
             data.status === 'approved' ? '#28a745'
               : data.status === 'rejected' ? '#dc3545'
-              : '#6c757d';
+                : '#6c757d';
 
           all.push({ id: doc.id, ...data });
 
@@ -48,8 +58,25 @@ const AdminScheduleScreen = () => {
     }
   };
 
+  const confirmReject = (id) => {
+    Alert.alert(
+      '거절 확인',
+      '정말 거절하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '거절', style: 'destructive', onPress: () => updateStatus(id, 'rejected') }
+      ]
+    );
+  };
+
+  const translateStatus = (status) => {
+    if (status === 'approved') return '승인됨';
+    if (status === 'rejected') return '거절됨';
+    return '대기중';
+  };
+
   const filteredConsultations = consultations.filter(
-    item => item.preferred_date === selectedDate
+    item => item.preferredDate === selectedDate
   );
 
   return (
@@ -60,6 +87,16 @@ const AdminScheduleScreen = () => {
         markedDates={markedDates}
         markingType="multi-dot"
         onDayPress={(day) => setSelectedDate(day.dateString)}
+        monthFormat={'yyyy년 MM월'} // ✅ 월 표시도 더 예쁘게
+        firstDay={0} // ✅ 일요일부터 시작
+        theme={{
+          textDayFontWeight: '600',
+          textMonthFontWeight: 'bold',
+          textDayHeaderFontWeight: '600',
+          textDayHeaderFontSize: 14,
+        }}
+        dayNames={['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']} // ✅ 수동 요일
+        dayNamesShort={['일', '월', '화', '수', '목', '금', '토']} // ✅ 수동 요일 축약형
       />
 
       {selectedDate && (
@@ -71,14 +108,14 @@ const AdminScheduleScreen = () => {
             renderItem={({ item }) => (
               <View style={styles.card}>
                 <Text style={styles.itemText}>차량명: {item.vehicleName}</Text>
-                <Text style={styles.itemText}>시간: {item.preferred_time}</Text>
-                <Text style={styles.itemText}>상태: {item.status}</Text>
+                <Text style={styles.itemText}>시간: {item.preferredTime}</Text>
+                <Text style={styles.itemText}>상태: {translateStatus(item.status)}</Text>
 
                 <View style={styles.buttonGroup}>
                   <TouchableOpacity onPress={() => updateStatus(item.id, 'approved')} style={styles.approveBtn}>
                     <Text style={styles.btnText}>승인</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => updateStatus(item.id, 'rejected')} style={styles.rejectBtn}>
+                  <TouchableOpacity onPress={() => confirmReject(item.id)} style={styles.rejectBtn}>
                     <Text style={styles.btnText}>거절</Text>
                   </TouchableOpacity>
                 </View>

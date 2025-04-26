@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import { View, Text, TextInput, Button, Alert, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity } from "react-native";
+import { Picker } from '@react-native-picker/picker';
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 import storage from "@react-native-firebase/storage";
@@ -11,13 +12,29 @@ const VehicleRegistrationScreen = () => {
 
   const [regiNumber, setRegiNumber] = useState("");
   const [ownerName, setOwnerName] = useState("");
+  const [vehicleType, setVehicleType] = useState(""); // ✅ 초기값 "" (선택 안 한 상태)
   const [loading, setLoading] = useState(false);
   const [vehicleData, setVehicleData] = useState(null);
   const [imageUri, setImageUri] = useState(null);
 
   const isValidRegiNumber = (number) => {
-    const regex = /^(\d{2,3}[가-힣]\s?\d{4})$/;
+    const regex = /^([가-힣]{0,2})?(\d{2,3})([가-힣A-Z외임])\s?(\d{3,4})$/;
     return regex.test(number);
+  };
+
+  const formatRegiNumber = (input) => {
+    const cleanInput = input.replace(/\s+/g, "");
+    const regex = /^([가-힣]{0,2})?(\d{2,3})([가-힣A-Z외임])(\d{3,4})$/;
+    const match = cleanInput.match(regex);
+
+    if (match) {
+      const region = match[1] || "";
+      const firstNumbers = match[2];
+      const letter = match[3];
+      const lastNumbers = match[4];
+      return `${region}${firstNumbers}${letter} ${lastNumbers}`;
+    }
+    return input;
   };
 
   const handleImageSelect = async () => {
@@ -34,7 +51,7 @@ const VehicleRegistrationScreen = () => {
     }
 
     if (!isValidRegiNumber(regiNumber)) {
-      Alert.alert("입력 오류", "올바른 차량번호 형식이 아닙니다. 예: 12가 3456");
+      Alert.alert("입력 오류", "올바른 차량번호 형식이 아닙니다. 예: 서울12가 3456");
       return;
     }
 
@@ -73,18 +90,25 @@ const VehicleRegistrationScreen = () => {
       Alert.alert("오류", "조회된 차량 정보가 없습니다.");
       return;
     }
-
+  
+    const validVehicleTypes = ["승용차", "택시", "렌터카", "화물차", "군용차", "외교차"];
+  
+    if (!validVehicleTypes.includes(vehicleType)) {
+      Alert.alert("입력 오류", "차량 종류를 정확히 선택해주세요.");
+      return;
+    }
+  
     try {
       const currentUser = auth().currentUser;
       let uploadedImageUrl = `https://www.cartory.net/cars/${vehicleData.CARURL}`;
-
+  
       if (imageUri) {
         const filename = imageUri.substring(imageUri.lastIndexOf('/') + 1);
         const reference = storage().ref(`/vehicles/${filename}`);
         await reference.putFile(imageUri);
         uploadedImageUrl = await reference.getDownloadURL();
       }
-
+  
       const docRef = await firestore().collection("vehicles").add({
         vehicleName: vehicleData.CARNAME,
         subModel: vehicleData.SUBMODEL,
@@ -107,20 +131,22 @@ const VehicleRegistrationScreen = () => {
         fuelTank: vehicleData.FUELTANK,
         regiNumber,
         ownerName,
+        vehicleType,
         createdAt: firestore.FieldValue.serverTimestamp(),
         sellerId: user.uid,
         sellerName: sellerName || "Unknown",
         sellerPhone: sellerPhone || "Unknown",
         sellerEmail: sellerEmail || "Unknown",
       });
-
+  
       await docRef.update({ vehicleId: docRef.id });
-
+  
       Alert.alert("성공", "차량 정보가 저장되었습니다.");
       setRegiNumber("");
       setOwnerName("");
       setVehicleData(null);
       setImageUri(null);
+      setVehicleType(""); // 저장 완료 후 차량 종류도 리셋
     } catch (error) {
       console.error("Firestore 저장 오류:", error);
       Alert.alert("오류", "차량 정보를 저장하는 중 문제가 발생했습니다.");
@@ -133,9 +159,9 @@ const VehicleRegistrationScreen = () => {
         <Text style={styles.label}>차량번호</Text>
         <TextInput
           value={regiNumber}
-          onChangeText={setRegiNumber}
+          onChangeText={(text) => setRegiNumber(formatRegiNumber(text))}
           style={styles.input}
-          placeholder="예: 12가 3456"
+          placeholder="예: 서울12가 3456"
           placeholderTextColor="#aaa"
         />
 
@@ -147,6 +173,24 @@ const VehicleRegistrationScreen = () => {
           placeholder="소유자 이름 입력"
           placeholderTextColor="#aaa"
         />
+
+        <Text style={styles.label}>차량 종류</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={vehicleType}
+            onValueChange={(itemValue) => setVehicleType(itemValue)}
+            style={[styles.picker, { color: vehicleType ? '#000' : '#aaa' }]} // ✅ 선택 여부에 따라 글자색 다르게
+            dropdownIconColor="#000"
+          >
+            <Picker.Item label="차량 종류 선택" value="" color="#aaa" />
+            <Picker.Item label="승용차" value="승용차" color="#eeeeee" />
+            <Picker.Item label="택시" value="택시" color="#eeeeee" />
+            <Picker.Item label="렌터카" value="렌터카" color="#eeeeee" />
+            <Picker.Item label="화물차" value="화물차" color="#eeeeee" />
+            <Picker.Item label="군용차" value="군용차" color="#eeeeee" />
+            <Picker.Item label="외교차" value="외교차" color="#eeeeee" />
+          </Picker>
+        </View>
 
         <TouchableOpacity onPress={handleImageSelect} style={styles.imageButton}>
           <Text style={styles.imageButtonText}>추가 사진 선택 (선택)</Text>
@@ -189,69 +233,19 @@ const VehicleRegistrationScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  scrollViewContent: {
-    padding: 20,
-    paddingBottom: 30,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    fontSize: 16,
-  },
-  buttonContainer: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  vehiclePreview: {
-    marginTop: 30,
-    padding: 15,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  previewTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  vehicleImage: {
-    width: "100%",
-    height: 200,
-    resizeMode: "contain",
-    marginBottom: 10,
-  },
-  imageButton: {
-    padding: 10,
-    backgroundColor: "#e0e0e0",
-    alignItems: "center",
-    marginBottom: 10,
-    borderRadius: 6,
-  },
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  scrollViewContent: { padding: 20, paddingBottom: 30 },
+  label: { fontSize: 16, fontWeight: "600", color: "#000", marginBottom: 5 },
+  input: { borderWidth: 1, borderColor: "#ccc", padding: 12, marginBottom: 15, borderRadius: 8, backgroundColor: "#fff", fontSize: 16 },
+  pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, overflow: 'hidden', marginBottom: 15, backgroundColor: '#fff' },
+  picker: { height: 55, width: '100%', fontSize: 16 }, // ✅ 높이와 글자 크기 조정
+  buttonContainer: { marginTop: 20, alignItems: "center" },
+  vehiclePreview: { marginTop: 30, padding: 15, backgroundColor: "#fff", borderRadius: 10, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
+  previewTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  vehicleImage: { width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 },
+  imageButton: { padding: 10, backgroundColor: "#e0e0e0", alignItems: "center", marginBottom: 10, borderRadius: 6 },
   imageButtonText: { color: "#333" },
-  imagePreview: {
-    width: "100%",
-    height: 200,
-    resizeMode: "cover",
-    borderRadius: 6,
-    marginBottom: 15,
-  },
+  imagePreview: { width: "100%", height: 200, resizeMode: "cover", borderRadius: 6, marginBottom: 15 },
 });
 
 export default VehicleRegistrationScreen;

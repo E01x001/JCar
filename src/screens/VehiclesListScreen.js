@@ -19,7 +19,6 @@ const VehiclesListScreen = ({ navigation }) => {
         console.error('차량 목록 불러오기 오류:', error);
       });
 
-    // Cleanup function to unsubscribe from the snapshot when the component is unmounted
     return () => unsubscribe();
   }, []);
 
@@ -28,7 +27,9 @@ const VehiclesListScreen = ({ navigation }) => {
       style={styles.vehicleItem}
       onPress={() => navigation.navigate('VehicleDetail', { vehicleId: item.id })}
     >
-      <Text style={styles.vehicleName}>{item.vehicleName}</Text>
+      <Text style={styles.vehicleName}>
+        [{item.vehicleType || '승용차'}] {item.vehicleName}
+      </Text>
       <Text>{item.manufacturer}</Text>
     </TouchableOpacity>
   );
