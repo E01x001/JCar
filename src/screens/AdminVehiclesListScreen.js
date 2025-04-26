@@ -52,7 +52,9 @@ const AdminVehiclesListScreen = ({ navigation }) => {
       <TouchableOpacity
         onPress={() => navigation.navigate('AdminVehicleDetail', { vehicleId: item.id })}
       >
-        <Text style={styles.vehicleName}>{item.vehicleName}</Text>
+        <Text style={styles.vehicleName}>
+          [{item.vehicleType || '승용차'}] {item.vehicleName}
+        </Text>
         <Text>제조사: {item.manufacturer}</Text>
         <Text>가격: {formatPrice(item.price)}</Text>
       </TouchableOpacity>
@@ -78,31 +80,11 @@ const AdminVehiclesListScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  vehicleItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  vehicleName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: "red",
-    padding: 8,
-    borderRadius: 5,
-  },
-  deleteText: {
-    color: "white",
-    fontWeight: "bold",
-  },
+  container: { padding: 20, backgroundColor: "#fff" },
+  vehicleItem: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#ccc', flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  vehicleName: { fontSize: 18, fontWeight: 'bold' },
+  deleteButton: { backgroundColor: "red", padding: 8, borderRadius: 5 },
+  deleteText: { color: "white", fontWeight: "bold" },
 });
 
 export default AdminVehiclesListScreen;

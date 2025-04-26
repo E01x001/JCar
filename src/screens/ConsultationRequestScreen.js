@@ -76,17 +76,19 @@ const ConsultationRequestScreen = ({ route }) => {
       return;
     }
 
+    // 상담 요청할 때 저장하는 데이터
     const consultationData = {
-      user_id: user.uid,
-      user_name: user.displayName || "익명",
-      user_phone: user.phoneNumber || "미등록",
+      userId: user.uid,
+      userName: user.displayName || "익명",
+      userPhone: user.phoneNumber || "미등록",
       vehicleId: vehicle.vehicleId,
       vehicleName: vehicle.vehicleName,
-      preferred_date: formattedDate,
-      preferred_time: formattedTime,
+      preferredDate: formattedDate,
+      preferredTime: formattedTime,
       status: "pending",
     };
 
+    // 저장 호출
     const success = await saveConsultationRequest(consultationData);
 
     if (success) {

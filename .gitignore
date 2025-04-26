@@ -67,3 +67,6 @@ xcuserdata
 
 # Generated files
 __generated__/
+
+# Scripts for temporary maintenance
+/scripts/

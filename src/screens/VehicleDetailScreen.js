@@ -56,7 +56,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
       >
         {/* 차량 이미지 */}
         <Image source={{ uri: vehicle.imageUrl }} style={styles.image} />
-        <Text style={styles.title}>{vehicle.vehicleName}</Text>
+        <Text style={styles.title}>[{vehicle.vehicleType || '승용차'}] {vehicle.vehicleName}</Text>
         <Text style={styles.subTitle}>{vehicle.subModel}</Text>
 
         {/* 차량 기본 정보 */}

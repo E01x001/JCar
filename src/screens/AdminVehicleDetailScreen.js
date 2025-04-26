@@ -41,7 +41,7 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <Image source={{ uri: vehicle.imageUrl }} style={styles.image} />
-        <Text style={styles.title}>{vehicle.vehicleName}</Text>
+        <Text style={styles.title}>[{vehicle.vehicleType || '승용차'}] {vehicle.vehicleName}</Text>
         <Text style={styles.subTitle}>{vehicle.subModel}</Text>
 
         <View style={styles.infoCard}><Text style={styles.infoTitle}>제조사</Text><Text>{vehicle.manufacturer}</Text></View>

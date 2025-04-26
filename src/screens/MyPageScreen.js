@@ -25,9 +25,10 @@ const MyPageScreen = ({ navigation }) => {
         setVehicles(vehicleList);
       });
 
-    const unsubscribeConsultations = firestore()
+      const unsubscribeConsultations = firestore()
       .collection('consultation_requests')
-      .where('user_id', '==', user.uid)
+      .where('userId', '==', user.uid)
+      .orderBy('createdAt', 'desc') // ✅ 최신순 추가
       .onSnapshot(snapshot => {
         const consultationList = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -151,7 +152,7 @@ const MyPageScreen = ({ navigation }) => {
           <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
             <View style={styles.consultItem}>
               <Text style={styles.consultText}>차량명: {item.vehicleName}</Text>
-              <Text style={styles.consultText}>일정: {item.preferred_date} {item.preferred_time}</Text>
+              <Text style={styles.consultText}>일정: {item.preferredDate} {item.preferredTime}</Text>
               {renderStatus(item.status)}
             </View>
           </TouchableOpacity>
