@@ -1,0 +1,1577 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+
+> Configure project :react-native-firebase_app
+:react-native-firebase_app package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_app:firebase.bom using default value: 33.12.0
+:react-native-firebase_app:play.play-services-auth using default value: 21.3.0
+:react-native-firebase_app package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_app:version set from package.json: 21.14.0 (21,14,0 - 21014000)
+:react-native-firebase_app:android.compileSdk using custom value: 35
+:react-native-firebase_app:android.targetSdk using custom value: 34
+:react-native-firebase_app:android.minSdk using custom value: 24
+:react-native-firebase_app:reactNativeAndroidDir C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native\android
+
+> Configure project :react-native-firebase_auth
+:react-native-firebase_auth package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\auth\package.json
+:react-native-firebase_app package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_auth:firebase.bom using default value: 33.12.0
+:react-native-firebase_auth package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\auth\package.json
+:react-native-firebase_auth:version set from package.json: 21.14.0 (21,14,0 - 21014000)
+:react-native-firebase_auth:android.compileSdk using custom value: 35
+:react-native-firebase_auth:android.targetSdk using custom value: 34
+:react-native-firebase_auth:android.minSdk using custom value: 24
+:react-native-firebase_auth:reactNativeAndroidDir C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native\android
+
+> Configure project :react-native-firebase_firestore
+:react-native-firebase_firestore package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\firestore\package.json
+:react-native-firebase_app package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_firestore:firebase.bom using default value: 33.12.0
+:react-native-firebase_firestore package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\firestore\package.json
+:react-native-firebase_firestore:version set from package.json: 21.14.0 (21,14,0 - 21014000)
+:react-native-firebase_firestore:android.compileSdk using custom value: 35
+:react-native-firebase_firestore:android.targetSdk using custom value: 34
+:react-native-firebase_firestore:android.minSdk using custom value: 24
+:react-native-firebase_firestore:reactNativeAndroidDir C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native\android
+
+> Configure project :react-native-firebase_storage
+:react-native-firebase_storage package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\storage\package.json
+:react-native-firebase_app package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_storage:firebase.bom using default value: 33.12.0
+:react-native-firebase_storage package.json found at C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\storage\package.json
+:react-native-firebase_storage:version set from package.json: 21.14.0 (21,14,0 - 21014000)
+:react-native-firebase_storage:android.compileSdk using custom value: 35
+:react-native-firebase_storage:android.targetSdk using custom value: 34
+:react-native-firebase_storage:android.minSdk using custom value: 24
+:react-native-firebase_storage:reactNativeAndroidDir C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native\android
+
+> Configure project :react-native-reanimated
+Android gradle plugin: 8.7.2
+Gradle: 8.10.2
+
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateAutolinkingNewArchitectureFiles UP-TO-DATE
+> Task :app:generateAutolinkingPackageList UP-TO-DATE
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preReleaseBuild UP-TO-DATE
+> Task :react-native-date-picker:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-async-storage_async-storage:writeReleaseAarMetadata
+> Task :react-native-date-picker:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-date-picker:preBuild UP-TO-DATE
+> Task :react-native-date-picker:preReleaseBuild UP-TO-DATE
+> Task :react-native-firebase_app:preBuild UP-TO-DATE
+> Task :react-native-firebase_app:preReleaseBuild UP-TO-DATE
+> Task :react-native-date-picker:writeReleaseAarMetadata
+> Task :react-native-firebase_auth:preBuild UP-TO-DATE
+> Task :react-native-firebase_auth:preReleaseBuild UP-TO-DATE
+> Task :react-native-firebase_app:writeReleaseAarMetadata
+> Task :react-native-firebase_firestore:preBuild UP-TO-DATE
+> Task :react-native-firebase_firestore:preReleaseBuild UP-TO-DATE
+> Task :react-native-firebase_auth:writeReleaseAarMetadata
+> Task :react-native-firebase_storage:preBuild UP-TO-DATE
+> Task :react-native-firebase_storage:preReleaseBuild UP-TO-DATE
+> Task :react-native-firebase_firestore:writeReleaseAarMetadata
+> Task :react-native-firebase_storage:writeReleaseAarMetadata
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-gesture-handler:preBuild UP-TO-DATE
+> Task :react-native-gesture-handler:preReleaseBuild UP-TO-DATE
+> Task :react-native-gesture-handler:writeReleaseAarMetadata
+> Task :react-native-image-picker:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-image-picker:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-image-picker:preBuild UP-TO-DATE
+> Task :react-native-image-picker:preReleaseBuild UP-TO-DATE
+> Task :react-native-image-picker:writeReleaseAarMetadata
+> Task :react-native-picker_picker:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-picker_picker:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-picker_picker:preBuild UP-TO-DATE
+> Task :react-native-picker_picker:preReleaseBuild UP-TO-DATE
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask SKIPPED
+> Task :react-native-picker_picker:writeReleaseAarMetadata
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs UP-TO-DATE
+> Task :react-native-reanimated:prepareWorkletsHeadersForPrefabs UP-TO-DATE
+> Task :react-native-reanimated:preBuild UP-TO-DATE
+> Task :react-native-reanimated:preReleaseBuild UP-TO-DATE
+> Task :react-native-reanimated:writeReleaseAarMetadata
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-safe-area-context:preBuild UP-TO-DATE
+> Task :react-native-safe-area-context:preReleaseBuild UP-TO-DATE
+> Task :react-native-safe-area-context:writeReleaseAarMetadata
+> Task :react-native-screens:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-screens:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-screens:preBuild UP-TO-DATE
+> Task :react-native-screens:preReleaseBuild UP-TO-DATE
+> Task :react-native-screens:writeReleaseAarMetadata
+> Task :react-native-vector-icons:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-vector-icons:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-vector-icons:preBuild UP-TO-DATE
+> Task :react-native-vector-icons:preReleaseBuild UP-TO-DATE
+> Task :react-native-vector-icons:writeReleaseAarMetadata
+> Task :app:createBundleReleaseJsAndAssets
+ WARN  the transform cache was reset.
+                Welcome to Metro v0.81.4
+              Fast - Scalable - Integrated
+
+
+Writing bundle output to: android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle
+Writing sourcemap output to: android\app\build\intermediates\sourcemaps\react\release\index.android.bundle.packager.map
+Done writing bundle output
+Done writing sourcemap output
+Copying 38 asset files
+Done copying assets
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:1226:23: warning: the variable "DebuggerInternal" was not declared in function "__shouldPauseOnThrow"
+        return typeof DebuggerInternal !== 'undefined' && DebuggerInternal.sh...
+                      ^~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:5617:7: warning: the variable "setTimeout" was not declared in function "logCapturedError"
+      setTimeout(function () {
+      ^~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:3851:31: warning: the variable "nativeFabricUIManager" was not declared in anonymous function " 141#"
+  var _nativeFabricUIManage = nativeFabricUIManager,
+                              ^~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:3879:21: warning: the variable "clearTimeout" was not declared in anonymous function " 141#"
+    cancelTimeout = clearTimeout;
+                    ^~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:3892:51: warning: the variable "RN$enableMicrotasksInReact" was not declared in anonymous function " 141#"
+... "undefined" !== typeof RN$enableMicrotasksInReact && !!RN$enableMicrotask...
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:3893:47: warning: the variable "queueMicrotask" was not declared in anonymous function " 141#"
+...otask = "function" === typeof queueMicrotask ? queueMicrotask : scheduleTi...
+                                 ^~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:8314:30: warning: the variable "__REACT_DEVTOOLS_GLOBAL_HOOK__" was not declared in anonymous function " 141#"
+  if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
+                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:10259:5: warning: the variable "setImmediate" was not declared in function "handleResolved"
+    setImmediate(function () {
+    ^~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14018:12: warning: the variable "fetch" was not declared in anonymous function " 393#"
+    fetch: fetch,
+           ^~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14019:14: warning: the variable "Headers" was not declared in anonymous function " 393#"
+    Headers: Headers,
+             ^~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14020:14: warning: the variable "Request" was not declared in anonymous function " 393#"
+    Request: Request,
+             ^~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14021:15: warning: the variable "Response" was not declared in anonymous function " 393#"
+    Response: Response
+              ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14178:24: warning: the variable "FileReader" was not declared in function "readBlobAsArrayBuffer"
+      var reader = new FileReader();
+                       ^~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14229:36: warning: the variable "Blob" was not declared in anonymous function " 404#"
+        } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
+                                   ^~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14231:40: warning: the variable "FormData" was not declared in anonymous function " 404#"
+        } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
+                                       ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14233:44: warning: the variable "URLSearchParams" was not declared in anonymous function " 404#"
+...e if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body...
+                                 ^~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14352:26: warning: the variable "AbortController" was not declared in anonymous function " 410#"
+          var ctrl = new AbortController();
+                         ^~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14486:23: warning: the variable "XMLHttpRequest" was not declared in anonymous function " 414#"
+        var xhr = new XMLHttpRequest();
+                      ^~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:14031:71: warning: the variable "self" was not declared in anonymous function " 396#"
+...undefined' && globalThis || typeof self !== 'undefined' && self ||
+                                      ^~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:22076:26: warning: the variable "navigator" was not declared in anonymous function " 703#"
+  "undefined" !== typeof navigator && undefined !== navigator.scheduling && u...
+                         ^~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:22186:37: warning: the variable "MessageChannel" was not declared in anonymous function " 703#"
+  };else if ("undefined" !== typeof MessageChannel) {
+                                    ^~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:22201:34: warning: the variable "nativeRuntimeScheduler" was not declared in anonymous function " 703#"
+... = "undefined" !== typeof nativeRuntimeScheduler ? nativeRuntimeScheduler....
+                             ^~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:72887:9: warning: the variable "REACT_NAVIGATION_DEVTOOLS" was not declared in anonymous function " 2455#"
+        REACT_NAVIGATION_DEVTOOLS.set(refContainer.current, {
+        ^~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:86384:9: warning: the variable "cancelAnimationFrame" was not declared in anonymous function " 3240#"
+        cancelAnimationFrame(this.renderAheadUpdateCallbackId);
+        ^~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:117773:26: warning: the variable "ResizeObserver" was not declared in anonymous function " 3979#"
+      var observer = new ResizeObserver(function (entries) {
+                         ^~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:124470:10: warning: the variable "_WORKLET" was not declared in function "registerReanimatedError"
+    if (!_WORKLET) {
+         ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:124674:24: warning: Direct call to eval(), but lexical scope is not supported.
+          workletFun = eval('(' + initData.code + '\n)');
+                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:124697:110: warning: the variable "_toString" was not declared in function "valueUnpacker"
+...recognized by value unpacker: "${_toString(objectToUnpack)}".`);
+                                    ^~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:125276:132: warning: the variable "location" was not declared in function "registerSensor"
+...E(_dependencyMap[5]).isWeb)() && location.protocol !== 'https:' ? ' Make s...
+                                    ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:127654:18: warning: the variable "__reanimatedLoggerConfig" was not declared in function "createWorkletRuntime 3#"
+    var config = __reanimatedLoggerConfig;
+                 ^~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:138945:27: warning: the variable "HTMLElement" was not declared in function "findDescendantWithExitingAnimation"
+    if (!(node instanceof HTMLElement)) {
+                          ^~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:138972:24: warning: the variable "MutationObserver" was not declared in function "addHTMLMutationObserver"
+    var observer = new MutationObserver(function (mutationsList) {
+                       ^~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:141167:41: warning: the variable "getComputedStyle" was not declared in function "fixElementPosition"
+...entBorderTopValue = parseInt(getComputedStyle(parent).borderTopWidth);
+                                ^~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:141503:26: warning: the variable "structuredClone" was not declared in function "createAnimationWithInitialValues"
+    var animationStyle = structuredClone(_$$_REQUIRE(_dependencyMap[6]).Anima...
+                         ^~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:145231:24: warning: the variable "_getAnimationTimestamp" was not declared in function "computeEasingProgress"
+    var elapsedTime = (_getAnimationTimestamp() - startingTimestamp) / 1000;
+                       ^~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:145595:5: warning: the variable "jest" was not declared in function "beforeTest"
+    jest.useFakeTimers();
+    ^~~~
+
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:processReleaseGoogleServices
+> Task :react-native-async-storage_async-storage:generateReleaseResValues
+> Task :react-native-async-storage_async-storage:generateReleaseResources
+> Task :react-native-async-storage_async-storage:packageReleaseResources
+> Task :react-native-date-picker:generateReleaseResValues
+> Task :react-native-date-picker:generateReleaseResources
+> Task :react-native-date-picker:packageReleaseResources
+> Task :react-native-firebase_app:generateReleaseResValues
+> Task :react-native-firebase_app:generateReleaseResources
+> Task :react-native-firebase_app:packageReleaseResources
+> Task :react-native-firebase_auth:generateReleaseResValues
+> Task :react-native-firebase_auth:generateReleaseResources
+> Task :react-native-firebase_auth:packageReleaseResources
+> Task :react-native-firebase_firestore:generateReleaseResValues
+> Task :react-native-firebase_firestore:generateReleaseResources
+> Task :react-native-firebase_firestore:packageReleaseResources
+> Task :react-native-firebase_storage:generateReleaseResValues
+> Task :react-native-firebase_storage:generateReleaseResources
+> Task :react-native-firebase_storage:packageReleaseResources
+> Task :react-native-gesture-handler:generateReleaseResValues
+> Task :react-native-gesture-handler:generateReleaseResources
+> Task :react-native-gesture-handler:packageReleaseResources
+> Task :react-native-image-picker:generateReleaseResValues
+> Task :react-native-image-picker:generateReleaseResources
+> Task :react-native-image-picker:packageReleaseResources
+> Task :react-native-picker_picker:generateReleaseResValues
+> Task :react-native-picker_picker:generateReleaseResources
+> Task :react-native-picker_picker:packageReleaseResources
+> Task :react-native-reanimated:generateReleaseResValues
+> Task :react-native-reanimated:generateReleaseResources
+> Task :react-native-reanimated:packageReleaseResources
+> Task :react-native-safe-area-context:generateReleaseResValues
+> Task :react-native-safe-area-context:generateReleaseResources
+> Task :react-native-safe-area-context:packageReleaseResources
+> Task :react-native-screens:generateReleaseResValues
+> Task :react-native-screens:generateReleaseResources
+> Task :react-native-screens:packageReleaseResources
+> Task :react-native-vector-icons:generateReleaseResValues
+> Task :react-native-vector-icons:generateReleaseResources
+> Task :react-native-vector-icons:packageReleaseResources
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :react-native-async-storage_async-storage:extractDeepLinksRelease
+> Task :react-native-date-picker:extractDeepLinksRelease
+> Task :react-native-firebase_app:extractDeepLinksRelease
+> Task :react-native-firebase_auth:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :react-native-firebase_firestore:extractDeepLinksRelease
+
+> Task :react-native-firebase_auth:processReleaseManifest
+package="io.invertase.firebase.auth" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\auth\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.invertase.firebase.auth" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\auth\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-date-picker:processReleaseManifest
+package="com.henninghall.date_picker" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-date-picker\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.henninghall.date_picker" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-date-picker\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-firebase_app:processReleaseManifest
+package="io.invertase.firebase" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\app\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.invertase.firebase" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\app\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-async-storage_async-storage:processReleaseManifest
+package="com.reactnativecommunity.asyncstorage" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-async-storage\async-storage\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativecommunity.asyncstorage" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-async-storage\async-storage\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-firebase_storage:extractDeepLinksRelease
+
+> Task :react-native-firebase_firestore:processReleaseManifest
+package="io.invertase.firebase.firestore" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\firestore\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.invertase.firebase.firestore" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\firestore\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-gesture-handler:extractDeepLinksRelease
+
+> Task :react-native-firebase_storage:processReleaseManifest
+package="io.invertase.firebase.storage" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\storage\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.invertase.firebase.storage" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\storage\android\src\main\AndroidManifest.xml.
+
+> Task :app:mergeReleaseResources
+> Task :react-native-image-picker:extractDeepLinksRelease
+> Task :react-native-gesture-handler:processReleaseManifest
+> Task :react-native-picker_picker:extractDeepLinksRelease
+
+> Task :react-native-image-picker:processReleaseManifest
+package="com.imagepicker" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-image-picker\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.imagepicker" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-image-picker\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-reanimated:extractDeepLinksRelease
+
+> Task :react-native-picker_picker:processReleaseManifest
+package="com.reactnativecommunity.picker" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-picker\picker\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativecommunity.picker" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-picker\picker\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-safe-area-context:extractDeepLinksRelease
+> Task :react-native-reanimated:processReleaseManifest
+> Task :react-native-screens:extractDeepLinksRelease
+
+> Task :react-native-safe-area-context:processReleaseManifest
+package="com.th3rdwave.safeareacontext" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.th3rdwave.safeareacontext" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-vector-icons:extractDeepLinksRelease
+> Task :react-native-screens:processReleaseManifest
+
+> Task :react-native-vector-icons:processReleaseManifest
+package="com.oblador.vectoricons" found in source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-vector-icons\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.oblador.vectoricons" from the source AndroidManifest.xml: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-vector-icons\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-async-storage_async-storage:compileReleaseLibraryResources
+> Task :react-native-async-storage_async-storage:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:processReleaseManifestForPackage
+> Task :react-native-date-picker:compileReleaseLibraryResources
+> Task :react-native-firebase_app:compileReleaseLibraryResources
+> Task :react-native-firebase_app:parseReleaseLocalResources
+> Task :react-native-date-picker:parseReleaseLocalResources
+> Task :react-native-firebase_auth:compileReleaseLibraryResources
+> Task :react-native-async-storage_async-storage:generateReleaseRFile
+> Task :react-native-firebase_app:generateReleaseRFile
+> Task :react-native-firebase_auth:parseReleaseLocalResources
+> Task :react-native-firebase_firestore:compileReleaseLibraryResources
+> Task :react-native-firebase_firestore:parseReleaseLocalResources
+> Task :react-native-date-picker:generateReleaseRFile
+> Task :react-native-firebase_auth:generateReleaseRFile
+> Task :react-native-firebase_firestore:generateReleaseRFile
+> Task :react-native-firebase_storage:compileReleaseLibraryResources
+> Task :react-native-firebase_storage:parseReleaseLocalResources
+> Task :react-native-gesture-handler:compileReleaseLibraryResources
+> Task :react-native-gesture-handler:parseReleaseLocalResources
+> Task :react-native-firebase_storage:generateReleaseRFile
+> Task :react-native-gesture-handler:generateReleaseRFile
+> Task :react-native-image-picker:compileReleaseLibraryResources
+> Task :react-native-image-picker:parseReleaseLocalResources
+> Task :react-native-image-picker:generateReleaseRFile
+> Task :react-native-picker_picker:compileReleaseLibraryResources
+> Task :react-native-reanimated:compileReleaseLibraryResources
+> Task :react-native-safe-area-context:compileReleaseLibraryResources
+> Task :react-native-reanimated:parseReleaseLocalResources
+> Task :react-native-picker_picker:parseReleaseLocalResources
+> Task :react-native-safe-area-context:parseReleaseLocalResources
+> Task :react-native-reanimated:generateReleaseRFile
+> Task :react-native-picker_picker:generateReleaseRFile
+> Task :react-native-safe-area-context:generateReleaseRFile
+> Task :react-native-screens:parseReleaseLocalResources
+> Task :react-native-vector-icons:compileReleaseLibraryResources
+> Task :react-native-screens:generateReleaseRFile
+> Task :react-native-vector-icons:parseReleaseLocalResources
+> Task :react-native-async-storage_async-storage:generateReleaseBuildConfig
+> Task :react-native-async-storage_async-storage:javaPreCompileRelease
+> Task :react-native-screens:compileReleaseLibraryResources
+> Task :react-native-vector-icons:generateReleaseRFile
+> Task :react-native-date-picker:generateReleaseBuildConfig
+
+> Task :react-native-async-storage_async-storage:compileReleaseJavaWithJavac
+C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-async-storage\async-storage\android\src\main\java\com\reactnativecommunity\asyncstorage\AsyncStorageModule.java:84: warning: [removal] onCatalystInstanceDestroy() in NativeModule has been deprecated and marked for removal
+  public void onCatalystInstanceDestroy() {
+              ^
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-async-storage\async-storage\android\src\javaPackage\java\com\reactnativecommunity\asyncstorage\AsyncStoragePackage.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+1 warning
+
+> Task :react-native-date-picker:javaPreCompileRelease
+> Task :react-native-firebase_app:generateReleaseBuildConfig
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarRelease
+> Task :app:processReleaseResources
+
+> Task :react-native-date-picker:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-date-picker\android\src\main\java\com\henninghall\date_picker\DerivedData.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-firebase_app:javaPreCompileRelease
+> Task :react-native-firebase_auth:generateReleaseBuildConfig
+> Task :react-native-date-picker:bundleLibCompileToJarRelease
+
+> Task :react-native-firebase_app:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :react-native-firebase_auth:javaPreCompileRelease
+> Task :react-native-firebase_firestore:generateReleaseBuildConfig
+> Task :react-native-firebase_firestore:javaPreCompileRelease
+> Task :react-native-firebase_app:bundleLibCompileToJarRelease
+> Task :react-native-firebase_storage:generateReleaseBuildConfig
+
+> Task :react-native-firebase_auth:compileReleaseJavaWithJavac
+Note: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\auth\android\src\main\java\io\invertase\firebase\auth\ReactNativeFirebaseAuthModule.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\@react-native-firebase\auth\android\src\main\java\io\invertase\firebase\auth\ReactNativeFirebaseAuthModule.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-firebase_auth:bundleLibCompileToJarRelease
+
+> Task :react-native-firebase_firestore:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-firebase_storage:javaPreCompileRelease
+> Task :react-native-gesture-handler:generateReleaseBuildConfig
+> Task :react-native-firebase_firestore:bundleLibCompileToJarRelease
+> Task :react-native-firebase_storage:compileReleaseJavaWithJavac
+> Task :react-native-reanimated:generateReleaseBuildConfig
+> Task :react-native-firebase_storage:bundleLibCompileToJarRelease
+> Task :react-native-reanimated:packageNdkLibs NO-SOURCE
+> Task :react-native-reanimated:javaPreCompileRelease
+> Task :react-native-gesture-handler:javaPreCompileRelease
+
+> Task :react-native-reanimated:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-image-picker:generateReleaseBuildConfig
+> Task :react-native-image-picker:javaPreCompileRelease
+> Task :react-native-picker_picker:generateReleaseBuildConfig
+> Task :react-native-reanimated:bundleLibCompileToJarRelease
+
+> Task :react-native-image-picker:compileReleaseJavaWithJavac
+Note: C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\node_modules\react-native-image-picker\android\src\main\java\com\imagepicker\ImagePickerPackage.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-picker_picker:javaPreCompileRelease
+> Task :react-native-safe-area-context:generateReleaseBuildConfig
+> Task :react-native-image-picker:bundleLibCompileToJarRelease
+
+> Task :react-native-picker_picker:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :react-native-picker_picker:bundleLibCompileToJarRelease
+> Task :react-native-screens:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:javaPreCompileRelease
+> Task :react-native-screens:generateReleaseBuildConfig
+> Task :react-native-screens:javaPreCompileRelease
+> Task :react-native-vector-icons:generateReleaseBuildConfig
+> Task :react-native-vector-icons:javaPreCompileRelease
+> Task :app:javaPreCompileRelease
+
+> Task :react-native-vector-icons:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:copyReactNativeVectorIconFonts UP-TO-DATE
+> Task :react-native-vector-icons:bundleLibCompileToJarRelease
+> Task :app:extractProguardFiles
+> Task :react-native-async-storage_async-storage:processReleaseJavaRes NO-SOURCE
+> Task :react-native-async-storage_async-storage:extractProguardFiles
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToJarRelease
+> Task :react-native-gesture-handler:compileReleaseKotlin
+> Task :react-native-safe-area-context:compileReleaseKotlin
+> Task :react-native-screens:compileReleaseKotlin
+> Task :react-native-async-storage_async-storage:generateReleaseLintModel
+> Task :react-native-async-storage_async-storage:createFullJarRelease
+> Task :react-native-async-storage_async-storage:prepareLintJarForPublish
+> Task :react-native-date-picker:processReleaseJavaRes NO-SOURCE
+> Task :react-native-date-picker:extractProguardFiles
+> Task :react-native-date-picker:generateReleaseLintModel
+> Task :react-native-date-picker:prepareLintJarForPublish
+> Task :react-native-firebase_app:processReleaseJavaRes NO-SOURCE
+> Task :react-native-firebase_app:extractProguardFiles
+> Task :react-native-date-picker:bundleLibRuntimeToJarRelease
+> Task :react-native-firebase_app:bundleLibRuntimeToJarRelease
+
+> Task :react-native-safe-area-context:compileReleaseKotlin
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:59:23 'val uiImplementation: UIImplementation!' is deprecated. Deprecated in Java.
+
+> Task :react-native-firebase_app:generateReleaseLintModel
+> Task :react-native-date-picker:createFullJarRelease
+> Task :react-native-firebase_app:createFullJarRelease
+> Task :react-native-firebase_app:prepareLintJarForPublish
+> Task :react-native-firebase_auth:processReleaseJavaRes NO-SOURCE
+> Task :react-native-firebase_auth:bundleLibRuntimeToJarRelease
+> Task :react-native-firebase_auth:extractProguardFiles
+> Task :react-native-firebase_auth:createFullJarRelease
+> Task :react-native-firebase_auth:generateReleaseLintModel
+> Task :react-native-safe-area-context:compileReleaseJavaWithJavac
+> Task :react-native-firebase_auth:prepareLintJarForPublish
+> Task :react-native-firebase_firestore:processReleaseJavaRes NO-SOURCE
+> Task :react-native-firebase_firestore:extractProguardFiles
+> Task :react-native-firebase_firestore:bundleLibRuntimeToJarRelease
+> Task :react-native-safe-area-context:bundleLibCompileToJarRelease
+> Task :react-native-firebase_firestore:generateReleaseLintModel
+> Task :react-native-gesture-handler:compileReleaseJavaWithJavac
+> Task :react-native-firebase_firestore:createFullJarRelease
+> Task :react-native-firebase_firestore:prepareLintJarForPublish
+> Task :react-native-firebase_storage:processReleaseJavaRes NO-SOURCE
+> Task :react-native-firebase_storage:bundleLibRuntimeToJarRelease
+> Task :react-native-firebase_storage:extractProguardFiles
+> Task :react-native-firebase_storage:createFullJarRelease
+> Task :react-native-gesture-handler:bundleLibCompileToJarRelease
+> Task :react-native-firebase_storage:generateReleaseLintModel
+> Task :react-native-firebase_storage:prepareLintJarForPublish
+> Task :react-native-gesture-handler:bundleLibRuntimeToJarRelease
+> Task :react-native-gesture-handler:processReleaseJavaRes
+> Task :react-native-gesture-handler:extractProguardFiles
+> Task :react-native-reanimated:processReleaseJavaRes NO-SOURCE
+> Task :react-native-reanimated:extractProguardFiles
+> Task :react-native-reanimated:bundleLibRuntimeToJarRelease
+
+> Task :react-native-screens:compileReleaseKotlin
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt:41:33 'class FrameCallback : Choreographer.FrameCallback' is deprecated. Use Choreographer.FrameCallback instead.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt:42:18 'class FrameCallback : Choreographer.FrameCallback' is deprecated. Use Choreographer.FrameCallback instead.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:66:17 'constructor(name: String, className: String, canOverrideExistingModule: Boolean, needsEagerInit: Boolean, hasConstants: Boolean, isCxxModule: Boolean, isTurboModule: Boolean): ReactModuleInfo' is deprecated. This constructor is deprecated and will be removed in the future. Use ReactModuleInfo(String, String, boolean, boolean, boolean, boolean)].
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:48:77 Unchecked cast of '(androidx.coordinatorlayout.widget.CoordinatorLayout.Behavior<android.view.View!>?..androidx.coordinatorlayout.widget.CoordinatorLayout.Behavior<*>?)' to 'com.google.android.material.bottomsheet.BottomSheetBehavior<com.swmansion.rnscreens.Screen>'.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt:33:33 'class FrameCallback : Choreographer.FrameCallback' is deprecated. Use Choreographer.FrameCallback instead.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt:34:18 'class FrameCallback : Choreographer.FrameCallback' is deprecated. Use Choreographer.FrameCallback instead.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:216:31 'var targetElevation: Float' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:219:13 'fun setHasOptionsMenu(p0: Boolean): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:379:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Please add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:386:22 'fun onPrepareOptionsMenu(p0: Menu): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:389:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Please add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:394:22 'fun onCreateOptionsMenu(p0: Menu, p1: MenuInflater): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigViewManager.kt:7:8 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigViewManager.kt:210:9 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigViewManager.kt:212:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigViewManager.kt:214:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:7:8 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:382:48 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:383:49 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:384:45 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:385:52 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:386:48 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:387:51 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:388:56 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:389:57 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:390:51 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:55:42 'fun replaceSystemWindowInsets(p0: Int, p1: Int, p2: Int, p3: Int): WindowInsetsCompat' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:56:39 'val systemWindowInsetLeft: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:58:39 'val systemWindowInsetRight: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:59:39 'val systemWindowInsetBottom: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:98:53 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:109:48 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:112:32 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:208:72 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:214:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:5:8 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:142:9 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:144:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:146:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:148:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:150:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:152:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarManager.kt:154:13 'class MapBuilder : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:7:8 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:25:13 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+
+> Task :react-native-reanimated:generateReleaseLintModel
+> Task :react-native-screens:compileReleaseJavaWithJavac
+> Task :react-native-gesture-handler:createFullJarRelease
+> Task :react-native-reanimated:createFullJarRelease
+> Task :react-native-reanimated:prepareLintJarForPublish
+> Task :react-native-gesture-handler:prepareLintJarForPublish
+> Task :react-native-gesture-handler:generateReleaseLintModel
+> Task :react-native-image-picker:processReleaseJavaRes NO-SOURCE
+> Task :react-native-image-picker:bundleLibRuntimeToJarRelease
+> Task :react-native-image-picker:extractProguardFiles
+> Task :react-native-image-picker:createFullJarRelease
+> Task :react-native-image-picker:generateReleaseLintModel
+> Task :react-native-image-picker:prepareLintJarForPublish
+> Task :react-native-picker_picker:processReleaseJavaRes NO-SOURCE
+> Task :react-native-screens:bundleLibCompileToJarRelease
+> Task :react-native-picker_picker:extractProguardFiles
+> Task :react-native-picker_picker:bundleLibRuntimeToJarRelease
+> Task :react-native-picker_picker:createFullJarRelease
+> Task :react-native-picker_picker:generateReleaseLintModel
+> Task :react-native-picker_picker:prepareLintJarForPublish
+> Task :react-native-safe-area-context:processReleaseJavaRes
+> Task :react-native-safe-area-context:extractProguardFiles
+> Task :react-native-safe-area-context:generateReleaseLintModel
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarRelease
+> Task :react-native-safe-area-context:prepareLintJarForPublish
+> Task :react-native-safe-area-context:createFullJarRelease
+> Task :react-native-screens:processReleaseJavaRes
+> Task :react-native-screens:extractProguardFiles
+> Task :react-native-screens:bundleLibRuntimeToJarRelease
+> Task :react-native-screens:generateReleaseLintModel
+> Task :react-native-screens:createFullJarRelease
+> Task :react-native-screens:prepareLintJarForPublish
+> Task :react-native-vector-icons:processReleaseJavaRes NO-SOURCE
+> Task :react-native-vector-icons:bundleLibRuntimeToJarRelease
+> Task :react-native-vector-icons:extractProguardFiles
+> Task :react-native-vector-icons:createFullJarRelease
+> Task :react-native-vector-icons:generateReleaseLintModel
+> Task :react-native-vector-icons:prepareLintJarForPublish
+> Task :app:compileReleaseKotlin
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:generateReleaseLintVitalReportModel
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-reanimated:generateJsonModelRelease
+> Task :react-native-reanimated:prefabReleaseConfigurePackage
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[arm64-v8a][reanimated,worklets]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[armeabi-v7a][reanimated,worklets]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86][reanimated,worklets]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86_64][reanimated,worklets]
+> Task :react-native-reanimated:externalNativeBuildRelease
+> Task :react-native-reanimated:prefabReleasePackage
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-gesture-handler:mergeReleaseJniLibFolders
+> Task :react-native-gesture-handler:extractDeepLinksForAarRelease
+> Task :react-native-gesture-handler:mergeReleaseNativeLibs
+> Task :react-native-gesture-handler:extractReleaseAnnotations
+> Task :react-native-gesture-handler:mergeReleaseGeneratedProguardFiles
+> Task :react-native-gesture-handler:mergeReleaseConsumerProguardFiles
+> Task :react-native-gesture-handler:mergeReleaseShaders
+> Task :react-native-gesture-handler:compileReleaseShaders NO-SOURCE
+> Task :react-native-gesture-handler:generateReleaseAssets UP-TO-DATE
+> Task :react-native-gesture-handler:packageReleaseAssets
+> Task :react-native-gesture-handler:prepareReleaseArtProfile
+> Task :react-native-safe-area-context:mergeReleaseJniLibFolders
+> Task :react-native-safe-area-context:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-safe-area-context:extractDeepLinksForAarRelease
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-gesture-handler:stripReleaseDebugSymbols
+> Task :react-native-safe-area-context:extractReleaseAnnotations
+> Task :react-native-safe-area-context:mergeReleaseGeneratedProguardFiles
+> Task :react-native-safe-area-context:mergeReleaseConsumerProguardFiles
+> Task :react-native-safe-area-context:mergeReleaseShaders
+> Task :react-native-safe-area-context:compileReleaseShaders NO-SOURCE
+> Task :react-native-safe-area-context:generateReleaseAssets UP-TO-DATE
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-gesture-handler:mergeReleaseJavaResource
+> Task :react-native-safe-area-context:packageReleaseAssets
+> Task :react-native-gesture-handler:syncReleaseLibJars
+> Task :react-native-gesture-handler:bundleReleaseLocalLintAar
+> Task :react-native-safe-area-context:prepareReleaseArtProfile
+> Task :react-native-safe-area-context:mergeReleaseJavaResource
+> Task :react-native-screens:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-safe-area-context:syncReleaseLibJars
+> Task :react-native-safe-area-context:bundleReleaseLocalLintAar
+> Task :react-native-screens:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-screens:mergeReleaseJniLibFolders
+> Task :react-native-screens:extractDeepLinksForAarRelease
+> Task :react-native-screens:mergeReleaseNativeLibs
+> Task :react-native-screens:extractReleaseAnnotations
+> Task :react-native-screens:mergeReleaseGeneratedProguardFiles
+> Task :react-native-screens:mergeReleaseConsumerProguardFiles
+> Task :react-native-screens:mergeReleaseShaders
+> Task :react-native-screens:compileReleaseShaders NO-SOURCE
+> Task :react-native-screens:generateReleaseAssets UP-TO-DATE
+> Task :react-native-screens:packageReleaseAssets
+> Task :react-native-screens:prepareReleaseArtProfile
+> Task :react-native-async-storage_async-storage:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-async-storage_async-storage:extractDeepLinksForAarRelease
+> Task :react-native-screens:mergeReleaseJavaResource
+> Task :react-native-screens:stripReleaseDebugSymbols
+> Task :react-native-async-storage_async-storage:extractReleaseAnnotations
+> Task :react-native-screens:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-screens:syncReleaseLibJars
+> Task :react-native-screens:bundleReleaseLocalLintAar
+> Task :react-native-async-storage_async-storage:mergeReleaseGeneratedProguardFiles
+> Task :react-native-async-storage_async-storage:mergeReleaseConsumerProguardFiles
+> Task :react-native-async-storage_async-storage:mergeReleaseShaders
+> Task :react-native-async-storage_async-storage:compileReleaseShaders NO-SOURCE
+> Task :react-native-async-storage_async-storage:generateReleaseAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:packageReleaseAssets
+> Task :react-native-async-storage_async-storage:prepareReleaseArtProfile
+> Task :react-native-firebase_auth:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeReleaseJavaResource
+> Task :react-native-firebase_auth:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:syncReleaseLibJars
+> Task :react-native-async-storage_async-storage:bundleReleaseLocalLintAar
+> Task :react-native-firebase_auth:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-firebase_auth:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-firebase_auth:extractDeepLinksForAarRelease
+> Task :react-native-firebase_auth:extractReleaseAnnotations
+> Task :react-native-firebase_auth:mergeReleaseGeneratedProguardFiles
+> Task :react-native-firebase_auth:mergeReleaseConsumerProguardFiles
+> Task :react-native-firebase_auth:mergeReleaseShaders
+> Task :react-native-firebase_auth:compileReleaseShaders NO-SOURCE
+> Task :react-native-firebase_auth:generateReleaseAssets UP-TO-DATE
+> Task :react-native-firebase_auth:packageReleaseAssets
+> Task :react-native-firebase_auth:prepareReleaseArtProfile
+> Task :react-native-firebase_auth:mergeReleaseJavaResource
+> Task :react-native-firebase_firestore:mergeReleaseJniLibFolders
+> Task :react-native-firebase_auth:syncReleaseLibJars
+> Task :react-native-firebase_auth:bundleReleaseLocalLintAar
+> Task :react-native-firebase_firestore:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-firebase_firestore:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-firebase_firestore:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-firebase_firestore:extractDeepLinksForAarRelease
+> Task :react-native-firebase_firestore:extractReleaseAnnotations
+> Task :react-native-firebase_firestore:mergeReleaseGeneratedProguardFiles
+> Task :react-native-firebase_firestore:mergeReleaseConsumerProguardFiles
+> Task :react-native-firebase_firestore:mergeReleaseShaders
+> Task :react-native-firebase_firestore:compileReleaseShaders NO-SOURCE
+> Task :react-native-firebase_firestore:generateReleaseAssets UP-TO-DATE
+> Task :react-native-firebase_firestore:packageReleaseAssets
+> Task :react-native-firebase_firestore:prepareReleaseArtProfile
+> Task :react-native-firebase_firestore:mergeReleaseJavaResource
+> Task :react-native-firebase_storage:mergeReleaseJniLibFolders
+> Task :react-native-firebase_firestore:syncReleaseLibJars
+> Task :react-native-firebase_firestore:bundleReleaseLocalLintAar
+> Task :react-native-firebase_storage:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-firebase_storage:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-firebase_storage:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-firebase_storage:extractDeepLinksForAarRelease
+> Task :react-native-firebase_storage:extractReleaseAnnotations
+> Task :react-native-firebase_storage:mergeReleaseGeneratedProguardFiles
+> Task :react-native-firebase_storage:mergeReleaseConsumerProguardFiles
+> Task :react-native-firebase_storage:mergeReleaseShaders
+> Task :react-native-firebase_storage:compileReleaseShaders NO-SOURCE
+> Task :react-native-firebase_storage:generateReleaseAssets UP-TO-DATE
+> Task :react-native-firebase_storage:packageReleaseAssets
+> Task :react-native-firebase_storage:prepareReleaseArtProfile
+> Task :react-native-firebase_storage:mergeReleaseJavaResource
+> Task :react-native-firebase_app:mergeReleaseJniLibFolders
+> Task :react-native-firebase_storage:syncReleaseLibJars
+> Task :react-native-firebase_storage:bundleReleaseLocalLintAar
+> Task :react-native-firebase_app:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-firebase_app:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-firebase_app:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-firebase_app:extractDeepLinksForAarRelease
+> Task :react-native-firebase_app:extractReleaseAnnotations
+> Task :react-native-firebase_app:mergeReleaseGeneratedProguardFiles
+> Task :react-native-firebase_app:mergeReleaseConsumerProguardFiles
+> Task :react-native-firebase_app:mergeReleaseShaders
+> Task :react-native-firebase_app:compileReleaseShaders NO-SOURCE
+> Task :react-native-firebase_app:generateReleaseAssets UP-TO-DATE
+> Task :react-native-firebase_app:packageReleaseAssets
+> Task :react-native-firebase_app:prepareReleaseArtProfile
+> Task :react-native-firebase_app:mergeReleaseJavaResource
+> Task :react-native-picker_picker:mergeReleaseJniLibFolders
+> Task :react-native-firebase_app:syncReleaseLibJars
+> Task :react-native-firebase_app:bundleReleaseLocalLintAar
+> Task :react-native-picker_picker:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-picker_picker:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-picker_picker:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-picker_picker:extractDeepLinksForAarRelease
+> Task :react-native-picker_picker:extractReleaseAnnotations
+> Task :react-native-picker_picker:mergeReleaseGeneratedProguardFiles
+> Task :react-native-picker_picker:mergeReleaseConsumerProguardFiles
+> Task :react-native-picker_picker:mergeReleaseShaders
+> Task :react-native-picker_picker:compileReleaseShaders NO-SOURCE
+> Task :react-native-picker_picker:generateReleaseAssets UP-TO-DATE
+> Task :react-native-picker_picker:packageReleaseAssets
+> Task :react-native-picker_picker:prepareReleaseArtProfile
+> Task :react-native-date-picker:mergeReleaseJniLibFolders
+> Task :react-native-date-picker:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-date-picker:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-picker_picker:mergeReleaseJavaResource
+> Task :react-native-date-picker:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-picker_picker:syncReleaseLibJars
+> Task :react-native-picker_picker:bundleReleaseLocalLintAar
+> Task :react-native-date-picker:extractDeepLinksForAarRelease
+> Task :react-native-date-picker:mergeReleaseGeneratedProguardFiles
+> Task :react-native-date-picker:mergeReleaseConsumerProguardFiles
+> Task :react-native-date-picker:mergeReleaseShaders
+> Task :react-native-date-picker:compileReleaseShaders NO-SOURCE
+> Task :react-native-date-picker:generateReleaseAssets UP-TO-DATE
+> Task :react-native-date-picker:packageReleaseAssets
+> Task :react-native-date-picker:prepareReleaseArtProfile
+> Task :react-native-date-picker:mergeReleaseJavaResource
+> Task :react-native-image-picker:mergeReleaseJniLibFolders
+> Task :react-native-image-picker:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-image-picker:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-image-picker:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-image-picker:extractDeepLinksForAarRelease
+> Task :react-native-image-picker:extractReleaseAnnotations
+> Task :react-native-image-picker:mergeReleaseGeneratedProguardFiles
+> Task :react-native-image-picker:mergeReleaseConsumerProguardFiles
+> Task :react-native-image-picker:mergeReleaseShaders
+> Task :react-native-image-picker:compileReleaseShaders NO-SOURCE
+> Task :react-native-image-picker:generateReleaseAssets UP-TO-DATE
+> Task :react-native-image-picker:packageReleaseAssets
+> Task :react-native-image-picker:prepareReleaseArtProfile
+> Task :react-native-image-picker:mergeReleaseJavaResource
+> Task :react-native-reanimated:mergeReleaseJniLibFolders
+> Task :react-native-image-picker:syncReleaseLibJars
+> Task :react-native-image-picker:bundleReleaseLocalLintAar
+> Task :react-native-reanimated:extractDeepLinksForAarRelease
+> Task :react-native-reanimated:extractReleaseAnnotations
+> Task :react-native-reanimated:mergeReleaseGeneratedProguardFiles
+> Task :react-native-reanimated:mergeReleaseConsumerProguardFiles
+> Task :react-native-reanimated:mergeReleaseShaders
+> Task :react-native-reanimated:compileReleaseShaders NO-SOURCE
+> Task :react-native-reanimated:generateReleaseAssets UP-TO-DATE
+> Task :react-native-reanimated:packageReleaseAssets
+> Task :react-native-reanimated:prepareReleaseArtProfile
+> Task :react-native-vector-icons:mergeReleaseJniLibFolders
+> Task :react-native-vector-icons:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-reanimated:mergeReleaseJavaResource
+> Task :react-native-vector-icons:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-reanimated:syncReleaseLibJars
+> Task :react-native-vector-icons:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-vector-icons:extractDeepLinksForAarRelease
+> Task :react-native-vector-icons:extractReleaseAnnotations
+> Task :react-native-vector-icons:mergeReleaseGeneratedProguardFiles
+> Task :react-native-vector-icons:mergeReleaseConsumerProguardFiles
+> Task :react-native-vector-icons:mergeReleaseShaders
+> Task :react-native-vector-icons:compileReleaseShaders NO-SOURCE
+> Task :react-native-vector-icons:generateReleaseAssets UP-TO-DATE
+> Task :react-native-vector-icons:packageReleaseAssets
+> Task :react-native-vector-icons:prepareReleaseArtProfile
+> Task :react-native-vector-icons:mergeReleaseJavaResource
+> Task :react-native-reanimated:mergeReleaseNativeLibs
+> Task :react-native-vector-icons:syncReleaseLibJars
+> Task :react-native-vector-icons:bundleReleaseLocalLintAar
+> Task :react-native-async-storage_async-storage:writeReleaseLintModelMetadata
+> Task :react-native-date-picker:writeReleaseLintModelMetadata
+> Task :react-native-reanimated:stripReleaseDebugSymbols
+> Task :react-native-firebase_app:writeReleaseLintModelMetadata
+> Task :react-native-firebase_auth:writeReleaseLintModelMetadata
+> Task :react-native-firebase_firestore:writeReleaseLintModelMetadata
+> Task :react-native-firebase_storage:writeReleaseLintModelMetadata
+> Task :react-native-reanimated:writeReleaseLintModelMetadata
+> Task :react-native-gesture-handler:writeReleaseLintModelMetadata
+> Task :react-native-image-picker:writeReleaseLintModelMetadata
+> Task :react-native-reanimated:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-picker_picker:writeReleaseLintModelMetadata
+> Task :react-native-reanimated:bundleReleaseLocalLintAar
+> Task :react-native-safe-area-context:writeReleaseLintModelMetadata
+> Task :react-native-screens:writeReleaseLintModelMetadata
+> Task :react-native-vector-icons:writeReleaseLintModelMetadata
+> Task :react-native-async-storage_async-storage:generateReleaseLintVitalModel
+> Task :react-native-date-picker:generateReleaseLintVitalModel
+> Task :react-native-firebase_app:generateReleaseLintVitalModel
+> Task :react-native-firebase_auth:generateReleaseLintVitalModel
+> Task :react-native-firebase_firestore:generateReleaseLintVitalModel
+> Task :react-native-firebase_storage:generateReleaseLintVitalModel
+> Task :react-native-gesture-handler:generateReleaseLintVitalModel
+> Task :react-native-date-picker:extractReleaseAnnotations
+> Task :react-native-image-picker:generateReleaseLintVitalModel
+> Task :react-native-date-picker:syncReleaseLibJars
+> Task :react-native-date-picker:bundleReleaseLocalLintAar
+> Task :react-native-picker_picker:generateReleaseLintVitalModel
+> Task :react-native-reanimated:generateReleaseLintVitalModel
+> Task :react-native-safe-area-context:generateReleaseLintVitalModel
+> Task :react-native-screens:generateReleaseLintVitalModel
+> Task :react-native-vector-icons:generateReleaseLintVitalModel
+> Task :react-native-firebase_app:lintVitalAnalyzeRelease
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+C/C++: CMake Warning in C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/android/app/.cxx/RelWithDebInfo/38243ff4/arm64-v8a/rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehandler_codegen.dir/./
+C/C++:   has 195 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+
+> Task :react-native-async-storage_async-storage:lintVitalAnalyzeRelease
+> Task :react-native-firebase_auth:lintVitalAnalyzeRelease
+> Task :react-native-date-picker:lintVitalAnalyzeRelease
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: ninja: Entering directory `C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\android\app\.cxx\RelWithDebInfo\38243ff4\arm64-v8a'
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:16:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    16 | void RNCAndroidDialogPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:18:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    18 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:20:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    20 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:25:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    25 | void RNCAndroidDialogPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:27:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    27 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:29:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    29 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:34:56: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    34 | void RNCAndroidDialogPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                        ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:36:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    36 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:38:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    38 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:43:62: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    43 | void RNCAndroidDropdownPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:45:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    45 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:47:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    47 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:52:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    52 | void RNCAndroidDropdownPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:54:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    54 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:56:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    56 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:61:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    61 | void RNCAndroidDropdownPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:63:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    63 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:65:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    65 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:70:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    70 | void RNCPickerEventEmitter::onChange(OnChange $event) const {
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:28: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:45: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                             ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:72:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    72 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:78: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |                                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:1: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       | ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:43: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       |                                           ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:75:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    75 |     return $payload;
+C/C++:       |            ^
+C/C++: 35 warnings generated.
+
+> Task :react-native-firebase_storage:lintVitalAnalyzeRelease
+> Task :react-native-firebase_firestore:lintVitalAnalyzeRelease
+
+> Task :app:configureCMakeRelWithDebInfo[armeabi-v7a]
+C/C++: CMake Warning in C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-date-picker/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/android/app/.cxx/RelWithDebInfo/38243ff4/armeabi-v7a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/./
+C/C++:   has 183 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/RNDatePickerSpecs/RNDatePickerSpecsJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+C/C++: CMake Warning in C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/android/app/.cxx/RelWithDebInfo/38243ff4/armeabi-v7a/rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehandler_codegen.dir/./
+C/C++:   has 197 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+C/C++: CMake Warning in C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-image-picker/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/android/app/.cxx/RelWithDebInfo/38243ff4/armeabi-v7a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/./
+C/C++:   has 183 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/RNImagePickerSpec/RNImagePickerSpecJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+C/C++: CMake Warning in C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-vector-icons/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/android/app/.cxx/RelWithDebInfo/38243ff4/armeabi-v7a/RNVectorIconsSpec_autolinked_build/CMakeFiles/react_codegen_RNVectorIconsSpec.dir/./
+C/C++:   has 183 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/RNVectorIconsSpec/RNVectorIconsSpecJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+
+> Task :react-native-image-picker:lintVitalAnalyzeRelease
+> Task :react-native-picker_picker:lintVitalAnalyzeRelease
+> Task :react-native-gesture-handler:lintVitalAnalyzeRelease
+> Task :app:buildCMakeRelWithDebInfo[armeabi-v7a]
+C/C++: ninja: Entering directory `C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\android\app\.cxx\RelWithDebInfo\38243ff4\armeabi-v7a'
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:16:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    16 | void RNCAndroidDialogPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:18:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    18 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:20:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    20 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:25:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    25 | void RNCAndroidDialogPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:27:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    27 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:29:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    29 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:34:56: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    34 | void RNCAndroidDialogPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                        ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:36:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    36 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:38:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    38 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:43:62: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    43 | void RNCAndroidDropdownPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:45:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    45 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:47:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    47 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:52:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    52 | void RNCAndroidDropdownPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:54:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    54 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:56:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    56 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:61:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    61 | void RNCAndroidDropdownPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:63:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    63 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:65:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    65 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:70:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    70 | void RNCPickerEventEmitter::onChange(OnChange $event) const {
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:28: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:45: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                             ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:72:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    72 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:78: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |                                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:1: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       | ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:43: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       |                                           ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:75:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    75 |     return $payload;
+C/C++:       |            ^
+C/C++: 35 warnings generated.
+
+> Task :react-native-reanimated:lintVitalAnalyzeRelease
+> Task :react-native-safe-area-context:lintVitalAnalyzeRelease
+
+> Task :app:configureCMakeRelWithDebInfo[x86]
+C/C++: CMake Warning in C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/android/app/.cxx/RelWithDebInfo/38243ff4/x86/rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehandler_codegen.dir/./
+C/C++:   has 189 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+
+> Task :react-native-vector-icons:lintVitalAnalyzeRelease
+> Task :react-native-screens:lintVitalAnalyzeRelease
+> Task :app:buildCMakeRelWithDebInfo[x86]
+C/C++: ninja: Entering directory `C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\android\app\.cxx\RelWithDebInfo\38243ff4\x86'
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:16:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    16 | void RNCAndroidDialogPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:18:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    18 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:20:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    20 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:25:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    25 | void RNCAndroidDialogPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:27:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    27 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:29:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    29 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:34:56: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    34 | void RNCAndroidDialogPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                        ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:36:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    36 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:38:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    38 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:43:62: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    43 | void RNCAndroidDropdownPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:45:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    45 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:47:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    47 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:52:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    52 | void RNCAndroidDropdownPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:54:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    54 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:56:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    56 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:61:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    61 | void RNCAndroidDropdownPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:63:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    63 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:65:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    65 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:70:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    70 | void RNCPickerEventEmitter::onChange(OnChange $event) const {
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:28: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:45: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                             ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:72:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    72 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:78: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |                                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:1: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       | ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:43: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       |                                           ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:75:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    75 |     return $payload;
+C/C++:       |            ^
+C/C++: 35 warnings generated.
+
+> Task :app:lintVitalAnalyzeRelease
+
+> Task :app:configureCMakeRelWithDebInfo[x86_64]
+C/C++: CMake Warning in C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/android/app/.cxx/RelWithDebInfo/38243ff4/x86_64/rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehandler_codegen.dir/./
+C/C++:   has 192 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+
+> Task :app:lintVitalReportRelease
+> Task :app:buildCMakeRelWithDebInfo[x86_64]
+C/C++: ninja: Entering directory `C:\Users\jyjeo\Documents\JCarPlatform\JCarApp\android\app\.cxx\RelWithDebInfo\38243ff4\x86_64'
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:16:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    16 | void RNCAndroidDialogPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:17:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    17 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:18:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    18 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:19:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    19 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:20:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    20 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:25:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    25 | void RNCAndroidDialogPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:27:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    27 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:29:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    29 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:34:56: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    34 | void RNCAndroidDialogPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                        ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:36:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    36 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:38:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    38 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:43:62: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    43 | void RNCAndroidDropdownPickerEventEmitter::onSelect(OnSelect $event) const {
+C/C++:       |                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:31: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:44:48: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    44 |   dispatchEvent("topSelect", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                                ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:45:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    45 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:46:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    46 |     $payload.setProperty(runtime, "position", $event.position);
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:47:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    47 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:52:60: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    52 | void RNCAndroidDropdownPickerEventEmitter::onFocus(OnFocus $event) const {
+C/C++:       |                                                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:54:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    54 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:56:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    56 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:61:58: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    61 | void RNCAndroidDropdownPickerEventEmitter::onBlur(OnBlur $event) const {
+C/C++:       |                                                          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:63:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    63 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:65:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    65 |     return $payload;
+C/C++:       |            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:70:47: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    70 | void RNCPickerEventEmitter::onChange(OnChange $event) const {
+C/C++:       |                                               ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:28: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                            ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:71:45: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    71 |   dispatchEvent("change", [$event=std::move($event)](jsi::Runtime &runtime) {
+C/C++:       |                                             ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:72:10: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    72 |     auto $payload = jsi::Object(runtime);
+C/C++:       |          ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:5: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |     ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:73:78: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    73 |     $payload.setProperty(runtime, "newValue", jsi::valueFromDynamic(runtime, $event.newValue));
+C/C++:       |                                                                              ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:1: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       | ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:74:43: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    74 | $payload.setProperty(runtime, "newIndex", $event.newIndex);
+C/C++:       |                                           ^
+C/C++: C:/Users/jyjeo/Documents/JCarPlatform/JCarApp/node_modules/@react-native-picker/picker/android/build/generated/source/codegen/jni/react/renderer/components/rnpicker/EventEmitters.cpp:75:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:    75 |     return $payload;
+C/C++:       |            ^
+C/C++: 35 warnings generated.
+
+> Task :app:lintVitalRelease
+> Task :app:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectOnly
+> Task :react-native-date-picker:copyReleaseJniLibsProjectOnly
+> Task :react-native-firebase_app:copyReleaseJniLibsProjectOnly
+> Task :react-native-firebase_auth:copyReleaseJniLibsProjectOnly
+> Task :react-native-firebase_firestore:copyReleaseJniLibsProjectOnly
+> Task :react-native-firebase_storage:copyReleaseJniLibsProjectOnly
+> Task :react-native-image-picker:copyReleaseJniLibsProjectOnly
+> Task :react-native-picker_picker:copyReleaseJniLibsProjectOnly
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectOnly
+> Task :react-native-vector-icons:copyReleaseJniLibsProjectOnly
+> Task :react-native-screens:copyReleaseJniLibsProjectOnly
+> Task :react-native-firebase_auth:bundleLibRuntimeToDirRelease
+> Task :react-native-firebase_storage:bundleLibRuntimeToDirRelease
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToDirRelease
+> Task :react-native-firebase_firestore:bundleLibRuntimeToDirRelease
+> Task :react-native-reanimated:copyReleaseJniLibsProjectOnly
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirRelease
+> Task :react-native-gesture-handler:bundleLibRuntimeToDirRelease
+> Task :react-native-screens:bundleLibRuntimeToDirRelease
+> Task :react-native-image-picker:bundleLibRuntimeToDirRelease
+> Task :react-native-picker_picker:bundleLibRuntimeToDirRelease
+> Task :react-native-firebase_app:bundleLibRuntimeToDirRelease
+> Task :react-native-vector-icons:bundleLibRuntimeToDirRelease
+> Task :react-native-date-picker:bundleLibRuntimeToDirRelease
+> Task :react-native-reanimated:bundleLibRuntimeToDirRelease
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:dexBuilderRelease
+> Task :app:desugarReleaseFileDependencies
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeExtDexRelease
+> Task :app:mergeReleaseArtProfile
+> Task :app:stripReleaseDebugSymbols
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processReleaseJavaRes
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :react-native-async-storage_async-storage:bundleReleaseAar
+> Task :react-native-async-storage_async-storage:mapReleaseSourceSetPaths
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:compressReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeDexRelease
+> Task :react-native-async-storage_async-storage:mergeReleaseResources
+> Task :react-native-date-picker:bundleReleaseAar
+> Task :react-native-date-picker:mapReleaseSourceSetPaths
+> Task :app:compileReleaseArtProfile
+> Task :react-native-async-storage_async-storage:verifyReleaseResources
+> Task :react-native-date-picker:mergeReleaseResources
+> Task :react-native-async-storage_async-storage:assembleRelease
+> Task :react-native-firebase_app:bundleReleaseAar
+> Task :react-native-firebase_app:mapReleaseSourceSetPaths
+> Task :react-native-date-picker:verifyReleaseResources
+> Task :app:optimizeReleaseResources
+> Task :react-native-firebase_app:mergeReleaseResources
+> Task :react-native-date-picker:assembleRelease
+> Task :react-native-firebase_auth:bundleReleaseAar
+> Task :react-native-firebase_auth:mapReleaseSourceSetPaths
+> Task :react-native-firebase_app:verifyReleaseResources
+> Task :react-native-firebase_auth:mergeReleaseResources
+> Task :react-native-firebase_app:assembleRelease
+> Task :react-native-firebase_firestore:bundleReleaseAar
+> Task :react-native-firebase_firestore:mapReleaseSourceSetPaths
+> Task :react-native-firebase_auth:verifyReleaseResources
+> Task :react-native-firebase_firestore:mergeReleaseResources
+> Task :react-native-firebase_auth:assembleRelease
+> Task :react-native-firebase_storage:bundleReleaseAar
+> Task :react-native-firebase_storage:mapReleaseSourceSetPaths
+> Task :react-native-firebase_firestore:verifyReleaseResources
+> Task :react-native-firebase_storage:mergeReleaseResources
+> Task :react-native-firebase_firestore:assembleRelease
+> Task :react-native-gesture-handler:bundleReleaseAar
+> Task :react-native-gesture-handler:mapReleaseSourceSetPaths
+> Task :react-native-firebase_storage:verifyReleaseResources
+> Task :react-native-gesture-handler:mergeReleaseResources
+> Task :react-native-firebase_storage:assembleRelease
+> Task :react-native-image-picker:bundleReleaseAar
+> Task :react-native-image-picker:mapReleaseSourceSetPaths
+> Task :react-native-gesture-handler:verifyReleaseResources
+> Task :react-native-image-picker:mergeReleaseResources
+> Task :react-native-gesture-handler:assembleRelease
+> Task :react-native-picker_picker:bundleReleaseAar
+> Task :react-native-picker_picker:mapReleaseSourceSetPaths
+> Task :react-native-image-picker:verifyReleaseResources
+> Task :react-native-picker_picker:mergeReleaseResources
+> Task :react-native-image-picker:assembleRelease
+> Task :react-native-reanimated:bundleReleaseAar
+> Task :react-native-reanimated:mapReleaseSourceSetPaths
+> Task :react-native-picker_picker:verifyReleaseResources
+> Task :react-native-reanimated:mergeReleaseResources
+> Task :react-native-picker_picker:assembleRelease
+> Task :react-native-safe-area-context:bundleReleaseAar
+> Task :react-native-safe-area-context:mapReleaseSourceSetPaths
+> Task :react-native-reanimated:verifyReleaseResources
+> Task :react-native-safe-area-context:mergeReleaseResources
+> Task :react-native-reanimated:assembleRelease
+> Task :react-native-screens:bundleReleaseAar
+> Task :react-native-screens:mapReleaseSourceSetPaths
+> Task :react-native-safe-area-context:verifyReleaseResources
+> Task :react-native-screens:mergeReleaseResources
+> Task :react-native-safe-area-context:assembleRelease
+> Task :react-native-vector-icons:bundleReleaseAar
+> Task :react-native-vector-icons:mapReleaseSourceSetPaths
+> Task :react-native-vector-icons:mergeReleaseResources
+> Task :react-native-screens:verifyReleaseResources
+> Task :react-native-screens:assembleRelease
+> Task :react-native-vector-icons:verifyReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+> Task :react-native-vector-icons:assembleRelease
+
+BUILD SUCCESSFUL in 35m 17s
+640 actionable tasks: 607 executed, 33 up-to-date
