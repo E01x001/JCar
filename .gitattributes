@@ -1,0 +1,44 @@
+# 모든 텍스트 파일은 Git이 줄바꿈을 자동 변환하도록 설정 (LF로 통일)
+* text=auto
+
+# JS/TS/JSON 등은 항상 LF로 저장
+*.js     text eol=lf
+*.jsx    text eol=lf
+*.ts     text eol=lf
+*.tsx    text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+
+# Android/iOS 프로젝트 관련 텍스트 파일
+*.gradle text eol=lf
+*.xml    text eol=lf
+*.plist  text eol=lf
+*.pbxproj text eol=lf
+
+# 바이너리 파일은 diff 하지 않도록 설정
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.mp4 binary
+*.mp3 binary
+*.apk binary
+*.keystore binary
+*.jks binary
+
+# 패키지 락 파일은 merge 전략 지정 (내 것 우선)
+package-lock.json merge=ours
+yarn.lock merge=ours
+
+# Markdown 문서는 GitHub 통계에서 제외 (코드 비중만 보이게)
+*.md linguist-documentation
+
+# 기본 UTF-8 인코딩 지정
+*.js text eol=lf working-tree-encoding=UTF-8
+*.ts text eol=lf working-tree-encoding=UTF-8
