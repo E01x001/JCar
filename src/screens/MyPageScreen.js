@@ -17,25 +17,43 @@ const MyPageScreen = ({ navigation }) => {
     const unsubscribeVehicles = firestore()
       .collection('vehicles')
       .where('sellerId', '==', user.uid)
-      .onSnapshot(snapshot => {
-        const vehicleList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setVehicles(vehicleList);
-      });
+      .onSnapshot(
+        snapshot => {
+          if (snapshot) {
+            const vehicleList = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setVehicles(vehicleList);
+          } else {
+            console.error('vehicle snapshot is null');
+          }
+        },
+        error => {
+          console.error('vehicle snapshot error:', error);
+        }
+      );
 
-      const unsubscribeConsultations = firestore()
+    const unsubscribeConsultations = firestore()
       .collection('consultation_requests')
       .where('userId', '==', user.uid)
-      .orderBy('createdAt', 'desc') // ✅ 최신순 추가
-      .onSnapshot(snapshot => {
-        const consultationList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setConsultations(consultationList);
-      });
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        snapshot => {
+          if (snapshot) {
+            const consultationList = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setConsultations(consultationList);
+          } else {
+            console.error('consultation snapshot is null');
+          }
+        },
+        error => {
+          console.error('consultation snapshot error:', error);
+        }
+      );
 
     return () => {
       unsubscribeVehicles();
@@ -51,7 +69,7 @@ const MyPageScreen = ({ navigation }) => {
     let color = '#6c757d';
     let icon = 'hourglass-empty';
     let label = '대기중';
-  
+
     if (status === 'approved') {
       color = '#28a745';
       icon = 'check-circle';
@@ -61,7 +79,7 @@ const MyPageScreen = ({ navigation }) => {
       icon = 'cancel';
       label = '거절됨';
     }
-  
+
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
         <Icon name={icon} size={18} color={color} style={{ marginRight: 6 }} />
@@ -69,7 +87,6 @@ const MyPageScreen = ({ navigation }) => {
       </View>
     );
   };
-  
 
   const handleDeleteVehicle = async (vehicleId) => {
     try {
@@ -123,7 +140,7 @@ const MyPageScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>마이페이지</Text>
-      <Text style={styles.userInfo}>이메일: {user?.email}</Text>
+      <Text style={styles.userInfo}>이메일: {user?.email ?? '이메일 없음'}</Text>
 
       <Text style={styles.sectionTitle}>내 차량</Text>
       <FlatList
@@ -132,8 +149,8 @@ const MyPageScreen = ({ navigation }) => {
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.id)}>
             <View style={styles.vehicleItem}>
-              <Text style={styles.vehicleName}>모델: {item.model}</Text>
-              <Text>가격: {formatPrice(item.price)}</Text>
+              <Text style={styles.vehicleName}>모델: {item?.model ?? '모델 정보 없음'}</Text>
+              <Text>가격: {item?.price != null ? formatPrice(item.price) : '가격 정보 없음'}</Text>
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDeleteVehicle(item.id)}>
@@ -151,8 +168,8 @@ const MyPageScreen = ({ navigation }) => {
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
             <View style={styles.consultItem}>
-              <Text style={styles.consultText}>차량명: {item.vehicleName}</Text>
-              <Text style={styles.consultText}>일정: {item.preferredDate} {item.preferredTime}</Text>
+              <Text style={styles.consultText}>차량명: {item?.vehicleName ?? '차량명 없음'}</Text>
+              <Text style={styles.consultText}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
               {renderStatus(item.status)}
             </View>
           </TouchableOpacity>

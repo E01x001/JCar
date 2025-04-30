@@ -3,8 +3,8 @@
 
 # Node.js
 node_modules/
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+yarn-error.log*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -13,17 +13,39 @@ yarn-error.log
 !.yarn/versions
 
 # Environment files
-.env
+.env*
+*.env.*
 .env.local
 .env.production
+.env.development
 
-# Android
+# Firebase
+google-services.json
+firebase-debug.log
+*.firebase/
+firebase-debug.log*
+
+# Firebase Admin SDK
+serviceAccountKey.json
+serviceAccount*.json
+
+# React Native & Android
 android/.gradle/
 .gradle/
 android/app/build/
 android/build/
 android/local.properties
 *.keystore
+*.jks
+*.apk
+*.ap_
+
+# RNFetchBlob (downloaded APKs or cache)
+Download/newApp.apk
+*.apk
+*.ipa
+
+# Build logs
 android/build-log.txt
 
 # iOS
@@ -38,11 +60,11 @@ ios/build/
 *.xccheckout
 *.moved-aside
 *.xcuserstate
-DerivedData
+DerivedData/
 *.hmap
 *.ipa
-xcuserdata
-**/.xcode.env.local
+*.xcuserstate
+*.xcode.env.local
 
 # IntelliJ
 .idea/
@@ -56,11 +78,16 @@ xcuserdata
 **/fastlane/screenshots
 **/fastlane/test_output
 
-# Metro
+# Metro / React Native cache
 .metro-health-check*
+.expo/
+*.expo
+*.expo-shared
 
 # Testing
-/coverage
+/coverage/
+*.test.js.snap
+jest.config.js
 
 # Bundle artifact
 *.jsbundle
@@ -68,5 +95,7 @@ xcuserdata
 # Generated files
 __generated__/
 
-# Scripts for temporary maintenance
+# Temp build/maintenance scripts
 /scripts/
+tmp/
+dist/

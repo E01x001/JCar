@@ -3,6 +3,7 @@ import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './context/AuthContext';
 import AppNavigator from './navigation/AppNavigator';
+import UpdateChecker from './components/UpdateChecker';
 //import fixAllCollections from './scripts/fixAllCollections';
 
 const App = () => {
@@ -13,6 +14,7 @@ const App = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
+        <UpdateChecker /> {/* ✅ 추가 */}
         <AppNavigator />
       </AuthProvider>
     </GestureHandlerRootView>
