@@ -99,4 +99,6 @@ __generated__/
 /scripts/
 tmp/
 dist/
-"android/app/google-services.json" 
+
+# Firebase config
+android/app/google-services.json

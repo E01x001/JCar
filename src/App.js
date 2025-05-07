@@ -1,20 +1,14 @@
-//import React, { useEffect } from 'react';
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './context/AuthContext';
 import AppNavigator from './navigation/AppNavigator';
 import UpdateChecker from './components/UpdateChecker';
-//import fixAllCollections from './scripts/fixAllCollections';
 
 const App = () => {
-  // useEffect(() => {
-  //   fixAllCollections(); // ✅ 컴포넌트 안에서 실행해야 정상 작동
-  // }, []);
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <UpdateChecker /> {/* ✅ 추가 */}
+        <UpdateChecker /> {/* ✅ 업데이트 확인 컴포넌트 추가 */}
         <AppNavigator />
       </AuthProvider>
     </GestureHandlerRootView>

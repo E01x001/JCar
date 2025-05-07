@@ -4,7 +4,6 @@ import { View, Text, Modal, Button, Alert, ActivityIndicator } from 'react-nativ
 import DeviceInfo from 'react-native-device-info';
 import firestore from '@react-native-firebase/firestore';
 import RNFetchBlob from 'rn-fetch-blob';
-import { Linking, Platform } from 'react-native';
 
 const UpdateChecker = () => {
   const [updateInfo, setUpdateInfo] = useState(null);
@@ -20,6 +19,9 @@ const UpdateChecker = () => {
       const doc = await firestore().collection('app_settings').doc('latest_version').get();
       const data = doc.data();
 
+      console.log('[🔍 로컬 버전]', localVersion);
+      console.log('[🔍 서버 버전]', data?.version);
+
       if (data && data.version && isVersionNewer(data.version, localVersion)) {
         setUpdateInfo(data);
       }
@@ -30,12 +32,17 @@ const UpdateChecker = () => {
     }
   };
 
+  // ✅ 개선된 버전 비교 함수
   const isVersionNewer = (serverVersion, localVersion) => {
     const sv = serverVersion.split('.').map(Number);
     const lv = localVersion.split('.').map(Number);
-    for (let i = 0; i < Math.max(sv.length, lv.length); i++) {
-      if ((sv[i] || 0) > (lv[i] || 0)) return true;
-      if ((sv[i] || 0) < (lv[i] || 0)) return false;
+    const maxLen = Math.max(sv.length, lv.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      const s = sv[i] ?? 0;
+      const l = lv[i] ?? 0;
+      if (s > l) return true;
+      if (s < l) return false;
     }
     return false;
   };
@@ -45,17 +52,17 @@ const UpdateChecker = () => {
       console.log('[APK 다운로드 시작]');
       const { dirs } = RNFetchBlob.fs;
       const downloadPath = `${dirs.DownloadDir}/newApp.apk`;
-  
+
       console.log('[APK 경로]', downloadPath);
       console.log('[APK URL]', updateInfo.apkUrl);
-  
+
       const res = await RNFetchBlob.config({
         fileCache: true,
         path: downloadPath,
       }).fetch('GET', updateInfo.apkUrl);
-  
+
       console.log('[APK 다운로드 완료]', res.path());
-  
+
       Alert.alert('다운로드 완료', '설치를 시작합니다.');
       RNFetchBlob.android.actionViewIntent(res.path(), 'application/vnd.android.package-archive');
     } catch (error) {
@@ -63,7 +70,6 @@ const UpdateChecker = () => {
       Alert.alert('오류', '다운로드에 실패했습니다.');
     }
   };
-  
 
   if (checking) {
     return (
