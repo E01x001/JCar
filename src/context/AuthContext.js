@@ -19,23 +19,17 @@ export const AuthProvider = ({ children }) => {
         const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
         if (userDoc.exists) {
           const userData = userDoc.data();
+          setUser(currentUser);
           setRole(userData.role || 'user');
           setSellerName(userData.name || 'Unknown');
           setSellerPhone(userData.phoneNumber || 'Unknown');
           setSellerEmail(userData.email || 'Unknown');
-        } else {
-          setRole('user');
-          setSellerName('Unknown');
-          setSellerPhone('Unknown');
-          setSellerEmail('Unknown');
+
+          // ✅ FCM 토큰 저장
+          await saveFcmToken(currentUser.uid);
         }
-        setUser(currentUser);
       } else {
         setUser(null);
-        setRole(null);
-        setSellerName(null);
-        setSellerPhone(null);
-        setSellerEmail(null);
       }
       setLoading(false);
     });

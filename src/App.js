@@ -1,17 +1,19 @@
 import React from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AuthProvider } from './context/AuthContext';
-import AppNavigator from './navigation/AppNavigator';
-import UpdateChecker from './components/UpdateChecker';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import AdminConsultationScreen from './screens/AdminConsultationScreen';
+import ConsultationDetailScreen from './screens/ConsultationDetailScreen';
+
+const Stack = createStackNavigator();
 
 const App = () => {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <UpdateChecker /> {/* ✅ 업데이트 확인 컴포넌트 추가 */}
-        <AppNavigator />
-      </AuthProvider>
-    </GestureHandlerRootView>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="AdminConsultation" component={AdminConsultationScreen} />
+        <Stack.Screen name="ConsultationDetail" component={ConsultationDetailScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 

@@ -4,6 +4,7 @@ import firestore from "@react-native-firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone } from '../utils/format';
+import { sendPushNotification } from '../services/pushNotificationService';
 
 const AdminConsultationScreen = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -38,8 +39,22 @@ const AdminConsultationScreen = () => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      await firestore().collection("consultation_requests").doc(id).update({ status: newStatus });
-      Alert.alert("상태 업데이트 완료", `요청이 '${newStatus}' 상태로 변경되었습니다.`);
+      const docRef = firestore().collection("consultation_requests").doc(id);
+      const doc = await docRef.get();
+
+      if (doc.exists) {
+        const data = doc.data();
+        await docRef.update({ status: newStatus });
+
+        // ✅ 푸시 알림 전송
+        if (data.fcmToken) {
+          const title = '상담 상태 변경 알림';
+          const body = `상담 요청이 '${newStatus}' 상태로 변경되었습니다.`;
+          await sendPushNotification(data.fcmToken, title, body);
+        }
+
+        Alert.alert("상태 업데이트 완료", `요청이 '${newStatus}' 상태로 변경되었습니다.`);
+      }
     } catch (error) {
       Alert.alert("오류", "상태 업데이트 중 문제가 발생했습니다.");
       console.error("상담 상태 업데이트 오류:", error);

@@ -32,7 +32,6 @@ const UpdateChecker = () => {
     }
   };
 
-  // ✅ 개선된 버전 비교 함수
   const isVersionNewer = (serverVersion, localVersion) => {
     const sv = serverVersion.split('.').map(Number);
     const lv = localVersion.split('.').map(Number);
