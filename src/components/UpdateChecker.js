@@ -10,21 +10,17 @@ const UpdateChecker = () => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    checkForUpdate();
-  }, []);
+  // checkForUpdate();
+}, []);
 
   const checkForUpdate = async () => {
     try {
-      const localVersion = DeviceInfo.getVersion(); // ex) 1.0.0
-      const doc = await firestore().collection('app_settings').doc('latest_version').get();
-      const data = doc.data();
-
-      console.log('[🔍 로컬 버전]', localVersion);
-      console.log('[🔍 서버 버전]', data?.version);
-
-      if (data && data.version && isVersionNewer(data.version, localVersion)) {
-        setUpdateInfo(data);
-      }
+      // const localVersion = DeviceInfo.getVersion();
+      // const doc = await firestore().collection('app_settings').doc('latest_version').get();
+      // const data = doc.data();
+      // if (data && data.version && isVersionNewer(data.version, localVersion)) {
+      //   setUpdateInfo(data);
+      // }
     } catch (error) {
       console.error('업데이트 확인 실패:', error);
     } finally {

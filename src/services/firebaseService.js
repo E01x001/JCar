@@ -26,11 +26,11 @@ export const saveConsultationRequest = async (data) => {
 
 export const saveFcmToken = async (userId) => {
   try {
-    const token = await messaging().getToken();
-    if (token) {
-      await firestore().collection('users').doc(userId).update({ fcmToken: token });
-      console.log('✅ FCM 토큰 저장 완료:', token);
-    }
+    // const token = await messaging().getToken();
+    // if (token) {
+    //   await firestore().collection('users').doc(userId).update({ fcmToken: token });
+    //   console.log('✅ FCM 토큰 저장 완료:', token);
+    // }
   } catch (error) {
     console.error('❌ FCM 토큰 저장 실패:', error);
   }

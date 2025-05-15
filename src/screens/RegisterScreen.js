@@ -136,8 +136,6 @@ const RegisterScreen = ({ navigation }) => {
     }
   
     try {
-      const fcmToken = await getFcmToken(); // ✅ FCM 토큰 가져오기
-  
       const emailUser = await auth().createUserWithEmailAndPassword(email, password);
       const userId = emailUser.user.uid;
   
@@ -148,7 +146,6 @@ const RegisterScreen = ({ navigation }) => {
         name,
         phoneNumber,
         email,
-        fcmToken: fcmToken || '', // ✅ Firestore에 FCM 토큰 저장
         createdAt: firestore.FieldValue.serverTimestamp(),
         role: 'user',
       });

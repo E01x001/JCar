@@ -4,7 +4,7 @@ import firestore from "@react-native-firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone } from '../utils/format';
-import { sendPushNotification } from '../services/pushNotificationService';
+//import { sendPushNotification } from '../services/pushNotificationService';
 
 const AdminConsultationScreen = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -46,13 +46,7 @@ const AdminConsultationScreen = () => {
         const data = doc.data();
         await docRef.update({ status: newStatus });
 
-        // ✅ 푸시 알림 전송
-        if (data.fcmToken) {
-          const title = '상담 상태 변경 알림';
-          const body = `상담 요청이 '${newStatus}' 상태로 변경되었습니다.`;
-          await sendPushNotification(data.fcmToken, title, body);
-        }
-
+        // ✅ 푸시 알림 관련 코드 제거
         Alert.alert("상태 업데이트 완료", `요청이 '${newStatus}' 상태로 변경되었습니다.`);
       }
     } catch (error) {
