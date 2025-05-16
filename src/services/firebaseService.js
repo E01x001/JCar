@@ -12,6 +12,7 @@ export const saveConsultationRequest = async (data) => {
       preferredDate: data.preferredDate || null,
       preferredTime: data.preferredTime || null,
       status: data.status || "pending",
+      type: data.type || "buy", // 상담 종류 (구매/판매)
       createdAt: firestore.FieldValue.serverTimestamp(), // ✅ 추가
     };
 

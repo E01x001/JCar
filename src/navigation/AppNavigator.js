@@ -14,6 +14,7 @@ import VehicleRegistrationScreen from '../screens/VehicleRegistrationScreen';
 import MyPageScreen from '../screens/MyPageScreen';
 import VehicleDetailScreen from '../screens/VehicleDetailScreen';
 import ConsultationRequestScreen from '../screens/ConsultationRequestScreen';
+import MyVehiclesScreen from '../screens/MyVehiclesScreen'; // ✅ 추가
 
 import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen';
 import AdminPageScreen from '../screens/AdminPageScreen';
@@ -100,20 +101,21 @@ const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          role === 'admin' ? (
-            <>
-              <Stack.Screen name="AdminHome" component={AdminTabs} />
-              <Stack.Screen name="AdminVehicleDetail" component={AdminVehicleDetailScreen} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen name="Home" component={UserTabs} />
-              <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
-              <Stack.Screen name="ConsultationRequest" component={ConsultationRequestScreen} />
-            </>
-          )
-        ) : (
+        {user && role === 'admin' && (
+          <>
+            <Stack.Screen name="AdminHome" component={AdminTabs} />
+            <Stack.Screen name="AdminVehicleDetail" component={AdminVehicleDetailScreen} />
+          </>
+        )}
+        {user && role !== 'admin' && (
+          <>
+            <Stack.Screen name="Home" component={UserTabs} />
+            <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
+            <Stack.Screen name="ConsultationRequest" component={ConsultationRequestScreen} />
+            <Stack.Screen name="MyVehicles" component={MyVehiclesScreen} />
+          </>
+        )}
+        {!user && (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />

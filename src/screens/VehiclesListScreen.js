@@ -9,6 +9,7 @@ const VehiclesListScreen = ({ navigation }) => {
   useEffect(() => {
     const unsubscribe = firestore()
       .collection('vehicles')
+      .where('status', '==', 'approved')  // ✅ 승인된 차량만
       .onSnapshot((snapshot) => {
         const vehiclesData = snapshot.docs.map(doc => ({
           id: doc.id,

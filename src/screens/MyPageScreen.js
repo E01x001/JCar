@@ -10,6 +10,8 @@ const MyPageScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
   const [vehicles, setVehicles] = useState([]);
   const [consultations, setConsultations] = useState([]);
+  const [showBuy, setShowBuy] = useState(true);
+  const [showSell, setShowSell] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -17,43 +19,23 @@ const MyPageScreen = ({ navigation }) => {
     const unsubscribeVehicles = firestore()
       .collection('vehicles')
       .where('sellerId', '==', user.uid)
-      .onSnapshot(
-        snapshot => {
-          if (snapshot) {
-            const vehicleList = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-            setVehicles(vehicleList);
-          } else {
-            console.error('vehicle snapshot is null');
-          }
-        },
-        error => {
-          console.error('vehicle snapshot error:', error);
+      .onSnapshot(snapshot => {
+        if (snapshot) {
+          const vehicleList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setVehicles(vehicleList);
         }
-      );
+      }, error => console.error('vehicle snapshot error:', error));
 
     const unsubscribeConsultations = firestore()
       .collection('consultation_requests')
       .where('userId', '==', user.uid)
       .orderBy('createdAt', 'desc')
-      .onSnapshot(
-        snapshot => {
-          if (snapshot) {
-            const consultationList = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-            setConsultations(consultationList);
-          } else {
-            console.error('consultation snapshot is null');
-          }
-        },
-        error => {
-          console.error('consultation snapshot error:', error);
+      .onSnapshot(snapshot => {
+        if (snapshot) {
+          const consultationList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setConsultations(consultationList);
         }
-      );
+      }, error => console.error('consultation snapshot error:', error));
 
     return () => {
       unsubscribeVehicles();
@@ -71,13 +53,9 @@ const MyPageScreen = ({ navigation }) => {
     let label = '대기중';
 
     if (status === 'approved') {
-      color = '#28a745';
-      icon = 'check-circle';
-      label = '승인됨';
+      color = '#28a745'; icon = 'check-circle'; label = '승인됨';
     } else if (status === 'rejected') {
-      color = '#dc3545';
-      icon = 'cancel';
-      label = '거절됨';
+      color = '#dc3545'; icon = 'cancel'; label = '거절됨';
     }
 
     return (
@@ -107,34 +85,26 @@ const MyPageScreen = ({ navigation }) => {
   };
 
   const handleDeleteAccount = async () => {
-    Alert.alert(
-      '회원탈퇴',
-      '정말로 회원탈퇴 하시겠습니까? 계정이 삭제됩니다.',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '탈퇴',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const querySnapshot = await firestore()
-                .collection('vehicles')
-                .where('sellerId', '==', user.uid)
-                .get();
-
-              const batch = firestore().batch();
-              querySnapshot.forEach(doc => batch.delete(doc.ref));
-              await batch.commit();
-
-              await user.delete();
-              Alert.alert('탈퇴 완료', '계정이 삭제되었습니다.');
-            } catch (error) {
-              Alert.alert('탈퇴 실패', error.message);
-            }
-          },
-        },
-      ]
-    );
+    Alert.alert('회원탈퇴', '정말로 회원탈퇴 하시겠습니까? 계정이 삭제됩니다.', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '탈퇴', style: 'destructive', onPress: async () => {
+          try {
+            const querySnapshot = await firestore()
+              .collection('vehicles')
+              .where('sellerId', '==', user.uid)
+              .get();
+            const batch = firestore().batch();
+            querySnapshot.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            await user.delete();
+            Alert.alert('탈퇴 완료', '계정이 삭제되었습니다.');
+          } catch (error) {
+            Alert.alert('탈퇴 실패', error.message);
+          }
+        }
+      }
+    ]);
   };
 
   return (
@@ -142,35 +112,64 @@ const MyPageScreen = ({ navigation }) => {
       <Text style={styles.title}>마이페이지</Text>
       <Text style={styles.userInfo}>이메일: {user?.email ?? '이메일 없음'}</Text>
 
+      <Text style={styles.sectionTitle}>상담 요청 내역</Text>
+
+      <TouchableOpacity onPress={() => setShowBuy(!showBuy)} style={styles.toggleButton}>
+        <View style={styles.toggleButtonContent}>
+          <Text style={styles.toggleButtonText}>구매 상담</Text>
+          <Icon name={showBuy ? 'expand-less' : 'expand-more'} size={20} color="#2B4593" />
+        </View>
+      </TouchableOpacity>
+      {showBuy && (
+        <FlatList
+          data={consultations.filter(c => c.type === 'buy' || !c.type)}
+          keyExtractor={(item) => item.id}
+          style={{ maxHeight: 200 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
+              <View style={styles.consultItem}>
+                <Text style={styles.consultText}>차량명: {item?.vehicleName ?? '차량명 없음'}</Text>
+                <Text style={styles.consultText}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
+                {renderStatus(item.status)}
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+
+      <TouchableOpacity onPress={() => setShowSell(!showSell)} style={styles.toggleButton}>
+        <View style={styles.toggleButtonContent}>
+          <Text style={styles.toggleButtonText}>판매 상담</Text>
+          <Icon name={showSell ? 'expand-less' : 'expand-more'} size={20} color="#2B4593" />
+        </View>
+      </TouchableOpacity>
+      {showSell && (
+        <FlatList
+          data={consultations.filter(c => c.type === 'sell')}
+          keyExtractor={(item) => item.id}
+          style={{ maxHeight: 200 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
+              <View style={styles.consultItem}>
+                <Text style={styles.consultText}>차량명: {item?.vehicleName ?? '차량명 없음'}</Text>
+                <Text style={styles.consultText}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
+                {renderStatus(item.status)}
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+
       <Text style={styles.sectionTitle}>내 차량</Text>
       <FlatList
         data={vehicles}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.id)}>
-            <View style={styles.vehicleItem}>
-              <Text style={styles.vehicleName}>모델: {item?.model ?? '모델 정보 없음'}</Text>
-              <Text>가격: {item?.price != null ? formatPrice(item.price) : '가격 정보 없음'}</Text>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteVehicle(item.id)}>
-                <Text style={styles.deleteButtonText}>삭제</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
-
-      <Text style={styles.sectionTitle}>상담 요청 내역</Text>
-      <FlatList
-        data={consultations}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
             <View style={styles.consultItem}>
-              <Text style={styles.consultText}>차량명: {item?.vehicleName ?? '차량명 없음'}</Text>
-              <Text style={styles.consultText}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
-              {renderStatus(item.status)}
+              <Text style={styles.consultText}>
+                🚗 [{item.vehicleType ?? '차량'}] {item.vehicleName ?? '차량명 없음'}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
@@ -192,24 +191,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
   userInfo: { fontSize: 16, color: '#555', marginBottom: 20 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', marginTop: 20, marginBottom: 10 },
-  vehicleItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    marginBottom: 10,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-  },
-  vehicleName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  deleteButton: {
-    marginTop: 10,
-    padding: 8,
-    borderRadius: 5,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2B4593',
-  },
-  deleteButtonText: { color: '#2B4593', fontWeight: 'bold' },
   consultItem: {
     padding: 10,
     backgroundColor: '#fff',
@@ -239,6 +220,22 @@ const styles = StyleSheet.create({
     color: '#2B4593',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  toggleButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 6,
+  },
+  toggleButtonContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  toggleButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2B4593',
   },
 });
 

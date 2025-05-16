@@ -13,7 +13,7 @@ const ConsultationRequestScreen = ({ route }) => {
   const [selectedDate, setSelectedDate] = useState("");
   const [time, setTime] = useState(new Date());
   const [open, setOpen] = useState(false);
-  const { vehicle } = route.params;
+  const { vehicle, isSell } = route.params;
 
   const adjustToNearestTenMinutes = (date) => {
     const minutes = date.getMinutes();
@@ -45,38 +45,48 @@ const ConsultationRequestScreen = ({ route }) => {
     return !snapshot.empty;
   };
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
+    console.log("🟡 상담 요청 버튼 클릭됨");
+
     if (!user) {
+      console.warn("⛔ 사용자 정보 없음");
       Alert.alert("로그인이 필요합니다.");
       return;
     }
 
     if (!selectedDate) {
+      console.warn("⛔ 날짜 미선택");
       Alert.alert("날짜를 선택해주세요.");
       return;
     }
 
     if (!time) {
+      console.warn("⛔ 시간 미선택");
       Alert.alert("시간을 선택해주세요.");
       return;
     }
 
     const formattedDate = selectedDate;
     const formattedTime = `${time.getHours().toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")}`;
+    console.log("📅 선택된 날짜:", formattedDate);
+    console.log("⏰ 선택된 시간:", formattedTime);
 
     const isDuplicate = await checkDuplicateConsultation(user.uid, vehicle.vehicleId);
+    console.log("🔁 중복 상담 여부:", isDuplicate);
+
     if (isDuplicate) {
       Alert.alert("중복 요청", "이미 이 차량에 대한 상담을 신청하셨습니다.");
       return;
     }
 
     const hasConflict = await checkTimeConflict(vehicle.vehicleId, formattedDate, formattedTime);
+    console.log("⏳ 시간 중복 여부:", hasConflict);
+
     if (hasConflict) {
       Alert.alert("이미 선택된 시간입니다.", "다른 시간을 선택해주세요.");
       return;
     }
 
-    // 상담 요청할 때 저장하는 데이터
     const consultationData = {
       userId: user.uid,
       userName: user.displayName || "익명",
@@ -86,18 +96,26 @@ const ConsultationRequestScreen = ({ route }) => {
       preferredDate: formattedDate,
       preferredTime: formattedTime,
       status: "pending",
+      type: isSell ? "sell" : "buy",
     };
 
-    // 저장 호출
+    console.log("🚀 저장할 상담 요청 데이터:", consultationData);
+
     const success = await saveConsultationRequest(consultationData);
+    console.log("✅ 저장 성공 여부:", success);
 
     if (success) {
-      Alert.alert("구매 상담 요청이 완료되었습니다.");
-      navigation.goBack();
+      Alert.alert("상담 요청 완료", "정상적으로 접수되었습니다.", [
+        {
+          text: "확인",
+          onPress: () => navigation.goBack(),
+        },
+      ]);
     } else {
       Alert.alert("상담 요청 저장에 실패했습니다. 다시 시도해주세요.");
     }
   };
+
 
   return (
     <View style={styles.container}>

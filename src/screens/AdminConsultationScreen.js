@@ -4,14 +4,21 @@ import firestore from "@react-native-firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone } from '../utils/format';
-//import { sendPushNotification } from '../services/pushNotificationService';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const AdminConsultationScreen = () => {
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [approvedRequests, setApprovedRequests] = useState([]);
-  const [rejectedRequests, setRejectedRequests] = useState([]);
+  const [pendingBuy, setPendingBuy] = useState([]);
+  const [pendingSell, setPendingSell] = useState([]);
+  const [approvedBuy, setApprovedBuy] = useState([]);
+  const [approvedSell, setApprovedSell] = useState([]);
+  const [rejectedBuy, setRejectedBuy] = useState([]);
+  const [rejectedSell, setRejectedSell] = useState([]);
   const [showApproved, setShowApproved] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
+
+  const [editingItem, setEditingItem] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const navigation = useNavigation();
 
@@ -20,14 +27,16 @@ const AdminConsultationScreen = () => {
       .collection("consultation_requests")
       .orderBy('createdAt', 'desc')
       .onSnapshot((snapshot) => {
-        const allRequests = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const all = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        setPendingRequests(allRequests.filter(r => r.status === 'pending'));
-        setApprovedRequests(allRequests.filter(r => r.status === 'approved'));
-        setRejectedRequests(allRequests.filter(r => r.status === 'rejected'));
+        setPendingBuy(all.filter(r => r.status === 'pending' && r.type !== 'sell'));
+        setPendingSell(all.filter(r => r.status === 'pending' && r.type === 'sell'));
+
+        setApprovedBuy(all.filter(r => r.status === 'approved' && r.type !== 'sell'));
+        setApprovedSell(all.filter(r => r.status === 'approved' && r.type === 'sell'));
+
+        setRejectedBuy(all.filter(r => r.status === 'rejected' && r.type !== 'sell'));
+        setRejectedSell(all.filter(r => r.status === 'rejected' && r.type === 'sell'));
       });
 
     return () => unsubscribe();
@@ -39,26 +48,23 @@ const AdminConsultationScreen = () => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const docRef = firestore().collection("consultation_requests").doc(id);
-      const doc = await docRef.get();
-
+      const ref = firestore().collection("consultation_requests").doc(id);
+      const doc = await ref.get();
       if (doc.exists) {
-        const data = doc.data();
-        await docRef.update({ status: newStatus });
-
-        // ✅ 푸시 알림 관련 코드 제거
-        Alert.alert("상태 업데이트 완료", `요청이 '${newStatus}' 상태로 변경되었습니다.`);
+        await ref.update({ status: newStatus });
+        Alert.alert("완료", `요청이 '${newStatus}'로 변경되었습니다.`);
       }
     } catch (error) {
       Alert.alert("오류", "상태 업데이트 중 문제가 발생했습니다.");
-      console.error("상담 상태 업데이트 오류:", error);
     }
   };
 
   const renderRequestItem = ({ item }) => (
     <View style={styles.card}>
       <TouchableOpacity onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
-        <Text style={styles.text}>이름: {item.userName}</Text>
+        <Text style={styles.text}>
+          [{item.type === 'sell' ? '판매' : '구매'}] {item.userName}
+        </Text>
         <Text style={styles.text}>전화번호: {formatPhone(item.userPhone)}</Text>
         <Text style={styles.text}>차량명: {item.vehicleName}</Text>
         <Text style={styles.text}>상담 일정: {item.preferredDate} {item.preferredTime}</Text>
@@ -66,28 +72,31 @@ const AdminConsultationScreen = () => {
       </TouchableOpacity>
 
       {item.status === 'pending' && (
-        <View style={styles.statusButtons}>
-          <TouchableOpacity onPress={() => handleStatusUpdate(item.id, 'approved')} style={styles.statusButtonGreen}>
-            <Text style={styles.statusButtonText}>승인</Text>
+        <>
+          <View style={styles.statusButtons}>
+            <TouchableOpacity onPress={() => handleStatusUpdate(item.id, 'approved')} style={styles.statusButtonGreen}>
+              <Text style={styles.statusButtonText}>승인</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleStatusUpdate(item.id, 'rejected')} style={styles.statusButtonRed}>
+              <Text style={styles.statusButtonText}>거절</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={() => {
+            setEditingItem(item);
+            setShowDatePicker(true);
+          }}>
+            <Text style={{ color: '#007bff', fontWeight: 'bold', marginTop: 6 }}>📅 일정 수정</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleStatusUpdate(item.id, 'rejected')} style={styles.statusButtonRed}>
-            <Text style={styles.statusButtonText}>거절</Text>
-          </TouchableOpacity>
-        </View>
+        </>
       )}
     </View>
   );
 
   const renderStatus = (status) => {
-    let color = '#6c757d';
-    let icon = 'hourglass-empty';
-    if (status === 'approved') {
-      color = '#28a745';
-      icon = 'check-circle';
-    } else if (status === 'rejected') {
-      color = '#dc3545';
-      icon = 'cancel';
-    }
+    let color = '#6c757d', icon = 'hourglass-empty';
+    if (status === 'approved') { color = '#28a745'; icon = 'check-circle'; }
+    else if (status === 'rejected') { color = '#dc3545'; icon = 'cancel'; }
+
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
         <Icon name={icon} size={18} color={color} style={{ marginRight: 6 }} />
@@ -96,53 +105,87 @@ const AdminConsultationScreen = () => {
     );
   };
 
+  const handleTimeConfirm = (event, selectedTime) => {
+    setShowTimePicker(false);
+    if (selectedTime && editingItem?.id) {
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      const formattedTime = `${hours}:${minutes}`;
+
+      firestore()
+        .collection('consultation_requests')
+        .doc(editingItem.id)
+        .update({
+          preferredDate: editingItem.preferredDate,
+          preferredTime: formattedTime,
+        })
+        .then(() => {
+          Alert.alert('성공', '일정이 수정되었습니다.');
+          setEditingItem(null);
+        })
+        .catch((error) => {
+          console.error(error);
+          Alert.alert('오류', '일정 수정에 실패했습니다.');
+        });
+    }
+  };
+
+  const handleDateConfirm = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setShowTimePicker(true);
+      setEditingItem(prev => ({
+        ...prev,
+        preferredDate: selectedDate.toISOString().split('T')[0],
+      }));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-        <Text style={styles.title}>구매 상담 요청 목록</Text>
+        <Text style={styles.title}>상담 요청 목록</Text>
 
-        {/* 대기중 상담 요청 */}
-        <Text style={styles.sectionTitle}>대기중 상담 요청</Text>
-        <FlatList
-          data={pendingRequests}
-          keyExtractor={(item) => item.id}
-          renderItem={renderRequestItem}
-          contentContainerStyle={styles.flatListContent}
-        />
+        <Text style={styles.sectionTitle}>🟡 대기중 - 구매 상담</Text>
+        <FlatList data={pendingBuy} keyExtractor={item => item.id} renderItem={renderRequestItem} contentContainerStyle={styles.flatListContent} />
 
-        {/* 승인 목록 펼치기/접기 버튼 */}
+        <Text style={styles.sectionTitle}>🟠 대기중 - 판매 상담</Text>
+        <FlatList data={pendingSell} keyExtractor={item => item.id} renderItem={renderRequestItem} contentContainerStyle={styles.flatListContent} />
+
         <TouchableOpacity onPress={() => setShowApproved(!showApproved)} style={styles.toggleButton}>
-          <Text style={styles.toggleButtonText}>
-            {showApproved ? "승인 목록 숨기기" : "승인 목록 보기"}
-          </Text>
+          <Text style={styles.toggleButtonText}>{showApproved ? "✅ 승인 목록 숨기기" : "✅ 승인 목록 보기"}</Text>
         </TouchableOpacity>
 
         {showApproved && (
-          <FlatList
-            data={approvedRequests}
-            keyExtractor={(item) => item.id}
-            renderItem={renderRequestItem}
-            contentContainerStyle={styles.flatListContent}
-          />
+          <>
+            <Text style={styles.sectionTitle}>구매 상담 승인</Text>
+            <FlatList data={approvedBuy} keyExtractor={item => item.id} renderItem={renderRequestItem} contentContainerStyle={styles.flatListContent} />
+            <Text style={styles.sectionTitle}>판매 상담 승인</Text>
+            <FlatList data={approvedSell} keyExtractor={item => item.id} renderItem={renderRequestItem} contentContainerStyle={styles.flatListContent} />
+          </>
         )}
 
-        {/* 거절 목록 펼치기/접기 버튼 */}
         <TouchableOpacity onPress={() => setShowRejected(!showRejected)} style={styles.toggleButton}>
-          <Text style={styles.toggleButtonText}>
-            {showRejected ? "거절 목록 숨기기" : "거절 목록 보기"}
-          </Text>
+          <Text style={styles.toggleButtonText}>{showRejected ? "❌ 거절 목록 숨기기" : "❌ 거절 목록 보기"}</Text>
         </TouchableOpacity>
 
         {showRejected && (
-          <FlatList
-            data={rejectedRequests}
-            keyExtractor={(item) => item.id}
-            renderItem={renderRequestItem}
-            contentContainerStyle={styles.flatListContent}
-          />
+          <>
+            <Text style={styles.sectionTitle}>구매 상담 거절</Text>
+            <FlatList data={rejectedBuy} keyExtractor={item => item.id} renderItem={renderRequestItem} contentContainerStyle={styles.flatListContent} />
+            <Text style={styles.sectionTitle}>판매 상담 거절</Text>
+            <FlatList data={rejectedSell} keyExtractor={item => item.id} renderItem={renderRequestItem} contentContainerStyle={styles.flatListContent} />
+          </>
         )}
 
-        <View style={styles.bottomSpacing}></View>
+        <View style={styles.bottomSpacing} />
+
+        {showDatePicker && (
+          <DateTimePicker mode="date" value={new Date()} display="default" onChange={handleDateConfirm} />
+        )}
+        {showTimePicker && (
+          <DateTimePicker mode="time" value={new Date()} display="spinner" minuteInterval={10} onChange={handleTimeConfirm} />
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

@@ -1,8 +1,10 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+
 import groovy.json.JsonSlurper
-// 🔧 version.json 읽기 (경로 수정)
+
+// 🔧 version.json 읽기
 def versionJson = new JsonSlurper().parse(file("${rootDir}/../version.json"))
 
 println "Root Directory: ${rootDir}"
@@ -20,28 +22,28 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.jcarapp"
+
     defaultConfig {
         applicationId "com.jcarplatform.jcar"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-
-        // ✅ 자동화된 버전 설정
         versionCode versionJson.code as int
         versionName versionJson.version
     }
 
     signingConfigs {
         debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
+            storeFile file("C:/Users/jyjeo/.android/debug.keystore") // 사용자 폴더의 디버그 키스토어 사용
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
         }
     }
 
+
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.debug  // ✅ 이 줄이 핵심!
         }
         release {
             signingConfig signingConfigs.debug
