@@ -2,10 +2,6 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
-import groovy.json.JsonSlurper
-
-// 🔧 version.json 읽기
-def versionJson = new JsonSlurper().parse(file("${rootDir}/../version.json"))
 
 println "Root Directory: ${rootDir}"
 
@@ -27,8 +23,8 @@ android {
         applicationId "com.jcarplatform.jcar"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode versionJson.code as int
-        versionName versionJson.version
+        versionCode 1
+        versionName "1.0.1"
     }
 
     signingConfigs {
