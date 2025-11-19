@@ -4,7 +4,7 @@ import firestore from "@react-native-firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone } from '../utils/format';
-import DateTimePicker from '@react-native-community/datetimepicker';
+// import DateTimePicker from '@react-native-community/datetimepicker';
 
 const AdminConsultationScreen = () => {
   const [pendingBuy, setPendingBuy] = useState([]);
@@ -180,12 +180,13 @@ const AdminConsultationScreen = () => {
 
         <View style={styles.bottomSpacing} />
 
-        {showDatePicker && (
+        {/* DateTimePicker 임시 비활성화 - 라이브러리 호환성 문제로 인해 주석처리 */}
+        {/* showDatePicker && (
           <DateTimePicker mode="date" value={new Date()} display="default" onChange={handleDateConfirm} />
         )}
         {showTimePicker && (
           <DateTimePicker mode="time" value={new Date()} display="spinner" minuteInterval={10} onChange={handleTimeConfirm} />
-        )}
+        )} */}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

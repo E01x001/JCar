@@ -6,6 +6,8 @@ import firestore from '@react-native-firebase/firestore';
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  // console.log('🔐 AuthProvider initializing...');
+  
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [sellerName, setSellerName] = useState(null);
@@ -16,20 +18,25 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
-        const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          setUser(currentUser);
-          setRole(userData.role || 'user');
-          setSellerName(userData.name || 'Unknown');
-          setSellerPhone(userData.phoneNumber || 'Unknown');
-          setSellerEmail(userData.email || 'Unknown');
+        try {
+          const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            setUser(currentUser);
+            setRole(userData.role || 'user');
+            setSellerName(userData.name || 'Unknown');
+            setSellerPhone(userData.phoneNumber || 'Unknown');
+            setSellerEmail(userData.email || 'Unknown');
 
-          // ✅ FCM 토큰 저장
-          await saveFcmToken(currentUser.uid);
+            // ✅ FCM 토큰 저장 (현재 비활성화)
+            // await saveFcmToken(currentUser.uid);
+          }
+        } catch (error) {
+          console.error('AuthContext: Error loading user data:', error);
         }
       } else {
         setUser(null);
+        setRole(null);
       }
       setLoading(false);
     });

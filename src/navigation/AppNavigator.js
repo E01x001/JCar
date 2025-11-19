@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
+import { AuthContext } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import VehiclesListScreen from '../screens/VehiclesListScreen';
@@ -70,25 +69,7 @@ const AdminTabs = () => (
 );
 
 const AppNavigator = () => {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
-      if (currentUser) {
-        const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
-        setRole(userDoc.exists ? userDoc.data().role : 'user');
-        setUser(currentUser);
-      } else {
-        setUser(null);
-        setRole(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const { user, role, loading } = useContext(AuthContext);
 
   if (loading) {
     return (

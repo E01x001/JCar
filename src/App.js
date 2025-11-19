@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import AppNavigator from './navigation/AppNavigator';
 
 const App = () => {
+  // console.log('🚀 App component rendering...');
+  
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>

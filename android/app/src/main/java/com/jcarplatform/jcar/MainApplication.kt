@@ -1,4 +1,4 @@
-package com.jcarapp
+package com.jcarplatform.jcar
 
 import android.app.Application
 import com.facebook.react.PackageList
