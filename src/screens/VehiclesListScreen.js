@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { collection, query, where, onSnapshot } from '@react-native-firebase/firestore';
 import { formatPrice } from '../utils/format';
 
 const VehiclesListScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    const unsubscribe = firestore()
-      .collection('vehicles')
-      .where('status', '==', 'approved')  // ✅ 승인된 차량만
-      .onSnapshot((snapshot) => {
-        const vehiclesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setVehicles(vehiclesData);
-      }, (error) => {
-        console.error('차량 목록 불러오기 오류:', error);
-      });
+    const q = query(collection(firestore(), 'vehicles'), where('status', '==', 'approved'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const vehiclesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setVehicles(vehiclesData);
+    }, (error) => {
+      console.error('차량 목록 불러오기 오류:', error);
+    });
 
     return () => unsubscribe();
   }, []);

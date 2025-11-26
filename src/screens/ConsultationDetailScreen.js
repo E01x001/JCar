@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
 
 const ConsultationDetailScreen = ({ route }) => {
   const { id } = route.params; // 상담 ID
@@ -10,9 +10,10 @@ const ConsultationDetailScreen = ({ route }) => {
   useEffect(() => {
     const fetchConsultation = async () => {
       try {
-        const doc = await firestore().collection('consultation_requests').doc(id).get();
-        if (doc.exists) {
-          setConsultation(doc.data());
+        const docRef = doc(firestore(), 'consultation_requests', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setConsultation(docSnap.data());
         }
       } catch (error) {
         console.error('상담 데이터 가져오기 실패:', error);

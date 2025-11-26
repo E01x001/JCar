@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { collection, query, where, onSnapshot, orderBy, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import { AuthContext } from '../context/AuthContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone, formatPrice } from '../utils/format';
@@ -16,26 +16,25 @@ const MyPageScreen = ({ navigation }) => {
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribeVehicles = firestore()
-      .collection('vehicles')
-      .where('sellerId', '==', user.uid)
-      .onSnapshot(snapshot => {
-        if (snapshot) {
-          const vehicleList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setVehicles(vehicleList);
-        }
-      }, error => console.error('vehicle snapshot error:', error));
+    const vehiclesQuery = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+    const unsubscribeVehicles = onSnapshot(vehiclesQuery, snapshot => {
+      if (snapshot) {
+        const vehicleList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setVehicles(vehicleList);
+      }
+    }, error => console.error('vehicle snapshot error:', error));
 
-    const unsubscribeConsultations = firestore()
-      .collection('consultation_requests')
-      .where('userId', '==', user.uid)
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
-        if (snapshot) {
-          const consultationList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setConsultations(consultationList);
-        }
-      }, error => console.error('consultation snapshot error:', error));
+    const consultationsQuery = query(
+      collection(firestore(), 'consultation_requests'),
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribeConsultations = onSnapshot(consultationsQuery, snapshot => {
+      if (snapshot) {
+        const consultationList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setConsultations(consultationList);
+      }
+    }, error => console.error('consultation snapshot error:', error));
 
     return () => {
       unsubscribeVehicles();
@@ -68,7 +67,7 @@ const MyPageScreen = ({ navigation }) => {
 
   const handleDeleteVehicle = async (vehicleId) => {
     try {
-      await firestore().collection('vehicles').doc(vehicleId).delete();
+      await deleteDoc(doc(firestore(), 'vehicles', vehicleId));
       setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
       Alert.alert('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
@@ -89,14 +88,15 @@ const MyPageScreen = ({ navigation }) => {
       { text: '취소', style: 'cancel' },
       {
         text: '탈퇴', style: 'destructive', onPress: async () => {
+          if (!user) return;
           try {
-            const querySnapshot = await firestore()
-              .collection('vehicles')
-              .where('sellerId', '==', user.uid)
-              .get();
-            const batch = firestore().batch();
-            querySnapshot.forEach(doc => batch.delete(doc.ref));
+            const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+            const querySnapshot = await getDocs(q);
+            
+            const batch = writeBatch(firestore());
+            querySnapshot.forEach(documentSnapshot => batch.delete(documentSnapshot.ref));
             await batch.commit();
+
             await user.delete();
             Alert.alert('탈퇴 완료', '계정이 삭제되었습니다.');
           } catch (error) {

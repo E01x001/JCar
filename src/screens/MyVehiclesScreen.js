@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { collection, query, where, onSnapshot } from '@react-native-firebase/firestore';
 import { AuthContext } from '../context/AuthContext';
 
 const MyVehiclesScreen = ({ navigation }) => {
@@ -10,16 +10,14 @@ const MyVehiclesScreen = ({ navigation }) => {
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = firestore()
-      .collection('vehicles')
-      .where('sellerId', '==', user.uid)
-      .onSnapshot(snapshot => {
-        const list = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setVehicles(list);
-      });
+    const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, snapshot => {
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setVehicles(list);
+    });
 
     return () => unsubscribe();
   }, [user]);

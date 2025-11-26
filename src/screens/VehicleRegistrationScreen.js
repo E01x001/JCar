@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { View, Text, TextInput, Button, Alert, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity } from "react-native";
 import { Picker } from '@react-native-picker/picker';
-import firestore from "@react-native-firebase/firestore";
+import firestore, { collection, doc, setDoc, serverTimestamp } from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 import storage from "@react-native-firebase/storage";
 import { launchImageLibrary } from "react-native-image-picker";
@@ -109,7 +109,10 @@ const VehicleRegistrationScreen = () => {
         uploadedImageUrl = await reference.getDownloadURL();
       }
   
-      const docRef = await firestore().collection("vehicles").add({
+      const newVehicleRef = doc(collection(firestore(), 'vehicles'));
+
+      await setDoc(newVehicleRef, {
+        vehicleId: newVehicleRef.id,
         vehicleName: vehicleData.CARNAME,
         subModel: vehicleData.SUBMODEL,
         manufacturer: vehicleData.CARVENDER,
@@ -132,14 +135,12 @@ const VehicleRegistrationScreen = () => {
         regiNumber,
         ownerName,
         vehicleType,
-        createdAt: firestore.FieldValue.serverTimestamp(),
+        createdAt: serverTimestamp(),
         sellerId: user.uid,
         sellerName: sellerName || "Unknown",
         sellerPhone: sellerPhone || "Unknown",
         sellerEmail: sellerEmail || "Unknown",
       });
-  
-      await docRef.update({ vehicleId: docRef.id });
   
       Alert.alert("성공", "차량 정보가 저장되었습니다.");
       setRegiNumber("");

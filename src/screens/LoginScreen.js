@@ -42,10 +42,19 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.loginButtonText}>로그인</Text>
         </TouchableOpacity>
 
-        {/* 회원가입 버튼 */}
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.registerButton}>회원가입</Text>
-        </TouchableOpacity>
+        <View style={styles.subActionsContainer}>
+          {/* 비밀번호 찾기 버튼 */}
+          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.subActionButton}>비밀번호 찾기</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.separator}>|</Text>
+
+          {/* 회원가입 버튼 */}
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.subActionButton}>회원가입</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -106,10 +115,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#2B4593',  // 텍스트 색상
   },
-  registerButton: {
-    fontSize: 16,
-    textDecorationLine: 'underline', // 밑줄 추가
-    color: '#aaa',  // 연한 회색으로 텍스트 색상 변경
+  subActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  subActionButton: {
+    fontSize: 14,
+    color: '#888',
+    textDecorationLine: 'underline',
+  },
+  separator: {
+    fontSize: 14,
+    color: '#ccc',
+    marginHorizontal: 10,
   },
 });
 

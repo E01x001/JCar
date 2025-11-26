@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
 // ✅ Calendar 한글 설정
@@ -19,39 +19,39 @@ const AdminScheduleScreen = () => {
   const [consultations, setConsultations] = useState([]);
 
   useEffect(() => {
-    const unsubscribe = firestore()
-      .collection('consultation_requests')
-      .onSnapshot(snapshot => {
-        const all = [];
-        const marks = {};
+    const consultationCollection = collection(firestore(), 'consultation_requests');
+    const unsubscribe = onSnapshot(consultationCollection, snapshot => {
+      const all = [];
+      const marks = {};
 
-        snapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const date = data.preferredDate; // ✅ camelCase 사용
-          const color =
-            data.status === 'approved' ? '#28a745'
-              : data.status === 'rejected' ? '#dc3545'
-                : '#6c757d';
+      snapshot.docs.forEach(d => {
+        const data = d.data();
+        const date = data.preferredDate; // ✅ camelCase 사용
+        const color =
+          data.status === 'approved' ? '#28a745'
+            : data.status === 'rejected' ? '#dc3545'
+              : '#6c757d';
 
-          all.push({ id: doc.id, ...data });
+        all.push({ id: d.id, ...data });
 
-          if (!marks[date]) {
-            marks[date] = { marked: true, dots: [{ color }] };
-          } else {
-            marks[date].dots.push({ color });
-          }
-        });
-
-        setConsultations(all);
-        setMarkedDates(marks);
+        if (!marks[date]) {
+          marks[date] = { marked: true, dots: [{ color }] };
+        } else {
+          marks[date].dots.push({ color });
+        }
       });
+
+      setConsultations(all);
+      setMarkedDates(marks);
+    });
 
     return () => unsubscribe();
   }, []);
 
   const updateStatus = async (id, status) => {
     try {
-      await firestore().collection('consultation_requests').doc(id).update({ status });
+      const docRef = doc(firestore(), 'consultation_requests', id);
+      await updateDoc(docRef, { status });
     } catch (error) {
       Alert.alert('오류', '상태 변경 실패');
       console.error(error);

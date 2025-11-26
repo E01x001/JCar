@@ -1,7 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
 
 export const AuthContext = createContext(null);
 
@@ -19,8 +19,10 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         try {
-          const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
-          if (userDoc.exists) {
+          const userDocRef = doc(firestore(), 'users', currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
             const userData = userDoc.data();
             setUser(currentUser);
             setRole(userData.role || 'user');

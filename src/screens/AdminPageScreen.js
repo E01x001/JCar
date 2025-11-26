@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -11,23 +11,22 @@ const AdminPageScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (!user) return;
-    const unsubscribe = firestore()
-      .collection('vehicles')
-      .where('sellerId', '==', user.uid)
-      .onSnapshot(snapshot => {
-        const vehicleList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setVehicles(vehicleList);
-      });
+    
+    const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, snapshot => {
+      const vehicleList = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+      }));
+      setVehicles(vehicleList);
+    });
 
     return () => unsubscribe();
   }, [user]);
 
   const handleDeleteVehicle = async (vehicleId) => {
     try {
-      await firestore().collection('vehicles').doc(vehicleId).delete();
+      await deleteDoc(doc(firestore(), 'vehicles', vehicleId));
       setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId)); // 🔥 이 줄 추가!
       Alert.alert('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
@@ -53,19 +52,20 @@ const AdminPageScreen = ({ navigation }) => {
           text: '탈퇴',
           style: 'destructive',
           onPress: async () => {
+            if (!user) return;
             try {
-              const querySnapshot = await firestore()
-                .collection('vehicles')
-                .where('sellerId', '==', user.uid)
-                .get();
+              const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+              const querySnapshot = await getDocs(q);
 
-              const batch = firestore().batch();
-              querySnapshot.forEach(doc => batch.delete(doc.ref));
+              const batch = writeBatch(firestore());
+              querySnapshot.forEach(documentSnapshot => {
+                batch.delete(documentSnapshot.ref);
+              });
               await batch.commit();
 
               await user.delete();
               Alert.alert('탈퇴 완료', '계정이 삭제되었습니다.');
-              navigation.replace('Login');
+              // AppNavigator will handle navigation to Login screen automatically
             } catch (error) {
               Alert.alert('탈퇴 실패', error.message);
             }

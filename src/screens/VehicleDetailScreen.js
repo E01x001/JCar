@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
@@ -16,8 +16,9 @@ const VehicleDetailScreen = ({ route, navigation }) => {
   useEffect(() => {
     const fetchVehicleDetails = async () => {
       try {
-        const vehicleDoc = await firestore().collection('vehicles').doc(vehicleId).get();
-        if (vehicleDoc.exists) {
+        const vehicleDocRef = doc(firestore(), 'vehicles', vehicleId);
+        const vehicleDoc = await getDoc(vehicleDocRef);
+        if (vehicleDoc.exists()) {
           const vehicleData = vehicleDoc.data();
           setVehicle(vehicleData);
 

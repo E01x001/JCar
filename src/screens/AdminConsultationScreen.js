@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from "react-native";
-import firestore from "@react-native-firebase/firestore";
+import firestore, { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc } from "@react-native-firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone } from '../utils/format';
@@ -23,21 +23,19 @@ const AdminConsultationScreen = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    const unsubscribe = firestore()
-      .collection("consultation_requests")
-      .orderBy('createdAt', 'desc')
-      .onSnapshot((snapshot) => {
-        const all = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const q = query(collection(firestore(), "consultation_requests"), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        setPendingBuy(all.filter(r => r.status === 'pending' && r.type !== 'sell'));
-        setPendingSell(all.filter(r => r.status === 'pending' && r.type === 'sell'));
+      setPendingBuy(all.filter(r => r.status === 'pending' && r.type !== 'sell'));
+      setPendingSell(all.filter(r => r.status === 'pending' && r.type === 'sell'));
 
-        setApprovedBuy(all.filter(r => r.status === 'approved' && r.type !== 'sell'));
-        setApprovedSell(all.filter(r => r.status === 'approved' && r.type === 'sell'));
+      setApprovedBuy(all.filter(r => r.status === 'approved' && r.type !== 'sell'));
+      setApprovedSell(all.filter(r => r.status === 'approved' && r.type === 'sell'));
 
-        setRejectedBuy(all.filter(r => r.status === 'rejected' && r.type !== 'sell'));
-        setRejectedSell(all.filter(r => r.status === 'rejected' && r.type === 'sell'));
-      });
+      setRejectedBuy(all.filter(r => r.status === 'rejected' && r.type !== 'sell'));
+      setRejectedSell(all.filter(r => r.status === 'rejected' && r.type === 'sell'));
+    });
 
     return () => unsubscribe();
   }, []);
@@ -48,10 +46,10 @@ const AdminConsultationScreen = () => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const ref = firestore().collection("consultation_requests").doc(id);
-      const doc = await ref.get();
-      if (doc.exists) {
-        await ref.update({ status: newStatus });
+      const docRef = doc(firestore(), "consultation_requests", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await updateDoc(docRef, { status: newStatus });
         Alert.alert("완료", `요청이 '${newStatus}'로 변경되었습니다.`);
       }
     } catch (error) {
@@ -111,22 +109,21 @@ const AdminConsultationScreen = () => {
       const hours = selectedTime.getHours().toString().padStart(2, '0');
       const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
       const formattedTime = `${hours}:${minutes}`;
+      
+      const docRef = doc(firestore(), "consultation_requests", editingItem.id);
 
-      firestore()
-        .collection('consultation_requests')
-        .doc(editingItem.id)
-        .update({
-          preferredDate: editingItem.preferredDate,
-          preferredTime: formattedTime,
-        })
-        .then(() => {
-          Alert.alert('성공', '일정이 수정되었습니다.');
-          setEditingItem(null);
-        })
-        .catch((error) => {
-          console.error(error);
-          Alert.alert('오류', '일정 수정에 실패했습니다.');
-        });
+      updateDoc(docRef, {
+        preferredDate: editingItem.preferredDate,
+        preferredTime: formattedTime,
+      })
+      .then(() => {
+        Alert.alert('성공', '일정이 수정되었습니다.');
+        setEditingItem(null);
+      })
+      .catch((error) => {
+        console.error(error);
+        Alert.alert('오류', '일정 수정에 실패했습니다.');
+      });
     }
   };
 

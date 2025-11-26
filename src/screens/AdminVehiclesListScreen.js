@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { collection, getDocs, doc, deleteDoc } from '@react-native-firebase/firestore';
 import { formatPrice } from '../utils/format';
 
 const AdminVehiclesListScreen = ({ navigation }) => {
@@ -9,10 +9,10 @@ const AdminVehiclesListScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const snapshot = await firestore().collection('vehicles').get();
-        const vehiclesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
+        const snapshot = await getDocs(collection(firestore(), 'vehicles'));
+        const vehiclesData = snapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data(),
         }));
         setVehicles(vehiclesData);
       } catch (error) {
@@ -34,7 +34,7 @@ const AdminVehiclesListScreen = ({ navigation }) => {
           style: "destructive",
           onPress: async () => {
             try {
-              await firestore().collection('vehicles').doc(vehicleId).delete();
+              await deleteDoc(doc(firestore(), 'vehicles', vehicleId));
               setVehicles(prevVehicles => prevVehicles.filter(vehicle => vehicle.id !== vehicleId));
               Alert.alert("삭제 완료", "차량이 삭제되었습니다.");
             } catch (error) {

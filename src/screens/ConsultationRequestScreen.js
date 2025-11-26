@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";
 import DatePicker from "react-native-date-picker";
 import { AuthContext } from "../context/AuthContext";
-import firestore from "@react-native-firebase/firestore";
+import firestore, { collection, query, where, getDocs } from "@react-native-firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
 import { saveConsultationRequest } from '../services/firebaseService';
 
@@ -25,23 +25,23 @@ const ConsultationRequestScreen = ({ route }) => {
   };
 
   const checkDuplicateConsultation = async (userId, vehicleId) => {
-    const snapshot = await firestore()
-      .collection('consultation_requests')
-      .where('user_id', '==', userId)
-      .where('vehicleId', '==', vehicleId)
-      .get();
-
+    const q = query(
+      collection(firestore(), 'consultation_requests'),
+      where('userId', '==', userId),
+      where('vehicleId', '==', vehicleId)
+    );
+    const snapshot = await getDocs(q);
     return !snapshot.empty;
   };
 
   const checkTimeConflict = async (vehicleId, date, time) => {
-    const snapshot = await firestore()
-      .collection('consultation_requests')
-      .where('vehicleId', '==', vehicleId)
-      .where('preferred_date', '==', date)
-      .where('preferred_time', '==', time)
-      .get();
-
+    const q = query(
+      collection(firestore(), 'consultation_requests'),
+      where('vehicleId', '==', vehicleId),
+      where('preferredDate', '==', date),
+      where('preferredTime', '==', time)
+    );
+    const snapshot = await getDocs(q);
     return !snapshot.empty;
   };
 
