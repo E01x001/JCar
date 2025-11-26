@@ -1,4 +1,4 @@
-package com.jcarplatform.jcar
+package com.jcarnew
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
