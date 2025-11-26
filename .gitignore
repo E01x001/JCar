@@ -102,3 +102,27 @@ dist/
 
 # Firebase config
 android/app/google-services.json
+
+# Logs
+logs
+*.log
+yarn-debug.log*
+dev-debug.log
+
+# Security & Credentials
+android/key.properties
+android/gradle.properties
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

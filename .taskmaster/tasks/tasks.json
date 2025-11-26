@@ -1,0 +1,736 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Security Hardening: Remove Exposed Credentials and Secure Environment",
+        "description": "Remove the exposed GitHub Personal Access Token (PAT) from the codebase and ensure the .env file is properly ignored by version control to prevent future credential leaks.",
+        "details": "1. Locate the .env file containing the exposed GitHub PAT. 2. Remove the PAT from the file. If it's needed for a dependency, source it from a secure environment variable provider or a secure secret management system. 3. Ensure the `.gitignore` file at the root of the project contains a line for `.env` and `*.env`. 4. Verify that no history of the .env file exists in the Git repository. If it does, the history must be rewritten using tools like `git filter-repo` or BFG Repo-Cleaner to completely remove the sensitive data. 5. Rotate the leaked PAT on GitHub immediately.",
+        "testStrategy": "1. Run `git check-ignore .env` to confirm the file is ignored. 2. Clone the repository in a fresh directory and verify the .env file is not present. 3. Search the Git history using `git log -S'GITHUB_PAT'` to ensure the token is no longer present in historical commits.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Immediately Rotate Exposed GitHub PAT",
+            "description": "The first and most critical step is to invalidate the leaked Personal Access Token on GitHub to prevent unauthorized access. A new token should be generated if it is still required for any services.",
+            "dependencies": [],
+            "details": "Log into the GitHub account associated with the leaked PAT. Navigate to Settings -> Developer settings -> Personal access tokens. Find the compromised token, revoke it, and delete it. If the token is necessary for CI/CD, generate a new one with minimal permissions and store it as a secure secret.\n<info added on 2025-11-26T16:43:31.211Z>\nThe .env file also contains an exposed Gemini API Key: AIzaSyDuZVHWbWwdMBjicHmHZxvPFowGGf4yVso. This key must also be revoked immediately in the Google Cloud Console. A .env.example file has been created to serve as a template for the required environment variables.\n</info added on 2025-11-26T16:43:31.211Z>",
+            "status": "done",
+            "testStrategy": "Verify that any scripts or services using the old token fail to authenticate after it has been revoked. Confirm the new token (if created) works correctly in its intended environment (e.g., GitHub Actions).",
+            "updatedAt": "2025-11-26T16:53:13.335Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Remove .env File from Git Tracking",
+            "description": "Remove the `.env` file from the Git index to ensure it is no longer tracked by version control, without deleting the local file itself.",
+            "dependencies": [
+              1
+            ],
+            "details": "First, locate the `.env` file in the project root and delete the line containing the `GITHUB_PAT`. Then, run the command `git rm --cached .env` to untrack the file. This will stage the deletion of the file from the repository index for the next commit.",
+            "status": "done",
+            "testStrategy": "After running the command, execute `git status`. The output should show the `.env` file as 'deleted' in the staging area. The local `.env` file should still exist in the filesystem.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-26T16:53:59.198Z"
+          },
+          {
+            "id": 3,
+            "title": "Update .gitignore to Exclude Environment Files",
+            "description": "Add entries for `.env` and similar configuration files to the project's root `.gitignore` file to prevent them from being accidentally committed in the future.",
+            "dependencies": [
+              2
+            ],
+            "details": "Open the `.gitignore` file at the root of the project. Add the following lines if they are not already present: `\n.env\n*.env`. This pattern will ignore the main `.env` file and any variants like `.env.local` or `.env.production`. Commit this change along with the untracked file from the previous step.",
+            "status": "done",
+            "testStrategy": "From the project root, run the command `git check-ignore .env`. The command should output `.env`, confirming that Git is now correctly ignoring the file. Attempting to stage the file with `git add --force .env` should work, but a normal `git add .env` should not.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-26T16:54:52.870Z"
+          },
+          {
+            "id": 4,
+            "title": "Scan Git History for Leaked Credentials",
+            "description": "Thoroughly scan the entire Git commit history to determine if the Personal Access Token or the `.env` file was ever committed. This is crucial for identifying the full extent of the leak.",
+            "dependencies": [
+              3
+            ],
+            "details": "Use Git commands to search the repository's history. Run `git log -S \"<PASTE_THE_LEAKED_TOKEN_HERE>\"` to find commits that introduced or removed the specific token value. Also, run `git log --all --full-history -- \"**/.env\"` to find any commits that affected an `.env` file. Document any commit hashes found.\n<info added on 2025-11-26T16:56:37.494Z>\nThe scan of the entire Git history is complete. Results confirm that no sensitive data, including the .env file, GitHub PAT, or Gemini API Key, was ever committed. The repository history is clean, making Task 1.5 (Purge Sensitive Data from Git History) unnecessary.\n</info added on 2025-11-26T16:56:37.494Z>",
+            "status": "done",
+            "testStrategy": "The successful execution of the search commands is the test. If the commands return any commit hashes, the scan has successfully identified historical leaks. If no commits are found, the history is clean and the next subtask can be skipped.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-26T16:56:14.561Z"
+          },
+          {
+            "id": 5,
+            "title": "Purge Sensitive Data from Git History",
+            "description": "If the previous scan revealed the PAT in the commit history, the history must be rewritten to permanently remove the sensitive data. This is a destructive operation and requires coordination with the entire team.",
+            "dependencies": [
+              4
+            ],
+            "details": "This task is conditional on the outcome of subtask 4. If credentials were found, use a tool like `git-filter-repo` to remove the specific file (`.env`) or the string value of the PAT from all historical commits. This action will rewrite commit hashes and requires a force push (`git push --force`) to the remote repository. All collaborators must be notified as they will need to re-clone or carefully reset their local branches.",
+            "status": "done",
+            "testStrategy": "After rewriting history and force-pushing, clone the repository into a new, clean directory. Run the same search commands from subtask 4 (`git log -S \"...\"`). The commands must now return no results, confirming the sensitive data has been successfully purged from the entire history.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-26T16:56:17.277Z"
+          }
+        ],
+        "updatedAt": "2025-11-26T16:56:17.277Z"
+      },
+      {
+        "id": 2,
+        "title": "Implement Firestore Security Rules",
+        "description": "Define and apply Firestore security rules for the users, vehicles, and consultation_requests collections to enforce proper access control and data validation.",
+        "details": "Develop and deploy `firestore.rules`. The rules should enforce that: \n- `users`: A user can only read/write their own document (`allow read, write: if request.auth.uid == userId;`). Publicly readable fields should be explicitly allowed. \n- `vehicles`: Any authenticated user can read vehicle documents. Only authorized admins or the vehicle owner (if allowed) can create/update/delete. Writes should validate data types (e.g., `price` is a number). \n- `consultation_requests`: Users can only create requests for themselves. They can only read their own requests. Admins should have read/write access to all requests. \n- `Firebase Storage`: Rules for image uploads should ensure that only authenticated users can upload images and that file size and type are validated.",
+        "testStrategy": "1. Use the Firebase Emulator Suite to test rules locally. 2. Write unit tests for security rules using the `@firebase/rules-unit-testing` library. 3. Create test cases for authenticated users, unauthenticated users, and admins attempting valid and invalid read/write operations on each collection.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Firestore and Storage Rules Files and Configure Emulator",
+            "description": "Create the `firestore.rules` and `storage.rules` files. Set up the basic rules structure with a default deny-all policy. Configure the Firebase Emulator Suite for local testing of these rules.",
+            "dependencies": [],
+            "details": "Create `firestore.rules` and `storage.rules` in the project root. In `firestore.rules`, add `rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if false; } } }`. A similar deny-all rule should be added to `storage.rules`. This establishes a secure baseline before adding specific permissions.",
+            "status": "pending",
+            "testStrategy": "Start the Firebase Emulator using `firebase emulators:start`. Manually verify in the Emulator UI that all unauthorized read/write attempts to Firestore and Storage are blocked as expected.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement Security Rules for the 'users' Collection",
+            "description": "Define security rules for the `users` collection to ensure a user can only read and write to their own document. This will also include creating a reusable function to check for admin privileges for use in other rules.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `firestore.rules`, add a match block for `/users/{userId}`. Implement the rule `allow read, write: if request.auth.uid == userId;`. Also, create a global helper function `isAdmin()` which checks if the requesting user has an `isAdmin: true` field in their own user document: `get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true`.",
+            "status": "pending",
+            "testStrategy": "Using `@firebase/rules-unit-testing`, write tests to assert that: 1. An authenticated user can successfully read and write their own document. 2. An authenticated user's attempt to read or write another user's document is denied. 3. An unauthenticated user's attempt to access any user document is denied.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Security Rules for the 'vehicles' Collection",
+            "description": "Define security rules for the `vehicles` collection. These rules should allow any authenticated user to read vehicle data but restrict create, update, and delete operations to admins. Data validation must be enforced on writes.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "In `firestore.rules`, add a match block for `/vehicles/{vehicleId}`. Implement `allow read: if request.auth != null;`. For writes, use `allow create, update, delete: if isAdmin();`. Add data validation to ensure incoming data (`request.resource.data`) contains required fields and that `price` and `year` are numbers.",
+            "status": "pending",
+            "testStrategy": "Write unit tests to confirm: 1. Any authenticated user can read from the vehicles collection. 2. An admin user can create, update, and delete vehicle documents. 3. A non-admin authenticated user cannot perform any write operations. 4. A write attempt with an invalid data type (e.g., `price` as a string) is rejected.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Security Rules for the 'consultation_requests' Collection",
+            "description": "Define security rules for the `consultation_requests` collection. Users must only be able to create requests for themselves and read their own requests. Admins require full read/write access to all requests.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Add a match block for `/consultation_requests/{requestId}`. The `read` rule should be `allow read: if request.auth.uid == resource.data.userId || isAdmin();`. The `create` rule should be `allow create: if request.auth.uid == request.resource.data.userId;`. The `update` and `delete` rules should be `allow update, delete: if isAdmin();`.",
+            "status": "pending",
+            "testStrategy": "Write unit tests to verify: 1. A user can create a request with their own UID. 2. A user can read their own requests but not others'. 3. An admin can read any user's request. 4. An admin can update or delete any request, while a regular user cannot.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Implement Firebase Storage Security Rules for Image Uploads",
+            "description": "Define security rules in `storage.rules` to manage file uploads for vehicle images. The rules must ensure that only authenticated users can upload files, and validate the file size and content type.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the `storage.rules` file, create a match block for vehicle images, e.g., `match /vehicle-images/{userId}/{imageId}`. The write rule should be `allow write: if request.auth != null && request.auth.uid == userId;`. Add validation checks to limit file size (e.g., `request.resource.size < 5 * 1024 * 1024`) and content type (`request.resource.contentType.matches('image/.*')`).",
+            "status": "pending",
+            "testStrategy": "Using the Storage emulator testing library, verify that: 1. An authenticated user can successfully upload an image that meets the size and type criteria. 2. An upload attempt from an unauthenticated user fails. 3. An attempt to upload an oversized file is rejected. 4. An attempt to upload a non-image file is rejected.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Implement Global Error Handling & Logging",
+        "description": "Establish a comprehensive error handling and logging strategy using a global error boundary and a structured logging service like Firebase Crashlytics.",
+        "details": "1. Integrate `react-native-firebase/app` and `react-native-firebase/crashlytics`. Follow the setup instructions for both Android and iOS. 2. Create a global error boundary component using a class component with `componentDidCatch`. This boundary should wrap the root `App` component. When it catches an error, it should log the error to Crashlytics (`crashlytics().recordError(error)`) and display a user-friendly fallback UI. 3. Wrap all Firebase API calls (Firestore, Auth, Storage) in try/catch blocks. In the catch block, log the error to Crashlytics and display a localized, user-friendly message to the user via a toast or alert.",
+        "testStrategy": "1. Create a test button in a development build that intentionally throws an error to verify the error boundary is triggered and the error is logged to the Firebase Crashlytics console. 2. Simulate network failures to test the retry logic and error handling for Firebase operations. 3. Manually test form submissions with invalid data to ensure catch blocks are working as expected.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and Configure Firebase App and Crashlytics SDKs",
+            "description": "Add the `@react-native-firebase/app` and `@react-native-firebase/crashlytics` packages to the project and perform the necessary native platform setup for both Android and iOS to enable Firebase services.",
+            "dependencies": [],
+            "details": "Follow the official react-native-firebase documentation. For Android, add the `google-services.json` file and update the `build.gradle` files with the Google services plugin and Crashlytics dependencies. For iOS, add `GoogleService-Info.plist` to Xcode, update the `AppDelegate` file, and run `pod install` in the `ios` directory.",
+            "status": "pending",
+            "testStrategy": "After setup, run the application on both an Android emulator and an iOS simulator to ensure it builds and launches without any Firebase-related configuration errors. Check the device logs for successful Firebase initialization messages.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create a Global Error Boundary Component",
+            "description": "Implement a new class component named `ErrorBoundary` that catches JavaScript rendering errors in its child component tree, logs them to Crashlytics, and displays a user-friendly fallback UI.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new file, for example, `src/components/ErrorBoundary.tsx`. This file will export a class component that extends `React.Component`. Implement the `getDerivedStateFromError` and `componentDidCatch(error, errorInfo)` lifecycle methods. Inside `componentDidCatch`, call `crashlytics().recordError(error)`. The component's state should track an `hasError` flag to conditionally render a fallback UI instead of the child components when an error is caught.",
+            "status": "pending",
+            "testStrategy": "Unit test the ErrorBoundary component. Create tests that simulate a child component throwing an error and assert that the fallback UI is rendered. Mock the Crashlytics module to verify that `recordError` is called.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Integrate Error Boundary at the Application Root",
+            "description": "Wrap the main application component with the newly created `ErrorBoundary` to ensure it can catch rendering errors that occur anywhere within the component tree.",
+            "dependencies": [
+              2
+            ],
+            "details": "Locate the application's root component file (e.g., `App.tsx` or `index.js`). Import the `ErrorBoundary` component and wrap the main rendered component (e.g., `<App />`) with `<ErrorBoundary>...</ErrorBoundary>`. This will make the error handling global for the entire React component tree.",
+            "status": "pending",
+            "testStrategy": "Manually test by temporarily adding a component that throws an error on render inside the main App component. Verify that the fallback UI from the ErrorBoundary is displayed instead of a white screen or app crash.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Refactor Firebase API Calls with try/catch Blocks",
+            "description": "Systematically review and refactor all asynchronous Firebase operations (e.g., Firestore, Auth, Storage) to include `try/catch` blocks for robust error handling and logging of non-component errors.",
+            "dependencies": [
+              1
+            ],
+            "details": "Search the codebase for all asynchronous interactions with Firebase services, such as `firestore().collection().get()`, `auth().signInWithEmailAndPassword()`, etc. Enclose these calls within `try/catch` blocks. In each `catch (error)` block, log the error using `crashlytics().recordError(error)` and implement a user-facing feedback mechanism, such as a toast notification or an alert, to inform the user of the failure.",
+            "status": "pending",
+            "testStrategy": "For each refactored Firebase call, write a unit test where the Firebase method is mocked to throw an error. Assert that `crashlytics().recordError()` is called and that the user feedback mechanism (e.g., a mocked toast service) is triggered.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Implement and Test a Crash Trigger for Verification",
+            "description": "Add a development-only mechanism to intentionally trigger a JavaScript error and a native crash to fully verify that the Error Boundary and Crashlytics are configured and working correctly.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "In a settings or debug screen, add two buttons that are only rendered if `__DEV__` is true. The first button's `onPress` handler should execute `throw new Error('Test JS Error from UI');`. The second button's handler should call `crashlytics().crash()`. Use these buttons to test the end-to-end error reporting flow.",
+            "status": "pending",
+            "testStrategy": "On a development build running on a physical device or emulator, press the test buttons. For the JS error, confirm the Error Boundary's fallback UI is shown. For both tests, check the Firebase Crashlytics console to ensure the crash and non-fatal error reports are received and correctly symbolicated.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Setup Testing Framework and Code Quality Tools",
+        "description": "Configure Jest for unit testing, ESLint for static code analysis, and Husky for pre-commit hooks to enforce code quality and testing standards.",
+        "details": "1. **Jest**: Install Jest and the `react-native` preset. Configure `jest.config.js` to set up mocks for native modules and assets. 2. **ESLint**: Initialize ESLint with a recommended ruleset like `@react-native-community/eslint-config`. Create a `.eslintrc.js` file and add rules to enforce project coding standards. Add an `npm run lint` script to `package.json`. 3. **Husky**: Install Husky and `lint-staged`. Configure a `pre-commit` hook in the Husky configuration to run ESLint and Jest on staged files (`npx lint-staged`). This will prevent commits with linting errors or failing tests.",
+        "testStrategy": "1. Create a simple test file for a utility function and run `npm test` to ensure Jest is configured correctly. 2. Intentionally introduce a linting error in a file, stage it, and try to commit. Verify that the pre-commit hook fails and prevents the commit. 3. Fix the error and verify the commit succeeds.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and Configure ESLint",
+            "description": "Install ESLint and the recommended '@react-native-community/eslint-config' package. Create a root '.eslintrc.js' configuration file to establish a baseline for code style.",
+            "dependencies": [],
+            "details": "Use npm or yarn to install the necessary development dependencies: `eslint` and `@react-native-community/eslint-config`. Create a `.eslintrc.js` file in the project root and configure it to extend the community ruleset: `module.exports = {root: true, extends: '@react-native-community/eslint-config'};`.",
+            "status": "pending",
+            "testStrategy": "After installation, run `npx eslint .` in the terminal. Verify that it runs without configuration errors and reports any existing linting issues in the codebase.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Add 'lint' Script to package.json",
+            "description": "Add a `lint` script to the `package.json` file to provide a standardized way to run static code analysis across the entire project.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the `scripts` section of the `package.json` file, add a new script: `\"lint\": \"eslint . --ext .js,.jsx,.ts,.tsx\"`. This will allow developers to run the linter with the command `npm run lint`.",
+            "status": "pending",
+            "testStrategy": "Run `npm run lint` from the command line. Confirm that the script executes ESLint correctly. Intentionally introduce a syntax or style error into a file, run the script again, and verify that the error is reported.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Install and Configure Jest",
+            "description": "Install Jest and its required dependencies for a React Native environment. Create and configure the `jest.config.js` file to set up the testing framework.",
+            "dependencies": [],
+            "details": "Install `jest`, `@testing-library/react-native`, `@testing-library/jest-native`, and other necessary peer dependencies. Create a `jest.config.js` file at the project root. Set the `preset` to `'react-native'` and configure any required mocks for native modules, assets, or navigation libraries.",
+            "status": "pending",
+            "testStrategy": "After configuration, add a `\"test\": \"jest\"` script to `package.json`. Run `npm test` and ensure the test runner initializes without any configuration-related crashes, even if no tests exist yet.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Create a Sample Component Test",
+            "description": "Create an initial test file for a simple component to ensure the Jest configuration is working correctly and to establish a pattern for future tests.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a `__tests__` directory if it doesn't exist. Inside, create a test file such as `App-test.tsx`. Write a basic test that renders the App component and checks if it matches a snapshot or if a specific element is present.",
+            "status": "pending",
+            "testStrategy": "Run `npm test` from the terminal. Verify that Jest discovers and runs the new test file and that all assertions within the test pass successfully.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Set Up Husky and lint-staged Pre-commit Hook",
+            "description": "Install and configure Husky and `lint-staged` to create a pre-commit hook. This hook will automatically run ESLint and Jest on staged files, preventing commits with errors.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Run `npx husky-init && npm install` to set up Husky. Install `lint-staged`. In `package.json`, add a `\"lint-staged\"` configuration object to specify commands for different file types, for example `\"*.{js,ts,jsx,tsx}\": [\"eslint --fix\", \"jest --bail --findRelatedTests\"]`. Modify the generated `.husky/pre-commit` file to run `npx lint-staged`.",
+            "status": "pending",
+            "testStrategy": "Stage a file containing a linting error and attempt to commit it. Verify the pre-commit hook fails and blocks the commit. Fix the error, stage the file again, and confirm that the commit now succeeds.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Implement Push Notification System using FCM",
+        "description": "Integrate Firebase Cloud Messaging (FCM) to send and receive push notifications for critical app events, such as consultation status changes.",
+        "details": "1. Add the `@react-native-firebase/messaging` package. 2. Configure FCM for the Android project by adding the necessary dependencies and plugins in `build.gradle` files. 3. In the app's entry point, implement logic to request notification permissions from the user using `messaging().requestPermission()`. 4. Retrieve the device's FCM token using `messaging().getToken()` and store it in the corresponding user's document in Firestore. 5. Set up background and foreground message handlers (`messaging().onMessage()` and `messaging().setBackgroundMessageHandler()`) to process incoming notifications and display them to the user. 6. Create a Firebase Function triggered by updates to the `consultation_requests` collection to send notifications to relevant users.",
+        "testStrategy": "1. Use the Firebase Console to send test messages to a specific device token to verify setup. 2. Test receiving notifications when the app is in the foreground, background, and closed. 3. Trigger a consultation status change and verify the corresponding Firebase Function is invoked and sends a notification successfully. 4. Test on a physical Android device.",
+        "priority": "high",
+        "dependencies": [
+          "1",
+          "2"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and Configure Firebase Messaging Package for Android",
+            "description": "Add the `@react-native-firebase/messaging` package to the project and perform the necessary native Android configuration to enable Firebase Cloud Messaging.",
+            "dependencies": [],
+            "details": "Run `npm install @react-native-firebase/messaging`. Follow the official documentation to configure Android. This includes ensuring the `google-services` plugin is applied in `android/app/build.gradle` and that the correct Firebase dependencies are listed. Rebuild the Android app to ensure the native changes are applied.",
+            "status": "pending",
+            "testStrategy": "After installation and configuration, build the Android app successfully without any build errors related to Firebase or messaging services. Verify that the app still runs correctly on an emulator or device.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement Notification Permission Request Logic",
+            "description": "Integrate logic into the app's startup sequence to request notification permissions from the user on both Android and iOS platforms.",
+            "dependencies": [
+              1
+            ],
+            "details": "In a suitable global component like `App.tsx` or a dedicated service file, use a `useEffect` hook to call `messaging().requestPermission()`. Handle the response to determine if the user granted permission. This should be triggered once when the app loads.",
+            "status": "pending",
+            "testStrategy": "On a fresh app install, verify that the OS-level permission dialog appears. Test both accepting and denying the permission. Check the app's notification settings in the OS to confirm the permission status is reflected correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Retrieve and Store FCM Token in User's Firestore Document",
+            "description": "After permission is granted, retrieve the device's unique FCM token and implement a mechanism to save it to the currently authenticated user's document in the `users` collection in Firestore.",
+            "dependencies": [
+              2
+            ],
+            "details": "Upon successful permission request or app start if permission is already granted, call `messaging().getToken()`. Once the token is retrieved, update the logged-in user's document in Firestore with the token, likely in a field named `fcmToken`. Also, subscribe to `messaging().onTokenRefresh()` to handle token updates.",
+            "status": "pending",
+            "testStrategy": "Log the retrieved token to the console to verify it's being generated. After logging in, check the corresponding user document in the Firestore console to confirm the `fcmToken` field has been created and populated correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Client-Side Message Handlers",
+            "description": "Set up message handlers to process incoming notifications when the app is in the foreground, background, or terminated.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the root `index.js` file, register the `messaging().setBackgroundMessageHandler()` to handle notifications when the app is not active. In the main `App.tsx` component, use the `messaging().onMessage()` listener inside a `useEffect` hook to handle incoming notifications while the app is in the foreground, potentially displaying an in-app alert.",
+            "status": "pending",
+            "testStrategy": "Use the Firebase Console to send test messages. Verify that foreground messages trigger the `onMessage` handler (e.g., show a console log or an alert). Send a message while the app is in the background and verify the notification appears in the system tray.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Create Firebase Function to Send Notifications on Status Change",
+            "description": "Develop and deploy a Firebase Cloud Function that is triggered by an update to a `consultation_requests` document. The function will send a notification to the relevant user.",
+            "dependencies": [
+              3
+            ],
+            "details": "In the `functions/src/index.ts` file, create a new Cloud Function using `functions.firestore.document('consultation_requests/{requestId}').onUpdate()`. Inside the function, check if the `status` field has changed. If it has, retrieve the associated user's ID, look up their `fcmToken` from the `users` collection, and use the Firebase Admin SDK to send a targeted push notification.",
+            "status": "pending",
+            "testStrategy": "Deploy the function to a development environment. Manually update the status of a document in the `consultation_requests` collection in the Firestore console. Check the function logs to ensure it was triggered correctly and monitor the test device to confirm the push notification is received.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Write Unit Tests for Critical Functions",
+        "description": "Write a suite of unit tests for existing critical business logic, focusing on services, formatters, and validators to improve code reliability.",
+        "details": "Using the Jest framework set up in Task 4, create test files for the following: \n- `firebaseService.js`: Mock Firebase functions using `jest.mock` to test data fetching, vehicle registration, and consultation request logic without making actual API calls. \n- **Validators**: Test input validation functions for forms (e.g., email format, password strength, vehicle year). Test with both valid and invalid inputs. \n- **Formatters**: Test utility functions that format data for display (e.g., currency formatters for price, date formatters for timestamps).",
+        "testStrategy": "1. Run all tests via `npm test` and ensure they pass. 2. Integrate a code coverage tool like `jest --coverage` to measure test effectiveness. Aim for an initial coverage of over 70% for the targeted files. 3. Ensure tests are run as part of the pre-commit hook.",
+        "priority": "medium",
+        "dependencies": [
+          "4"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Test Setup for firebaseService.js with Firebase Mocks",
+            "description": "Create a `firebaseService.test.js` file and implement the necessary mocks for the `@react-native-firebase/firestore` module using `jest.mock`. This foundational step will prevent actual database calls during tests.",
+            "dependencies": [],
+            "details": "In the new `__tests__/services/firebaseService.test.js` file, use `jest.mock('@react-native-firebase/firestore', () => { ... })` to return a mock implementation. The mock should allow for spying on and controlling the behavior of functions like `collection`, `doc`, `get`, and `add` for subsequent tests.",
+            "status": "pending",
+            "testStrategy": "Verify that running `npm test` does not result in errors related to the firebaseService test file and that no actual network requests to Firebase are made.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Write Unit Tests for Data Fetching Functions in firebaseService.js",
+            "description": "Using the mock setup from the previous task, write unit tests for the data retrieval functions in `firebaseService.js`, specifically `getVehicles` and `getUserProfile`. Tests should cover both successful and empty/failed responses.",
+            "dependencies": [
+              1
+            ],
+            "details": "For `getVehicles`, mock a successful response from `firestore().collection('vehicles').get()` and assert that the function correctly maps and returns the documents. For `getUserProfile`, test the case where a document is found and the case where it isn't, ensuring it returns user data or null accordingly.",
+            "status": "pending",
+            "testStrategy": "Run tests and assert that the functions return the expected data structures based on the mocked Firestore responses. Ensure tests pass for both success and failure scenarios.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Write Unit Tests for Data Writing Functions in firebaseService.js",
+            "description": "Write unit tests for the functions that perform write operations, such as `registerVehicle` and `createConsultationRequest`. The tests should verify that the correct data payload is passed to the mocked Firestore functions.",
+            "dependencies": [
+              1
+            ],
+            "details": "For each write function, create a test that calls the function with sample data. Use `expect(mockedAddFunction).toHaveBeenCalledWith(...)` to assert that the mocked Firestore `add` method was called with the exact object structure expected.",
+            "status": "pending",
+            "testStrategy": "Confirm that tests pass and that the spy on the mocked `add` function correctly captures the function calls with the appropriate arguments.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Unit Tests for Validator and Formatter Utilities",
+            "description": "Create test files for `validators.js` and `formatters.js`. Write a comprehensive suite of tests covering all functions with both valid and invalid inputs to ensure they behave as expected across various edge cases.",
+            "dependencies": [],
+            "details": "Create `__tests__/utils/validators.test.js` and `__tests__/utils/formatters.test.js`. For validators (e.g., `isValidEmail`, `isStrongPassword`), test with multiple valid and invalid strings. For formatters (e.g., `formatCurrency`, `formatDate`), test with numbers, valid timestamp objects, and null/undefined inputs to ensure robust formatting.",
+            "status": "pending",
+            "testStrategy": "Execute the tests and verify that all assertions pass. Check that each function's output matches the expected result for a wide range of inputs, including edge cases.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Run Test Suite and Generate Code Coverage Report",
+            "description": "Execute the entire test suite and use Jest's built-in coverage tool to generate a report. Analyze the report to ensure the newly tested files meet the project's target coverage of over 70%.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Run the command `npm test -- --coverage` in the terminal. This will execute all tests and create a `coverage/` directory. Open the `lcov-report/index.html` file in a browser to review the statement, branch, and function coverage for the targeted files. If coverage is below 70%, add tests for any missed logic.",
+            "status": "pending",
+            "testStrategy": "Confirm that the coverage command runs successfully and produces a report. Verify that the coverage percentages for `firebaseService.js`, `validators.js`, and `formatters.js` are at or above the 70% threshold.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Enhance Admin Management Features",
+        "description": "Implement high-priority admin features, including emergency vehicle deletion and a user management interface for suspending or activating accounts.",
+        "details": "1. **Emergency Delete**: In the admin panel's vehicle view, add a 'Delete' button. On click, it should trigger a Firebase Function that performs a hard delete of the vehicle document and its associated images in Firebase Storage. This action should be logged in an admin activity log collection. 2. **User Management**: Create a new screen in the admin panel to list all users. Implement functionality to search and filter users. Each user item should have a toggle/button to change a `status` field in their user document (e.g., from 'active' to 'suspended'). Firestore security rules must be updated to deny writes from suspended users.",
+        "testStrategy": "1. As an admin, delete a test vehicle and verify its document and storage files are removed. 2. As an admin, suspend a test user account. Log in as the suspended user and verify they are blocked from performing key actions (e.g., creating a consultation). 3. Verify all admin actions are correctly recorded in the activity log.",
+        "priority": "medium",
+        "dependencies": [
+          "2"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Firebase Function for Emergency Vehicle Deletion",
+            "description": "Develop and deploy an HTTPS callable Firebase Function that hard-deletes a specified vehicle document from Firestore, removes its associated images from Firebase Storage, and logs the action in an 'admin_activity_log' collection.",
+            "dependencies": [],
+            "details": "The function should accept a `vehicleId` as input. It must first authenticate the request to ensure the caller is an admin. It will then fetch the vehicle document to get image URLs, delete files from the default storage bucket, delete the Firestore document, and finally create a log entry with admin UID, target vehicleId, and timestamp.",
+            "status": "pending",
+            "testStrategy": "Use the Firebase Local Emulator Suite to invoke the function with a test vehicle ID. Verify that the Firestore document is deleted, the corresponding files in the Storage emulator are removed, and a log entry is created. Test unauthorized access to ensure it fails.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement 'Delete Vehicle' Button in Admin Panel UI",
+            "description": "In the admin's vehicle management screen, add a 'Delete' button to each vehicle entry. This button will trigger a confirmation modal and, upon confirmation, call the vehicle deletion Firebase Function.",
+            "dependencies": [
+              1
+            ],
+            "details": "Locate the component responsible for rendering the list of vehicles for admins. Add a styled 'Delete' button. Implement an `Alert` or a custom modal to confirm the deletion. On confirmation, use the Firebase Functions SDK to call the `deleteVehicle` function, passing the `vehicleId`.",
+            "status": "pending",
+            "testStrategy": "As an admin, navigate to the vehicle list. Press the delete button for a test vehicle. Verify the confirmation modal appears. Confirm deletion and check the UI for the vehicle's removal. Check Firestore and Storage to confirm deletion via the function.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Build User Management Screen UI",
+            "description": "Create a new screen in the admin panel to display a list of all application users. The screen should include a search bar to find users by email or name.",
+            "dependencies": [],
+            "details": "Create a new screen component, e.g., `UserManagementScreen.js`. Add it to the admin navigation stack. Fetch all documents from the 'users' collection and display them in a `FlatList`. Each list item should show key user details (name, email, status). Implement a search input that filters the displayed list client-side or by re-querying Firestore.",
+            "status": "pending",
+            "testStrategy": "Navigate to the new admin screen and verify that all registered users are listed correctly. Test the search functionality by typing a known user's name or email and confirm the list filters as expected. Ensure the UI is responsive.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement User Account Suspend/Activate Functionality",
+            "description": "In the User Management screen, add a toggle switch or button to each user item that allows an admin to change the user's status between 'active' and 'suspended'.",
+            "dependencies": [
+              3
+            ],
+            "details": "For each user in the list, add a `Switch` or `Button` component that reflects the user's current `status` from Firestore. When the admin interacts with the control, it should trigger a Firestore update operation to change the `status` field on the corresponding user document. The UI should optimistically update or refetch data to show the new status.",
+            "status": "pending",
+            "testStrategy": "As an admin, go to the user management screen. Change the status of a test user from 'active' to 'suspended' and back. Verify the change is reflected in the UI and in the user's document in the Firestore console. Also log this admin action.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Update Firestore Security Rules to Restrict Suspended Users",
+            "description": "Modify `firestore.rules` to deny write access to key collections (e.g., 'consultation_requests', 'vehicles') for users whose `status` field in their own user document is set to 'suspended'.",
+            "dependencies": [
+              4
+            ],
+            "details": "Edit the `firestore.rules` file. For relevant collections, update the `allow write` conditions to include a check against the requesting user's document. The rule should look something like: `allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';`",
+            "status": "pending",
+            "testStrategy": "Using the Firestore Rules Emulator, write unit tests for a suspended user attempting to create a document in a protected collection. The test should assert that the write operation is denied. Manually log in to the app as a suspended test user and attempt a write action to confirm it is blocked.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement Advanced Vehicle Search and Filters",
+        "description": "Develop an advanced search interface allowing users to filter and sort the vehicle list by multiple criteria such as price range, year, and manufacturer.",
+        "details": "1. Create a 'Filter' modal or screen accessible from the main vehicle list. 2. Add UI components for filtering: sliders for price/year range, multi-select pickers for manufacturers. 3. When the user applies filters, construct a composite Firestore query. For example: `firestore().collection('vehicles').where('price', '>=', minPrice).where('price', '<=', maxPrice).orderBy('price').limit(20)`. Note Firestore's limitations on composite queries may require data duplication or a more advanced search solution like Algolia if complexity increases. 4. Implement sorting options (e.g., Price: Low to High) which will modify the `orderBy()` clause of the Firestore query.",
+        "testStrategy": "1. Unit test the query construction logic. 2. Manually test the UI by applying various filter combinations and verifying that the returned vehicle list is accurate. 3. Test edge cases, such as a filter combination that yields no results, ensuring a user-friendly message is displayed.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Filter Modal UI and Navigation Trigger",
+            "description": "Create a new modal component for the advanced search filters and add a 'Filter' button to the main vehicle list screen to open it.",
+            "dependencies": [],
+            "details": "In the `VehicleListScreen.tsx`, add a new `Button` or `TouchableOpacity` component that, when pressed, will present the `FilterModal`. The `FilterModal` component should be created as a new file, e.g., `src/components/modals/FilterModal.tsx`. Initially, it can be a simple shell with a title, a close button, and an 'Apply Filters' button.",
+            "status": "pending",
+            "testStrategy": "Manually press the 'Filter' button on the vehicle list screen and verify that the modal appears correctly and can be dismissed. Snapshot testing can be used for the initial modal layout.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Develop UI Components for Filtering Criteria",
+            "description": "Implement the UI components inside the filter modal for price range, year range, and manufacturer selection.",
+            "dependencies": [
+              1
+            ],
+            "details": "Inside `FilterModal.tsx`, add the necessary UI controls. Use a slider component (e.g., from `@react-native-community/slider`) for price and year ranges. For manufacturers, implement a multi-select list. Fetch the list of unique manufacturers from the Firestore 'vehicles' collection once. Use `useState` within the modal to manage the temporary state of these inputs before they are applied.",
+            "status": "pending",
+            "testStrategy": "Render the modal component in a storybook or test environment. Interact with the sliders and the multi-select component to ensure their state is updated correctly within the component. Verify the UI is responsive and user-friendly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Filter State Management",
+            "description": "Establish a mechanism, likely using React Context or a global state manager, to hold the applied filter values and make them accessible to the vehicle list screen.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a `FilterContext` to manage the state of active filters. The context provider should wrap the main navigator or at least the `VehicleListScreen`. The `FilterModal` will use the context's updater function when the 'Apply Filters' button is pressed. The `VehicleListScreen` will consume this context to get the current filter criteria.",
+            "status": "pending",
+            "testStrategy": "Unit test the context provider and consumer. Create a test component that updates the filter context and another that reads from it, and assert that the values are passed correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Build Dynamic Firestore Query Construction Service",
+            "description": "Create a utility function or service that takes a filter object and dynamically constructs a Firestore query with the appropriate 'where' and 'orderBy' clauses.",
+            "dependencies": [],
+            "details": "Create a new file, e.g., `src/services/firestoreQueryBuilder.ts`. This file will export a function `buildVehicleQuery(filters)` which accepts an object like `{ minPrice, maxPrice, manufacturers, sortBy }`. The function will start with `firestore().collection('vehicles')` and conditionally chain `.where()` and `.orderBy()` methods based on the provided filters. It must handle cases where filters are not set. Note Firestore's limitation: range filters can only be on one field per query.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the `buildVehicleQuery` function. Pass various filter combinations (including empty/null values) and assert that the generated Firestore query object has the correct structure and clauses. Mock the firestore object for these tests.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Integrate Filtering Logic into Vehicle List Screen",
+            "description": "Connect the filter state and the query builder to the vehicle list screen to fetch and display the filtered and sorted data from Firestore.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "In `VehicleListScreen.tsx`, use the `FilterContext` to get the current filters. Use a `useEffect` hook that listens for changes to these filters. When filters change, call the `buildVehicleQuery` service with the new filter state, execute the resulting query against Firestore, and update the component's state with the new list of vehicles. Also, implement a loading indicator and a message for when no results are found.",
+            "status": "pending",
+            "testStrategy": "Perform end-to-end manual testing. Open the modal, apply various filter combinations (price, manufacturer, sort order), and verify that the vehicle list updates correctly. Test edge cases like clearing all filters and applying a filter that returns no results.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Set Up CI/CD Pipeline with GitHub Actions",
+        "description": "Automate the build, linting, and testing process for the Android application using a GitHub Actions workflow.",
+        "details": "1. Create a `.github/workflows` directory in the project root. 2. Create a YAML file (e.g., `android-ci.yml`). 3. Define a workflow that triggers on `pull_request` to the `main` or `develop` branch. 4. The workflow should have jobs for: \n   - `setup`: Check out the code, set up Node.js, and install npm dependencies. \n   - `lint`: Run the ESLint checks (`npm run lint`). \n   - `test`: Run the Jest unit tests (`npm run test`). \n   - `build`: Assemble the Android debug build (`cd android && ./gradlew assembleDebug`) to ensure the project builds successfully.",
+        "testStrategy": "1. Create a new branch and open a pull request with code that contains a linting error. Verify that the 'lint' job in the GitHub Actions workflow fails. 2. Fix the linting error and push the change. Verify all jobs in the workflow pass. 3. Check the GitHub Actions tab in the repository to monitor workflow runs and diagnose failures.",
+        "priority": "medium",
+        "dependencies": [
+          "4",
+          "6"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize GitHub Actions Workflow Directory and File",
+            "description": "Create the necessary directory structure `.github/workflows` at the project root and add a new YAML file named `android-ci.yml` to house the continuous integration workflow.",
+            "dependencies": [],
+            "details": "In the root of the JCar project, create a directory named `.github`. Inside `.github`, create another directory named `workflows`. Finally, create an empty file inside `workflows` named `android-ci.yml`.",
+            "status": "pending",
+            "testStrategy": "Verify that the `.github/workflows/android-ci.yml` file exists in the repository after pushing the changes.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Define Workflow Triggers and Setup Job",
+            "description": "Configure the `android-ci.yml` workflow to trigger on pull requests to the `main` and `develop` branches. Implement a foundational `setup` job to prepare the environment for subsequent jobs.",
+            "dependencies": [
+              1
+            ],
+            "details": "Edit `android-ci.yml`. Define the workflow `name` and the `on` trigger: `pull_request: branches: [ main, develop ]`. Create a `jobs` section with a `setup` job that runs on `ubuntu-latest`. The job steps should include `actions/checkout@v3`, `actions/setup-node@v3` (with caching for npm), and `actions/setup-java@v3` for the Android build. The final step should be `npm install`.",
+            "status": "pending",
+            "testStrategy": "Create a pull request and verify that the GitHub Action workflow is triggered and the 'setup' job completes successfully by checking the Actions tab on GitHub.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Linting Job in Workflow",
+            "description": "Add a `lint` job to the CI pipeline that performs static code analysis on the codebase. This job should depend on the successful completion of the `setup` job.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `android-ci.yml`, add a new job named `lint`. Specify `needs: setup` to ensure it runs only after the setup is complete. The job should run on `ubuntu-latest` and reuse the checkout and setup steps or download artifacts from the setup job. The key step is `run: npm run lint`.",
+            "status": "pending",
+            "testStrategy": "Open a pull request with a deliberate linting error. Confirm that the `lint` job fails. Fix the error, push the commit, and confirm the `lint` job passes.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Unit Testing Job in Workflow",
+            "description": "Add a `test` job to the CI pipeline to execute the Jest unit tests. This job should also depend on the `setup` job and can run in parallel with the `lint` job.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `android-ci.yml`, add a new job named `test`. Specify `needs: setup`. This job will run on `ubuntu-latest`. The main step for this job will be `run: npm run test` to execute the Jest test suite.",
+            "status": "pending",
+            "testStrategy": "Create a pull request with a failing unit test. Verify that the `test` job in the workflow fails as expected. Then, fix the test and push the update to ensure the job passes.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Implement Android Debug Build Job in Workflow",
+            "description": "Add a `build` job that compiles the Android application to ensure it's in a buildable state. This job is crucial for catching native code or configuration issues early.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `android-ci.yml`, add the final job named `build`. It should also have `needs: setup`. The job will run on `ubuntu-latest`. The core steps are to grant execute permissions to the gradlew script (`chmod +x ./android/gradlew`) and then run the build command (`cd ./android && ./gradlew assembleDebug`).",
+            "status": "pending",
+            "testStrategy": "Open a pull request with a valid change and verify that the `build` job completes successfully. Check the job logs to ensure the `assembleDebug` task succeeded without errors.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Prepare Android for Production Release",
+        "description": "Configure the Android project for a production release, including setting up app signing, enabling code shrinking, and generating a signed Android App Bundle (AAB).",
+        "details": "1. **Keystore**: Generate a private signing key using `keytool`. Store the keystore file and its credentials securely (e.g., using environment variables or a secret manager), not in the repository. 2. **Gradle Configuration**: In `android/app/build.gradle`, create a signing configuration that loads the keystore credentials. Apply this signing config to the `release` build type. 3. **ProGuard/R8**: Enable code shrinking and obfuscation for the release build by setting `minifyEnabled true` in the `release` build type. Add any necessary ProGuard rules to `proguard-rules.pro` to prevent vital code from being stripped. 4. **Generate AAB**: Run the command `./gradlew bundleRelease` from the `android` directory to generate the signed AAB file, which will be located in `android/app/build/outputs/bundle/release/`.",
+        "testStrategy": "1. Install the generated release AAB on a physical device to ensure it runs without crashing (which could indicate incorrect ProGuard rules). 2. Test core application flows like login, vehicle browsing, and consultation requests on the release build. 3. Upload the AAB to an internal testing track on the Google Play Console to verify it's correctly signed and configured.",
+        "priority": "medium",
+        "dependencies": [
+          "1",
+          "3"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Generate Android Upload Keystore",
+            "description": "Create a new private signing key using the 'keytool' utility. This key is essential for signing the production release of the Android application and uploading it to the Google Play Store.",
+            "dependencies": [],
+            "details": "Use the Java `keytool` command-line tool to generate a new `.keystore` file. The command will be similar to `keytool -genkeypair -v -keystore jcar-upload-key.keystore -alias jcar_upload_alias -keyalg RSA -keysize 2048 -validity 10000`. Store the generated `jcar-upload-key.keystore` file in a secure location outside of the project's version-controlled directory.",
+            "status": "pending",
+            "testStrategy": "Verify that the `jcar-upload-key.keystore` file is successfully created. Document the key alias and passwords in a secure password manager.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Securely Configure Keystore Credentials",
+            "description": "Store the keystore password, key alias, and key password securely so they can be accessed by the Gradle build process without being committed to version control.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create or edit the `android/gradle.properties` file to store the credentials. Add the following properties: `JCAR_UPLOAD_STORE_FILE=path/to/your/jcar-upload-key.keystore`, `JCAR_UPLOAD_KEY_ALIAS=jcar_upload_alias`, `JCAR_UPLOAD_STORE_PASSWORD=your_store_password`, and `JCAR_UPLOAD_KEY_PASSWORD=your_key_password`. Ensure that `gradle.properties` is included in the root `.gitignore` file to prevent it from being committed.",
+            "status": "pending",
+            "testStrategy": "Run `git check-ignore android/gradle.properties` to confirm the file is ignored by Git. Verify that Gradle can read these properties by adding a `println` statement in `build.gradle` and running a sync.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Configure Release Signing in build.gradle",
+            "description": "Modify the `android/app/build.gradle` file to read the secure credentials from `gradle.properties` and apply the signing configuration to the `release` build type.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `android/app/build.gradle`, define a `signingConfigs` block for `release` that reads the properties set in the previous task. The configuration should look like: `storeFile file(JCAR_UPLOAD_STORE_FILE)`, `storePassword JCAR_UPLOAD_STORE_PASSWORD`, etc. Then, within the `buildTypes.release` block, set `signingConfig signingConfigs.release`.",
+            "status": "pending",
+            "testStrategy": "From the `android` directory, run the `./gradlew :app:signingReport` command. Check the output to ensure the 'release' variant is correctly configured with the 'jcar_upload_alias' and shows no errors.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Enable Code Shrinking and Obfuscation with R8",
+            "description": "Enable R8 for the release build to reduce app size, remove unused code, and obfuscate class and method names, which enhances security.",
+            "dependencies": [
+              3
+            ],
+            "details": "In the `release` build type within `android/app/build.gradle`, set `minifyEnabled true` and `shrinkResources true`. Check for any third-party libraries that might require specific rules to function correctly after minification. Add any necessary `-keep` rules to the `android/app/proguard-rules.pro` file to prevent critical code from being stripped.",
+            "status": "pending",
+            "testStrategy": "After generating a release AAB, analyze it using Android Studio's 'Analyze APK' tool to inspect the dex files and confirm that code has been obfuscated. The primary test is to install and run the app to ensure no crashes occur due to incorrect ProGuard rules.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Generate and Verify Signed Android App Bundle (AAB)",
+            "description": "Execute the final Gradle command to build the signed Android App Bundle (AAB) and perform a verification test on a physical device to ensure its integrity and functionality.",
+            "dependencies": [
+              4
+            ],
+            "details": "Navigate to the `android` directory in your terminal and run the command `./gradlew bundleRelease`. This command will compile the code, run R8, and sign the application, producing the final AAB file located at `android/app/build/outputs/bundle/release/app-release.aab`.",
+            "status": "pending",
+            "testStrategy": "Install the generated `app-release.aab` on a physical Android device, either via `bundletool` or by uploading it to an internal testing track on the Google Play Console. Perform a full smoke test of the application's core features, such as login, vehicle browsing, and consultation requests.",
+            "parentId": "undefined"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-11-26T16:56:17.278Z",
+      "taskCount": 10,
+      "completedCount": 1,
+      "tags": [
+        "master"
+      ],
+      "created": "2025-11-26T16:56:29.129Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
