@@ -542,7 +542,7 @@
         "testStrategy": "1. Unit test the query construction logic. 2. Manually test the UI by applying various filter combinations and verifying that the returned vehicle list is accurate. 3. Test edge cases, such as a filter combination that yields no results, ensuring a user-friendly message is displayed.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -550,9 +550,10 @@
             "description": "Create a new modal component for the advanced search filters and add a 'Filter' button to the main vehicle list screen to open it.",
             "dependencies": [],
             "details": "In the `VehicleListScreen.tsx`, add a new `Button` or `TouchableOpacity` component that, when pressed, will present the `FilterModal`. The `FilterModal` component should be created as a new file, e.g., `src/components/modals/FilterModal.tsx`. Initially, it can be a simple shell with a title, a close button, and an 'Apply Filters' button.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "Manually press the 'Filter' button on the vehicle list screen and verify that the modal appears correctly and can be dismissed. Snapshot testing can be used for the initial modal layout.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T14:11:08.996Z"
           },
           {
             "id": 2,
@@ -602,7 +603,8 @@
             "testStrategy": "Perform end-to-end manual testing. Open the modal, apply various filter combinations (price, manufacturer, sort order), and verify that the vehicle list updates correctly. Test edge cases like clearing all filters and applying a filter that returns no results.",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-27T14:19:55.925Z"
       },
       {
         "id": "9",
@@ -753,9 +755,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-27T14:06:00.118Z",
+      "lastModified": "2025-11-27T14:19:55.926Z",
       "taskCount": 10,
-      "completedCount": 6,
+      "completedCount": 7,
       "tags": [
         "master"
       ]
