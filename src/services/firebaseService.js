@@ -3,6 +3,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import messaging from '@react-native-firebase/messaging';
+import crashlytics from '@react-native-firebase/crashlytics';
 import { Alert } from 'react-native';
 
 // --------------------
@@ -25,6 +26,8 @@ export const registerUser = async ({ email, password, name, phoneNumber }) => {
     return { success: true, userId };
   } catch (error) {
     console.error('회원가입 실패:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('registerUser failed');
     Alert.alert('회원가입 오류', error.message || '알 수 없는 오류가 발생했습니다.');
     return { success: false, error };
   }
@@ -39,6 +42,8 @@ export const loginUser = async ({ email, password }) => {
     return { success: true, userId: userCredential.user.uid };
   } catch (error) {
     console.error('로그인 실패:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('loginUser failed');
     Alert.alert('로그인 오류', error.message || '알 수 없는 오류가 발생했습니다.');
     return { success: false, error };
   }
@@ -54,6 +59,8 @@ export const sendPasswordResetEmail = async (email) => {
     return { success: true };
   } catch (error) {
     console.error('비밀번호 재설정 실패:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('sendPasswordResetEmail failed');
     Alert.alert('오류', error.message || '비밀번호 재설정 중 오류가 발생했습니다.');
     return { success: false, error };
   }
@@ -81,6 +88,8 @@ export const saveConsultationRequest = async (data) => {
     return { success: true };
   } catch (error) {
     console.error('상담 요청 저장 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('saveConsultationRequest failed');
     Alert.alert('오류', '상담 요청 저장에 실패했습니다.');
     return { success: false, error };
   }
@@ -98,6 +107,8 @@ export const saveFcmToken = async (userId) => {
     }
   } catch (error) {
     console.error('FCM 토큰 저장 실패:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('saveFcmToken failed');
   }
 };
 
@@ -111,6 +122,8 @@ export const deleteVehicleAdmin = async (vehicleId) => {
     Alert.alert('알림', '차량이 삭제되었습니다.');
   } catch (error) {
     console.error('차량 삭제 실패:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('deleteVehicleAdmin failed');
     Alert.alert('오류', error.message || '차량 삭제 중 오류가 발생했습니다.');
   }
 };
@@ -122,6 +135,8 @@ export const deleteConsultationAdmin = async (consultationId) => {
     Alert.alert('알림', '상담이 삭제되었습니다.');
   } catch (error) {
     console.error('상담 삭제 실패:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('deleteConsultationAdmin failed');
     Alert.alert('오류', error.message || '상담 삭제 중 오류가 발생했습니다.');
   }
 };

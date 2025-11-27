@@ -17,7 +17,9 @@
       "Bash(task-master update-subtask:*)",
       "Bash(gh repo view:*)",
       "Bash(git check-ignore:*)",
-      "Bash(git add .gitignore .env.example .taskmaster/)"
+      "Bash(git add .gitignore .env.example .taskmaster/)",
+      "Bash(claude mcp remove:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

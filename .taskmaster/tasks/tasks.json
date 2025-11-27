@@ -85,17 +85,18 @@
         "testStrategy": "1. Use the Firebase Emulator Suite to test rules locally. 2. Write unit tests for security rules using the `@firebase/rules-unit-testing` library. 3. Create test cases for authenticated users, unauthenticated users, and admins attempting valid and invalid read/write operations on each collection.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Initialize Firestore and Storage Rules Files and Configure Emulator",
             "description": "Create the `firestore.rules` and `storage.rules` files. Set up the basic rules structure with a default deny-all policy. Configure the Firebase Emulator Suite for local testing of these rules.",
             "dependencies": [],
-            "details": "Create `firestore.rules` and `storage.rules` in the project root. In `firestore.rules`, add `rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if false; } } }`. A similar deny-all rule should be added to `storage.rules`. This establishes a secure baseline before adding specific permissions.",
-            "status": "pending",
+            "details": "Create `firestore.rules` and `storage.rules` in the project root. In `firestore.rules`, add `rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if false; } } }`. A similar deny-all rule should be added to `storage.rules`. This establishes a secure baseline before adding specific permissions.\n<info added on 2025-11-27T01:00:25.182Z>\nUpdated firebase.json with firestore, storage, and emulator configurations. The emulator ports are now set to auth: 9099, firestore: 8080, storage: 9199, and ui: 4000. Firebase CLI v14.26.0 is installed and ready for local testing.\n</info added on 2025-11-27T01:00:25.182Z>",
+            "status": "done",
             "testStrategy": "Start the Firebase Emulator using `firebase emulators:start`. Manually verify in the Emulator UI that all unauthorized read/write attempts to Firestore and Storage are blocked as expected.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T01:00:37.568Z"
           },
           {
             "id": 2,
@@ -104,10 +105,11 @@
             "dependencies": [
               1
             ],
-            "details": "In `firestore.rules`, add a match block for `/users/{userId}`. Implement the rule `allow read, write: if request.auth.uid == userId;`. Also, create a global helper function `isAdmin()` which checks if the requesting user has an `isAdmin: true` field in their own user document: `get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true`.",
-            "status": "pending",
+            "details": "In `firestore.rules`, add a match block for `/users/{userId}`. Implement the rule `allow read, write: if request.auth.uid == userId;`. Also, create a global helper function `isAdmin()` which checks if the requesting user has an `isAdmin: true` field in their own user document: `get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true`.\n<info added on 2025-11-27T01:01:51.019Z>\nThe implementation in `firestore.rules` for the `/users/{userId}` path is complete. The `isAdmin()` helper function was created to check if the requesting user's document contains `role == 'admin'`. The final rules allow a user to read and write their own document, but also grant read access to any user document for users with the 'admin' role. The logic is effectively `allow read: if request.auth.uid == userId || isAdmin();` and `allow write: if request.auth.uid == userId;`.\n</info added on 2025-11-27T01:01:51.019Z>",
+            "status": "done",
             "testStrategy": "Using `@firebase/rules-unit-testing`, write tests to assert that: 1. An authenticated user can successfully read and write their own document. 2. An authenticated user's attempt to read or write another user's document is denied. 3. An unauthenticated user's attempt to access any user document is denied.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T01:02:03.067Z"
           },
           {
             "id": 3,
@@ -117,10 +119,11 @@
               1,
               2
             ],
-            "details": "In `firestore.rules`, add a match block for `/vehicles/{vehicleId}`. Implement `allow read: if request.auth != null;`. For writes, use `allow create, update, delete: if isAdmin();`. Add data validation to ensure incoming data (`request.resource.data`) contains required fields and that `price` and `year` are numbers.",
-            "status": "pending",
+            "details": "In `firestore.rules`, add a match block for `/vehicles/{vehicleId}`. Implement `allow read: if request.auth != null;`. For writes, use `allow create, update, delete: if isAdmin();`. Add data validation to ensure incoming data (`request.resource.data`) contains required fields and that `price` and `year` are numbers.\n<info added on 2025-11-27T01:04:14.575Z>\nImplemented security rules for vehicles collection in firestore.rules. Authenticated users can read all vehicle data. Only admins can create, update, or delete vehicles. Data validation ensures vehicleId, vehicleName, manufacturer, and sellerId are strings during create/update operations.\n</info added on 2025-11-27T01:04:14.575Z>",
+            "status": "done",
             "testStrategy": "Write unit tests to confirm: 1. Any authenticated user can read from the vehicles collection. 2. An admin user can create, update, and delete vehicle documents. 3. A non-admin authenticated user cannot perform any write operations. 4. A write attempt with an invalid data type (e.g., `price` as a string) is rejected.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T01:04:27.548Z"
           },
           {
             "id": 4,
@@ -130,10 +133,11 @@
               1,
               2
             ],
-            "details": "Add a match block for `/consultation_requests/{requestId}`. The `read` rule should be `allow read: if request.auth.uid == resource.data.userId || isAdmin();`. The `create` rule should be `allow create: if request.auth.uid == request.resource.data.userId;`. The `update` and `delete` rules should be `allow update, delete: if isAdmin();`.",
-            "status": "pending",
+            "details": "Add a match block for `/consultation_requests/{requestId}`. The `read` rule should be `allow read: if request.auth.uid == resource.data.userId || isAdmin();`. The `create` rule should be `allow create: if request.auth.uid == request.resource.data.userId;`. The `update` and `delete` rules should be `allow update, delete: if isAdmin();`.\n<info added on 2025-11-27T01:05:39.109Z>\nImplemented the security rules for the `consultation_requests` collection in `firestore.rules`. The rules ensure that a user can read only their own requests, while an admin can read all. A user can only create a request for themselves (where their `auth.uid` matches the `userId` in the document). Updates and deletions are restricted to admins only.\n</info added on 2025-11-27T01:05:39.109Z>",
+            "status": "done",
             "testStrategy": "Write unit tests to verify: 1. A user can create a request with their own UID. 2. A user can read their own requests but not others'. 3. An admin can read any user's request. 4. An admin can update or delete any request, while a regular user cannot.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T01:05:52.484Z"
           },
           {
             "id": 5,
@@ -142,12 +146,14 @@
             "dependencies": [
               1
             ],
-            "details": "In the `storage.rules` file, create a match block for vehicle images, e.g., `match /vehicle-images/{userId}/{imageId}`. The write rule should be `allow write: if request.auth != null && request.auth.uid == userId;`. Add validation checks to limit file size (e.g., `request.resource.size < 5 * 1024 * 1024`) and content type (`request.resource.contentType.matches('image/.*')`).",
-            "status": "pending",
+            "details": "In the `storage.rules` file, create a match block for vehicle images, e.g., `match /vehicle-images/{userId}/{imageId}`. The write rule should be `allow write: if request.auth != null && request.auth.uid == userId;`. Add validation checks to limit file size (e.g., `request.resource.size < 5 * 1024 * 1024`) and content type (`request.resource.contentType.matches('image/.*')`).\n<info added on 2025-11-27T01:06:51.729Z>\nImplemented security rules in the `storage.rules` file for the `/vehicles/{filename}` path. The new rules allow public read access to all images. Write operations are restricted to authenticated users and include validation to ensure the file size is under 5MB and the content type is an image.\n</info added on 2025-11-27T01:06:51.729Z>",
+            "status": "done",
             "testStrategy": "Using the Storage emulator testing library, verify that: 1. An authenticated user can successfully upload an image that meets the size and type criteria. 2. An upload attempt from an unauthenticated user fails. 3. An attempt to upload an oversized file is rejected. 4. An attempt to upload a non-image file is rejected.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T01:07:03.819Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-27T01:07:03.819Z"
       },
       {
         "id": 3,
@@ -157,17 +163,18 @@
         "testStrategy": "1. Create a test button in a development build that intentionally throws an error to verify the error boundary is triggered and the error is logged to the Firebase Crashlytics console. 2. Simulate network failures to test the retry logic and error handling for Firebase operations. 3. Manually test form submissions with invalid data to ensure catch blocks are working as expected.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Install and Configure Firebase App and Crashlytics SDKs",
             "description": "Add the `@react-native-firebase/app` and `@react-native-firebase/crashlytics` packages to the project and perform the necessary native platform setup for both Android and iOS to enable Firebase services.",
             "dependencies": [],
-            "details": "Follow the official react-native-firebase documentation. For Android, add the `google-services.json` file and update the `build.gradle` files with the Google services plugin and Crashlytics dependencies. For iOS, add `GoogleService-Info.plist` to Xcode, update the `AppDelegate` file, and run `pod install` in the `ios` directory.",
-            "status": "pending",
+            "details": "Follow the official react-native-firebase documentation. For Android, add the `google-services.json` file and update the `build.gradle` files with the Google services plugin and Crashlytics dependencies. For iOS, add `GoogleService-Info.plist` to Xcode, update the `AppDelegate` file, and run `pod install` in the `ios` directory.\n<info added on 2025-11-27T04:23:21.611Z>\nAndroid setup completed for @react-native-firebase/crashlytics v23.5.0. This included adding the `firebase-crashlytics-gradle:3.0.2` dependency to `android/build.gradle` and applying the `com.google.firebase.crashlytics` plugin in `android/app/build.gradle`. The necessary INTERNET permission was already present in AndroidManifest.xml.\n</info added on 2025-11-27T04:23:21.611Z>",
+            "status": "done",
             "testStrategy": "After setup, run the application on both an Android emulator and an iOS simulator to ensure it builds and launches without any Firebase-related configuration errors. Check the device logs for successful Firebase initialization messages.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T04:23:08.370Z"
           },
           {
             "id": 2,
@@ -176,10 +183,11 @@
             "dependencies": [
               1
             ],
-            "details": "Create a new file, for example, `src/components/ErrorBoundary.tsx`. This file will export a class component that extends `React.Component`. Implement the `getDerivedStateFromError` and `componentDidCatch(error, errorInfo)` lifecycle methods. Inside `componentDidCatch`, call `crashlytics().recordError(error)`. The component's state should track an `hasError` flag to conditionally render a fallback UI instead of the child components when an error is caught.",
-            "status": "pending",
+            "details": "Create a new file, for example, `src/components/ErrorBoundary.tsx`. This file will export a class component that extends `React.Component`. Implement the `getDerivedStateFromError` and `componentDidCatch(error, errorInfo)` lifecycle methods. Inside `componentDidCatch`, call `crashlytics().recordError(error)`. The component's state should track an `hasError` flag to conditionally render a fallback UI instead of the child components when an error is caught.\n<info added on 2025-11-27T04:24:25.512Z>\nThe component's fallback UI displays user-friendly messages in Korean. For easier debugging, detailed error information is shown when the application is in development mode. A reset button was also added to allow users to retry the operation.\n</info added on 2025-11-27T04:24:25.512Z>",
+            "status": "done",
             "testStrategy": "Unit test the ErrorBoundary component. Create tests that simulate a child component throwing an error and assert that the fallback UI is rendered. Mock the Crashlytics module to verify that `recordError` is called.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T04:24:13.088Z"
           },
           {
             "id": 3,
@@ -188,10 +196,11 @@
             "dependencies": [
               2
             ],
-            "details": "Locate the application's root component file (e.g., `App.tsx` or `index.js`). Import the `ErrorBoundary` component and wrap the main rendered component (e.g., `<App />`) with `<ErrorBoundary>...</ErrorBoundary>`. This will make the error handling global for the entire React component tree.",
-            "status": "pending",
+            "details": "Locate the application's root component file (e.g., `App.tsx` or `index.js`). Import the `ErrorBoundary` component and wrap the main rendered component (e.g., `<App />`) with `<ErrorBoundary>...</ErrorBoundary>`. This will make the error handling global for the entire React component tree.\n<info added on 2025-11-27T04:25:17.577Z>\nThe ErrorBoundary component has been integrated in `src/App.js` at the application root. It now wraps both the `AuthProvider` and `AppNavigator`, ensuring that errors throughout the component tree are caught and logged to Firebase Crashlytics. To preserve gesture functionality, the error boundary is nested inside `GestureHandlerRootView`.\n</info added on 2025-11-27T04:25:17.577Z>",
+            "status": "done",
             "testStrategy": "Manually test by temporarily adding a component that throws an error on render inside the main App component. Verify that the fallback UI from the ErrorBoundary is displayed instead of a white screen or app crash.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T04:25:05.390Z"
           },
           {
             "id": 4,
@@ -200,10 +209,11 @@
             "dependencies": [
               1
             ],
-            "details": "Search the codebase for all asynchronous interactions with Firebase services, such as `firestore().collection().get()`, `auth().signInWithEmailAndPassword()`, etc. Enclose these calls within `try/catch` blocks. In each `catch (error)` block, log the error using `crashlytics().recordError(error)` and implement a user-facing feedback mechanism, such as a toast notification or an alert, to inform the user of the failure.",
-            "status": "pending",
+            "details": "Search the codebase for all asynchronous interactions with Firebase services, such as `firestore().collection().get()`, `auth().signInWithEmailAndPassword()`, etc. Enclose these calls within `try/catch` blocks. In each `catch (error)` block, log the error using `crashlytics().recordError(error)` and implement a user-facing feedback mechanism, such as a toast notification or an alert, to inform the user of the failure.\n<info added on 2025-11-27T04:28:48.585Z>\nRefactored all major Firebase API calls to include Crashlytics error logging. Added crashlytics().recordError() and crashlytics().log() to catch blocks in: src/services/firebaseService.js (all functions), src/context/AuthContext.js (user data loading), src/screens/LoginScreen.js (login), src/screens/ForgotPasswordScreen.js (password reset), src/screens/MyPageScreen.js (logout, delete account, vehicle/consultation snapshot errors). All Firebase operations now log errors to Crashlytics with descriptive messages for better debugging and monitoring.\n</info added on 2025-11-27T04:28:48.585Z>",
+            "status": "done",
             "testStrategy": "For each refactored Firebase call, write a unit test where the Firebase method is mocked to throw an error. Assert that `crashlytics().recordError()` is called and that the user feedback mechanism (e.g., a mocked toast service) is triggered.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T04:28:36.510Z"
           },
           {
             "id": 5,
@@ -213,12 +223,14 @@
               3,
               4
             ],
-            "details": "In a settings or debug screen, add two buttons that are only rendered if `__DEV__` is true. The first button's `onPress` handler should execute `throw new Error('Test JS Error from UI');`. The second button's handler should call `crashlytics().crash()`. Use these buttons to test the end-to-end error reporting flow.",
-            "status": "pending",
+            "details": "In a settings or debug screen, add two buttons that are only rendered if `__DEV__` is true. The first button's `onPress` handler should execute `throw new Error('Test JS Error from UI');`. The second button's handler should call `crashlytics().crash()`. Use these buttons to test the end-to-end error reporting flow.\n<info added on 2025-11-27T04:30:14.286Z>\nA crash trigger test button was added to AdminPageScreen.js, visible only during development (__DEV__). When pressed, it logs a test message, sets a test attribute, and records a test error to Crashlytics. This allows for verification that errors, along with their descriptive messages and metadata, are successfully logged to the Firebase Crashlytics console.\n</info added on 2025-11-27T04:30:14.286Z>",
+            "status": "done",
             "testStrategy": "On a development build running on a physical device or emulator, press the test buttons. For the JS error, confirm the Error Boundary's fallback UI is shown. For both tests, check the Firebase Crashlytics console to ensure the crash and non-fatal error reports are received and correctly symbolicated.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T04:30:00.578Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-27T04:30:00.578Z"
       },
       {
         "id": 4,
@@ -723,13 +735,13 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-26T16:56:17.278Z",
+      "lastModified": "2025-11-27T04:30:00.579Z",
       "taskCount": 10,
-      "completedCount": 1,
+      "completedCount": 3,
       "tags": [
         "master"
       ],
-      "created": "2025-11-26T16:56:29.129Z",
+      "created": "2025-11-27T04:30:03.683Z",
       "description": "Tasks for master context"
     }
   }

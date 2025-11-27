@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
 import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 export const AuthContext = createContext(null);
 
@@ -35,6 +36,8 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('AuthContext: Error loading user data:', error);
+          crashlytics().recordError(error);
+          crashlytics().log('AuthContext: Failed to load user data');
         }
       } else {
         setUser(null);

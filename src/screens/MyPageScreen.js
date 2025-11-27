@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore, { collection, query, where, onSnapshot, orderBy, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
+import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone, formatPrice } from '../utils/format';
@@ -22,7 +23,11 @@ const MyPageScreen = ({ navigation }) => {
         const vehicleList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         setVehicles(vehicleList);
       }
-    }, error => console.error('vehicle snapshot error:', error));
+    }, error => {
+      console.error('vehicle snapshot error:', error);
+      crashlytics().recordError(error);
+      crashlytics().log('MyPageScreen: Vehicle snapshot error');
+    });
 
     const consultationsQuery = query(
       collection(firestore(), 'consultation_requests'),
@@ -34,7 +39,11 @@ const MyPageScreen = ({ navigation }) => {
         const consultationList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         setConsultations(consultationList);
       }
-    }, error => console.error('consultation snapshot error:', error));
+    }, error => {
+      console.error('consultation snapshot error:', error);
+      crashlytics().recordError(error);
+      crashlytics().log('MyPageScreen: Consultation snapshot error');
+    });
 
     return () => {
       unsubscribeVehicles();
@@ -71,6 +80,8 @@ const MyPageScreen = ({ navigation }) => {
       setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
       Alert.alert('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
+      crashlytics().recordError(error);
+      crashlytics().log('MyPageScreen: Delete vehicle failed');
       Alert.alert('삭제 실패', error.message);
     }
   };
@@ -79,6 +90,8 @@ const MyPageScreen = ({ navigation }) => {
     try {
       await auth().signOut();
     } catch (error) {
+      crashlytics().recordError(error);
+      crashlytics().log('MyPageScreen: Logout failed');
       Alert.alert('로그아웃 실패', error.message);
     }
   };
@@ -100,6 +113,8 @@ const MyPageScreen = ({ navigation }) => {
             await user.delete();
             Alert.alert('탈퇴 완료', '계정이 삭제되었습니다.');
           } catch (error) {
+            crashlytics().recordError(error);
+            crashlytics().log('MyPageScreen: Delete account failed');
             Alert.alert('탈퇴 실패', error.message);
           }
         }

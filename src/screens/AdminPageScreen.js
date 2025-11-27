@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore, { collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
+import crashlytics from '@react-native-firebase/crashlytics';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -75,6 +76,28 @@ const AdminPageScreen = ({ navigation }) => {
     );
   };
 
+  const handleTestCrash = () => {
+    Alert.alert(
+      'Crashlytics 테스트',
+      'Crashlytics 테스트를 위해 의도적으로 에러를 발생시키겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '테스트 실행',
+          onPress: () => {
+            crashlytics().log('User triggered test crash');
+            crashlytics().setAttribute('test_type', 'manual_crash');
+
+            const testError = new Error('Test crash from AdminPage for Crashlytics verification');
+            crashlytics().recordError(testError);
+
+            Alert.alert('테스트 완료', 'Crashlytics에 에러가 기록되었습니다. Firebase Console에서 확인하세요.');
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>마이페이지</Text>
@@ -103,6 +126,12 @@ const AdminPageScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
         <Text style={styles.buttonText}>회원탈퇴</Text>
       </TouchableOpacity>
+
+      {__DEV__ && (
+        <TouchableOpacity style={styles.testCrashButton} onPress={handleTestCrash}>
+          <Text style={styles.testCrashButtonText}>🧪 Crashlytics 테스트</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -168,6 +197,20 @@ const styles = StyleSheet.create({
     color: '#2B4593',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  testCrashButton: {
+    marginTop: 20,
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+    backgroundColor: '#ff9800',
+    borderWidth: 1,
+    borderColor: '#f57c00',
+  },
+  testCrashButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

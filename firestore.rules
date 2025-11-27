@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users collection: Users can only read/write their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admins can read all user documents
+      allow read: if isAdmin();
+    }
+
+    // Vehicles collection: Authenticated users can read, only admins can write
+    match /vehicles/{vehicleId} {
+      // Any authenticated user can read vehicle data
+      allow read: if request.auth != null;
+
+      // Only admins can create/update vehicles with data validation
+      allow create, update: if isAdmin() &&
+        request.resource.data.vehicleId is string &&
+        request.resource.data.vehicleName is string &&
+        request.resource.data.manufacturer is string &&
+        request.resource.data.sellerId is string;
+
+      // Only admins can delete vehicles
+      allow delete: if isAdmin();
+    }
+
+    // Consultation requests collection: Users can only access their own requests, admins have full access
+    match /consultation_requests/{requestId} {
+      // Users can read their own requests, admins can read all requests
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.userId || isAdmin());
+
+      // Users can only create requests for themselves
+      allow create: if request.auth != null &&
+        request.auth.uid == request.resource.data.userId;
+
+      // Only admins can update or delete requests
+      allow update, delete: if isAdmin();
+    }
+
+    // Default deny-all policy for all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -15,6 +16,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
       Alert.alert('성공', '비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.');
       navigation.navigate('Login');
     } catch (error) {
+      crashlytics().recordError(error);
+      crashlytics().log('ForgotPasswordScreen: Password reset failed');
       Alert.alert('오류', error.message);
     }
   };

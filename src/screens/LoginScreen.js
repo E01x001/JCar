@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -10,6 +11,8 @@ const LoginScreen = ({ navigation }) => {
     try {
       await auth().signInWithEmailAndPassword(email, password);
     } catch (error) {
+      crashlytics().recordError(error);
+      crashlytics().log('LoginScreen: Login failed');
       alert("로그인 실패: " + error.message);
     }
   };
