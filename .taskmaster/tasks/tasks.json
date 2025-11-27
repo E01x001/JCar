@@ -396,17 +396,18 @@
         "dependencies": [
           "4"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Create Test Setup for firebaseService.js with Firebase Mocks",
             "description": "Create a `firebaseService.test.js` file and implement the necessary mocks for the `@react-native-firebase/firestore` module using `jest.mock`. This foundational step will prevent actual database calls during tests.",
             "dependencies": [],
-            "details": "In the new `__tests__/services/firebaseService.test.js` file, use `jest.mock('@react-native-firebase/firestore', () => { ... })` to return a mock implementation. The mock should allow for spying on and controlling the behavior of functions like `collection`, `doc`, `get`, and `add` for subsequent tests.",
-            "status": "pending",
+            "details": "In the new `__tests__/services/firebaseService.test.js` file, use `jest.mock('@react-native-firebase/firestore', () => { ... })` to return a mock implementation. The mock should allow for spying on and controlling the behavior of functions like `collection`, `doc`, `get`, and `add` for subsequent tests.\n<info added on 2025-11-27T14:05:30.443Z>\nGlobal mocks have been configured in `jest.setup.js`, centralizing the setup for all tests. This includes mocks for Firebase messaging, functions, and crashlytics. A mock for `PermissionsAndroid` has also been added to support testing for Android 13+ permissions.\n</info added on 2025-11-27T14:05:30.443Z>",
+            "status": "done",
             "testStrategy": "Verify that running `npm test` does not result in errors related to the firebaseService test file and that no actual network requests to Firebase are made.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T14:05:49.206Z"
           },
           {
             "id": 2,
@@ -416,9 +417,10 @@
               1
             ],
             "details": "For `getVehicles`, mock a successful response from `firestore().collection('vehicles').get()` and assert that the function correctly maps and returns the documents. For `getUserProfile`, test the case where a document is found and the case where it isn't, ensuring it returns user data or null accordingly.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run tests and assert that the functions return the expected data structures based on the mocked Firestore responses. Ensure tests pass for both success and failure scenarios.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T14:05:51.969Z"
           },
           {
             "id": 3,
@@ -428,9 +430,10 @@
               1
             ],
             "details": "For each write function, create a test that calls the function with sample data. Use `expect(mockedAddFunction).toHaveBeenCalledWith(...)` to assert that the mocked Firestore `add` method was called with the exact object structure expected.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirm that tests pass and that the spy on the mocked `add` function correctly captures the function calls with the appropriate arguments.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T14:05:54.707Z"
           },
           {
             "id": 4,
@@ -438,9 +441,10 @@
             "description": "Create test files for `validators.js` and `formatters.js`. Write a comprehensive suite of tests covering all functions with both valid and invalid inputs to ensure they behave as expected across various edge cases.",
             "dependencies": [],
             "details": "Create `__tests__/utils/validators.test.js` and `__tests__/utils/formatters.test.js`. For validators (e.g., `isValidEmail`, `isStrongPassword`), test with multiple valid and invalid strings. For formatters (e.g., `formatCurrency`, `formatDate`), test with numbers, valid timestamp objects, and null/undefined inputs to ensure robust formatting.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Execute the tests and verify that all assertions pass. Check that each function's output matches the expected result for a wide range of inputs, including edge cases.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T14:05:57.389Z"
           },
           {
             "id": 5,
@@ -452,11 +456,13 @@
               4
             ],
             "details": "Run the command `npm test -- --coverage` in the terminal. This will execute all tests and create a `coverage/` directory. Open the `lcov-report/index.html` file in a browser to review the statement, branch, and function coverage for the targeted files. If coverage is below 70%, add tests for any missed logic.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirm that the coverage command runs successfully and produces a report. Verify that the coverage percentages for `firebaseService.js`, `validators.js`, and `formatters.js` are at or above the 70% threshold.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-27T14:06:00.117Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-27T14:06:00.117Z"
       },
       {
         "id": "7",
@@ -747,9 +753,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-27T13:53:40.253Z",
+      "lastModified": "2025-11-27T14:06:00.118Z",
       "taskCount": 10,
-      "completedCount": 5,
+      "completedCount": 6,
       "tags": [
         "master"
       ]
