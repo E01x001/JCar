@@ -4,7 +4,7 @@ import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import messaging from '@react-native-firebase/messaging';
 import crashlytics from '@react-native-firebase/crashlytics';
-import { Alert } from 'react-native';
+import { Alert, Platform, PermissionsAndroid } from 'react-native';
 
 // --------------------
 // 회원가입
@@ -92,6 +92,62 @@ export const saveConsultationRequest = async (data) => {
     crashlytics().log('saveConsultationRequest failed');
     Alert.alert('오류', '상담 요청 저장에 실패했습니다.');
     return { success: false, error };
+  }
+};
+
+// --------------------
+// 알림 권한 요청
+// --------------------
+export const requestNotificationPermission = async () => {
+  try {
+    if (Platform.OS === 'android') {
+      if (Platform.Version >= 33) {
+        // Android 13 이상에서는 POST_NOTIFICATIONS 권한 요청
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          {
+            title: '알림 권한 요청',
+            message: '중요한 알림을 받으려면 권한이 필요합니다.',
+            buttonNeutral: '나중에',
+            buttonNegative: '거부',
+            buttonPositive: '허용',
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('✅ 알림 권한 허용됨');
+          return true;
+        } else {
+          console.log('❌ 알림 권한 거부됨');
+          return false;
+        }
+      } else {
+        // Android 12 이하에서는 자동으로 권한 허용
+        console.log('✅ Android 12 이하 - 알림 권한 자동 허용');
+        return true;
+      }
+    } else if (Platform.OS === 'ios') {
+      // iOS에서는 Firebase Messaging의 requestPermission 사용
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (enabled) {
+        console.log('✅ iOS 알림 권한 허용됨:', authStatus);
+        return true;
+      } else {
+        console.log('❌ iOS 알림 권한 거부됨');
+        return false;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error('알림 권한 요청 실패:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('requestNotificationPermission failed');
+    return false;
   }
 };
 
