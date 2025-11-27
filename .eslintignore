@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+android/
+ios/
+.expo/
+dist/
+build/
+
+# Metro bundler
+.metro/
+metro.config.js
+
+# Firebase
+functions/node_modules/
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+
+# Miscellaneous
+.git/
+.DS_Store
+*.log
+.env
+.env.*
+
+# Config files
+babel.config.js
+jest.config.js
