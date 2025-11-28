@@ -702,7 +702,7 @@
           "1",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -710,9 +710,10 @@
             "description": "Create a new private signing key using the 'keytool' utility. This key is essential for signing the production release of the Android application and uploading it to the Google Play Store.",
             "dependencies": [],
             "details": "Use the Java `keytool` command-line tool to generate a new `.keystore` file. The command will be similar to `keytool -genkeypair -v -keystore jcar-upload-key.keystore -alias jcar_upload_alias -keyalg RSA -keysize 2048 -validity 10000`. Store the generated `jcar-upload-key.keystore` file in a secure location outside of the project's version-controlled directory.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the `jcar-upload-key.keystore` file is successfully created. Document the key alias and passwords in a secure password manager.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:08:21.192Z"
           },
           {
             "id": 2,
@@ -722,9 +723,10 @@
               1
             ],
             "details": "Create or edit the `android/gradle.properties` file to store the credentials. Add the following properties: `JCAR_UPLOAD_STORE_FILE=path/to/your/jcar-upload-key.keystore`, `JCAR_UPLOAD_KEY_ALIAS=jcar_upload_alias`, `JCAR_UPLOAD_STORE_PASSWORD=your_store_password`, and `JCAR_UPLOAD_KEY_PASSWORD=your_key_password`. Ensure that `gradle.properties` is included in the root `.gitignore` file to prevent it from being committed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run `git check-ignore android/gradle.properties` to confirm the file is ignored by Git. Verify that Gradle can read these properties by adding a `println` statement in `build.gradle` and running a sync.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:09:23.166Z"
           },
           {
             "id": 3,
@@ -734,9 +736,10 @@
               2
             ],
             "details": "In `android/app/build.gradle`, define a `signingConfigs` block for `release` that reads the properties set in the previous task. The configuration should look like: `storeFile file(JCAR_UPLOAD_STORE_FILE)`, `storePassword JCAR_UPLOAD_STORE_PASSWORD`, etc. Then, within the `buildTypes.release` block, set `signingConfig signingConfigs.release`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "From the `android` directory, run the `./gradlew :app:signingReport` command. Check the output to ensure the 'release' variant is correctly configured with the 'jcar_upload_alias' and shows no errors.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:09:25.469Z"
           },
           {
             "id": 4,
@@ -746,9 +749,10 @@
               3
             ],
             "details": "In the `release` build type within `android/app/build.gradle`, set `minifyEnabled true` and `shrinkResources true`. Check for any third-party libraries that might require specific rules to function correctly after minification. Add any necessary `-keep` rules to the `android/app/proguard-rules.pro` file to prevent critical code from being stripped.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "After generating a release AAB, analyze it using Android Studio's 'Analyze APK' tool to inspect the dex files and confirm that code has been obfuscated. The primary test is to install and run the app to ensure no crashes occur due to incorrect ProGuard rules.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:12:58.196Z"
           },
           {
             "id": 5,
@@ -758,18 +762,20 @@
               4
             ],
             "details": "Navigate to the `android` directory in your terminal and run the command `./gradlew bundleRelease`. This command will compile the code, run R8, and sign the application, producing the final AAB file located at `android/app/build/outputs/bundle/release/app-release.aab`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Install the generated `app-release.aab` on a physical Android device, either via `bundletool` or by uploading it to an internal testing track on the Google Play Console. Perform a full smoke test of the application's core features, such as login, vehicle browsing, and consultation requests.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:13:00.536Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-28T10:13:00.536Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-28T10:06:38.763Z",
+      "lastModified": "2025-11-28T10:13:00.537Z",
       "taskCount": 10,
-      "completedCount": 9,
+      "completedCount": 10,
       "tags": [
         "master"
       ]
