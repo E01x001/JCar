@@ -21,6 +21,7 @@ import AdminPageScreen from '../screens/AdminPageScreen';
 import AdminVehicleDetailScreen from '../screens/AdminVehicleDetailScreen';
 import AdminConsultationScreen from '../screens/AdminConsultationScreen';
 import AdminScheduleScreen from '../screens/AdminScheduleScreen';
+import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,9 +31,9 @@ const UserTabs = () => (
     screenOptions={({ route }) => ({
       tabBarIcon: ({ color, size }) => {
         let iconName;
-        if (route.name === 'Vehicles') iconName = 'directions-car';
-        else if (route.name === 'Register') iconName = 'add-circle-outline';
-        else if (route.name === 'MyPage') iconName = 'person';
+        if (route.name === 'Vehicles') {iconName = 'directions-car';}
+        else if (route.name === 'Register') {iconName = 'add-circle-outline';}
+        else if (route.name === 'MyPage') {iconName = 'person';}
         return <Icon name={iconName} size={size} color={color} />;
       },
       tabBarStyle: { backgroundColor: '#2B4593' },
@@ -51,21 +52,23 @@ const AdminTabs = () => (
     screenOptions={({ route }) => ({
       tabBarIcon: ({ color, size }) => {
         let iconName;
-        if (route.name === 'AdminVehicles') iconName = 'car-repair';
-        else if (route.name === 'Consultations') iconName = 'question-answer';
-        else if (route.name === 'AdminPage') iconName = 'admin-panel-settings';
-        else if (route.name === 'AdminSchedule') iconName = 'calendar-month';
+        if (route.name === 'AdminVehicles') {iconName = 'car-repair';}
+        else if (route.name === 'Consultations') {iconName = 'question-answer';}
+        else if (route.name === 'AdminSchedule') {iconName = 'calendar-month';}
+        else if (route.name === 'UserManagement') {iconName = 'people';}
+        else if (route.name === 'AdminPage') {iconName = 'admin-panel-settings';}
         return <Icon name={iconName} size={size} color={color} />;
       },
       tabBarStyle: { backgroundColor: '#2B4593' },
-      tabBarLabelStyle: { color: 'black', textAlign: 'center' },
+      tabBarLabelStyle: { color: 'black', textAlign: 'center', fontSize: 11 },
       headerTitleAlign: 'center',
     })}
   >
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} options={{ title: '차량 관리' }} />
     <Tab.Screen name="Consultations" component={AdminConsultationScreen} options={{ title: '상담 관리' }} />
     <Tab.Screen name="AdminSchedule" component={AdminScheduleScreen} options={{ title: '일정' }} />
-    <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자 정보' }} />
+    <Tab.Screen name="UserManagement" component={AdminUserManagementScreen} options={{ title: '사용자 관리' }} />
+    <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자' }} />
   </Tab.Navigator>
 );
 

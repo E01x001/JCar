@@ -25,7 +25,8 @@
       "Bash(npm test:*)",
       "Bash(git commit:*)",
       "Bash(git add:*)",
-      "Bash(task-master next:*)"
+      "Bash(task-master next:*)",
+      "Bash(./gradlew installDebug:*)"
     ],
     "deny": []
   }

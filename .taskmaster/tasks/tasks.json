@@ -474,7 +474,7 @@
         "dependencies": [
           "2"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -482,9 +482,10 @@
             "description": "Develop and deploy an HTTPS callable Firebase Function that hard-deletes a specified vehicle document from Firestore, removes its associated images from Firebase Storage, and logs the action in an 'admin_activity_log' collection.",
             "dependencies": [],
             "details": "The function should accept a `vehicleId` as input. It must first authenticate the request to ensure the caller is an admin. It will then fetch the vehicle document to get image URLs, delete files from the default storage bucket, delete the Firestore document, and finally create a log entry with admin UID, target vehicleId, and timestamp.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use the Firebase Local Emulator Suite to invoke the function with a test vehicle ID. Verify that the Firestore document is deleted, the corresponding files in the Storage emulator are removed, and a log entry is created. Test unauthorized access to ensure it fails.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T09:49:26.341Z"
           },
           {
             "id": 2,
@@ -494,9 +495,10 @@
               1
             ],
             "details": "Locate the component responsible for rendering the list of vehicles for admins. Add a styled 'Delete' button. Implement an `Alert` or a custom modal to confirm the deletion. On confirmation, use the Firebase Functions SDK to call the `deleteVehicle` function, passing the `vehicleId`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "As an admin, navigate to the vehicle list. Press the delete button for a test vehicle. Verify the confirmation modal appears. Confirm deletion and check the UI for the vehicle's removal. Check Firestore and Storage to confirm deletion via the function.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T09:50:45.244Z"
           },
           {
             "id": 3,
@@ -504,9 +506,10 @@
             "description": "Create a new screen in the admin panel to display a list of all application users. The screen should include a search bar to find users by email or name.",
             "dependencies": [],
             "details": "Create a new screen component, e.g., `UserManagementScreen.js`. Add it to the admin navigation stack. Fetch all documents from the 'users' collection and display them in a `FlatList`. Each list item should show key user details (name, email, status). Implement a search input that filters the displayed list client-side or by re-querying Firestore.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate to the new admin screen and verify that all registered users are listed correctly. Test the search functionality by typing a known user's name or email and confirm the list filters as expected. Ensure the UI is responsive.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T09:52:08.383Z"
           },
           {
             "id": 4,
@@ -516,9 +519,10 @@
               3
             ],
             "details": "For each user in the list, add a `Switch` or `Button` component that reflects the user's current `status` from Firestore. When the admin interacts with the control, it should trigger a Firestore update operation to change the `status` field on the corresponding user document. The UI should optimistically update or refetch data to show the new status.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "As an admin, go to the user management screen. Change the status of a test user from 'active' to 'suspended' and back. Verify the change is reflected in the UI and in the user's document in the Firestore console. Also log this admin action.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T09:53:29.537Z"
           },
           {
             "id": 5,
@@ -528,11 +532,13 @@
               4
             ],
             "details": "Edit the `firestore.rules` file. For relevant collections, update the `allow write` conditions to include a check against the requesting user's document. The rule should look something like: `allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';`",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Using the Firestore Rules Emulator, write unit tests for a suspended user attempting to create a document in a protected collection. The test should assert that the write operation is denied. Manually log in to the app as a suspended test user and attempt a write action to confirm it is blocked.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T09:54:23.687Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-28T09:54:23.687Z"
       },
       {
         "id": "8",
@@ -755,9 +761,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-27T14:19:55.926Z",
+      "lastModified": "2025-11-28T09:54:23.689Z",
       "taskCount": 10,
-      "completedCount": 7,
+      "completedCount": 8,
       "tags": [
         "master"
       ]

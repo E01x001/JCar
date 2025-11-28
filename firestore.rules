@@ -8,6 +8,14 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // Helper function to check if user is active (not suspended)
+    function isActiveUser() {
+      return request.auth != null &&
+             (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+              !('status' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != 'suspended');
+    }
+
     // Users collection: Users can only read/write their own document
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -15,34 +23,47 @@ service cloud.firestore {
       allow read: if isAdmin();
     }
 
-    // Vehicles collection: Authenticated users can read, only admins can write
+    // Vehicles collection: Authenticated users can read, only active admins can write
     match /vehicles/{vehicleId} {
       // Any authenticated user can read vehicle data
       allow read: if request.auth != null;
 
-      // Only admins can create/update vehicles with data validation
-      allow create, update: if isAdmin() &&
+      // Only active admins can create/update vehicles with data validation
+      allow create, update: if isAdmin() && isActiveUser() &&
         request.resource.data.vehicleId is string &&
         request.resource.data.vehicleName is string &&
         request.resource.data.manufacturer is string &&
         request.resource.data.sellerId is string;
 
-      // Only admins can delete vehicles
-      allow delete: if isAdmin();
+      // Only active admins can delete vehicles
+      allow delete: if isAdmin() && isActiveUser();
     }
 
-    // Consultation requests collection: Users can only access their own requests, admins have full access
+    // Consultation requests collection: Only active users can create, admins have full access
     match /consultation_requests/{requestId} {
       // Users can read their own requests, admins can read all requests
       allow read: if request.auth != null &&
         (request.auth.uid == resource.data.userId || isAdmin());
 
-      // Users can only create requests for themselves
+      // Only active users can create requests for themselves
       allow create: if request.auth != null &&
+        isActiveUser() &&
         request.auth.uid == request.resource.data.userId;
 
-      // Only admins can update or delete requests
-      allow update, delete: if isAdmin();
+      // Only active admins can update or delete requests
+      allow update, delete: if isAdmin() && isActiveUser();
+    }
+
+    // Admin activity log collection: Only admins can write, no one can delete
+    match /admin_activity_log/{logId} {
+      // Only admins can read logs
+      allow read: if isAdmin();
+
+      // Only active admins can create logs
+      allow create: if isAdmin() && isActiveUser();
+
+      // No one can update or delete logs
+      allow update, delete: if false;
     }
 
     // Default deny-all policy for all other documents

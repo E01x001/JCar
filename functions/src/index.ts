@@ -2,6 +2,7 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { getMessaging } from "firebase-admin/messaging";
+import { getStorage } from "firebase-admin/storage";
 import { setGlobalOptions } from "firebase-functions/v2/options";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onRequest } from "firebase-functions/v2/https";
@@ -12,6 +13,7 @@ initializeApp();
 const db = getFirestore();
 const auth = getAuth();
 const messaging = getMessaging();
+const storage = getStorage();
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -160,3 +162,109 @@ export const sendConsultationNotification = onDocumentUpdated(
     }
   }
 );
+
+/**
+ * ⭐ Cloud Functions v2 - 긴급 차량 삭제
+ * - 관리자 권한 확인
+ * - 차량 문서와 관련 이미지를 Storage에서 삭제
+ * - admin_activity_log에 삭제 작업 기록
+ */
+export const emergencyDeleteVehicle = onCall(async (request) => {
+  const { vehicleId } = request.data;
+
+  if (!vehicleId) {
+    throw new HttpsError("invalid-argument", "차량 ID가 필요합니다.");
+  }
+
+  // 1) 관리자 권한 확인
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "인증이 필요합니다.");
+  }
+
+  const uid = request.auth.uid;
+
+  try {
+    const userDoc = await db.collection("users").doc(uid).get();
+
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "사용자를 찾을 수 없습니다.");
+    }
+
+    const userData = userDoc.data();
+    if (userData?.role !== "admin") {
+      throw new HttpsError("permission-denied", "관리자 권한이 필요합니다.");
+    }
+
+    // 2) 차량 문서 조회
+    const vehicleDoc = await db.collection("vehicles").doc(vehicleId).get();
+
+    if (!vehicleDoc.exists) {
+      throw new HttpsError("not-found", "차량을 찾을 수 없습니다.");
+    }
+
+    const vehicleData = vehicleDoc.data();
+
+    // 3) Storage에서 이미지 삭제
+    const bucket = storage.bucket();
+    const imageUrls: string[] = [];
+
+    // 단일 이미지 URL
+    if (vehicleData?.imageUrl) {
+      imageUrls.push(vehicleData.imageUrl);
+    }
+
+    // 다중 이미지 URL 배열
+    if (vehicleData?.imageUrls && Array.isArray(vehicleData.imageUrls)) {
+      imageUrls.push(...vehicleData.imageUrls);
+    }
+
+    // Storage에서 이미지 파일 삭제
+    for (const imageUrl of imageUrls) {
+      try {
+        // Firebase Storage URL에서 파일 경로 추출
+        // 예: https://firebasestorage.googleapis.com/v0/b/bucket/o/path%2Fto%2Ffile.jpg?alt=media
+        const urlMatch = imageUrl.match(/\/o\/(.+?)\?/);
+        if (urlMatch && urlMatch[1]) {
+          const filePath = decodeURIComponent(urlMatch[1]);
+          const file = bucket.file(filePath);
+          await file.delete();
+          logger.info(`Deleted image: ${filePath}`);
+        }
+      } catch (error) {
+        logger.warn(`Failed to delete image: ${imageUrl}`, error);
+        // 이미지 삭제 실패해도 계속 진행
+      }
+    }
+
+    // 4) Firestore 문서 삭제
+    await vehicleDoc.ref.delete();
+    logger.info(`Deleted vehicle document: ${vehicleId}`);
+
+    // 5) admin_activity_log에 기록
+    await db.collection("admin_activity_log").add({
+      adminUid: uid,
+      action: "emergency_delete_vehicle",
+      targetVehicleId: vehicleId,
+      vehicleName: vehicleData?.vehicleName || "Unknown",
+      timestamp: FieldValue.serverTimestamp(),
+      deletedImageCount: imageUrls.length,
+    });
+
+    logger.info(`Admin ${uid} deleted vehicle ${vehicleId}`);
+
+    return {
+      success: true,
+      message: "차량이 성공적으로 삭제되었습니다.",
+      deletedImages: imageUrls.length,
+    };
+  } catch (error: any) {
+    logger.error("Error in emergencyDeleteVehicle:", error);
+
+    // HttpsError는 그대로 던지고, 그 외는 internal로 처리
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    throw new HttpsError("internal", "차량 삭제 중 오류가 발생했습니다.");
+  }
+});
