@@ -556,10 +556,10 @@
             "description": "Create a new modal component for the advanced search filters and add a 'Filter' button to the main vehicle list screen to open it.",
             "dependencies": [],
             "details": "In the `VehicleListScreen.tsx`, add a new `Button` or `TouchableOpacity` component that, when pressed, will present the `FilterModal`. The `FilterModal` component should be created as a new file, e.g., `src/components/modals/FilterModal.tsx`. Initially, it can be a simple shell with a title, a close button, and an 'Apply Filters' button.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Manually press the 'Filter' button on the vehicle list screen and verify that the modal appears correctly and can be dismissed. Snapshot testing can be used for the initial modal layout.",
             "parentId": "undefined",
-            "updatedAt": "2025-11-27T14:11:08.996Z"
+            "updatedAt": "2025-11-28T10:15:57.149Z"
           },
           {
             "id": 2,
@@ -569,9 +569,10 @@
               1
             ],
             "details": "Inside `FilterModal.tsx`, add the necessary UI controls. Use a slider component (e.g., from `@react-native-community/slider`) for price and year ranges. For manufacturers, implement a multi-select list. Fetch the list of unique manufacturers from the Firestore 'vehicles' collection once. Use `useState` within the modal to manage the temporary state of these inputs before they are applied.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Render the modal component in a storybook or test environment. Interact with the sliders and the multi-select component to ensure their state is updated correctly within the component. Verify the UI is responsive and user-friendly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:15:59.483Z"
           },
           {
             "id": 3,
@@ -581,9 +582,10 @@
               1
             ],
             "details": "Create a `FilterContext` to manage the state of active filters. The context provider should wrap the main navigator or at least the `VehicleListScreen`. The `FilterModal` will use the context's updater function when the 'Apply Filters' button is pressed. The `VehicleListScreen` will consume this context to get the current filter criteria.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the context provider and consumer. Create a test component that updates the filter context and another that reads from it, and assert that the values are passed correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:16:01.791Z"
           },
           {
             "id": 4,
@@ -591,9 +593,10 @@
             "description": "Create a utility function or service that takes a filter object and dynamically constructs a Firestore query with the appropriate 'where' and 'orderBy' clauses.",
             "dependencies": [],
             "details": "Create a new file, e.g., `src/services/firestoreQueryBuilder.ts`. This file will export a function `buildVehicleQuery(filters)` which accepts an object like `{ minPrice, maxPrice, manufacturers, sortBy }`. The function will start with `firestore().collection('vehicles')` and conditionally chain `.where()` and `.orderBy()` methods based on the provided filters. It must handle cases where filters are not set. Note Firestore's limitation: range filters can only be on one field per query.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the `buildVehicleQuery` function. Pass various filter combinations (including empty/null values) and assert that the generated Firestore query object has the correct structure and clauses. Mock the firestore object for these tests.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:16:04.120Z"
           },
           {
             "id": 5,
@@ -605,12 +608,13 @@
               4
             ],
             "details": "In `VehicleListScreen.tsx`, use the `FilterContext` to get the current filters. Use a `useEffect` hook that listens for changes to these filters. When filters change, call the `buildVehicleQuery` service with the new filter state, execute the resulting query against Firestore, and update the component's state with the new list of vehicles. Also, implement a loading indicator and a message for when no results are found.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Perform end-to-end manual testing. Open the modal, apply various filter combinations (price, manufacturer, sort order), and verify that the vehicle list updates correctly. Test edge cases like clearing all filters and applying a filter that returns no results.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:16:06.420Z"
           }
         ],
-        "updatedAt": "2025-11-27T14:19:55.925Z"
+        "updatedAt": "2025-11-28T10:16:06.420Z"
       },
       {
         "id": "9",
@@ -773,7 +777,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-28T10:13:00.537Z",
+      "lastModified": "2025-11-28T10:16:06.421Z",
       "taskCount": 10,
       "completedCount": 10,
       "tags": [
