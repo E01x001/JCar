@@ -623,7 +623,7 @@
           "4",
           "6"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -631,9 +631,10 @@
             "description": "Create the necessary directory structure `.github/workflows` at the project root and add a new YAML file named `android-ci.yml` to house the continuous integration workflow.",
             "dependencies": [],
             "details": "In the root of the JCar project, create a directory named `.github`. Inside `.github`, create another directory named `workflows`. Finally, create an empty file inside `workflows` named `android-ci.yml`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the `.github/workflows/android-ci.yml` file exists in the repository after pushing the changes.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:06:29.437Z"
           },
           {
             "id": 2,
@@ -643,9 +644,10 @@
               1
             ],
             "details": "Edit `android-ci.yml`. Define the workflow `name` and the `on` trigger: `pull_request: branches: [ main, develop ]`. Create a `jobs` section with a `setup` job that runs on `ubuntu-latest`. The job steps should include `actions/checkout@v3`, `actions/setup-node@v3` (with caching for npm), and `actions/setup-java@v3` for the Android build. The final step should be `npm install`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a pull request and verify that the GitHub Action workflow is triggered and the 'setup' job completes successfully by checking the Actions tab on GitHub.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:06:31.750Z"
           },
           {
             "id": 3,
@@ -655,9 +657,10 @@
               2
             ],
             "details": "In `android-ci.yml`, add a new job named `lint`. Specify `needs: setup` to ensure it runs only after the setup is complete. The job should run on `ubuntu-latest` and reuse the checkout and setup steps or download artifacts from the setup job. The key step is `run: npm run lint`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Open a pull request with a deliberate linting error. Confirm that the `lint` job fails. Fix the error, push the commit, and confirm the `lint` job passes.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:06:34.055Z"
           },
           {
             "id": 4,
@@ -667,9 +670,10 @@
               2
             ],
             "details": "In `android-ci.yml`, add a new job named `test`. Specify `needs: setup`. This job will run on `ubuntu-latest`. The main step for this job will be `run: npm run test` to execute the Jest test suite.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a pull request with a failing unit test. Verify that the `test` job in the workflow fails as expected. Then, fix the test and push the update to ensure the job passes.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:06:36.450Z"
           },
           {
             "id": 5,
@@ -679,11 +683,13 @@
               2
             ],
             "details": "In `android-ci.yml`, add the final job named `build`. It should also have `needs: setup`. The job will run on `ubuntu-latest`. The core steps are to grant execute permissions to the gradlew script (`chmod +x ./android/gradlew`) and then run the build command (`cd ./android && ./gradlew assembleDebug`).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Open a pull request with a valid change and verify that the `build` job completes successfully. Check the job logs to ensure the `assembleDebug` task succeeded without errors.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-28T10:06:38.763Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-28T10:06:38.763Z"
       },
       {
         "id": "10",
@@ -761,9 +767,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-28T09:54:23.689Z",
+      "lastModified": "2025-11-28T10:06:38.763Z",
       "taskCount": 10,
-      "completedCount": 8,
+      "completedCount": 9,
       "tags": [
         "master"
       ]
