@@ -1486,7 +1486,7 @@
           "14",
           "17"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1494,9 +1494,10 @@
             "description": "Update the MyPage screen to display the user's profile information within the new <Card> component, replacing the existing View-based container.",
             "dependencies": [],
             "details": "Locate the MyPage screen file (likely 'src/screens/MyPage/MyPageScreen.js'). Import the <Card> component. Wrap the user avatar, name, and email section in a single <Card> component. Use theme spacing tokens for internal padding.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Visually inspect the MyPage screen to confirm the user information is correctly displayed inside the new Card component and matches the design mockup.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:56:50.737Z"
           },
           {
             "id": 2,
@@ -1506,9 +1507,10 @@
               1
             ],
             "details": "In the MyPage screen file, map over the menu items and render each as a pressable <Card>. Replace the existing logout button with <Button variant='Secondary'> and the withdrawal link/button with <Button variant='Danger Text'>.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that all menu items are rendered as cards and navigate correctly on press. Confirm the Logout and 회원탈퇴 buttons have the correct 'Secondary' and 'Danger Text' styling and are functional.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:56:53.003Z"
           },
           {
             "id": 3,
@@ -1516,9 +1518,10 @@
             "description": "Apply the new design system styling to the tab bar in the Admin section. The active tab must have a primary-colored bottom border to indicate its state.",
             "dependencies": [],
             "details": "Locate the Admin Tab Navigator configuration. Use the 'tabBarOptions' or equivalent prop to customize the styling. Set 'activeTintColor' to the theme's primary color and apply a 'borderBottomWidth' and 'borderBottomColor' style to the active tab label or indicator.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate to the Admin screens and switch between tabs. Confirm that the active tab is correctly highlighted with a bottom border in the primary brand color and that inactive tabs are styled correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:56:55.252Z"
           },
           {
             "id": 4,
@@ -1528,9 +1531,10 @@
               3
             ],
             "details": "In the relevant Admin screen file (e.g., 'VehicleApprovalScreen.js'), modify the list rendering logic. Each item in the FlatList or map should be wrapped in a <Card>. Use the <Badge> component to display item status (e.g., 'Pending', 'Approved').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Check the admin list views to ensure each item is displayed within a Card. Verify that status badges are visible and show the correct text and color based on the item's state.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:56:57.525Z"
           },
           {
             "id": 5,
@@ -1540,18 +1544,20 @@
               4
             ],
             "details": "Within the admin list item component, import the new <Button>. Replace the 'Approve' button with <Button variant='Success'> and the 'Reject' button with <Button variant='Danger'>. Ensure onPress handlers are correctly passed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Go to an admin list screen. Confirm the 'Approve' and 'Reject' buttons use the new Success (green) and Danger (red) styles. Test the functionality of these buttons to ensure actions are still triggered correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:56:59.781Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-29T23:56:59.781Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-29T23:51:24.888Z",
+      "lastModified": "2025-11-29T23:56:59.782Z",
       "taskCount": 20,
-      "completedCount": 19,
+      "completedCount": 20,
       "tags": [
         "master"
       ]
