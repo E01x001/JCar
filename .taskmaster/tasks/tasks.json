@@ -1329,7 +1329,7 @@
           "12",
           "14"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1337,9 +1337,10 @@
             "description": "Create a reusable full-screen modal component that displays a loading indicator to block UI interactions during global asynchronous operations.",
             "dependencies": [],
             "details": "Create a new component at `src/components/common/GlobalLoader.tsx`. Utilize React Native's `Modal` component with a semi-transparent background overlay. Center an `ActivityIndicator` component within the modal and configure it to use the primary color from the application's theme.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a Storybook story to visually test the component in isolation. Verify the modal's transparency, the loader's color, and its centered position on the screen.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:51:15.767Z"
           },
           {
             "id": 2,
@@ -1347,9 +1348,10 @@
             "description": "Build a skeleton loader that mimics the layout and structure of a standard Card component, providing a placeholder UI with a shimmering animation while content is loading.",
             "dependencies": [],
             "details": "Create the component at `src/components/common/SkeletonLoader.tsx`. Use a library like `react-native-skeleton-placeholder` to define shapes (e.g., rectangles for images, lines for text) that match the card layout. Ensure the shimmering animation is smooth and performant.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Add a Storybook story for the `SkeletonLoader` to visually confirm that the layout correctly mimics a card and that the shimmering animation works as expected on both iOS and Android.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:51:18.043Z"
           },
           {
             "id": 3,
@@ -1357,9 +1359,10 @@
             "description": "Develop a versatile, full-page component for displaying empty data states or error messages, complete with an optional retry action.",
             "dependencies": [],
             "details": "Create the file `src/components/common/StateScreen.tsx`. The component must accept `icon`, `title`, `message`, and an optional `onRetry` function as props. If the `onRetry` prop is provided, a secondary-styled `Button` should be rendered that triggers the callback when pressed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests using Jest and React Native Testing Library to assert that all props are rendered correctly and that the `onRetry` function is called on button press. Create multiple stories in Storybook to represent different use cases (e.g., an empty state, an error state with a retry button).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:51:20.323Z"
           },
           {
             "id": 4,
@@ -1369,9 +1372,10 @@
               1
             ],
             "details": "Create a new context at `src/context/LoadingContext.tsx`. The context provider should manage a boolean state for the loader's visibility and render the `GlobalLoader` component. Expose `showLoader` and `hideLoader` functions via a custom hook (e.g., `useLoading`). Wrap the root component in `App.tsx` with this provider.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually test on a development screen by adding two buttons. One button will call `showLoader()` and the other will call `hideLoader()`. Verify the global loader appears and disappears as expected.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:51:22.619Z"
           },
           {
             "id": 5,
@@ -1383,11 +1387,13 @@
               3
             ],
             "details": "In the project's stories directory, create `GlobalLoader.stories.tsx`, `SkeletonLoader.stories.tsx`, and `StateScreen.stories.tsx`. For `StateScreen`, define multiple named exports to showcase its different configurations (e.g., 'EmptyState', 'ErrorWithRetry').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the Storybook instance and navigate to each new story. Verify that each component and its variations render correctly and are interactive where applicable (e.g., the retry button in `StateScreen`).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T23:51:24.886Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-29T23:51:24.886Z"
       },
       {
         "id": "19",
@@ -1543,9 +1549,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-29T23:47:50.174Z",
+      "lastModified": "2025-11-29T23:51:24.888Z",
       "taskCount": 20,
-      "completedCount": 18,
+      "completedCount": 19,
       "tags": [
         "master"
       ]

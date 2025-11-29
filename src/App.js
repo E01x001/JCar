@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import messaging from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from './context/AuthContext';
+import { LoadingProvider } from './context/LoadingContext';
 import { ThemeProvider } from './theme/ThemeProvider';
 import AppNavigator from './navigation/AppNavigator';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -79,9 +80,11 @@ const App = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ErrorBoundary>
         <ThemeProvider>
-          <AuthProvider>
-            <AppNavigator />
-          </AuthProvider>
+          <LoadingProvider>
+            <AuthProvider>
+              <AppNavigator />
+            </AuthProvider>
+          </LoadingProvider>
         </ThemeProvider>
       </ErrorBoundary>
       <Toast config={toastConfig} />

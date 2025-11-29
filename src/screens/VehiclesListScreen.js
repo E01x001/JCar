@@ -10,10 +10,13 @@ import {
 import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
+import SkeletonLoader from '../components/SkeletonLoader';
+import StateScreen from '../components/StateScreen';
 
 const VehiclesListScreen = ({ navigation }) => {
   const theme = useTheme();
   const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState({
     minPrice: '',
@@ -25,8 +28,10 @@ const VehiclesListScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
+    setLoading(true);
     const unsubscribe = subscribeToFilteredVehicles(filters, (filteredVehicles) => {
       setVehicles(filteredVehicles);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -94,22 +99,24 @@ const VehiclesListScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={vehicles}
-        renderItem={renderVehicle}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: theme.spacing.sm }}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="directions-car" size={64} color={theme.colors.text.tertiary} />
-            <Text style={[styles.emptyText, {
-              fontSize: theme.typography.fontSize.h4,
-              color: theme.colors.text.secondary,
-              marginTop: theme.spacing.md,
-            }]}>조건에 맞는 차량이 없습니다.</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <SkeletonLoader count={5} style={{ paddingTop: theme.spacing.sm }} />
+      ) : (
+        <FlatList
+          data={vehicles}
+          renderItem={renderVehicle}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingVertical: theme.spacing.sm, flexGrow: 1 }}
+          ListEmptyComponent={
+            <StateScreen
+              icon="directions-car"
+              title="차량이 없습니다"
+              message="조건에 맞는 차량이 없습니다. 필터를 변경해보세요."
+              style={{ flex: 1 }}
+            />
+          }
+        />
+      )}
 
       <VehicleFilterModal
         visible={filterModalVisible}
