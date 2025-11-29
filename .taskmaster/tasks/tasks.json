@@ -1093,7 +1093,7 @@
           "12",
           "13"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1101,9 +1101,10 @@
             "description": "Navigate to the Login screen file. Replace all existing `TextInput` components with the new, unified `InputField` component from the design system. Adjust the layout by removing hardcoded styles and applying spacing tokens from the theme for consistent margins and padding between the logo, inputs, and other elements.",
             "dependencies": [],
             "details": "Identify the main login screen file, likely located at `src/screens/auth/LoginScreen.tsx`. Import the new `InputField` component. Systematically replace each `TextInput` for email and password. Utilize the theme provider hook (e.g., `useTheme`) to access spacing tokens (`theme.spacing.medium`, etc.) and apply them via the style prop for vertical spacing.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the `InputField` components render correctly. Check that placeholder text is visible and that users can type into the fields. Confirm that layout spacing matches the new design specifications.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:25:43.549Z"
           },
           {
             "id": 2,
@@ -1113,9 +1114,10 @@
               1
             ],
             "details": "In `src/screens/auth/LoginScreen.tsx`, import the new `Button` component. Replace the main login submission button with `<Button variant=\"primary\" title=\"로그인\">`. Replace text links like '비밀번호 찾기' and '회원가입' with `<Button variant=\"text\" title=\"비밀번호 찾기\">`. Ensure all `onPress` handlers are correctly reassigned to the new components.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually test that the primary button is tappable and triggers the login function. Verify that the text buttons navigate to the correct screens (Forgot Password, Sign-up). Check that the button styles match the 'primary' and 'text' variants from the design system.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:25:43.552Z"
           },
           {
             "id": 3,
@@ -1125,9 +1127,10 @@
               2
             ],
             "details": "Locate the sign-up screen file, likely at `src/screens/auth/SignUpScreen.tsx`. Import the `InputField` component. Replace all text inputs (e.g., email, password, confirm password, name) with the new component. Apply spacing tokens from the theme to ensure consistent vertical rhythm between form elements.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirm all `InputField` components render correctly on the Sign-up screen. Test user input in all fields. Verify the layout is consistent with the refactored Login screen and meets PRD specifications.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:26:01.685Z"
           },
           {
             "id": 4,
@@ -1137,9 +1140,10 @@
               3
             ],
             "details": "In `src/screens/auth/SignUpScreen.tsx`, import the `Button` component. Replace the main registration button with `<Button variant=\"primary\" title=\"회원가입\">`. Convert the '이미 계정이 있나요? 로그인' link to use the `<Button variant=\"text\">`. Re-connect the `onPress` handlers to the new components.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that the primary 'Sign-up' button triggers the registration logic. Verify the 'Login' text button navigates back to the Login screen. Ensure button styles are consistent with the design system.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:26:01.689Z"
           },
           {
             "id": 5,
@@ -1150,11 +1154,13 @@
               4
             ],
             "details": "Manually navigate between the Login and Sign-up screens. Test the complete sign-up process with valid and invalid data to check error states. Test the login process with correct and incorrect credentials. Perform a visual comparison of both screens against the PRD mockups to catch any inconsistencies in layout, spacing, or component styling.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Execute a full end-to-end test case for user registration and another for user login. Perform visual regression testing by comparing screenshots of the old and new screens. Verify that focus states, error messages, and button press states work as expected.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:31:31.472Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-29T17:31:31.472Z"
       },
       {
         "id": "16",
@@ -1521,9 +1527,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-29T11:48:16.022Z",
+      "lastModified": "2025-11-29T17:31:31.473Z",
       "taskCount": 20,
-      "completedCount": 14,
+      "completedCount": 15,
       "tags": [
         "master"
       ]
