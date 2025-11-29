@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { AuthContext } from '../context/AuthContext';
+import { theme } from '../theme';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen'; // 잊어버린 비밀번호 화면 추가
@@ -26,6 +27,48 @@ import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Centralized Navigation Style Constants
+const navigationStyles = {
+  header: {
+    headerStyle: {
+      backgroundColor: theme.colors.primary.main,
+      elevation: 4,
+      shadowColor: theme.colors.neutral.black,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    headerTintColor: theme.colors.text.white,
+    headerTitleStyle: {
+      fontSize: theme.typography.fontSize.h3,
+      fontWeight: theme.typography.fontWeight.semiBold,
+    },
+    headerTitleAlign: 'center',
+  },
+  tabBar: {
+    tabBarStyle: {
+      backgroundColor: theme.colors.background.primary,
+      borderTopWidth: 3,
+      borderTopColor: theme.colors.primary.main,
+      height: 60,
+      paddingBottom: 8,
+      paddingTop: 8,
+      elevation: 8,
+      shadowColor: theme.colors.neutral.black,
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    tabBarActiveTintColor: theme.colors.primary.main,
+    tabBarInactiveTintColor: theme.colors.text.tertiary,
+    tabBarActiveBackgroundColor: theme.colors.primary.opacity10,
+    tabBarLabelStyle: {
+      fontSize: theme.typography.fontSize.bodySmall,
+      fontWeight: theme.typography.fontWeight.semiBold,
+    },
+  },
+};
+
 const UserTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -36,9 +79,8 @@ const UserTabs = () => (
         else if (route.name === 'MyPage') {iconName = 'person';}
         return <Icon name={iconName} size={size} color={color} />;
       },
-      tabBarStyle: { backgroundColor: '#2B4593' },
-      tabBarLabelStyle: { color: 'black', textAlign: 'center' },
-      headerTitleAlign: 'center',
+      ...navigationStyles.header,
+      ...navigationStyles.tabBar,
     })}
   >
     <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '차량 목록' }} />
@@ -59,9 +101,8 @@ const AdminTabs = () => (
         else if (route.name === 'AdminPage') {iconName = 'admin-panel-settings';}
         return <Icon name={iconName} size={size} color={color} />;
       },
-      tabBarStyle: { backgroundColor: '#2B4593' },
-      tabBarLabelStyle: { color: 'black', textAlign: 'center', fontSize: 11 },
-      headerTitleAlign: 'center',
+      ...navigationStyles.header,
+      ...navigationStyles.tabBar,
     })}
   >
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} options={{ title: '차량 관리' }} />
@@ -78,26 +119,45 @@ const AppNavigator = () => {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{
+        headerShown: false,
+        ...navigationStyles.header,
+      }}>
         {user && role === 'admin' && (
           <>
             <Stack.Screen name="AdminHome" component={AdminTabs} />
-            <Stack.Screen name="AdminVehicleDetail" component={AdminVehicleDetailScreen} />
+            <Stack.Screen
+              name="AdminVehicleDetail"
+              component={AdminVehicleDetailScreen}
+              options={{ headerShown: true, title: '차량 상세' }}
+            />
           </>
         )}
         {user && role !== 'admin' && (
           <>
             <Stack.Screen name="Home" component={UserTabs} />
-            <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
-            <Stack.Screen name="ConsultationRequest" component={ConsultationRequestScreen} />
-            <Stack.Screen name="MyVehicles" component={MyVehiclesScreen} />
+            <Stack.Screen
+              name="VehicleDetail"
+              component={VehicleDetailScreen}
+              options={{ headerShown: true, title: '차량 상세' }}
+            />
+            <Stack.Screen
+              name="ConsultationRequest"
+              component={ConsultationRequestScreen}
+              options={{ headerShown: true, title: '상담 신청' }}
+            />
+            <Stack.Screen
+              name="MyVehicles"
+              component={MyVehiclesScreen}
+              options={{ headerShown: true, title: '내 차량' }}
+            />
           </>
         )}
         {!user && (

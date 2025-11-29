@@ -1173,7 +1173,7 @@
           "12",
           "14"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1181,9 +1181,10 @@
             "description": "Update the individual item component rendered in the vehicle list to use the new <Card> as its root element. Inside the card, replace existing elements with <Badge> for the vehicle type and apply H3/Body typography from the theme for other text.",
             "dependencies": [],
             "details": "Locate the component used for rendering each vehicle in the FlatList on the Vehicle List Screen. Replace the main container View with the <Card> component. Import and use the <Badge> component for vehicle status/type. Apply theme.typography.h3 and theme.typography.body styles to the relevant <Text> components.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Visually inspect the new list item component in a Storybook or on the list screen to ensure it matches the PRD design. Verify correct props are passed to Card and Badge.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:34:52.949Z"
           },
           {
             "id": 2,
@@ -1193,9 +1194,10 @@
               1
             ],
             "details": "In the VehicleListScreen file, modify the FlatList props. Use ItemSeparatorComponent or contentContainerStyle with a gap property set from the theme (e.g., theme.spacing.m). Update the header component or options in the navigation stack to apply the new typography and layout.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Scroll through the vehicle list to confirm consistent spacing between all items. Check that the header style is correctly applied and consistent with other refactored screens.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:34:52.953Z"
           },
           {
             "id": 3,
@@ -1203,9 +1205,10 @@
             "description": "Refactor the layout of the Vehicle Detail screen to organize content into logical sections. Apply H4 typography for section titles and use theme-defined padding and spacing for all elements.",
             "dependencies": [],
             "details": "Open the VehicleDetailScreen file. Wrap content sections in <View> containers. Apply padding to the main screen container using theme.spacing.l. For each section, add a <Text> component with theme.typography.h4 style for the title. Ensure all margins and paddings use the theme's spacing tokens.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "Visually verify the detail screen's layout against the design mockups. Check that all spacing is consistent and typography is correctly applied to section headers and body text.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:34:55.239Z"
           },
           {
             "id": 4,
@@ -1232,7 +1235,8 @@
             "testStrategy": "Perform an end-to-end test: start on the list screen, scroll, tap a vehicle card, view the detail screen, scroll, and interact with the bottom button. Compare both screens side-by-side with the PRD.",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-29T17:37:40.737Z"
       },
       {
         "id": "17",
@@ -1244,7 +1248,7 @@
         "dependencies": [
           "11"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1252,9 +1256,10 @@
             "description": "Create a dedicated file to define and export style objects for the global header and tab bar, pulling values from the application's theme file.",
             "dependencies": [],
             "details": "Create a new file at `src/navigation/navigationStyles.js`. In this file, import the application's theme object. Export a `defaultHeaderOptions` object containing `headerStyle`, `headerTintColor`, and `headerTitleStyle`. Also, export a `defaultTabBarOptions` object containing `tabBarStyle`, `tabBarActiveTintColor`, and `tabBarInactiveTintColor`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Review the created file to ensure it correctly imports theme colors and exports the style configuration objects for both header and tab bar.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:40:43.488Z"
           },
           {
             "id": 2,
@@ -1264,9 +1269,10 @@
               1
             ],
             "details": "Locate the primary `StackNavigator` component in the application, likely in `src/navigation/AppNavigator.js`. Import the `defaultHeaderOptions` object from `navigationStyles.js` and spread it into the `screenOptions` prop of the `Stack.Navigator` component to apply the style to all screens within that stack.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the app and observe that all screens governed by the main stack navigator now share the same header background color, title color, and font style.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:40:46.204Z"
           },
           {
             "id": 3,
@@ -1276,9 +1282,10 @@
               1
             ],
             "details": "Find the `BottomTabNavigator` component. Import the `defaultTabBarOptions` from `navigationStyles.js`. Apply these options to the `screenOptions` prop of the `Tab.Navigator`. This will set the `tabBarStyle`, `tabBarActiveTintColor`, and `tabBarInactiveTintColor` for all tabs.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Launch the application and verify the bottom tab bar's background color is correct. Tap between different tabs to confirm that the active and inactive tint colors for icons and labels match the defined styles.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:40:48.886Z"
           },
           {
             "id": 4,
@@ -1288,9 +1295,10 @@
               3
             ],
             "details": "Since React Navigation's default tab bar doesn't directly support a top border on the active item, update the `tabBarIcon` function for each `Tab.Screen`. The function should return a `View` that wraps the icon. This `View` will conditionally apply a `borderTopWidth` and `borderTopColor` style when its `focused` prop is true.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate between tabs and confirm that only the currently active tab icon displays a top border with the correct color and thickness. Ensure the border does not appear on inactive tabs.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:40:51.561Z"
           },
           {
             "id": 5,
@@ -1301,11 +1309,13 @@
               4
             ],
             "details": "Manually navigate to every screen, including nested screens within stacks. Identify any screens that still have local `options` prop styling for the header that conflicts with the new global style. Remove these local overrides unless they are intentionally different. Ensure a consistent user experience across the app.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test on both iOS and Android. Create a checklist of all screens. Go through the checklist, verifying header and tab bar appearance on each screen. Confirm that no legacy styling remains.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-29T17:40:54.287Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-29T17:40:54.287Z"
       },
       {
         "id": "18",
@@ -1527,9 +1537,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-29T17:31:31.473Z",
+      "lastModified": "2025-11-29T17:40:54.288Z",
       "taskCount": 20,
-      "completedCount": 15,
+      "completedCount": 17,
       "tags": [
         "master"
       ]

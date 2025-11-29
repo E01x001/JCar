@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
 import { formatPrice } from '../utils/format';
+import { useTheme } from '../theme/ThemeProvider';
+import Button from '../components/Button';
+import Badge from '../components/Badge';
 
 const { width } = Dimensions.get('window');
 
 const VehicleDetailScreen = ({ route, navigation }) => {
+  const theme = useTheme();
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
   const [isOwnVehicle, setIsOwnVehicle] = useState(false);
@@ -36,102 +39,159 @@ const VehicleDetailScreen = ({ route, navigation }) => {
   }, [vehicleId]);
 
   const handleConsultationRequest = () => {
-    navigation.navigate("ConsultationRequest", {
+    navigation.navigate('ConsultationRequest', {
       vehicle,
-      isSell: isOwnVehicle // ✅ 판매자면 true 전달
+      isSell: isOwnVehicle, // ✅ 판매자면 true 전달
     });
   };
 
   if (!vehicle) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>차량 정보를 불러오는 중...</Text>
+        <Text style={{
+          fontSize: theme.typography.fontSize.body,
+          color: theme.colors.text.secondary,
+        }}>차량 정보를 불러오는 중...</Text>
       </View>
     );
   }
 
+  const InfoRow = ({ label, value }) => (
+    <View style={[styles.infoCard, {
+      marginBottom: theme.spacing.sm,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: theme.borderRadius.medium,
+      borderWidth: 1,
+      borderColor: theme.colors.border.light,
+    }]}>
+      <Text style={[styles.infoTitle, {
+        fontSize: theme.typography.fontSize.body,
+        fontWeight: theme.typography.fontWeight.semiBold,
+        color: theme.colors.text.secondary,
+      }]}>{label}</Text>
+      <Text style={{
+        fontSize: theme.typography.fontSize.body,
+        color: theme.colors.text.primary,
+      }}>{value}</Text>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <ScrollView 
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 50 }}
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background.primary }]} edges={['bottom']}>
+      <ScrollView
+        style={[styles.container, {
+          padding: theme.spacing.md,
+          backgroundColor: theme.colors.background.secondary,
+        }]}
+        contentContainerStyle={{ paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       >
-        <Image source={{ uri: vehicle.imageUrl }} style={styles.image} />
-        <Text style={styles.title}>[{vehicle.vehicleType || '승용차'}] {vehicle.vehicleName}</Text>
-        <Text style={styles.subTitle}>{vehicle.subModel}</Text>
+        <Image source={{ uri: vehicle.imageUrl }} style={[styles.image, {
+          borderRadius: theme.borderRadius.large,
+        }]} />
 
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>제조사</Text><Text>{vehicle.manufacturer}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연식</Text><Text>{vehicle.year}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연료 종류</Text><Text>{vehicle.fuelType}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>변속기</Text><Text>{vehicle.transmission}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>구동 방식</Text><Text>{vehicle.driveType}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>배기량</Text><Text>{vehicle.cc} cc</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연비</Text><Text>{vehicle.fuelEco} km/L</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연료탱크 용량</Text><Text>{vehicle.fuelTank} L</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>가격</Text><Text>{formatPrice(vehicle.price)}</Text></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs }}>
+          <Badge status="completed" label={vehicle.vehicleType || '승용차'} />
+        </View>
 
-        <Text style={styles.sectionTitle}>부품 정보</Text>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>앞 타이어</Text><Text>{vehicle.frontTire}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>뒤 타이어</Text><Text>{vehicle.rearTire}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>엔진 오일 용량</Text><Text>{vehicle.engineOilLiter} L</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>와이퍼 정보</Text><Text>{vehicle.wiperInfo}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>배터리 모델</Text><Text>{vehicle.battery}</Text></View>
+        <Text style={[styles.title, {
+          fontSize: theme.typography.fontSize.h2,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing.xs,
+        }]}>{vehicle.vehicleName}</Text>
+
+        <Text style={[styles.subTitle, {
+          fontSize: theme.typography.fontSize.h4,
+          fontWeight: theme.typography.fontWeight.semiBold,
+          color: theme.colors.text.secondary,
+          marginBottom: theme.spacing.lg,
+        }]}>{vehicle.subModel}</Text>
+
+        <Text style={[styles.sectionTitle, {
+          fontSize: theme.typography.fontSize.h4,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.primary.main,
+          marginBottom: theme.spacing.md,
+        }]}>기본 정보</Text>
+
+        <InfoRow label="제조사" value={vehicle.manufacturer} />
+        <InfoRow label="연식" value={`${vehicle.year}년`} />
+        <InfoRow label="연료 종류" value={vehicle.fuelType} />
+        <InfoRow label="변속기" value={vehicle.transmission} />
+        <InfoRow label="구동 방식" value={vehicle.driveType} />
+        <InfoRow label="배기량" value={`${vehicle.cc} cc`} />
+        <InfoRow label="연비" value={`${vehicle.fuelEco} km/L`} />
+        <InfoRow label="연료탱크 용량" value={`${vehicle.fuelTank} L`} />
+        <InfoRow label="가격" value={formatPrice(vehicle.price)} />
+
+        <Text style={[styles.sectionTitle, {
+          fontSize: theme.typography.fontSize.h4,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.primary.main,
+          marginTop: theme.spacing.lg,
+          marginBottom: theme.spacing.md,
+        }]}>부품 정보</Text>
+
+        <InfoRow label="앞 타이어" value={vehicle.frontTire} />
+        <InfoRow label="뒤 타이어" value={vehicle.rearTire} />
+        <InfoRow label="엔진 오일 용량" value={`${vehicle.engineOilLiter} L`} />
+        <InfoRow label="와이퍼 정보" value={vehicle.wiperInfo} />
+        <InfoRow label="배터리 모델" value={vehicle.battery} />
       </ScrollView>
 
-      {/* ✅ 판매자든 구매자든 버튼 보이도록 수정 */}
-      <TouchableOpacity 
-        style={styles.consultButton}
-        onPress={handleConsultationRequest}
-      >
-        <Text style={styles.consultButtonText}>
-          {isOwnVehicle ? '판매 상담 신청' : '구매 상담 신청'}
-        </Text>
-      </TouchableOpacity>
+      <View style={[styles.bottomButtonContainer, {
+        padding: theme.spacing.md,
+        backgroundColor: theme.colors.background.primary,
+        ...theme.shadows.card,
+      }]}>
+        <Button
+          variant="primary"
+          title={isOwnVehicle ? '판매 상담 신청' : '구매 상담 신청'}
+          onPress={handleConsultationRequest}
+        />
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
   image: {
-    width: width - 40,
+    width: width - 32,
     height: undefined,
     aspectRatio: 16 / 9,
-    marginBottom: 20,
-    borderRadius: 10,
+    marginBottom: 16,
     resizeMode: 'cover',
     alignSelf: 'center',
   },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#333' },
-  subTitle: { fontSize: 18, fontWeight: '600', color: '#666', marginBottom: 15 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10, color: '#2B4593' },
+  title: {},
+  subTitle: {},
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionTitle: {},
   infoCard: {
-    marginBottom: 10,
-    padding: 12,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  infoTitle: { fontSize: 16, fontWeight: '600', color: '#555', flex: 1 },
-  consultButton: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 14,
-    backgroundColor: '#2B4593',
-    borderRadius: 8,
-    alignItems: 'center',
+  infoTitle: {
+    flex: 1,
   },
-  consultButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });
 
