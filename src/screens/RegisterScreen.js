@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { firebaseFunctions } from '../firebase/firebaseConfig';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
+import { useToast } from '../hooks/useToast';
 
 const RegisterScreen = ({ navigation }) => {
   const theme = useTheme();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -47,8 +49,8 @@ const RegisterScreen = ({ navigation }) => {
       const result = await registerUser({ email, password, name, phoneNumber });
       console.log('[DEBUG] registerUser result:', result.data);
 
-      Alert.alert('회원가입 완료', '로그인 화면으로 이동합니다.');
-      navigation.navigate('Login');
+      toast.showSuccess('회원가입 완료', '로그인 화면으로 이동합니다.');
+      setTimeout(() => navigation.navigate('Login'), 1000);
 
     } catch (error) {
       console.error('--- registerUser Cloud Function Error ---');
@@ -57,7 +59,7 @@ const RegisterScreen = ({ navigation }) => {
       const errorMsg = error?.code
         ? `${error.code}: ${error.message}`
         : error?.message || '알 수 없는 오류가 발생했습니다.';
-      Alert.alert('회원가입 실패', errorMsg);
+      toast.showError('회원가입 실패', errorMsg);
     }
   };
 

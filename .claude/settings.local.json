@@ -43,7 +43,11 @@
       "Bash(gradlew clean:*)",
       "Bash(./gradlew.bat clean)",
       "Bash(if:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(mkdir:*)",
+      "Bash(task-master update-task:*)",
+      "Bash(git restore:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": []
   },

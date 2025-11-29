@@ -2,11 +2,13 @@ import React, { useEffect } from 'react';
 import { Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import messaging from '@react-native-firebase/messaging';
+import Toast from 'react-native-toast-message';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './theme/ThemeProvider';
 import AppNavigator from './navigation/AppNavigator';
 import ErrorBoundary from './components/ErrorBoundary';
 import { requestNotificationPermission } from './services/firebaseService';
+import { toastConfig } from './config/toastConfig';
 
 const App = () => {
   // console.log('🚀 App component rendering...');
@@ -82,6 +84,7 @@ const App = () => {
           </AuthProvider>
         </ThemeProvider>
       </ErrorBoundary>
+      <Toast config={toastConfig} />
     </GestureHandlerRootView>
   );
 };

@@ -1,18 +1,20 @@
-import React, { useState, useContext } from "react";
-import { View, Text, TextInput, Button, Alert, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity } from "react-native";
+import React, { useState, useContext } from 'react';
+import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import firestore, { collection, doc, setDoc, serverTimestamp } from "@react-native-firebase/firestore";
-import auth from "@react-native-firebase/auth";
-import storage from "@react-native-firebase/storage";
-import { launchImageLibrary } from "react-native-image-picker";
-import { AuthContext } from "../context/AuthContext";
+import firestore, { collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import storage from '@react-native-firebase/storage';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { AuthContext } from '../context/AuthContext';
+import { useToast } from '../hooks/useToast';
 
 const VehicleRegistrationScreen = () => {
   const { user, sellerName, sellerPhone, sellerEmail } = useContext(AuthContext);
+  const toast = useToast();
 
-  const [regiNumber, setRegiNumber] = useState("");
-  const [ownerName, setOwnerName] = useState("");
-  const [vehicleType, setVehicleType] = useState(""); // ✅ 초기값 "" (선택 안 한 상태)
+  const [regiNumber, setRegiNumber] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [vehicleType, setVehicleType] = useState(''); // ✅ 초기값 "" (선택 안 한 상태)
   const [loading, setLoading] = useState(false);
   const [vehicleData, setVehicleData] = useState(null);
   const [imageUri, setImageUri] = useState(null);
@@ -23,12 +25,12 @@ const VehicleRegistrationScreen = () => {
   };
 
   const formatRegiNumber = (input) => {
-    const cleanInput = input.replace(/\s+/g, "");
+    const cleanInput = input.replace(/\s+/g, '');
     const regex = /^([가-힣]{0,2})?(\d{2,3})([가-힣A-Z외임])(\d{3,4})$/;
     const match = cleanInput.match(regex);
 
     if (match) {
-      const region = match[1] || "";
+      const region = match[1] || '';
       const firstNumbers = match[2];
       const letter = match[3];
       const lastNumbers = match[4];
@@ -46,40 +48,41 @@ const VehicleRegistrationScreen = () => {
 
   const fetchVehicleInfo = async () => {
     if (!regiNumber || !ownerName) {
-      Alert.alert("입력 오류", "차량번호와 소유자명을 입력하세요.");
+      toast.showWarning('입력 오류', '차량번호와 소유자명을 입력하세요.');
       return;
     }
 
     if (!isValidRegiNumber(regiNumber)) {
-      Alert.alert("입력 오류", "올바른 차량번호 형식이 아닙니다. 예: 서울12가 3456");
+      toast.showWarning('입력 오류', '올바른 차량번호 형식이 아닙니다. 예: 서울12가 3456');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch("https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry", {
-        method: "POST",
+      const response = await fetch('https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry', {
+        method: 'POST',
         headers: {
-          "Authorization": "7c112786a95c41dd9d3f24895f47e6cbc62c6b48",
-          "Content-Type": "application/json;charset=UTF-8",
+          'Authorization': '7c112786a95c41dd9d3f24895f47e6cbc62c6b48',
+          'Content-Type': 'application/json;charset=UTF-8',
         },
         body: JSON.stringify({ REGINUMBER: regiNumber, OWNERNAME: ownerName }),
       });
 
       const jsonResponse = await response.json();
-      console.log("API 응답:", jsonResponse);
+      console.log('API 응답:', jsonResponse);
 
-      if (jsonResponse.errCode !== "0000" || jsonResponse.result !== "SUCCESS" || jsonResponse.data.STATUS !== "200") {
-        Alert.alert("조회 실패", jsonResponse.errMsg || "차량 정보를 찾을 수 없습니다.");
+      if (jsonResponse.errCode !== '0000' || jsonResponse.result !== 'SUCCESS' || jsonResponse.data.STATUS !== '200') {
+        toast.showError('조회 실패', jsonResponse.errMsg || '차량 정보를 찾을 수 없습니다.');
         return;
       }
 
       setVehicleData(jsonResponse.data);
+      toast.showInfo('조회 성공', '차량 정보를 성공적으로 가져왔습니다.');
 
     } catch (error) {
-      console.error("API 요청 실패:", error);
-      Alert.alert("오류", "차량 정보를 조회하는 중 오류가 발생했습니다.");
+      console.error('API 요청 실패:', error);
+      toast.showError('오류', '차량 정보를 조회하는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -87,28 +90,28 @@ const VehicleRegistrationScreen = () => {
 
   const saveVehicleData = async () => {
     if (!vehicleData) {
-      Alert.alert("오류", "조회된 차량 정보가 없습니다.");
+      toast.showWarning('오류', '조회된 차량 정보가 없습니다.');
       return;
     }
-  
-    const validVehicleTypes = ["승용차", "택시", "렌터카", "화물차", "군용차", "외교차"];
-  
+
+    const validVehicleTypes = ['승용차', '택시', '렌터카', '화물차', '군용차', '외교차'];
+
     if (!validVehicleTypes.includes(vehicleType)) {
-      Alert.alert("입력 오류", "차량 종류를 정확히 선택해주세요.");
+      toast.showWarning('입력 오류', '차량 종류를 정확히 선택해주세요.');
       return;
     }
-  
+
     try {
       const currentUser = auth().currentUser;
       let uploadedImageUrl = `https://www.cartory.net/cars/${vehicleData.CARURL}`;
-  
+
       if (imageUri) {
         const filename = imageUri.substring(imageUri.lastIndexOf('/') + 1);
         const reference = storage().ref(`/vehicles/${filename}`);
         await reference.putFile(imageUri);
         uploadedImageUrl = await reference.getDownloadURL();
       }
-  
+
       const newVehicleRef = doc(collection(firestore(), 'vehicles'));
 
       await setDoc(newVehicleRef, {
@@ -129,7 +132,7 @@ const VehicleRegistrationScreen = () => {
         engineOilLiter: vehicleData.EOILLITER,
         wiperInfo: vehicleData.WIPER,
         seats: vehicleData.SEATS,
-        battery: Array.isArray(vehicleData.BATTERYLIST) && vehicleData.BATTERYLIST.length > 0 ? vehicleData.BATTERYLIST[0].MODEL : "Unknown",
+        battery: Array.isArray(vehicleData.BATTERYLIST) && vehicleData.BATTERYLIST.length > 0 ? vehicleData.BATTERYLIST[0].MODEL : 'Unknown',
         fuelEco: vehicleData.FUELECO,
         fuelTank: vehicleData.FUELTANK,
         regiNumber,
@@ -137,20 +140,20 @@ const VehicleRegistrationScreen = () => {
         vehicleType,
         createdAt: serverTimestamp(),
         sellerId: user.uid,
-        sellerName: sellerName || "Unknown",
-        sellerPhone: sellerPhone || "Unknown",
-        sellerEmail: sellerEmail || "Unknown",
+        sellerName: sellerName || 'Unknown',
+        sellerPhone: sellerPhone || 'Unknown',
+        sellerEmail: sellerEmail || 'Unknown',
       });
-  
-      Alert.alert("성공", "차량 정보가 저장되었습니다.");
-      setRegiNumber("");
-      setOwnerName("");
+
+      toast.showSuccess('성공', '차량 정보가 저장되었습니다.');
+      setRegiNumber('');
+      setOwnerName('');
       setVehicleData(null);
       setImageUri(null);
-      setVehicleType(""); // 저장 완료 후 차량 종류도 리셋
+      setVehicleType(''); // 저장 완료 후 차량 종류도 리셋
     } catch (error) {
-      console.error("Firestore 저장 오류:", error);
-      Alert.alert("오류", "차량 정보를 저장하는 중 문제가 발생했습니다.");
+      console.error('Firestore 저장 오류:', error);
+      toast.showError('오류', '차량 정보를 저장하는 중 문제가 발생했습니다.');
     }
   };
 
@@ -234,19 +237,19 @@ const VehicleRegistrationScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
   scrollViewContent: { padding: 20, paddingBottom: 30 },
-  label: { fontSize: 16, fontWeight: "600", color: "#000", marginBottom: 5 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 12, marginBottom: 15, borderRadius: 8, backgroundColor: "#fff", fontSize: 16 },
-  pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, overflow: 'hidden', marginBottom: 15, backgroundColor: '#fff' },
+  label: { fontSize: 16, fontWeight: '600', color: '#000', marginBottom: 5 },
+  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 15, borderRadius: 8, backgroundColor: '#fff', fontSize: 16 },
+  pickerContainer: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, overflow: 'hidden', marginBottom: 15, backgroundColor: '#fff' },
   picker: { height: 55, width: '100%', fontSize: 16 }, // ✅ 높이와 글자 크기 조정
-  buttonContainer: { marginTop: 20, alignItems: "center" },
-  vehiclePreview: { marginTop: 30, padding: 15, backgroundColor: "#fff", borderRadius: 10, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
-  previewTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  vehicleImage: { width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 },
-  imageButton: { padding: 10, backgroundColor: "#e0e0e0", alignItems: "center", marginBottom: 10, borderRadius: 6 },
-  imageButtonText: { color: "#333" },
-  imagePreview: { width: "100%", height: 200, resizeMode: "cover", borderRadius: 6, marginBottom: 15 },
+  buttonContainer: { marginTop: 20, alignItems: 'center' },
+  vehiclePreview: { marginTop: 30, padding: 15, backgroundColor: '#fff', borderRadius: 10, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
+  previewTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  vehicleImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 10 },
+  imageButton: { padding: 10, backgroundColor: '#e0e0e0', alignItems: 'center', marginBottom: 10, borderRadius: 6 },
+  imageButtonText: { color: '#333' },
+  imagePreview: { width: '100%', height: 200, resizeMode: 'cover', borderRadius: 6, marginBottom: 15 },
 });
 
 export default VehicleRegistrationScreen;

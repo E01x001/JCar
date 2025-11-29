@@ -5,19 +5,22 @@ import crashlytics from '@react-native-firebase/crashlytics';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
+import { useToast } from '../hooks/useToast';
 
 const LoginScreen = ({ navigation }) => {
   const theme = useTheme();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     try {
       await auth().signInWithEmailAndPassword(email, password);
+      toast.showSuccess('로그인 성공', '환영합니다!');
     } catch (error) {
       crashlytics().recordError(error);
       crashlytics().log('LoginScreen: Login failed');
-      alert('로그인 실패: ' + error.message);
+      toast.showError('로그인 실패', error.message);
     }
   };
 
