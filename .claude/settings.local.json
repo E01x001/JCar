@@ -26,8 +26,29 @@
       "Bash(git commit:*)",
       "Bash(git add:*)",
       "Bash(task-master next:*)",
-      "Bash(./gradlew installDebug:*)"
+      "Bash(./gradlew installDebug:*)",
+      "mcp__context7__resolve-library-id",
+      "Bash(./gradlew assembleRelease:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "WebSearch",
+      "Bash(test:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(reg query:*)",
+      "Bash(tee:*)",
+      "WebFetch(domain:vhxpffltm.tistory.com)",
+      "Bash(powershell -Command \"Get-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem'' -Name LongPathsEnabled\")",
+      "Bash(git config:*)",
+      "Bash(gradlew clean:*)",
+      "Bash(./gradlew.bat clean)",
+      "Bash(if:*)",
+      "Bash(powershell -Command:*)"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "task-master-ai"
+  ]
 }

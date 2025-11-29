@@ -19,8 +19,8 @@ service cloud.firestore {
     // Users collection: Users can only read/write their own document
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      // Admins can read all user documents
-      allow read: if isAdmin();
+      // Admins can read and write all user documents
+      allow read, write: if isAdmin();
     }
 
     // Vehicles collection: Authenticated users can read, only active admins can write

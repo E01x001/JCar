@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Security Hardening: Remove Exposed Credentials and Secure Environment",
         "description": "Remove the exposed GitHub Personal Access Token (PAT) from the codebase and ensure the .env file is properly ignored by version control to prevent future credential leaks.",
         "details": "1. Locate the .env file containing the exposed GitHub PAT. 2. Remove the PAT from the file. If it's needed for a dependency, source it from a secure environment variable provider or a secure secret management system. 3. Ensure the `.gitignore` file at the root of the project contains a line for `.env` and `*.env`. 4. Verify that no history of the .env file exists in the Git repository. If it does, the history must be rewritten using tools like `git filter-repo` or BFG Repo-Cleaner to completely remove the sensitive data. 5. Rotate the leaked PAT on GitHub immediately.",
@@ -78,7 +78,7 @@
         "updatedAt": "2025-11-26T16:56:17.277Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Implement Firestore Security Rules",
         "description": "Define and apply Firestore security rules for the users, vehicles, and consultation_requests collections to enforce proper access control and data validation.",
         "details": "Develop and deploy `firestore.rules`. The rules should enforce that: \n- `users`: A user can only read/write their own document (`allow read, write: if request.auth.uid == userId;`). Publicly readable fields should be explicitly allowed. \n- `vehicles`: Any authenticated user can read vehicle documents. Only authorized admins or the vehicle owner (if allowed) can create/update/delete. Writes should validate data types (e.g., `price` is a number). \n- `consultation_requests`: Users can only create requests for themselves. They can only read their own requests. Admins should have read/write access to all requests. \n- `Firebase Storage`: Rules for image uploads should ensure that only authenticated users can upload images and that file size and type are validated.",
@@ -156,7 +156,7 @@
         "updatedAt": "2025-11-27T01:07:03.819Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Implement Global Error Handling & Logging",
         "description": "Establish a comprehensive error handling and logging strategy using a global error boundary and a structured logging service like Firebase Crashlytics.",
         "details": "1. Integrate `react-native-firebase/app` and `react-native-firebase/crashlytics`. Follow the setup instructions for both Android and iOS. 2. Create a global error boundary component using a class component with `componentDidCatch`. This boundary should wrap the root `App` component. When it catches an error, it should log the error to Crashlytics (`crashlytics().recordError(error)`) and display a user-friendly fallback UI. 3. Wrap all Firebase API calls (Firestore, Auth, Storage) in try/catch blocks. In the catch block, log the error to Crashlytics and display a localized, user-friendly message to the user via a toast or alert.",
@@ -233,7 +233,7 @@
         "updatedAt": "2025-11-27T04:30:00.578Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "Setup Testing Framework and Code Quality Tools",
         "description": "Configure Jest for unit testing, ESLint for static code analysis, and Husky for pre-commit hooks to enforce code quality and testing standards.",
         "details": "1. **Jest**: Install Jest and the `react-native` preset. Configure `jest.config.js` to set up mocks for native modules and assets. 2. **ESLint**: Initialize ESLint with a recommended ruleset like `@react-native-community/eslint-config`. Create a `.eslintrc.js` file and add rules to enforce project coding standards. Add an `npm run lint` script to `package.json`. 3. **Husky**: Install Husky and `lint-staged`. Configure a `pre-commit` hook in the Husky configuration to run ESLint and Jest on staged files (`npx lint-staged`). This will prevent commits with linting errors or failing tests.",
@@ -308,7 +308,7 @@
         "updatedAt": "2025-11-27T04:49:06.599Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "Implement Push Notification System using FCM",
         "description": "Integrate Firebase Cloud Messaging (FCM) to send and receive push notifications for critical app events, such as consultation status changes.",
         "details": "1. Add the `@react-native-firebase/messaging` package. 2. Configure FCM for the Android project by adding the necessary dependencies and plugins in `build.gradle` files. 3. In the app's entry point, implement logic to request notification permissions from the user using `messaging().requestPermission()`. 4. Retrieve the device's FCM token using `messaging().getToken()` and store it in the corresponding user's document in Firestore. 5. Set up background and foreground message handlers (`messaging().onMessage()` and `messaging().setBackgroundMessageHandler()`) to process incoming notifications and display them to the user. 6. Create a Firebase Function triggered by updates to the `consultation_requests` collection to send notifications to relevant users.",
@@ -387,7 +387,7 @@
         "updatedAt": "2025-11-27T13:53:40.252Z"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "Write Unit Tests for Critical Functions",
         "description": "Write a suite of unit tests for existing critical business logic, focusing on services, formatters, and validators to improve code reliability.",
         "details": "Using the Jest framework set up in Task 4, create test files for the following: \n- `firebaseService.js`: Mock Firebase functions using `jest.mock` to test data fetching, vehicle registration, and consultation request logic without making actual API calls. \n- **Validators**: Test input validation functions for forms (e.g., email format, password strength, vehicle year). Test with both valid and invalid inputs. \n- **Formatters**: Test utility functions that format data for display (e.g., currency formatters for price, date formatters for timestamps).",
@@ -465,7 +465,7 @@
         "updatedAt": "2025-11-27T14:06:00.117Z"
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "Enhance Admin Management Features",
         "description": "Implement high-priority admin features, including emergency vehicle deletion and a user management interface for suspending or activating accounts.",
         "details": "1. **Emergency Delete**: In the admin panel's vehicle view, add a 'Delete' button. On click, it should trigger a Firebase Function that performs a hard delete of the vehicle document and its associated images in Firebase Storage. This action should be logged in an admin activity log collection. 2. **User Management**: Create a new screen in the admin panel to list all users. Implement functionality to search and filter users. Each user item should have a toggle/button to change a `status` field in their user document (e.g., from 'active' to 'suspended'). Firestore security rules must be updated to deny writes from suspended users.",
@@ -541,7 +541,7 @@
         "updatedAt": "2025-11-28T09:54:23.687Z"
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "Implement Advanced Vehicle Search and Filters",
         "description": "Develop an advanced search interface allowing users to filter and sort the vehicle list by multiple criteria such as price range, year, and manufacturer.",
         "details": "1. Create a 'Filter' modal or screen accessible from the main vehicle list. 2. Add UI components for filtering: sliders for price/year range, multi-select pickers for manufacturers. 3. When the user applies filters, construct a composite Firestore query. For example: `firestore().collection('vehicles').where('price', '>=', minPrice).where('price', '<=', maxPrice).orderBy('price').limit(20)`. Note Firestore's limitations on composite queries may require data duplication or a more advanced search solution like Algolia if complexity increases. 4. Implement sorting options (e.g., Price: Low to High) which will modify the `orderBy()` clause of the Firestore query.",
@@ -617,7 +617,7 @@
         "updatedAt": "2025-11-28T10:16:06.420Z"
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "Set Up CI/CD Pipeline with GitHub Actions",
         "description": "Automate the build, linting, and testing process for the Android application using a GitHub Actions workflow.",
         "details": "1. Create a `.github/workflows` directory in the project root. 2. Create a YAML file (e.g., `android-ci.yml`). 3. Define a workflow that triggers on `pull_request` to the `main` or `develop` branch. 4. The workflow should have jobs for: \n   - `setup`: Check out the code, set up Node.js, and install npm dependencies. \n   - `lint`: Run the ESLint checks (`npm run lint`). \n   - `test`: Run the Jest unit tests (`npm run test`). \n   - `build`: Assemble the Android debug build (`cd android && ./gradlew assembleDebug`) to ensure the project builds successfully.",
@@ -696,7 +696,7 @@
         "updatedAt": "2025-11-28T10:06:38.763Z"
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "Prepare Android for Production Release",
         "description": "Configure the Android project for a production release, including setting up app signing, enabling code shrinking, and generating a signed Android App Bundle (AAB).",
         "details": "1. **Keystore**: Generate a private signing key using `keytool`. Store the keystore file and its credentials securely (e.g., using environment variables or a secret manager), not in the repository. 2. **Gradle Configuration**: In `android/app/build.gradle`, create a signing configuration that loads the keystore credentials. Apply this signing config to the `release` build type. 3. **ProGuard/R8**: Enable code shrinking and obfuscation for the release build by setting `minifyEnabled true` in the `release` build type. Add any necessary ProGuard rules to `proguard-rules.pro` to prevent vital code from being stripped. 4. **Generate AAB**: Run the command `./gradlew bundleRelease` from the `android` directory to generate the signed AAB file, which will be located in `android/app/build/outputs/bundle/release/`.",
@@ -773,16 +773,683 @@
           }
         ],
         "updatedAt": "2025-11-28T10:13:00.536Z"
+      },
+      {
+        "id": 11,
+        "title": "Establish Design System Foundation (Theme)",
+        "description": "Create the core theme files for the design system, including color palettes, typography, spacing, border radius, and shadow styles. This will serve as the single source of truth for all UI styling.",
+        "details": "Create a `src/theme` directory. Inside, create separate files for each design token category: `colors.js`, `typography.js`, `spacing.js`, `shadows.js`, `borderRadius.js`. Export constants from each file. For example, in `colors.js`: `export const colors = { primary: '#2B4593', success: '#28A745', ... }`. Create a main `index.js` in `src/theme` that exports all tokens as a single theme object. Use React's Context API to provide this theme object to the entire application tree via a `ThemeProvider` component.",
+        "testStrategy": "Unit test the theme files to ensure all values from the PRD are correctly defined and exported. Manually review the theme object structure. Integrate the ThemeProvider at the root of the app and verify in a sample component that theme values can be accessed correctly.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set Up Theme Directory and File Structure",
+            "description": "Create the necessary directory and empty files for the design system's theme foundation.",
+            "dependencies": [],
+            "details": "Create a new directory at `src/theme`. Inside this directory, create the following empty files: `colors.js`, `typography.js`, `spacing.js`, `shadows.js`, `borderRadius.js`, and a main `index.js` file for consolidation.",
+            "status": "pending",
+            "testStrategy": "Verify that the `src/theme` directory and all specified `.js` files exist in the project structure."
+          },
+          {
+            "id": 2,
+            "title": "Define and Export Individual Design Tokens",
+            "description": "Populate each theme file with the specific design tokens (colors, typography, etc.) and export them as constants.",
+            "dependencies": [
+              1
+            ],
+            "details": "In each file created in the previous step, define and export the corresponding design tokens. For example, in `src/theme/colors.js`, add `export const colors = { primary: '#2B4593', secondary: '#...', ... }`. Do this for all token files based on the project's PRD.",
+            "status": "pending",
+            "testStrategy": "Unit test each file to ensure that it exports a non-empty object with the correct structure and that the values match the design specifications."
+          },
+          {
+            "id": 3,
+            "title": "Consolidate All Tokens into a Single Theme Object",
+            "description": "Import all individual token objects into the main theme index file and export them as a single, unified theme object.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `src/theme/index.js`, import the constants from `colors.js`, `typography.js`, `spacing.js`, etc. Combine them into a single `theme` object and export it as the default export. Example: `export default { colors, typography, ... }`.",
+            "status": "pending",
+            "testStrategy": "Create a test that imports the default export from `src/theme/index.js` and verifies that it is an object containing all the individual token categories as properties (e.g., `theme.colors`, `theme.typography`)."
+          },
+          {
+            "id": 4,
+            "title": "Create ThemeProvider using React Context API",
+            "description": "Develop a ThemeProvider component that uses React's Context API to make the theme object available to all descendant components.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a new file, for example `src/providers/ThemeProvider.js`. In this file, create a `ThemeContext`. Then, create a `ThemeProvider` component that accepts `children` and provides the consolidated theme object (imported from `src/theme`) through the `ThemeContext.Provider`. Also, create and export a custom hook `useTheme` for easy consumption of the context.",
+            "status": "pending",
+            "testStrategy": "Unit test the `ThemeProvider` to ensure it renders its children. Test the `useTheme` hook within a test component wrapped by the provider to verify it returns the correct theme object."
+          },
+          {
+            "id": 5,
+            "title": "Integrate ThemeProvider at the Application Root",
+            "description": "Wrap the root component of the application with the new ThemeProvider to make the theme available globally.",
+            "dependencies": [
+              4
+            ],
+            "details": "Locate the main entry point of the application (e.g., `App.js`). Import the `ThemeProvider` and wrap the entire application's component tree with it. This will ensure that any component can access the theme via the `useTheme` hook.",
+            "status": "pending",
+            "testStrategy": "Manually test the application after integration. Modify a sample component to use the `useTheme` hook and apply a theme style (e.g., `color: theme.colors.primary`). Verify that the style is correctly applied when the app runs."
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Develop Unified Button Component",
+        "description": "Create a single, reusable Button component that supports all variants (Primary, Secondary, Danger, Success, Text) and states (Default, Hover, Pressed, Disabled) defined in the PRD.",
+        "details": "Create a `src/components/Button.js` file. The component should accept props like `variant`, `onPress`, `disabled`, and `title`. Use the theme values from the context for styling. Implement dynamic styling based on the `variant` prop. For example: `const getBackgroundColor = () => { switch(variant) { case 'primary': return theme.colors.primary; case 'danger': return theme.colors.danger; default: return 'transparent'; } };`. Use `Pressable` to handle states like `onPressIn` and `onPressOut` to apply pressed styles (scale transform).",
+        "testStrategy": "Use Storybook or a similar tool to visually test all variants and states. Write unit tests using React Native Testing Library to verify that the correct styles are applied for each prop combination and that the `onPress` handler is called when not disabled, and not called when disabled.",
+        "priority": "high",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Button.js File and Basic Component Structure",
+            "description": "Set up the initial `Button.js` file with a basic functional component structure. It should accept `title` and `onPress` props and render a `Pressable` component containing a `Text` component for the title.",
+            "dependencies": [],
+            "details": "Create the file `src/components/Button.js`. The component will accept props `(title, onPress, ...rest)`. It will return a `<Pressable onPress={onPress}><Text>{title}</Text></Pressable>`. Apply initial, default styling for the container and text.",
+            "status": "pending",
+            "testStrategy": "Manually render the component on a development screen to ensure it displays correctly with a title and is clickable."
+          },
+          {
+            "id": 2,
+            "title": "Implement Dynamic Styles for All Button Variants",
+            "description": "Implement the styling logic to support all five variants: Primary, Secondary, Danger, Success, and Text. Styles should be derived from the application's theme context.",
+            "dependencies": [
+              1
+            ],
+            "details": "Import and use the application's theme context (e.g., via a `useTheme` hook). Create a style generation function or use a `switch` statement that returns an object with `backgroundColor`, `borderColor`, and `textColor` based on the `variant` prop. Apply these styles to the `Pressable` and `Text` elements.",
+            "status": "pending",
+            "testStrategy": "Write a unit test that provides each variant prop to the component and asserts that the returned style object contains the correct theme colors. Visually confirm each variant in the app."
+          },
+          {
+            "id": 3,
+            "title": "Implement Styling and Logic for Pressed and Disabled States",
+            "description": "Add visual feedback for the `pressed` state and functional/visual changes for the `disabled` state. The button should provide interaction feedback and appear inactive when disabled.",
+            "dependencies": [
+              2
+            ],
+            "details": "Use the `Pressable` component's function-as-a-child for the `style` prop: `style={({ pressed }) => [...]}`. When `pressed`, apply a transform style, e.g., `transform: [{ scale: 0.98 }]`. When the `disabled` prop is true, merge an opacity style (e.g., `{ opacity: 0.5 }`) and ensure the `onPress` handler is blocked.",
+            "status": "pending",
+            "testStrategy": "Using React Native Testing Library, simulate a press event and verify the `onPress` callback is not fired when `disabled` is true. Manually press the button to confirm the visual transform and check the disabled appearance."
+          },
+          {
+            "id": 4,
+            "title": "Define Prop Types and Finalize Component API",
+            "description": "Formalize the component's public API by adding PropType definitions or TypeScript types for all accepted props, including setting default values.",
+            "dependencies": [
+              3
+            ],
+            "details": "Import `PropTypes` from 'prop-types'. Define `Button.propTypes` specifying the type for each prop: `variant` as `oneOf(['primary', 'secondary', 'danger', 'success', 'text'])`, `title` as `string.isRequired`, `onPress` as `func.isRequired`, `disabled` as `bool`. Set default props, e.g., `Button.defaultProps = { variant: 'primary', disabled: false };`.",
+            "status": "pending",
+            "testStrategy": "This is a static code quality task. The test is to run the application's linter or type-checker to ensure the definitions are correct and that console warnings are not thrown for valid prop usage."
+          },
+          {
+            "id": 5,
+            "title": "Create Storybook for Visual Testing and Documentation",
+            "description": "Develop a Storybook story file for the Button component to visually test all variants and states in an isolated environment, which will also serve as living documentation.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create a new file `src/components/Button.stories.js`. Write stories for each `variant`. For each variant, display its default, pressed (via addon), and disabled states to ensure all visual combinations render as expected.",
+            "status": "pending",
+            "testStrategy": "The successful creation and rendering of the Storybook stories is the test. Manually navigate through each story in the Storybook UI to visually confirm that all variants and states match the design specifications from the PRD."
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Develop Unified Input Field Component",
+        "description": "Create a reusable text input component with consistent styling for default, focus, and error states as specified in the PRD.",
+        "details": "Create `src/components/InputField.js`. This component will wrap React Native's `TextInput`. It should accept props like `value`, `onChangeText`, `placeholder`, `error` (a string for the error message), etc. Use the `useState` hook to track focus state (`onFocus`, `onBlur`). Apply conditional styling based on focus and the presence of the `error` prop. The error message should be displayed below the input field using the 'Danger' color. All styling (height, padding, border radius, colors) should come from the theme.",
+        "testStrategy": "Visually test the component in different states: default, focused, with input text, and with an error message. Write unit tests to check that the border color and style change on focus/blur, and that the error message is rendered correctly when the `error` prop is provided.",
+        "priority": "high",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Basic InputField Component Structure",
+            "description": "Create the file `src/components/InputField.js` and set up a basic functional component that wraps the React Native `TextInput`. The component should accept and pass through essential props like `value`, `onChangeText`, and `placeholder`.",
+            "dependencies": [],
+            "details": "Initialize the file at `src/components/InputField.js`. The component should return a `View` containing a `TextInput`. Ensure props like `value`, `onChangeText`, and `placeholder` are correctly passed to the `TextInput` element.",
+            "status": "pending",
+            "testStrategy": "Verify that the component renders a text input and that typing in it works as expected."
+          },
+          {
+            "id": 2,
+            "title": "Apply Default Styles from Theme",
+            "description": "Integrate the application's theme to apply default styling to the InputField. This includes border radius, background color, padding, text color, and border color for the default (non-focused, no-error) state.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use the theme context to access style values. Create a StyleSheet for the component. Apply theme values for `colors.border`, `colors.text`, `spacing.padding`, `borderRadius`, and a fixed height as specified in the PRD.",
+            "status": "pending",
+            "testStrategy": "Visually inspect the component to ensure it matches the default state styling defined in the design specifications. Check that all style values are derived from the theme."
+          },
+          {
+            "id": 3,
+            "title": "Implement Focus State and Styling",
+            "description": "Use the `useState` hook to track the input's focus state. Implement `onFocus` and `onBlur` handlers to update the state, and apply conditional styling when the input is focused, such as changing the border color.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a state variable `isFocused` initialized to `false`. The `onFocus` prop of `TextInput` should set `isFocused` to `true`, and `onBlur` should set it to `false`. Use this state to conditionally change the `borderColor` to `theme.colors.primary`.",
+            "status": "pending",
+            "testStrategy": "Manually test by tapping in and out of the input field. Verify that the border color changes to the primary theme color on focus and reverts to the default color on blur."
+          },
+          {
+            "id": 4,
+            "title": "Implement Error State and Message Display",
+            "description": "Handle the `error` prop. When an error string is passed, the input's border color should change to the 'danger' color. The error message itself should be displayed in a `Text` component directly below the input field.",
+            "dependencies": [
+              3
+            ],
+            "details": "The component should accept an `error` prop (string). If `error` has a value, override other border color styles with `theme.colors.danger`. Render a `<Text>` component conditionally (`{error && <Text>...}`), styling it with `theme.colors.danger`.",
+            "status": "pending",
+            "testStrategy": "Pass a sample error string to the `error` prop and verify that the border becomes red and the error message appears below the input in the correct color."
+          },
+          {
+            "id": 5,
+            "title": "Finalize Props and Add Documentation",
+            "description": "Ensure any additional `TextInput` props can be passed to the underlying component using the `...rest` spread operator. Add comprehensive JSDoc comments or PropTypes to document the component's API.",
+            "dependencies": [
+              4
+            ],
+            "details": "Modify the component's props to include `{ ...rest }`. Pass this `rest` object directly to the `TextInput` component. Add documentation for primary props like `value`, `onChangeText`, `placeholder`, and `error`.",
+            "status": "pending",
+            "testStrategy": "Test passing a standard `TextInput` prop like `keyboardType='numeric'` or `secureTextEntry` to the `InputField` component and verify it functions correctly."
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Develop Card and Status Badge Components",
+        "description": "Create reusable Card and Badge components. The Card will be a container for content sections, and the Badge will be used to display status labels like '대기중', '승인', etc.",
+        "details": "For `src/components/Card.js`, create a `View` with styles defined by the PRD (background, border radius, padding, shadow). It should accept `children` to render any content inside. For `src/components/Badge.js`, the component should take a `status` prop ('waiting', 'approved', 'rejected', 'completed'). Based on the status, it should apply the corresponding semantic color from the theme (Warning for waiting, Success for approved, etc.) for its background. All styling should be derived from the theme.",
+        "testStrategy": "Visually test the Card component with various child elements to ensure padding and shadow are correct. For the Badge, create a Storybook story that displays all status variants to confirm correct color mapping and styling. Unit test the Badge to ensure the `status` prop correctly maps to the theme color.",
+        "priority": "high",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Card.js Component File and Basic Structure",
+            "description": "Initialize the `Card.js` file within `src/components/`. Set up a basic React Native functional component that accepts and renders `children` props within a `View`.",
+            "dependencies": [],
+            "details": "Create the file at `src/components/Card.js`. The component should be a simple functional component that receives `children` and an optional `style` prop and renders them inside a `View`. Example: `const Card = ({ children, style }) => <View style={[styles.container, style]}>{children}</View>;`",
+            "status": "pending",
+            "testStrategy": "Verify the file is created and the component can render simple text passed as a child element without crashing."
+          },
+          {
+            "id": 2,
+            "title": "Apply Theme-Based Styling to the Card Component",
+            "description": "Enhance the `Card` component by applying styles for background color, border radius, padding, and shadow. These styles must be derived from the application's theme.",
+            "dependencies": [
+              1
+            ],
+            "details": "Access the theme context to retrieve styling values. Apply a background color (e.g., `theme.colors.surface`), padding (e.g., `theme.spacing.m`), and border radius (e.g., `theme.radii.m`). Implement platform-specific shadow for iOS and elevation for Android.",
+            "status": "pending",
+            "testStrategy": "Visually test the component on a screen with a different background color to confirm shadow and padding are correctly applied. Render various child elements inside to test content layout."
+          },
+          {
+            "id": 3,
+            "title": "Create Badge.js Component File and Define Prop Interface",
+            "description": "Create the `src/components/Badge.js` file. Set up a functional component that accepts a `status` prop with defined possible values ('waiting', 'approved', 'rejected', 'completed') and renders a `View` containing a `Text` element.",
+            "dependencies": [],
+            "details": "Create the file `src/components/Badge.js`. The component signature should be `const Badge = ({ status }) => { ... };`. It should be prepared to handle dynamic styling and text content based on the `status` prop.",
+            "status": "pending",
+            "testStrategy": "Confirm the file is created and the component renders a default state without errors when passed a valid status prop."
+          },
+          {
+            "id": 4,
+            "title": "Implement Dynamic Styling and Text Mapping for Badge",
+            "description": "Implement the core logic for the `Badge` component. This includes mapping the `status` prop to a specific background color from the theme and a corresponding Korean text label (e.g., 'waiting' -> '대기중').",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a helper function or a configuration object to map each status to its theme color and text. For example: `const config = { waiting: { color: theme.colors.warning, text: '대기중' }, approved: { color: theme.colors.success, text: '승인' } };`. Use this config to dynamically set the `backgroundColor` of the `View` and the content of the `Text` component.",
+            "status": "pending",
+            "testStrategy": "Write a unit test for the mapping logic to ensure each status string input returns the correct color value and text string output."
+          },
+          {
+            "id": 5,
+            "title": "Finalize Badge Styling and Document with Storybook",
+            "description": "Add final styling touches to the Badge, such as padding, border radius, and text styling. Create a Storybook story to display all variants of the Badge, and an example of the Card containing content.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "In `Badge.js`, apply styles from the theme for horizontal/vertical padding, border-radius, and text color/font size to ensure readability and a polished look. Create `Badge.stories.js` to render a list of all badge variants ('waiting', 'approved', 'rejected', 'completed') for visual regression testing.",
+            "status": "pending",
+            "testStrategy": "Use Storybook to visually inspect all Badge variants to confirm correct color mapping, text labels, and padding. Also, verify that the Card component renders correctly with a Badge and other content inside."
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Refactor Login and Sign-up Screens",
+        "description": "Apply the new design system to the Login and Sign-up screens, replacing existing elements with the new unified Button and Input Field components and adjusting layout spacing.",
+        "details": "Navigate to the authentication screen files. Replace all `<Button>` and `<TextInput>` instances with the new `<Button>` and `<InputField>` components. Use the 'primary' variant for the main action button and 'text' variant for links like '비밀번호 찾기'. Remove any hardcoded style values and use spacing tokens from the theme for margins and paddings between the logo, input fields, and buttons as per the PRD.",
+        "testStrategy": "Perform visual regression testing to compare the old screens with the newly styled ones. Manually test the login and sign-up flows to ensure functionality is unchanged. Check that focus, error, and button press states work as expected.",
+        "priority": "high",
+        "dependencies": [
+          12,
+          13
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refactor Input Fields and Layout on Login Screen",
+            "description": "Navigate to the Login screen file. Replace all existing `TextInput` components with the new, unified `InputField` component from the design system. Adjust the layout by removing hardcoded styles and applying spacing tokens from the theme for consistent margins and padding between the logo, inputs, and other elements.",
+            "dependencies": [],
+            "details": "Identify the main login screen file, likely located at `src/screens/auth/LoginScreen.tsx`. Import the new `InputField` component. Systematically replace each `TextInput` for email and password. Utilize the theme provider hook (e.g., `useTheme`) to access spacing tokens (`theme.spacing.medium`, etc.) and apply them via the style prop for vertical spacing.",
+            "status": "pending",
+            "testStrategy": "Verify that the `InputField` components render correctly. Check that placeholder text is visible and that users can type into the fields. Confirm that layout spacing matches the new design specifications."
+          },
+          {
+            "id": 2,
+            "title": "Refactor Buttons on Login Screen",
+            "description": "In the Login screen file, replace the existing primary action button and any text-based navigation links with the new unified `Button` component, using the appropriate variants.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/screens/auth/LoginScreen.tsx`, import the new `Button` component. Replace the main login submission button with `<Button variant=\"primary\" title=\"로그인\">`. Replace text links like '비밀번호 찾기' and '회원가입' with `<Button variant=\"text\" title=\"비밀번호 찾기\">`. Ensure all `onPress` handlers are correctly reassigned to the new components.",
+            "status": "pending",
+            "testStrategy": "Manually test that the primary button is tappable and triggers the login function. Verify that the text buttons navigate to the correct screens (Forgot Password, Sign-up). Check that the button styles match the 'primary' and 'text' variants from the design system."
+          },
+          {
+            "id": 3,
+            "title": "Refactor Input Fields and Layout on Sign-up Screen",
+            "description": "Navigate to the Sign-up screen file. Replace all `TextInput` components with the new `InputField` component and apply theme spacing tokens to standardize the layout, similar to the Login screen.",
+            "dependencies": [
+              2
+            ],
+            "details": "Locate the sign-up screen file, likely at `src/screens/auth/SignUpScreen.tsx`. Import the `InputField` component. Replace all text inputs (e.g., email, password, confirm password, name) with the new component. Apply spacing tokens from the theme to ensure consistent vertical rhythm between form elements.",
+            "status": "pending",
+            "testStrategy": "Confirm all `InputField` components render correctly on the Sign-up screen. Test user input in all fields. Verify the layout is consistent with the refactored Login screen and meets PRD specifications."
+          },
+          {
+            "id": 4,
+            "title": "Refactor Buttons on Sign-up Screen",
+            "description": "In the Sign-up screen file, replace the existing primary action button and text links with the new `Button` component, applying the correct variants.",
+            "dependencies": [
+              3
+            ],
+            "details": "In `src/screens/auth/SignUpScreen.tsx`, import the `Button` component. Replace the main registration button with `<Button variant=\"primary\" title=\"회원가입\">`. Convert the '이미 계정이 있나요? 로그인' link to use the `<Button variant=\"text\">`. Re-connect the `onPress` handlers to the new components.",
+            "status": "pending",
+            "testStrategy": "Test that the primary 'Sign-up' button triggers the registration logic. Verify the 'Login' text button navigates back to the Login screen. Ensure button styles are consistent with the design system."
+          },
+          {
+            "id": 5,
+            "title": "Final Review and Functional Testing of Auth Flow",
+            "description": "Perform a comprehensive visual review and functional test of the entire authentication flow, covering both the Login and Sign-up screens, to ensure functionality is preserved and styling is consistent.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Manually navigate between the Login and Sign-up screens. Test the complete sign-up process with valid and invalid data to check error states. Test the login process with correct and incorrect credentials. Perform a visual comparison of both screens against the PRD mockups to catch any inconsistencies in layout, spacing, or component styling.",
+            "status": "pending",
+            "testStrategy": "Execute a full end-to-end test case for user registration and another for user login. Perform visual regression testing by comparing screenshots of the old and new screens. Verify that focus states, error messages, and button press states work as expected."
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Refactor Vehicle List and Detail Screens",
+        "description": "Update the Vehicle List and Detail screens using the new design system components, including Card, Badge, and standardized typography and layout.",
+        "details": "On the Vehicle List screen, wrap each list item in the new `<Card>` component. Use theme spacing for gaps between cards. Re-style the header according to the PRD. Inside the card, use the `<Badge>` for vehicle type and apply H3/Body typography from the theme. On the Vehicle Detail screen, structure content into sections with H4 titles. Use the theme for padding and spacing. Implement the fixed bottom action button using the primary `<Button>` component.",
+        "testStrategy": "Manually navigate through the vehicle list and tap into detail pages. Verify that all elements use the new components and theme styles. Check for layout consistency across different list items. Ensure the bottom action button on the detail screen is fixed and functional.",
+        "priority": "high",
+        "dependencies": [
+          12,
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refactor VehicleListItem to use Card and Badge Components",
+            "description": "Update the individual item component rendered in the vehicle list to use the new <Card> as its root element. Inside the card, replace existing elements with <Badge> for the vehicle type and apply H3/Body typography from the theme for other text.",
+            "dependencies": [],
+            "details": "Locate the component used for rendering each vehicle in the FlatList on the Vehicle List Screen. Replace the main container View with the <Card> component. Import and use the <Badge> component for vehicle status/type. Apply theme.typography.h3 and theme.typography.body styles to the relevant <Text> components.",
+            "status": "pending",
+            "testStrategy": "Visually inspect the new list item component in a Storybook or on the list screen to ensure it matches the PRD design. Verify correct props are passed to Card and Badge."
+          },
+          {
+            "id": 2,
+            "title": "Update Vehicle List Screen Layout and Header",
+            "description": "Adjust the main FlatList on the Vehicle List screen to use theme spacing for the gap between the new Card items. Restyle the screen's header to match the new design system specifications.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the VehicleListScreen file, modify the FlatList props. Use ItemSeparatorComponent or contentContainerStyle with a gap property set from the theme (e.g., theme.spacing.m). Update the header component or options in the navigation stack to apply the new typography and layout.",
+            "status": "pending",
+            "testStrategy": "Scroll through the vehicle list to confirm consistent spacing between all items. Check that the header style is correctly applied and consistent with other refactored screens."
+          },
+          {
+            "id": 3,
+            "title": "Restructure Vehicle Detail Screen with Theme Spacing and Typography",
+            "description": "Refactor the layout of the Vehicle Detail screen to organize content into logical sections. Apply H4 typography for section titles and use theme-defined padding and spacing for all elements.",
+            "dependencies": [],
+            "details": "Open the VehicleDetailScreen file. Wrap content sections in <View> containers. Apply padding to the main screen container using theme.spacing.l. For each section, add a <Text> component with theme.typography.h4 style for the title. Ensure all margins and paddings use the theme's spacing tokens.",
+            "status": "pending",
+            "testStrategy": "Visually verify the detail screen's layout against the design mockups. Check that all spacing is consistent and typography is correctly applied to section headers and body text."
+          },
+          {
+            "id": 4,
+            "title": "Implement Fixed Bottom Action Button on Vehicle Detail Screen",
+            "description": "Add a primary <Button> component to the Vehicle Detail screen that is fixed to the bottom of the viewport for the main call-to-action, such as '상담 신청'.",
+            "dependencies": [
+              3
+            ],
+            "details": "In VehicleDetailScreen, import the new <Button> component. Place it inside a View with absolute positioning (position: 'absolute', bottom: 0, left: 0, right: 0) and appropriate padding from the theme. Set the variant to 'primary' and pass the correct onPress handler.",
+            "status": "pending",
+            "testStrategy": "Navigate to the detail screen and confirm the button is visible and fixed at the bottom. Scroll the content to ensure the button remains in place. Tap the button to verify its action is triggered."
+          },
+          {
+            "id": 5,
+            "title": "Verify Navigation and Perform Final Visual Review",
+            "description": "Ensure the navigation from the refactored Vehicle List screen to the refactored Vehicle Detail screen is working correctly. Conduct a final visual review of both screens to catch any inconsistencies.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Test the onPress handler on the new <Card> component in the vehicle list to ensure it navigates with the correct vehicleId. Review both screens on different device sizes if possible. Clean up any unused styles or imports from the old implementation.",
+            "status": "pending",
+            "testStrategy": "Perform an end-to-end test: start on the list screen, scroll, tap a vehicle card, view the detail screen, scroll, and interact with the bottom button. Compare both screens side-by-side with the PRD."
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Implement Standardized Navigation Headers and Tab Bar",
+        "description": "Apply a consistent design to the global navigation header and bottom tab bar across the application, using the styles defined in the PRD.",
+        "details": "This task likely involves configuring the navigation library (e.g., React Navigation). Define a common `headerStyle` object using theme colors (`primary` for background, `white` for text) and apply it as a default screen option. For the tab bar, configure `tabBarOptions` or `tabBarStyle` to set the background, height, and active/inactive tint colors using the theme. The active tab's top border can be implemented using a custom tab bar component if the library doesn't support it directly.",
+        "testStrategy": "Navigate through all major sections of the app and verify that the header and tab bar have a consistent appearance. Check that the active tab state (color, border) is correctly displayed on each screen.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Centralized Navigation Style Constants",
+            "description": "Create a dedicated file to define and export style objects for the global header and tab bar, pulling values from the application's theme file.",
+            "dependencies": [],
+            "details": "Create a new file at `src/navigation/navigationStyles.js`. In this file, import the application's theme object. Export a `defaultHeaderOptions` object containing `headerStyle`, `headerTintColor`, and `headerTitleStyle`. Also, export a `defaultTabBarOptions` object containing `tabBarStyle`, `tabBarActiveTintColor`, and `tabBarInactiveTintColor`.",
+            "status": "pending",
+            "testStrategy": "Review the created file to ensure it correctly imports theme colors and exports the style configuration objects for both header and tab bar."
+          },
+          {
+            "id": 2,
+            "title": "Apply Standardized Styles to the Global Header",
+            "description": "Update the root Stack Navigator configuration to import and apply the centralized header style object as its default `screenOptions`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Locate the primary `StackNavigator` component in the application, likely in `src/navigation/AppNavigator.js`. Import the `defaultHeaderOptions` object from `navigationStyles.js` and spread it into the `screenOptions` prop of the `Stack.Navigator` component to apply the style to all screens within that stack.",
+            "status": "pending",
+            "testStrategy": "Run the app and observe that all screens governed by the main stack navigator now share the same header background color, title color, and font style."
+          },
+          {
+            "id": 3,
+            "title": "Apply Standardized Styles to the Bottom Tab Bar",
+            "description": "Configure the main BottomTabNavigator to use the centralized tab bar style object for its background, height, and active/inactive icon and label colors.",
+            "dependencies": [
+              1
+            ],
+            "details": "Find the `BottomTabNavigator` component. Import the `defaultTabBarOptions` from `navigationStyles.js`. Apply these options to the `screenOptions` prop of the `Tab.Navigator`. This will set the `tabBarStyle`, `tabBarActiveTintColor`, and `tabBarInactiveTintColor` for all tabs.",
+            "status": "pending",
+            "testStrategy": "Launch the application and verify the bottom tab bar's background color is correct. Tap between different tabs to confirm that the active and inactive tint colors for icons and labels match the defined styles."
+          },
+          {
+            "id": 4,
+            "title": "Implement Active Tab Top Border Indicator",
+            "description": "Implement the visual indicator (a colored top border) for the currently active tab in the bottom tab bar as specified in the PRD.",
+            "dependencies": [
+              3
+            ],
+            "details": "Since React Navigation's default tab bar doesn't directly support a top border on the active item, update the `tabBarIcon` function for each `Tab.Screen`. The function should return a `View` that wraps the icon. This `View` will conditionally apply a `borderTopWidth` and `borderTopColor` style when its `focused` prop is true.",
+            "status": "pending",
+            "testStrategy": "Navigate between tabs and confirm that only the currently active tab icon displays a top border with the correct color and thickness. Ensure the border does not appear on inactive tabs."
+          },
+          {
+            "id": 5,
+            "title": "Full App Navigation Style Verification and Cleanup",
+            "description": "Perform a comprehensive review of the entire application to ensure the new navigation styles are applied consistently and remove any old, screen-specific header or tab bar style overrides.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Manually navigate to every screen, including nested screens within stacks. Identify any screens that still have local `options` prop styling for the header that conflicts with the new global style. Remove these local overrides unless they are intentionally different. Ensure a consistent user experience across the app.",
+            "status": "pending",
+            "testStrategy": "Test on both iOS and Android. Create a checklist of all screens. Go through the checklist, verifying header and tab bar appearance on each screen. Confirm that no legacy styling remains."
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Create Interaction State Components (Loading, Empty, Error)",
+        "description": "Develop reusable components for displaying global loading spinners, skeleton loaders for lists, and full-page empty/error states.",
+        "details": "1. `GlobalLoader`: A modal overlay with a semi-transparent background and an `ActivityIndicator` using the theme's primary color. 2. `SkeletonLoader`: A component that mimics the layout of a `<Card>` but with placeholder shapes and a shimmering animation. 3. `StateScreen`: A generic component accepting `icon`, `title`, `message`, and `onRetry` props to display consistent empty or error screens. It should use the secondary `<Button>` for the retry action.",
+        "testStrategy": "Use Storybook to visually test each state component. Unit test the `StateScreen` to ensure props are rendered correctly and the `onRetry` callback is fired. Manually trigger these states in the app (e.g., by simulating a network delay or error) to see them in context.",
+        "priority": "medium",
+        "dependencies": [
+          11,
+          12,
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement the GlobalLoader Component",
+            "description": "Create a reusable full-screen modal component that displays a loading indicator to block UI interactions during global asynchronous operations.",
+            "dependencies": [],
+            "details": "Create a new component at `src/components/common/GlobalLoader.tsx`. Utilize React Native's `Modal` component with a semi-transparent background overlay. Center an `ActivityIndicator` component within the modal and configure it to use the primary color from the application's theme.",
+            "status": "pending",
+            "testStrategy": "Create a Storybook story to visually test the component in isolation. Verify the modal's transparency, the loader's color, and its centered position on the screen."
+          },
+          {
+            "id": 2,
+            "title": "Develop the SkeletonLoader Component",
+            "description": "Build a skeleton loader that mimics the layout and structure of a standard Card component, providing a placeholder UI with a shimmering animation while content is loading.",
+            "dependencies": [],
+            "details": "Create the component at `src/components/common/SkeletonLoader.tsx`. Use a library like `react-native-skeleton-placeholder` to define shapes (e.g., rectangles for images, lines for text) that match the card layout. Ensure the shimmering animation is smooth and performant.",
+            "status": "pending",
+            "testStrategy": "Add a Storybook story for the `SkeletonLoader` to visually confirm that the layout correctly mimics a card and that the shimmering animation works as expected on both iOS and Android."
+          },
+          {
+            "id": 3,
+            "title": "Create the Generic StateScreen Component",
+            "description": "Develop a versatile, full-page component for displaying empty data states or error messages, complete with an optional retry action.",
+            "dependencies": [],
+            "details": "Create the file `src/components/common/StateScreen.tsx`. The component must accept `icon`, `title`, `message`, and an optional `onRetry` function as props. If the `onRetry` prop is provided, a secondary-styled `Button` should be rendered that triggers the callback when pressed.",
+            "status": "pending",
+            "testStrategy": "Write unit tests using Jest and React Native Testing Library to assert that all props are rendered correctly and that the `onRetry` function is called on button press. Create multiple stories in Storybook to represent different use cases (e.g., an empty state, an error state with a retry button)."
+          },
+          {
+            "id": 4,
+            "title": "Implement a LoadingContext for Global State Management",
+            "description": "Establish a React Context to manage the visibility of the GlobalLoader, allowing any component in the app to toggle the loader without prop drilling.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new context at `src/context/LoadingContext.tsx`. The context provider should manage a boolean state for the loader's visibility and render the `GlobalLoader` component. Expose `showLoader` and `hideLoader` functions via a custom hook (e.g., `useLoading`). Wrap the root component in `App.tsx` with this provider.",
+            "status": "pending",
+            "testStrategy": "Manually test on a development screen by adding two buttons. One button will call `showLoader()` and the other will call `hideLoader()`. Verify the global loader appears and disappears as expected."
+          },
+          {
+            "id": 5,
+            "title": "Integrate All State Components into Storybook",
+            "description": "Create Storybook stories for all three new components (`GlobalLoader`, `SkeletonLoader`, `StateScreen`) to ensure they can be developed and reviewed in isolation.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "In the project's stories directory, create `GlobalLoader.stories.tsx`, `SkeletonLoader.stories.tsx`, and `StateScreen.stories.tsx`. For `StateScreen`, define multiple named exports to showcase its different configurations (e.g., 'EmptyState', 'ErrorWithRetry').",
+            "status": "pending",
+            "testStrategy": "Run the Storybook instance and navigate to each new story. Verify that each component and its variations render correctly and are interactive where applicable (e.g., the retry button in `StateScreen`)."
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "Implement Global Toast Message System",
+        "description": "Set up a global system to display toast messages for success, error, and info feedback, accessible from anywhere in the app.",
+        "details": "Use a library like `react-native-toast-message` or build a custom solution using a global context provider. Create a `ToastProvider` at the app's root. Define custom toast types ('success', 'danger', 'info') that map to the semantic colors in the theme. Expose a hook like `useToast()` which provides functions (`toast.showSuccess(message)`, `toast.showError(message)`) to trigger toasts from any component.",
+        "testStrategy": "Create a test screen with buttons to trigger each type of toast message. Verify that they appear with the correct background color, text color, and content, and that they disappear automatically after a few seconds. Ensure the toast can be triggered from various places in the component tree.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and Configure react-native-toast-message",
+            "description": "Add the `react-native-toast-message` library to the project dependencies and perform any necessary native configuration for both iOS and Android platforms.",
+            "dependencies": [],
+            "details": "Run `npm install react-native-toast-message` or `yarn add react-native-toast-message`. Follow the library's documentation to add required code to `MainActivity.java` for Android and potentially `AppDelegate.m` for iOS if needed. Ensure the project builds successfully after installation.",
+            "status": "pending",
+            "testStrategy": "Verify the app builds without errors on both iOS and Android simulators after adding the library."
+          },
+          {
+            "id": 2,
+            "title": "Define Custom Toast Components and Configuration",
+            "description": "Create custom React components for 'success', 'danger', and 'info' toast types. These components will use the semantic colors defined in the application's theme.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a `toastConfig.js` file. In this file, import the `BaseToast` from the library and extend it to create custom components. For each type ('success', 'danger', 'info'), set the `style` and `text1Style` properties using the corresponding colors from the theme (e.g., `theme.colors.semantic.success`).",
+            "status": "pending",
+            "testStrategy": "Create Storybook stories for each custom toast component to visually inspect their appearance and ensure they render correctly with different message lengths, using the correct theme colors."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Toast Provider at App Root",
+            "description": "Wrap the root of the application with the Toast provider component to make it available globally across all screens.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "In the main `App.tsx` file, import the `Toast` component from `react-native-toast-message` and the custom configuration from `toastConfig.js`. Render `<Toast config={toastConfig} />` as the last child within the root view or fragment, ensuring it overlays all other content.",
+            "status": "pending",
+            "testStrategy": "After adding the provider, manually trigger a basic toast from a temporary button on the home screen to confirm the provider is set up correctly and the toast appears on screen."
+          },
+          {
+            "id": 4,
+            "title": "Create a `useToast` Hook for Global Access",
+            "description": "Develop a custom hook named `useToast` that encapsulates the logic for showing different types of toasts, providing a clean and reusable API.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a new file `src/hooks/useToast.ts`. This hook will import the `Toast` API from the library. It should return an object with methods like `showSuccess(message, options)`, `showError(message, options)`, and `showInfo(message, options)`. Each method will call `Toast.show()` with the corresponding `type` ('success', 'danger', 'info') and the passed message.",
+            "status": "pending",
+            "testStrategy": "Unit test the `useToast` hook. Mock the `react-native-toast-message` library and verify that calling `showSuccess('Test')` on the hook's return value calls the underlying `Toast.show` method with the correct parameters (`{ type: 'success', text1: 'Test' }`)."
+          },
+          {
+            "id": 5,
+            "title": "Implement a Test Screen and Verify All Toast Types",
+            "description": "Create or modify a development/test screen with buttons to trigger each type of toast message using the `useToast` hook.",
+            "dependencies": [
+              4
+            ],
+            "details": "Add a new screen or a section in an existing developer settings screen. Add three buttons: 'Show Success', 'Show Error', and 'Show Info'. In the component, call the `useToast()` hook and link each button's `onPress` to the corresponding function (`showSuccess`, `showError`, `showInfo`) with a sample message.",
+            "status": "pending",
+            "testStrategy": "Manually press each button on the test screen. Verify that the correct toast appears with the right background color and text. Check that it disappears automatically. Confirm that toasts can be triggered multiple times and queue correctly."
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Refactor MyPage and Admin Screens",
+        "description": "Apply the new design system and components to the MyPage and Admin screens to ensure full app consistency.",
+        "details": "For MyPage, use the `<Card>` component for the user info section and for each menu list item. Use appropriate button variants for 'Logout' (Secondary) and '회원탈퇴' (Danger Text). For Admin screens, implement the tab bar styling with the primary color bottom border for the active tab. Replace list items and buttons with the new `<Card>`, `<Badge>`, and `<Button>` (Success/Danger) components to standardize the interface.",
+        "testStrategy": "Perform a visual audit of the MyPage and Admin screens, comparing them against the PRD mockups. Test all interactive elements, including menu navigation, logout, and admin actions (e.g., approving/rejecting items) to confirm functionality and consistent styling.",
+        "priority": "medium",
+        "dependencies": [
+          12,
+          14,
+          17
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refactor MyPage User Info Section with Card Component",
+            "description": "Update the MyPage screen to display the user's profile information within the new <Card> component, replacing the existing View-based container.",
+            "dependencies": [],
+            "details": "Locate the MyPage screen file (likely 'src/screens/MyPage/MyPageScreen.js'). Import the <Card> component. Wrap the user avatar, name, and email section in a single <Card> component. Use theme spacing tokens for internal padding.",
+            "status": "pending",
+            "testStrategy": "Visually inspect the MyPage screen to confirm the user information is correctly displayed inside the new Card component and matches the design mockup."
+          },
+          {
+            "id": 2,
+            "title": "Update MyPage Menu List and Action Buttons",
+            "description": "Convert the list of navigation links (e.g., '내 정보 수정', '고객센터') into individual <Card> components and update the 'Logout' and '회원탈퇴' buttons to use the new <Button> variants.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the MyPage screen file, map over the menu items and render each as a pressable <Card>. Replace the existing logout button with <Button variant='Secondary'> and the withdrawal link/button with <Button variant='Danger Text'>.",
+            "status": "pending",
+            "testStrategy": "Verify that all menu items are rendered as cards and navigate correctly on press. Confirm the Logout and 회원탈퇴 buttons have the correct 'Secondary' and 'Danger Text' styling and are functional."
+          },
+          {
+            "id": 3,
+            "title": "Implement Styled Tab Bar for Admin Screens",
+            "description": "Apply the new design system styling to the tab bar in the Admin section. The active tab must have a primary-colored bottom border to indicate its state.",
+            "dependencies": [],
+            "details": "Locate the Admin Tab Navigator configuration. Use the 'tabBarOptions' or equivalent prop to customize the styling. Set 'activeTintColor' to the theme's primary color and apply a 'borderBottomWidth' and 'borderBottomColor' style to the active tab label or indicator.",
+            "status": "pending",
+            "testStrategy": "Navigate to the Admin screens and switch between tabs. Confirm that the active tab is correctly highlighted with a bottom border in the primary brand color and that inactive tabs are styled correctly."
+          },
+          {
+            "id": 4,
+            "title": "Refactor Admin List Items using Card and Badge Components",
+            "description": "Update the lists within the Admin screens (e.g., vehicle approval list) to use the new <Card> component for each item and the <Badge> component for status indicators.",
+            "dependencies": [
+              3
+            ],
+            "details": "In the relevant Admin screen file (e.g., 'VehicleApprovalScreen.js'), modify the list rendering logic. Each item in the FlatList or map should be wrapped in a <Card>. Use the <Badge> component to display item status (e.g., 'Pending', 'Approved').",
+            "status": "pending",
+            "testStrategy": "Check the admin list views to ensure each item is displayed within a Card. Verify that status badges are visible and show the correct text and color based on the item's state."
+          },
+          {
+            "id": 5,
+            "title": "Replace Admin Action Buttons with New Component Variants",
+            "description": "Replace the existing approval and rejection buttons within the admin list items with the new <Button> component, using the 'Success' and 'Danger' variants.",
+            "dependencies": [
+              4
+            ],
+            "details": "Within the admin list item component, import the new <Button>. Replace the 'Approve' button with <Button variant='Success'> and the 'Reject' button with <Button variant='Danger'>. Ensure onPress handlers are correctly passed.",
+            "status": "pending",
+            "testStrategy": "Go to an admin list screen. Confirm the 'Approve' and 'Reject' buttons use the new Success (green) and Danger (red) styles. Test the functionality of these buttons to ensure actions are still triggered correctly."
+          }
+        ]
       }
     ],
     "metadata": {
-      "version": "1.0.0",
-      "lastModified": "2025-11-28T10:16:06.421Z",
-      "taskCount": 10,
-      "completedCount": 10,
-      "tags": [
-        "master"
-      ]
+      "created": "2025-11-28T10:23:06.244Z",
+      "updated": "2025-11-28T10:23:06.244Z",
+      "description": "Tasks for master context"
     }
   }
 }

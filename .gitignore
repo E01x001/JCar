@@ -126,3 +126,7 @@ android/gradle.properties
 # Task files
 # tasks.json
 # tasks/ 
+
+# fffr
+error.txt
+rule.txt

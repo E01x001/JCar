@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Button, Alert, ActivityIndicator } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import firestore from '@react-native-firebase/firestore';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 const UpdateChecker = () => {
   const [updateInfo, setUpdateInfo] = useState(null);
@@ -36,8 +36,8 @@ const UpdateChecker = () => {
     for (let i = 0; i < maxLen; i++) {
       const s = sv[i] ?? 0;
       const l = lv[i] ?? 0;
-      if (s > l) return true;
-      if (s < l) return false;
+      if (s > l) {return true;}
+      if (s < l) {return false;}
     }
     return false;
   };
@@ -45,13 +45,13 @@ const UpdateChecker = () => {
   const handleDownloadAndInstall = async () => {
     try {
       console.log('[APK 다운로드 시작]');
-      const { dirs } = RNFetchBlob.fs;
+      const { dirs } = ReactNativeBlobUtil.fs;
       const downloadPath = `${dirs.DownloadDir}/newApp.apk`;
 
       console.log('[APK 경로]', downloadPath);
       console.log('[APK URL]', updateInfo.apkUrl);
 
-      const res = await RNFetchBlob.config({
+      const res = await ReactNativeBlobUtil.config({
         fileCache: true,
         path: downloadPath,
       }).fetch('GET', updateInfo.apkUrl);
@@ -59,7 +59,7 @@ const UpdateChecker = () => {
       console.log('[APK 다운로드 완료]', res.path());
 
       Alert.alert('다운로드 완료', '설치를 시작합니다.');
-      RNFetchBlob.android.actionViewIntent(res.path(), 'application/vnd.android.package-archive');
+      ReactNativeBlobUtil.android.actionViewIntent(res.path(), 'application/vnd.android.package-archive');
     } catch (error) {
       console.error('[APK 다운로드 실패]', error);
       Alert.alert('오류', '다운로드에 실패했습니다.');

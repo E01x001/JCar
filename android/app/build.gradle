@@ -3,6 +3,16 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: "com.google.firebase.crashlytics"
 
+// Load keystore properties
+def properties = new Properties()
+def propertiesFile = rootProject.file("key.properties")
+if (propertiesFile.exists()) {
+    properties.load(propertiesFile.newDataInputStream())
+} else {
+    println("⚠️ Warning: key.properties not found. Release signing will fail.")
+}
+
+
 
 println "Root Directory: ${rootDir}"
 
@@ -36,13 +46,11 @@ android {
         }
 
         release {
-            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
-                storeFile file(MYAPP_UPLOAD_STORE_FILE)
-                storePassword MYAPP_UPLOAD_STORE_PASSWORD
-                keyAlias MYAPP_UPLOAD_KEY_ALIAS
-                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
-            }
-        }
+            storeFile file(properties['storeFile'])
+            storePassword properties['storePassword']
+            keyAlias properties['keyAlias']
+            keyPassword properties['keyPassword']
+        } 
     }
 
     buildTypes {
@@ -69,4 +77,5 @@ dependencies {
 }
 
 apply plugin: "com.google.gms.google-services"   // ✅ 반드시 app/build.gradle 최하단!
+apply plugin: 'com.google.firebase.crashlytics'
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"

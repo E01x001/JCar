@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.jcarnew">   <!-- ✅ 통일된 패키지명 -->
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -16,12 +16,14 @@
         <!-- FCM Default notification icon -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
+            android:resource="@mipmap/ic_launcher"
+            tools:replace="android:resource" />
 
         <!-- FCM Default notification channel -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="jcar_default_channel" />
+            android:value="jcar_default_channel"
+            tools:replace="android:value" />
 
         <activity
             android:name=".MainActivity"
