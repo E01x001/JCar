@@ -12,25 +12,20 @@ if (propertiesFile.exists()) {
     println("⚠️ Warning: key.properties not found. Release signing will fail.")
 }
 
-
-
-println "Root Directory: ${rootDir}"
-
 react {
     autolinkLibrariesWithApp()
 }
 
-def enableProguardInReleaseBuilds = false
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
-    namespace "com.jcarnew"   // ✅ 통일된 namespace
+    namespace "com.jcarnew"
     ndkVersion rootProject.ext.ndkVersion
-    buildToolsVersion "34.0.0"          // ✅ 실제 존재하는 최신 버전
+    buildToolsVersion "34.0.0"
     compileSdk rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId "com.jcarnew"   // ✅ google-services.json 과 일치
+        applicationId "com.jcarnew"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -50,13 +45,14 @@ android {
             storePassword properties['storePassword']
             keyAlias properties['keyAlias']
             keyPassword properties['keyPassword']
-        } 
+        }
     }
 
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
+
         release {
             signingConfig signingConfigs.release
             minifyEnabled true
@@ -69,6 +65,7 @@ android {
 dependencies {
     implementation("com.facebook.react:react-android")
 
+    // ⭐ hermesEnabled 플래그 기준 자동 선택
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
@@ -76,6 +73,6 @@ dependencies {
     }
 }
 
-apply plugin: "com.google.gms.google-services"   // ✅ 반드시 app/build.gradle 최하단!
-apply plugin: 'com.google.firebase.crashlytics'
+apply plugin: "com.google.gms.google-services"
+apply plugin: "com.google.firebase.crashlytics"
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"

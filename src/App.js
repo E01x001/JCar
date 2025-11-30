@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
-import { Alert } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import React, {useEffect} from 'react';
+import {Alert} from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from './context/AuthContext';
@@ -77,7 +76,7 @@ const App = () => {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <>
       <ErrorBoundary>
         <ThemeProvider>
           <LoadingProvider>
@@ -88,7 +87,7 @@ const App = () => {
         </ThemeProvider>
       </ErrorBoundary>
       <Toast config={toastConfig} />
-    </GestureHandlerRootView>
+    </>
   );
 };
 
