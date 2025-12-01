@@ -1,24 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import firestore, { collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { AuthContext } from '../context/AuthContext';
 
 // ✅ Calendar 한글 설정
-LocaleConfig.locales['ko'] = {
+LocaleConfig.locales.ko = {
   monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
   monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
   dayNames: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
   dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
-  today: '오늘'
+  today: '오늘',
 };
 LocaleConfig.defaultLocale = 'ko';
 
 const AdminScheduleScreen = () => {
+  const { user } = useContext(AuthContext);
   const [markedDates, setMarkedDates] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [consultations, setConsultations] = useState([]);
 
   useEffect(() => {
+    if (!user) {return () => {};}
+
     const consultationCollection = collection(firestore(), 'consultation_requests');
     const unsubscribe = onSnapshot(consultationCollection, snapshot => {
       const all = [];
@@ -46,7 +50,7 @@ const AdminScheduleScreen = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   const updateStatus = async (id, status) => {
     try {
@@ -64,14 +68,14 @@ const AdminScheduleScreen = () => {
       '정말 거절하시겠습니까?',
       [
         { text: '취소', style: 'cancel' },
-        { text: '거절', style: 'destructive', onPress: () => updateStatus(id, 'rejected') }
+        { text: '거절', style: 'destructive', onPress: () => updateStatus(id, 'rejected') },
       ]
     );
   };
 
   const translateStatus = (status) => {
-    if (status === 'approved') return '승인됨';
-    if (status === 'rejected') return '거절됨';
+    if (status === 'approved') {return '승인됨';}
+    if (status === 'rejected') {return '거절됨';}
     return '대기중';
   };
 

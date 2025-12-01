@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from "react-native";
-import firestore, { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc } from "@react-native-firebase/firestore";
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import firestore, { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPhone } from '../utils/format';
+import { AuthContext } from '../context/AuthContext';
 // import DateTimePicker from '@react-native-community/datetimepicker';
 
 const AdminConsultationScreen = () => {
+  const { user } = useContext(AuthContext);
   const [pendingBuy, setPendingBuy] = useState([]);
   const [pendingSell, setPendingSell] = useState([]);
   const [approvedBuy, setApprovedBuy] = useState([]);
@@ -23,7 +25,9 @@ const AdminConsultationScreen = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    const q = query(collection(firestore(), "consultation_requests"), orderBy('createdAt', 'desc'));
+    if (!user) {return () => {};}
+
+    const q = query(collection(firestore(), 'consultation_requests'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
@@ -38,22 +42,22 @@ const AdminConsultationScreen = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   const handleNavigateToVehicleDetail = (vehicleId) => {
-    navigation.navigate("AdminVehicleDetail", { vehicleId });
+    navigation.navigate('AdminVehicleDetail', { vehicleId });
   };
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const docRef = doc(firestore(), "consultation_requests", id);
+      const docRef = doc(firestore(), 'consultation_requests', id);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         await updateDoc(docRef, { status: newStatus });
-        Alert.alert("완료", `요청이 '${newStatus}'로 변경되었습니다.`);
+        Alert.alert('완료', `요청이 '${newStatus}'로 변경되었습니다.`);
       }
     } catch (error) {
-      Alert.alert("오류", "상태 업데이트 중 문제가 발생했습니다.");
+      Alert.alert('오류', '상태 업데이트 중 문제가 발생했습니다.');
     }
   };
 
@@ -109,8 +113,8 @@ const AdminConsultationScreen = () => {
       const hours = selectedTime.getHours().toString().padStart(2, '0');
       const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
       const formattedTime = `${hours}:${minutes}`;
-      
-      const docRef = doc(firestore(), "consultation_requests", editingItem.id);
+
+      const docRef = doc(firestore(), 'consultation_requests', editingItem.id);
 
       updateDoc(docRef, {
         preferredDate: editingItem.preferredDate,
@@ -140,7 +144,7 @@ const AdminConsultationScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <Text style={styles.title}>상담 요청 목록</Text>
 
         <Text style={styles.sectionTitle}>🟡 대기중 - 구매 상담</Text>
@@ -150,7 +154,7 @@ const AdminConsultationScreen = () => {
         <FlatList data={pendingSell} keyExtractor={item => item.id} renderItem={renderRequestItem} contentContainerStyle={styles.flatListContent} />
 
         <TouchableOpacity onPress={() => setShowApproved(!showApproved)} style={styles.toggleButton}>
-          <Text style={styles.toggleButtonText}>{showApproved ? "✅ 승인 목록 숨기기" : "✅ 승인 목록 보기"}</Text>
+          <Text style={styles.toggleButtonText}>{showApproved ? '✅ 승인 목록 숨기기' : '✅ 승인 목록 보기'}</Text>
         </TouchableOpacity>
 
         {showApproved && (
@@ -163,7 +167,7 @@ const AdminConsultationScreen = () => {
         )}
 
         <TouchableOpacity onPress={() => setShowRejected(!showRejected)} style={styles.toggleButton}>
-          <Text style={styles.toggleButtonText}>{showRejected ? "❌ 거절 목록 숨기기" : "❌ 거절 목록 보기"}</Text>
+          <Text style={styles.toggleButtonText}>{showRejected ? '❌ 거절 목록 숨기기' : '❌ 거절 목록 보기'}</Text>
         </TouchableOpacity>
 
         {showRejected && (
@@ -190,11 +194,11 @@ const AdminConsultationScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginVertical: 10 },
-  card: { padding: 10, borderBottomWidth: 1, borderColor: "#ddd", marginBottom: 10, backgroundColor: "#f9f9f9", borderRadius: 8 },
-  text: { fontSize: 16, marginBottom: 5, color: "#333" },
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 10 },
+  card: { padding: 10, borderBottomWidth: 1, borderColor: '#ddd', marginBottom: 10, backgroundColor: '#f9f9f9', borderRadius: 8 },
+  text: { fontSize: 16, marginBottom: 5, color: '#333' },
   flatListContent: { paddingBottom: 20 },
   bottomSpacing: { height: 20 },
   statusButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, gap: 10 },
@@ -203,15 +207,15 @@ const styles = StyleSheet.create({
   statusButtonText: { color: '#fff', fontWeight: 'bold' },
   toggleButton: {
     padding: 10,
-    backgroundColor: "#eee",
+    backgroundColor: '#eee',
     borderRadius: 8,
     marginTop: 10,
-    alignItems: "center",
+    alignItems: 'center',
   },
   toggleButtonText: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#2B4593",
+    fontWeight: 'bold',
+    color: '#2B4593',
   },
 });
 

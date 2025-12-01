@@ -8,7 +8,7 @@ const MyVehiclesScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {return () => {};}
 
     const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
     const unsubscribe = onSnapshot(q, snapshot => {

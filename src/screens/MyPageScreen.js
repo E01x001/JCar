@@ -22,7 +22,7 @@ const MyPageScreen = ({ navigation }) => {
   const [showSell, setShowSell] = useState(true);
 
   useEffect(() => {
-    if (!user) {return;}
+    if (!user) {return () => {};}
 
     const vehiclesQuery = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
     const unsubscribeVehicles = onSnapshot(vehiclesQuery, snapshot => {
