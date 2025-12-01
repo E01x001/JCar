@@ -12,8 +12,35 @@ const LoginScreen = ({ navigation }) => {
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  // 이메일 형식 검증 함수
+  const validateEmail = (emailInput) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailInput);
+  };
 
   const handleLogin = async () => {
+    // 빈 값 체크
+    if (!email) {
+      setEmailError('이메일 주소를 입력해주세요.');
+      return;
+    }
+
+    // 이메일 형식 검증
+    if (!validateEmail(email)) {
+      setEmailError('올바른 이메일 형식이 아닙니다.');
+      return;
+    }
+
+    if (!password) {
+      toast.showError('입력 오류', '비밀번호를 입력해주세요.');
+      return;
+    }
+
+    // 에러 초기화
+    setEmailError('');
+
     try {
       await auth().signInWithEmailAndPassword(email, password);
       toast.showSuccess('로그인 성공', '환영합니다!');
@@ -31,10 +58,16 @@ const LoginScreen = ({ navigation }) => {
       <View style={[styles.formContainer, { marginTop: theme.spacing.xl }]}>
         <InputField
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (emailError) {
+              setEmailError('');
+            }
+          }}
           placeholder="이메일 입력"
           keyboardType="email-address"
           autoCapitalize="none"
+          error={emailError}
         />
         <InputField
           value={password}

@@ -47,7 +47,12 @@
       "Bash(mkdir:*)",
       "Bash(task-master update-task:*)",
       "Bash(git restore:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "mcp__task-master-ai__update_task",
+      "mcp__task-master-ai__add_task",
+      "mcp__task-master-ai__expand_task",
+      "mcp__task-master-ai__get_task",
+      "mcp__task-master-ai__set_task_status"
     ],
     "deny": []
   },

@@ -50,23 +50,6 @@ export const loginUser = async ({ email, password }) => {
 };
 
 // --------------------
-// 비밀번호 재설정
-// --------------------
-export const sendPasswordResetEmail = async (email) => {
-  try {
-    await auth().sendPasswordResetEmail(email);
-    Alert.alert('알림', '비밀번호 재설정 메일을 발송했습니다.');
-    return { success: true };
-  } catch (error) {
-    console.error('비밀번호 재설정 실패:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('sendPasswordResetEmail failed');
-    Alert.alert('오류', error.message || '비밀번호 재설정 중 오류가 발생했습니다.');
-    return { success: false, error };
-  }
-};
-
-// --------------------
 // 상담 요청 저장
 // --------------------
 export const saveConsultationRequest = async (data) => {

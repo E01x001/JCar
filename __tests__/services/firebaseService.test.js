@@ -20,7 +20,6 @@ import { Alert, Platform, PermissionsAndroid } from 'react-native';
 import {
   registerUser,
   loginUser,
-  sendPasswordResetEmail,
   saveConsultationRequest,
   saveFcmToken,
   requestNotificationPermission,
@@ -37,11 +36,13 @@ describe('firebaseService', () => {
       const mockUserCredential = { user: mockUser };
 
       const mockCreateUser = jest.fn().mockResolvedValue(mockUserCredential);
+      const mockSet = jest.fn().mockResolvedValue();
+      const mockServerTimestamp = jest.fn();
+
       auth.mockReturnValue({
         createUserWithEmailAndPassword: mockCreateUser,
       });
 
-      const mockSet = jest.fn().mockResolvedValue();
       firestore.mockReturnValue({
         collection: jest.fn(() => ({
           doc: jest.fn(() => ({
@@ -49,6 +50,9 @@ describe('firebaseService', () => {
           })),
         })),
       });
+      firestore.FieldValue = {
+        serverTimestamp: mockServerTimestamp,
+      };
 
       const userData = {
         email: 'test@example.com',
@@ -118,37 +122,18 @@ describe('firebaseService', () => {
     });
   });
 
-  describe('sendPasswordResetEmail', () => {
-    it('should successfully send password reset email', async () => {
-      auth.mockReturnValue({
-        sendPasswordResetEmail: jest.fn().mockResolvedValue(),
-      });
-
-      const result = await sendPasswordResetEmail('test@example.com');
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should handle password reset error', async () => {
-      const mockError = new Error('User not found');
-      auth.mockReturnValue({
-        sendPasswordResetEmail: jest.fn().mockRejectedValue(mockError),
-      });
-
-      const result = await sendPasswordResetEmail('nonexistent@example.com');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-    });
-  });
-
   describe('saveConsultationRequest', () => {
     it('should successfully save consultation request', async () => {
+      const mockServerTimestamp = jest.fn();
+
       firestore.mockReturnValue({
         collection: jest.fn(() => ({
           add: jest.fn().mockResolvedValue({ id: 'consultation-123' }),
         })),
       });
+      firestore.FieldValue = {
+        serverTimestamp: mockServerTimestamp,
+      };
 
       const consultationData = {
         userId: 'user-123',
@@ -168,11 +153,16 @@ describe('firebaseService', () => {
     });
 
     it('should handle missing fields with defaults', async () => {
+      const mockServerTimestamp = jest.fn();
+
       firestore.mockReturnValue({
         collection: jest.fn(() => ({
           add: jest.fn().mockResolvedValue({ id: 'consultation-123' }),
         })),
       });
+      firestore.FieldValue = {
+        serverTimestamp: mockServerTimestamp,
+      };
 
       const result = await saveConsultationRequest({});
 
