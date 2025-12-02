@@ -4,7 +4,7 @@ import firestore, { collection, onSnapshot, doc, updateDoc } from '@react-native
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
 
-// ✅ Calendar 한글 설정
+// Calendar 한글 설정
 LocaleConfig.locales.ko = {
   monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
   monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
@@ -30,7 +30,7 @@ const AdminScheduleScreen = () => {
 
       snapshot.docs.forEach(d => {
         const data = d.data();
-        const date = data.preferredDate; // ✅ camelCase 사용
+        const date = data.preferredDate;
         const color =
           data.status === 'approved' ? '#28a745'
             : data.status === 'rejected' ? '#dc3545'
@@ -91,16 +91,16 @@ const AdminScheduleScreen = () => {
         markedDates={markedDates}
         markingType="multi-dot"
         onDayPress={(day) => setSelectedDate(day.dateString)}
-        monthFormat={'yyyy년 MM월'} // ✅ 월 표시도 더 예쁘게
-        firstDay={0} // ✅ 일요일부터 시작
+        monthFormat={'yyyy년 MM월'}
+        firstDay={0}
         theme={{
           textDayFontWeight: '600',
           textMonthFontWeight: 'bold',
           textDayHeaderFontWeight: '600',
           textDayHeaderFontSize: 14,
         }}
-        dayNames={['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']} // ✅ 수동 요일
-        dayNamesShort={['일', '월', '화', '수', '목', '금', '토']} // ✅ 수동 요일 축약형
+        dayNames={['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']}
+        dayNamesShort={['일', '월', '화', '수', '목', '금', '토']}
       />
 
       {selectedDate && (
