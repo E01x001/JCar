@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TabView, TabBar } from 'react-native-tab-view';
 import auth from '@react-native-firebase/auth';
-import firestore, { collection, query, where, onSnapshot, orderBy, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
+import firestore, { collection, query, where, onSnapshot, orderBy, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import Card from '../components/Card';
-import Badge from '../components/Badge';
 import Button from '../components/Button';
+import BuyConsultationsTab from './MyPage/tabs/BuyConsultationsTab';
+import SellConsultationsTab from './MyPage/tabs/SellConsultationsTab';
+import MyVehiclesTab from './MyPage/tabs/MyVehiclesTab';
 
 const MyPageScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -18,8 +20,12 @@ const MyPageScreen = ({ navigation }) => {
   const toast = useToast();
   const [vehicles, setVehicles] = useState([]);
   const [consultations, setConsultations] = useState([]);
-  const [showBuy, setShowBuy] = useState(true);
-  const [showSell, setShowSell] = useState(true);
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'buy', title: '구매 상담' },
+    { key: 'sell', title: '판매 상담' },
+    { key: 'vehicles', title: '내 차량' },
+  ]);
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -62,15 +68,32 @@ const MyPageScreen = ({ navigation }) => {
     navigation.navigate('VehicleDetail', { vehicleId });
   };
 
-  const getStatusBadge = (status) => {
-    if (status === 'approved') {
-      return <Badge status="completed" label="승인됨" />;
-    } else if (status === 'rejected') {
-      return <Badge status="failed" label="거절됨" />;
+  const renderScene = ({ route }) => {
+    switch (route.key) {
+      case 'buy':
+        return <BuyConsultationsTab consultations={consultations} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
+      case 'sell':
+        return <SellConsultationsTab consultations={consultations} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
+      case 'vehicles':
+        return <MyVehiclesTab vehicles={vehicles} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
+      default:
+        return null;
     }
-    return <Badge status="pending" label="대기중" />;
   };
 
+  const renderTabBar = (props) => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: theme.colors.primary.main }}
+      style={{ backgroundColor: theme.colors.background.card }}
+      labelStyle={{
+        fontSize: theme.typography.fontSize.body,
+        fontWeight: theme.typography.fontWeight.semiBold,
+      }}
+      activeColor={theme.colors.primary.main}
+      inactiveColor={theme.colors.text.secondary}
+    />
+  );
 
   const handleLogout = async () => {
     try {
@@ -111,9 +134,9 @@ const MyPageScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      <ScrollView contentContainerStyle={{ padding: theme.spacing.md }}>
+      <View style={styles.container}>
         {/* User Info Card */}
-        <Card style={{ marginBottom: theme.spacing.lg }}>
+        <Card style={{ margin: theme.spacing.md, marginBottom: theme.spacing.sm }}>
           <Text style={[styles.title, {
             fontSize: theme.typography.fontSize.h2,
             fontWeight: theme.typography.fontWeight.bold,
@@ -126,139 +149,31 @@ const MyPageScreen = ({ navigation }) => {
           }]}>이메일: {user?.email ?? '이메일 없음'}</Text>
         </Card>
 
-        {/* Consultations Section */}
-        <Text style={[styles.sectionTitle, {
-          fontSize: theme.typography.fontSize.h3,
-          fontWeight: theme.typography.fontWeight.semiBold,
-          color: theme.colors.text.primary,
-          marginBottom: theme.spacing.md,
-        }]}>상담 요청 내역</Text>
-
-        {/* Buy Consultations */}
-        <TouchableOpacity
-          onPress={() => setShowBuy(!showBuy)}
-          style={[styles.toggleButton, {
-            backgroundColor: theme.colors.background.card,
-            borderRadius: theme.borderRadius.medium,
-            padding: theme.spacing.md,
-            marginBottom: theme.spacing.sm,
-          }]}
-        >
-          <View style={styles.toggleButtonContent}>
-            <Text style={[styles.toggleButtonText, {
-              fontSize: theme.typography.fontSize.body,
-              fontWeight: theme.typography.fontWeight.semiBold,
-              color: theme.colors.primary.main,
-            }]}>구매 상담</Text>
-            <Icon name={showBuy ? 'expand-less' : 'expand-more'} size={24} color={theme.colors.primary.main} />
-          </View>
-        </TouchableOpacity>
-        {showBuy && (
-          <View style={{ marginBottom: theme.spacing.md }}>
-            {consultations.filter(c => c.type === 'buy' || !c.type).map((item) => (
-              <TouchableOpacity key={item.id} onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
-                <Card style={{ marginBottom: theme.spacing.sm }}>
-                  <View style={styles.consultHeader}>
-                    <Text style={[styles.consultText, {
-                      fontSize: theme.typography.fontSize.body,
-                      fontWeight: theme.typography.fontWeight.semiBold,
-                      color: theme.colors.text.primary,
-                    }]}>{item?.vehicleName ?? '차량명 없음'}</Text>
-                    {getStatusBadge(item.status)}
-                  </View>
-                  <Text style={[styles.consultDetail, {
-                    fontSize: theme.typography.fontSize.bodySmall,
-                    color: theme.colors.text.secondary,
-                    marginTop: theme.spacing.xs,
-                  }]}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
-                </Card>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Sell Consultations */}
-        <TouchableOpacity
-          onPress={() => setShowSell(!showSell)}
-          style={[styles.toggleButton, {
-            backgroundColor: theme.colors.background.card,
-            borderRadius: theme.borderRadius.medium,
-            padding: theme.spacing.md,
-            marginBottom: theme.spacing.sm,
-          }]}
-        >
-          <View style={styles.toggleButtonContent}>
-            <Text style={[styles.toggleButtonText, {
-              fontSize: theme.typography.fontSize.body,
-              fontWeight: theme.typography.fontWeight.semiBold,
-              color: theme.colors.primary.main,
-            }]}>판매 상담</Text>
-            <Icon name={showSell ? 'expand-less' : 'expand-more'} size={24} color={theme.colors.primary.main} />
-          </View>
-        </TouchableOpacity>
-        {showSell && (
-          <View style={{ marginBottom: theme.spacing.md }}>
-            {consultations.filter(c => c.type === 'sell').map((item) => (
-              <TouchableOpacity key={item.id} onPress={() => handleNavigateToVehicleDetail(item.vehicleId)}>
-                <Card style={{ marginBottom: theme.spacing.sm }}>
-                  <View style={styles.consultHeader}>
-                    <Text style={[styles.consultText, {
-                      fontSize: theme.typography.fontSize.body,
-                      fontWeight: theme.typography.fontWeight.semiBold,
-                      color: theme.colors.text.primary,
-                    }]}>{item?.vehicleName ?? '차량명 없음'}</Text>
-                    {getStatusBadge(item.status)}
-                  </View>
-                  <Text style={[styles.consultDetail, {
-                    fontSize: theme.typography.fontSize.bodySmall,
-                    color: theme.colors.text.secondary,
-                    marginTop: theme.spacing.xs,
-                  }]}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
-                </Card>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* My Vehicles Section */}
-        <Text style={[styles.sectionTitle, {
-          fontSize: theme.typography.fontSize.h3,
-          fontWeight: theme.typography.fontWeight.semiBold,
-          color: theme.colors.text.primary,
-          marginTop: theme.spacing.lg,
-          marginBottom: theme.spacing.md,
-        }]}>내 차량</Text>
-        {vehicles.map((item) => (
-          <TouchableOpacity key={item.id} onPress={() => handleNavigateToVehicleDetail(item.id)}>
-            <Card style={{ marginBottom: theme.spacing.sm }}>
-              <View style={styles.vehicleRow}>
-                <Badge status="completed" label={item.vehicleType ?? '차량'} />
-                <Text style={[styles.vehicleName, {
-                  fontSize: theme.typography.fontSize.body,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginLeft: theme.spacing.sm,
-                }]}>{item.vehicleName ?? '차량명 없음'}</Text>
-              </View>
-            </Card>
-          </TouchableOpacity>
-        ))}
+        {/* TabView */}
+        <TabView
+          navigationState={{ index, routes }}
+          renderScene={renderScene}
+          renderTabBar={renderTabBar}
+          onIndexChange={setIndex}
+          initialLayout={{ width: Dimensions.get('window').width }}
+        />
 
         {/* Action Buttons */}
-        <Button
-          variant="secondary"
-          title="로그아웃"
-          onPress={handleLogout}
-          style={{ marginTop: theme.spacing.xl }}
-        />
+        <View style={{ padding: theme.spacing.md, paddingTop: 0 }}>
+          <Button
+            variant="secondary"
+            title="로그아웃"
+            onPress={handleLogout}
+            style={{ marginBottom: theme.spacing.sm }}
+          />
 
-        <Button
-          variant="danger"
-          title="회원탈퇴"
-          onPress={handleDeleteAccount}
-          style={{ marginTop: theme.spacing.md, marginBottom: theme.spacing.xl }}
-        />
-      </ScrollView>
+          <Button
+            variant="danger"
+            title="회원탈퇴"
+            onPress={handleDeleteAccount}
+          />
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -269,26 +184,6 @@ const styles = StyleSheet.create({
   },
   title: {},
   userInfo: {},
-  sectionTitle: {},
-  toggleButton: {},
-  toggleButtonContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  toggleButtonText: {},
-  consultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  consultText: {},
-  consultDetail: {},
-  vehicleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  vehicleName: {},
 });
 
 export default MyPageScreen;
