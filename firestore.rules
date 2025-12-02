@@ -23,20 +23,33 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // Vehicles collection: Authenticated users can read, only active admins can write
+    // Vehicles collection: Authenticated users can read, owners/admins can manage
     match /vehicles/{vehicleId} {
-      // Any authenticated user can read vehicle data
+      // Authenticated users can read all vehicles
       allow read: if request.auth != null;
 
-      // Only active admins can create/update vehicles with data validation
-      allow create, update: if isAdmin() && isActiveUser() &&
-        request.resource.data.vehicleId is string &&
-        request.resource.data.vehicleName is string &&
-        request.resource.data.manufacturer is string &&
-        request.resource.data.sellerId is string;
+      // Authenticated active users can create their own vehicles
+      allow create: if request.auth != null &&
+                    isActiveUser() &&
+                    request.auth.uid == request.resource.data.sellerId &&
+                    request.resource.data.vehicleId is string &&
+                    request.resource.data.vehicleName is string &&
+                    request.resource.data.manufacturer is string &&
+                    request.resource.data.sellerId is string;
 
-      // Only active admins can delete vehicles
-      allow delete: if isAdmin() && isActiveUser();
+      // Vehicle owner or active admin can update vehicles
+      allow update: if request.auth != null &&
+                    isActiveUser() &&
+                    (request.auth.uid == resource.data.sellerId || isAdmin()) &&
+                    request.resource.data.vehicleId is string &&
+                    request.resource.data.vehicleName is string &&
+                    request.resource.data.manufacturer is string &&
+                    request.resource.data.sellerId is string;
+
+      // Vehicle owner or active admin can delete vehicles
+      allow delete: if request.auth != null &&
+                    isActiveUser() &&
+                    (request.auth.uid == resource.data.sellerId || isAdmin());
     }
 
     // Consultation requests collection: Only active users can create, admins have full access

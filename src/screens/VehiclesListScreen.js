@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatPrice } from '../utils/format';
@@ -8,6 +8,7 @@ import {
   getActiveFilterCount,
 } from '../services/vehicleFilterService';
 import { useTheme } from '../theme/ThemeProvider';
+import { AuthContext } from '../context/AuthContext';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -15,6 +16,7 @@ import StateScreen from '../components/StateScreen';
 
 const VehiclesListScreen = ({ navigation }) => {
   const theme = useTheme();
+  const { user } = useContext(AuthContext);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -28,6 +30,8 @@ const VehiclesListScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
+    if (!user) {return () => {};}
+
     setLoading(true);
     const unsubscribe = subscribeToFilteredVehicles(filters, (filteredVehicles) => {
       setVehicles(filteredVehicles);
@@ -35,7 +39,7 @@ const VehiclesListScreen = ({ navigation }) => {
     });
 
     return () => unsubscribe();
-  }, [filters]);
+  }, [filters, user]);
 
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
