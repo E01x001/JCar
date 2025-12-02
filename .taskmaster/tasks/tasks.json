@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Security Hardening: Remove Exposed Credentials and Secure Environment",
         "description": "Remove the exposed GitHub Personal Access Token (PAT) from the codebase and ensure the .env file is properly ignored by version control to prevent future credential leaks.",
         "details": "1. Locate the .env file containing the exposed GitHub PAT. 2. Remove the PAT from the file. If it's needed for a dependency, source it from a secure environment variable provider or a secure secret management system. 3. Ensure the `.gitignore` file at the root of the project contains a line for `.env` and `*.env`. 4. Verify that no history of the .env file exists in the Git repository. If it does, the history must be rewritten using tools like `git filter-repo` or BFG Repo-Cleaner to completely remove the sensitive data. 5. Rotate the leaked PAT on GitHub immediately.",
@@ -78,7 +78,7 @@
         "updatedAt": "2025-11-26T16:56:17.277Z"
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Implement Firestore Security Rules",
         "description": "Define and apply Firestore security rules for the users, vehicles, and consultation_requests collections to enforce proper access control and data validation.",
         "details": "Develop and deploy `firestore.rules`. The rules should enforce that: \n- `users`: A user can only read/write their own document (`allow read, write: if request.auth.uid == userId;`). Publicly readable fields should be explicitly allowed. \n- `vehicles`: Any authenticated user can read vehicle documents. Only authorized admins or the vehicle owner (if allowed) can create/update/delete. Writes should validate data types (e.g., `price` is a number). \n- `consultation_requests`: Users can only create requests for themselves. They can only read their own requests. Admins should have read/write access to all requests. \n- `Firebase Storage`: Rules for image uploads should ensure that only authenticated users can upload images and that file size and type are validated.",
@@ -156,7 +156,7 @@
         "updatedAt": "2025-11-27T01:07:03.819Z"
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Implement Global Error Handling & Logging",
         "description": "Establish a comprehensive error handling and logging strategy using a global error boundary and a structured logging service like Firebase Crashlytics.",
         "details": "1. Integrate `react-native-firebase/app` and `react-native-firebase/crashlytics`. Follow the setup instructions for both Android and iOS. 2. Create a global error boundary component using a class component with `componentDidCatch`. This boundary should wrap the root `App` component. When it catches an error, it should log the error to Crashlytics (`crashlytics().recordError(error)`) and display a user-friendly fallback UI. 3. Wrap all Firebase API calls (Firestore, Auth, Storage) in try/catch blocks. In the catch block, log the error to Crashlytics and display a localized, user-friendly message to the user via a toast or alert.",
@@ -233,7 +233,7 @@
         "updatedAt": "2025-11-27T04:30:00.578Z"
       },
       {
-        "id": 4,
+        "id": "4",
         "title": "Setup Testing Framework and Code Quality Tools",
         "description": "Configure Jest for unit testing, ESLint for static code analysis, and Husky for pre-commit hooks to enforce code quality and testing standards.",
         "details": "1. **Jest**: Install Jest and the `react-native` preset. Configure `jest.config.js` to set up mocks for native modules and assets. 2. **ESLint**: Initialize ESLint with a recommended ruleset like `@react-native-community/eslint-config`. Create a `.eslintrc.js` file and add rules to enforce project coding standards. Add an `npm run lint` script to `package.json`. 3. **Husky**: Install Husky and `lint-staged`. Configure a `pre-commit` hook in the Husky configuration to run ESLint and Jest on staged files (`npx lint-staged`). This will prevent commits with linting errors or failing tests.",
@@ -308,7 +308,7 @@
         "updatedAt": "2025-11-27T04:49:06.599Z"
       },
       {
-        "id": 5,
+        "id": "5",
         "title": "Implement Push Notification System using FCM",
         "description": "Integrate Firebase Cloud Messaging (FCM) to send and receive push notifications for critical app events, such as consultation status changes.",
         "details": "1. Add the `@react-native-firebase/messaging` package. 2. Configure FCM for the Android project by adding the necessary dependencies and plugins in `build.gradle` files. 3. In the app's entry point, implement logic to request notification permissions from the user using `messaging().requestPermission()`. 4. Retrieve the device's FCM token using `messaging().getToken()` and store it in the corresponding user's document in Firestore. 5. Set up background and foreground message handlers (`messaging().onMessage()` and `messaging().setBackgroundMessageHandler()`) to process incoming notifications and display them to the user. 6. Create a Firebase Function triggered by updates to the `consultation_requests` collection to send notifications to relevant users.",
@@ -387,7 +387,7 @@
         "updatedAt": "2025-11-27T13:53:40.252Z"
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "Write Unit Tests for Critical Functions",
         "description": "Write a suite of unit tests for existing critical business logic, focusing on services, formatters, and validators to improve code reliability.",
         "details": "Using the Jest framework set up in Task 4, create test files for the following: \n- `firebaseService.js`: Mock Firebase functions using `jest.mock` to test data fetching, vehicle registration, and consultation request logic without making actual API calls. \n- **Validators**: Test input validation functions for forms (e.g., email format, password strength, vehicle year). Test with both valid and invalid inputs. \n- **Formatters**: Test utility functions that format data for display (e.g., currency formatters for price, date formatters for timestamps).",
@@ -465,7 +465,7 @@
         "updatedAt": "2025-11-27T14:06:00.117Z"
       },
       {
-        "id": 7,
+        "id": "7",
         "title": "Enhance Admin Management Features",
         "description": "Implement high-priority admin features, including emergency vehicle deletion and a user management interface for suspending or activating accounts.",
         "details": "1. **Emergency Delete**: In the admin panel's vehicle view, add a 'Delete' button. On click, it should trigger a Firebase Function that performs a hard delete of the vehicle document and its associated images in Firebase Storage. This action should be logged in an admin activity log collection. 2. **User Management**: Create a new screen in the admin panel to list all users. Implement functionality to search and filter users. Each user item should have a toggle/button to change a `status` field in their user document (e.g., from 'active' to 'suspended'). Firestore security rules must be updated to deny writes from suspended users.",
@@ -541,7 +541,7 @@
         "updatedAt": "2025-11-28T09:54:23.687Z"
       },
       {
-        "id": 8,
+        "id": "8",
         "title": "Implement Advanced Vehicle Search and Filters",
         "description": "Develop an advanced search interface allowing users to filter and sort the vehicle list by multiple criteria such as price range, year, and manufacturer.",
         "details": "1. Create a 'Filter' modal or screen accessible from the main vehicle list. 2. Add UI components for filtering: sliders for price/year range, multi-select pickers for manufacturers. 3. When the user applies filters, construct a composite Firestore query. For example: `firestore().collection('vehicles').where('price', '>=', minPrice).where('price', '<=', maxPrice).orderBy('price').limit(20)`. Note Firestore's limitations on composite queries may require data duplication or a more advanced search solution like Algolia if complexity increases. 4. Implement sorting options (e.g., Price: Low to High) which will modify the `orderBy()` clause of the Firestore query.",
@@ -617,7 +617,7 @@
         "updatedAt": "2025-11-28T10:16:06.420Z"
       },
       {
-        "id": 9,
+        "id": "9",
         "title": "Set Up CI/CD Pipeline with GitHub Actions",
         "description": "Automate the build, linting, and testing process for the Android application using a GitHub Actions workflow.",
         "details": "1. Create a `.github/workflows` directory in the project root. 2. Create a YAML file (e.g., `android-ci.yml`). 3. Define a workflow that triggers on `pull_request` to the `main` or `develop` branch. 4. The workflow should have jobs for: \n   - `setup`: Check out the code, set up Node.js, and install npm dependencies. \n   - `lint`: Run the ESLint checks (`npm run lint`). \n   - `test`: Run the Jest unit tests (`npm run test`). \n   - `build`: Assemble the Android debug build (`cd android && ./gradlew assembleDebug`) to ensure the project builds successfully.",
@@ -696,7 +696,7 @@
         "updatedAt": "2025-11-28T10:06:38.763Z"
       },
       {
-        "id": 10,
+        "id": "10",
         "title": "Prepare Android for Production Release",
         "description": "Configure the Android project for a production release, including setting up app signing, enabling code shrinking, and generating a signed Android App Bundle (AAB).",
         "details": "1. **Keystore**: Generate a private signing key using `keytool`. Store the keystore file and its credentials securely (e.g., using environment variables or a secret manager), not in the repository. 2. **Gradle Configuration**: In `android/app/build.gradle`, create a signing configuration that loads the keystore credentials. Apply this signing config to the `release` build type. 3. **ProGuard/R8**: Enable code shrinking and obfuscation for the release build by setting `minifyEnabled true` in the `release` build type. Add any necessary ProGuard rules to `proguard-rules.pro` to prevent vital code from being stripped. 4. **Generate AAB**: Run the command `./gradlew bundleRelease` from the `android` directory to generate the signed AAB file, which will be located in `android/app/build/outputs/bundle/release/`.",
@@ -775,7 +775,7 @@
         "updatedAt": "2025-11-28T10:13:00.536Z"
       },
       {
-        "id": 11,
+        "id": "11",
         "title": "Establish Design System Foundation (Theme)",
         "description": "Create the core theme files for the design system, including color palettes, typography, spacing, border radius, and shadow styles. This will serve as the single source of truth for all UI styling.",
         "details": "Create a `src/theme` directory. Inside, create separate files for each design token category: `colors.js`, `typography.js`, `spacing.js`, `shadows.js`, `borderRadius.js`. Export constants from each file. For example, in `colors.js`: `export const colors = { primary: '#2B4593', success: '#28A745', ... }`. Create a main `index.js` in `src/theme` that exports all tokens as a single theme object. Use React's Context API to provide this theme object to the entire application tree via a `ThemeProvider` component.",
@@ -851,7 +851,7 @@
         "updatedAt": "2025-11-29T11:33:07.789Z"
       },
       {
-        "id": 12,
+        "id": "12",
         "title": "Develop Unified Button Component",
         "description": "Create a single, reusable Button component that supports all variants (Primary, Secondary, Danger, Success, Text) and states (Default, Hover, Pressed, Disabled) defined in the PRD.",
         "details": "Create a `src/components/Button.js` file. The component should accept props like `variant`, `onPress`, `disabled`, and `title`. Use the theme values from the context for styling. Implement dynamic styling based on the `variant` prop. For example: `const getBackgroundColor = () => { switch(variant) { case 'primary': return theme.colors.primary; case 'danger': return theme.colors.danger; default: return 'transparent'; } };`. Use `Pressable` to handle states like `onPressIn` and `onPressOut` to apply pressed styles (scale transform).",
@@ -928,7 +928,7 @@
         "updatedAt": "2025-11-29T11:46:30.533Z"
       },
       {
-        "id": 13,
+        "id": "13",
         "title": "Develop Unified Input Field Component",
         "description": "Create a reusable text input component with consistent styling for default, focus, and error states as specified in the PRD.",
         "details": "Create `src/components/InputField.js`. This component will wrap React Native's `TextInput`. It should accept props like `value`, `onChangeText`, `placeholder`, `error` (a string for the error message), etc. Use the `useState` hook to track focus state (`onFocus`, `onBlur`). Apply conditional styling based on focus and the presence of the `error` prop. The error message should be displayed below the input field using the 'Danger' color. All styling (height, padding, border radius, colors) should come from the theme.",
@@ -1006,7 +1006,7 @@
         "updatedAt": "2025-11-29T11:47:19.263Z"
       },
       {
-        "id": 14,
+        "id": "14",
         "title": "Develop Card and Status Badge Components",
         "description": "Create reusable Card and Badge components. The Card will be a container for content sections, and the Badge will be used to display status labels like '대기중', '승인', etc.",
         "details": "For `src/components/Card.js`, create a `View` with styles defined by the PRD (background, border radius, padding, shadow). It should accept `children` to render any content inside. For `src/components/Badge.js`, the component should take a `status` prop ('waiting', 'approved', 'rejected', 'completed'). Based on the status, it should apply the corresponding semantic color from the theme (Warning for waiting, Success for approved, etc.) for its background. All styling should be derived from the theme.",
@@ -1083,7 +1083,7 @@
         "updatedAt": "2025-11-29T11:48:16.021Z"
       },
       {
-        "id": 15,
+        "id": "15",
         "title": "Refactor Login and Sign-up Screens",
         "description": "Apply the new design system to the Login and Sign-up screens, replacing existing elements with the new unified Button and Input Field components and adjusting layout spacing.",
         "details": "Navigate to the authentication screen files. Replace all `<Button>` and `<TextInput>` instances with the new `<Button>` and `<InputField>` components. Use the 'primary' variant for the main action button and 'text' variant for links like '비밀번호 찾기'. Remove any hardcoded style values and use spacing tokens from the theme for margins and paddings between the logo, input fields, and buttons as per the PRD.",
@@ -1163,7 +1163,7 @@
         "updatedAt": "2025-11-29T17:31:31.472Z"
       },
       {
-        "id": 16,
+        "id": "16",
         "title": "Refactor Vehicle List and Detail Screens",
         "description": "Update the Vehicle List and Detail screens using the new design system components, including Card, Badge, and standardized typography and layout.",
         "details": "On the Vehicle List screen, wrap each list item in the new `<Card>` component. Use theme spacing for gaps between cards. Re-style the header according to the PRD. Inside the card, use the `<Badge>` for vehicle type and apply H3/Body typography from the theme. On the Vehicle Detail screen, structure content into sections with H4 titles. Use the theme for padding and spacing. Implement the fixed bottom action button using the primary `<Button>` component.",
@@ -1239,7 +1239,7 @@
         "updatedAt": "2025-11-29T17:37:40.737Z"
       },
       {
-        "id": 17,
+        "id": "17",
         "title": "Implement Standardized Navigation Headers and Tab Bar",
         "description": "Apply a consistent design to the global navigation header and bottom tab bar across the application, using the styles defined in the PRD.",
         "details": "This task likely involves configuring the navigation library (e.g., React Navigation). Define a common `headerStyle` object using theme colors (`primary` for background, `white` for text) and apply it as a default screen option. For the tab bar, configure `tabBarOptions` or `tabBarStyle` to set the background, height, and active/inactive tint colors using the theme. The active tab's top border can be implemented using a custom tab bar component if the library doesn't support it directly.",
@@ -1318,7 +1318,7 @@
         "updatedAt": "2025-11-29T17:40:54.287Z"
       },
       {
-        "id": 18,
+        "id": "18",
         "title": "Create Interaction State Components (Loading, Empty, Error)",
         "description": "Develop reusable components for displaying global loading spinners, skeleton loaders for lists, and full-page empty/error states.",
         "details": "1. `GlobalLoader`: A modal overlay with a semi-transparent background and an `ActivityIndicator` using the theme's primary color. 2. `SkeletonLoader`: A component that mimics the layout of a `<Card>` but with placeholder shapes and a shimmering animation. 3. `StateScreen`: A generic component accepting `icon`, `title`, `message`, and `onRetry` props to display consistent empty or error screens. It should use the secondary `<Button>` for the retry action.",
@@ -1396,7 +1396,7 @@
         "updatedAt": "2025-11-29T23:51:24.886Z"
       },
       {
-        "id": 19,
+        "id": "19",
         "title": "Implement Global Toast Message System",
         "description": "Set up a global system to display toast messages for success, error, and info feedback, accessible from anywhere in the app.",
         "details": "Use a library like `react-native-toast-message` or build a custom solution using a global context provider. Create a `ToastProvider` at the app's root. Define custom toast types ('success', 'danger', 'info') that map to the semantic colors in the theme. Expose a hook like `useToast()` which provides functions (`toast.showSuccess(message)`, `toast.showError(message)`) to trigger toasts from any component.",
@@ -1475,7 +1475,7 @@
         "updatedAt": "2025-11-29T23:47:50.173Z"
       },
       {
-        "id": 20,
+        "id": "20",
         "title": "Refactor MyPage and Admin Screens",
         "description": "Apply the new design system and components to the MyPage and Admin screens to ensure full app consistency.",
         "details": "For MyPage, use the `<Card>` component for the user info section and for each menu list item. Use appropriate button variants for 'Logout' (Secondary) and '회원탈퇴' (Danger Text). For Admin screens, implement the tab bar styling with the primary color bottom border for the active tab. Replace list items and buttons with the new `<Card>`, `<Badge>`, and `<Button>` (Success/Danger) components to standardize the interface.",
@@ -1553,30 +1553,30 @@
         "updatedAt": "2025-11-29T23:56:59.781Z"
       },
       {
-        "id": 21,
+        "id": "21",
         "title": "Resolve Dependabot Security Alerts",
         "description": "Review and resolve 8 security vulnerabilities (2 high, 3 moderate, 3 low) reported by GitHub Dependabot by updating npm packages and ensuring application stability.",
         "details": "This task addresses security vulnerabilities identified in project dependencies. First, review all open alerts at https://github.com/E01x001/JCar/security/dependabot. Create a dedicated branch for this work (e.g., `fix/dependabot-vulns`). Use `npm audit` to get a detailed report locally. Address the vulnerabilities starting with the 'high' severity alerts, then 'moderate', and finally 'low'. Update packages individually or in small, logical groups using `npm install <package-name>@latest`. After each update, run `npm install` to regenerate the `package-lock.json` file. For any major version updates, consult the package's release notes for potential breaking changes. IMPORTANT: This is a special maintenance task and should not be completed until explicitly requested by the project lead.\n<info added on 2025-11-30T13:54:07.600Z>\n⚠️ SPECIAL TASK: Do not complete until user requests. 8 vulnerabilities detected (2 high, 3 moderate, 3 low). See: https://github.com/E01x001/JCar/security/dependabot\n</info added on 2025-11-30T13:54:07.600Z>",
         "testStrategy": "After all dependencies have been updated, run `npm audit` and confirm that it reports 0 vulnerabilities, or that any remaining vulnerabilities are documented and accepted. Open a Pull Request for the changes; the associated CI/CD workflow (from Task 9) must pass all jobs, including linting, unit tests, and the build process. Finally, after merging, perform a manual smoke test on a debug build to ensure core functionalities like login, viewing the vehicle list, and navigating to a detail page have not been affected by the updates.",
         "status": "pending",
         "dependencies": [
-          9
+          "9"
         ],
         "priority": "medium",
         "subtasks": []
       },
       {
-        "id": 22,
+        "id": "22",
         "title": "Implement Tab View on MyPage Screen for Improved UX",
         "description": "Refactor the MyPage screen to use a tab-based navigation for separating 'Buy Consultations', 'Sell Consultations', and 'My Vehicles'. This will replace the current single scroll view, improving UI clarity and user experience.",
         "details": "First, install and configure the 'react-native-tab-view' library. Refactor the existing MyPageScreen.js to serve as the main container, keeping the top user info card (from Task 20) positioned above the new tab view. Create three new child components: BuyConsultationsTab.js, SellConsultationsTab.js, and MyVehiclesTab.js. Each of these components will be responsible for fetching and displaying its respective data in a FlatList, reusing the standardized <Card> component (from Task 14) for list items. In MyPageScreen.js, implement the TabView component, configure the routes for the three tabs, and pass the new components as the scenes. The tab bar should be styled using the application theme (from Task 11), with the active tab indicator using the 'primary' theme color. For the 'Buy' and 'Sell' tabs, fetch the count of items and pass it to a custom tab bar renderer to display a numeric <Badge> component. Ensure the 'Logout' and 'Account Deletion' buttons remain accessible, positioned below the tab view container.",
         "testStrategy": "1. Perform a visual comparison of the new MyPage screen against the design mockups, ensuring the user info card, tab bar, and tab content are correctly laid out. 2. Test navigation between the three tabs by both tapping on the tab labels and using swipe gestures. 3. Verify that each tab correctly displays its corresponding data list (buy consultations, sell consultations, and user's registered vehicles). 4. Confirm that the badge counters on the 'Buy' and 'Sell' tabs accurately reflect the number of items in their lists, including when the list is empty. 5. Ensure that all list items within the tabs are rendered using the consistent <Card> component and that theme colors are applied correctly, especially for the active tab indicator. 6. Verify that the 'Logout' and 'Account Deletion' buttons are visible and fully functional.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          11,
-          14,
-          17,
-          20
+          "11",
+          "14",
+          "17",
+          "20"
         ],
         "priority": "high",
         "subtasks": [
@@ -1586,8 +1586,9 @@
             "description": "Add the `react-native-tab-view` and its peer dependency `react-native-pager-view` to the project. Configure it for both iOS and Android platforms as per the library's documentation.",
             "dependencies": [],
             "details": "Run `npm install react-native-tab-view react-native-pager-view` or the yarn equivalent. Follow up with `npx pod-install` for iOS. Ensure the native dependencies are correctly linked and the app builds successfully on both platforms after the installation.",
-            "status": "pending",
-            "testStrategy": "After installation, import `TabView` into `MyPageScreen.js`. A successful import without build errors confirms the installation. The app should launch on both iOS and Android simulators without crashing."
+            "status": "done",
+            "testStrategy": "After installation, import `TabView` into `MyPageScreen.js`. A successful import without build errors confirms the installation. The app should launch on both iOS and Android simulators without crashing.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -1597,8 +1598,9 @@
               1
             ],
             "details": "Structure the screen layout using a `View` or `SafeAreaView`. Position the existing user info card component above the `TabView`. Initialize the state for the `TabView` with `index` and `routes`. The routes will be: `[{ key: 'buy', title: 'Buy Consultations' }, { key: 'sell', title: 'Sell Consultations' }, { key: 'vehicles', title: 'My Vehicles' }]`. Place the action buttons below the tab view container.",
-            "status": "pending",
-            "testStrategy": "Visually inspect the `MyPageScreen`. The user info card must be visible at the top, the tab bar should appear below it, and the action buttons must be fixed at the bottom of the screen. The layout should be responsive and not break on different screen sizes."
+            "status": "in-progress",
+            "testStrategy": "Visually inspect the `MyPageScreen`. The user info card must be visible at the top, the tab bar should appear below it, and the action buttons must be fixed at the bottom of the screen. The layout should be responsive and not break on different screen sizes.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -1609,7 +1611,8 @@
             ],
             "details": "Create a new directory `src/screens/MyPage/tabs`. Inside, create the three component files. Each file should export a default React Native component. For now, they can render simple placeholder text (e.g., `<Text>Buy Consultations</Text>`). These will be connected as scenes in `MyPageScreen.js`.",
             "status": "pending",
-            "testStrategy": "In `MyPageScreen.js`, pass the three new components to the `renderScene` prop of `TabView`. Verify that swiping and tapping on the tabs correctly switches between the three placeholder components."
+            "testStrategy": "In `MyPageScreen.js`, pass the three new components to the `renderScene` prop of `TabView`. Verify that swiping and tapping on the tabs correctly switches between the three placeholder components.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -1620,7 +1623,8 @@
             ],
             "details": "In each tab component, use a `useEffect` hook to fetch data from Firestore based on the current user's ID. Use `consultation_requests` for the buy/sell tabs (filtering by requester/seller ID) and the `vehicles` collection for the My Vehicles tab. Render the fetched data in a `FlatList`, using the existing `<Card>` component (from Task 14) for list items. Implement loading and empty state UI.",
             "status": "pending",
-            "testStrategy": "For each tab, mock Firestore data to test three states: 1. Loading state shows an activity indicator. 2. Data is successfully fetched and rendered correctly in `<Card>` components. 3. Empty state shows a user-friendly message when no data is returned."
+            "testStrategy": "For each tab, mock Firestore data to test three states: 1. Loading state shows an activity indicator. 2. Data is successfully fetched and rendered correctly in `<Card>` components. 3. Empty state shows a user-friendly message when no data is returned.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -1631,20 +1635,22 @@
             ],
             "details": "In `MyPageScreen.js`, pass a custom function to the `renderTabBar` prop of `TabView`. Use the theme context (from Task 11) to style the tab bar's background, labels, and indicator, setting the active indicator color to `theme.colors.primary`. Fetch the count for 'buy' and 'sell' items and pass these counts to the custom tab bar to render a `<Badge>` component next to the respective tab titles.",
             "status": "pending",
-            "testStrategy": "1. Visually confirm the tab bar's colors and fonts match the app theme. 2. Verify the active tab indicator uses the primary theme color. 3. Check that the 'Buy' and 'Sell' tabs correctly display a badge with the accurate count of items. 4. Ensure no badge is displayed on the 'My Vehicles' tab."
+            "testStrategy": "1. Visually confirm the tab bar's colors and fonts match the app theme. 2. Verify the active tab indicator uses the primary theme color. 3. Check that the 'Buy' and 'Sell' tabs correctly display a badge with the accurate count of items. 4. Ensure no badge is displayed on the 'My Vehicles' tab.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-12-02T03:05:38.980Z"
       },
       {
-        "id": 23,
+        "id": "23",
         "title": "Fix Permission-Denied Error on Logout from Uncleaned Firestore Listeners",
         "description": "Resolve a 'permission-denied' error that occurs on user logout by refactoring useEffect hooks in multiple screens to ensure Firestore snapshot listeners are always properly unsubscribed.",
         "details": "A 'permission-denied' error is being thrown from Firestore when a user logs out because active snapshot listeners are not being cleaned up. This happens in useEffect hooks that have an early return when the user object becomes null, which prevents the cleanup function from being registered. The fix is to refactor all affected hooks to ensure they always return a cleanup function. \n\nProblematic Pattern:\n```javascript\nuseEffect(() => {\n  if (!user) {\n    return; // This prevents the cleanup function for the previous effect from running\n  }\n  const unsubscribe = onSnapshot(query, ...);\n  return () => {\n    unsubscribe();\n  };\n}, [user]);\n```\n\nRequired Refactor:\n```javascript\nuseEffect(() => {\n  if (!user) {\n    return () => {}; // Always return a function, even if it's empty\n  }\n  const unsubscribe = onSnapshot(query, ...);\n  return () => {\n    unsubscribe();\n  };\n}, [user]);\n```\n\nAffected Files:\n- src/screens/MyPageScreen.js (2 listeners: vehicles, consultations)\n- src/screens/AdminConsultationScreen.js (1 listener)\n- src/screens/AdminPageScreen.js (1 listener)\n- src/screens/AdminScheduleScreen.js (1 listener)\n- src/screens/MyVehiclesScreen.js (1 listener)",
         "testStrategy": "1. Before applying the fix, enable verbose Firestore logging in your development environment. \n2. Log in to the application.\n3. Navigate to each of the affected screens: MyPage, the Admin screens, and MyVehicles. \n4. Log out of the application.\n5. Observe the console logs for a 'permission-denied' error originating from Firestore. This confirms the bug is reproducible.\n6. After applying the code changes to all affected files, repeat steps 2-4.\n7. Verify that no 'permission-denied' errors appear in the console upon logout.\n8. Additionally, confirm that data is still fetched and displayed correctly on these screens when a user is logged in, ensuring the listeners still function as intended.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          2,
-          20
+          "2",
+          "20"
         ],
         "priority": "high",
         "subtasks": [
@@ -1654,8 +1660,9 @@
             "description": "Modify the two useEffect hooks in `src/screens/MyPageScreen.js` that fetch user vehicles and consultations to prevent listener leaks on logout. Both hooks currently have an early return that blocks the unsubscribe function.",
             "dependencies": [],
             "details": "In `src/screens/MyPageScreen.js`, locate the two useEffect hooks that set up onSnapshot listeners. In each hook, change the early `return;` inside the `if (!user)` block to `return () => {};` to ensure the cleanup function from the previous render is always executed.",
-            "status": "pending",
-            "testStrategy": "After refactoring, log in, visit the My Page screen, then log out. Check the developer console to ensure no permission-denied errors related to the vehicles or consultations collections appear."
+            "status": "done",
+            "testStrategy": "After refactoring, log in, visit the My Page screen, then log out. Check the developer console to ensure no permission-denied errors related to the vehicles or consultations collections appear.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -1663,8 +1670,9 @@
             "description": "Apply the required useEffect refactor to the Firestore listener in `src/screens/AdminConsultationScreen.js` to ensure it is properly cleaned up on admin logout.",
             "dependencies": [],
             "details": "In the `AdminConsultationScreen.js` file, identify the useEffect hook managing the Firestore snapshot listener. Change the logic to always return a cleanup function by replacing the early `return;` with `return () => {};` when the user is not present.",
-            "status": "pending",
-            "testStrategy": "Log in as an admin, navigate to the Admin Consultation screen, and then log out. Verify that no Firestore permission-denied errors are thrown in the console."
+            "status": "done",
+            "testStrategy": "Log in as an admin, navigate to the Admin Consultation screen, and then log out. Verify that no Firestore permission-denied errors are thrown in the console.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -1672,8 +1680,9 @@
             "description": "Modify the useEffect hook in `src/screens/AdminPageScreen.js` to fix the uncleaned listener issue that occurs on user logout.",
             "dependencies": [],
             "details": "Locate the useEffect hook in `src/screens/AdminPageScreen.js` that establishes a Firestore listener. Replace the `if (!user) { return; }` pattern with `if (!user) { return () => {}; }` to guarantee the listener's cleanup function is called upon unmount or re-render.",
-            "status": "pending",
-            "testStrategy": "Log in as an admin, navigate to the Admin Page screen, log out, and confirm the absence of permission-denied errors in the logs."
+            "status": "done",
+            "testStrategy": "Log in as an admin, navigate to the Admin Page screen, log out, and confirm the absence of permission-denied errors in the logs.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -1681,8 +1690,9 @@
             "description": "Apply the listener cleanup fix to the useEffect hooks in both `src/screens/AdminScheduleScreen.js` and `src/screens/MyVehiclesScreen.js`.",
             "dependencies": [],
             "details": "For both `AdminScheduleScreen.js` and `MyVehiclesScreen.js`, find the respective useEffect hooks with Firestore listeners. Change their early `return;` statements to `return () => {};` to ensure the unsubscribe function is consistently called on logout.",
-            "status": "pending",
-            "testStrategy": "Log in, navigate to the My Vehicles screen. Then, log in as an admin, navigate to the Admin Schedule screen. After visiting each, log out and check the console to ensure no related errors appear."
+            "status": "done",
+            "testStrategy": "Log in, navigate to the My Vehicles screen. Then, log in as an admin, navigate to the Admin Schedule screen. After visiting each, log out and check the console to ensure no related errors appear.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -1695,21 +1705,22 @@
               4
             ],
             "details": "Follow the full test plan from the parent task. Enable verbose Firestore logging. Log in as a regular user and navigate to MyPage and MyVehicles. Log out. Log in as an admin and navigate to AdminConsultationScreen, AdminPageScreen, and AdminScheduleScreen. Log out again. Meticulously check the console logs after each logout to confirm the complete absence of 'permission-denied' errors.",
-            "status": "pending",
-            "testStrategy": "Execute the parent task's test strategy: 1. Enable verbose Firestore logging. 2. Log in. 3. Navigate to all 5 affected screens. 4. Log out. 5. Scrutinize console logs to confirm the error is completely gone."
+            "status": "done",
+            "testStrategy": "Execute the parent task's test strategy: 1. Enable verbose Firestore logging. 2. Log in. 3. Navigate to all 5 affected screens. 4. Log out. 5. Scrutinize console logs to confirm the error is completely gone.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 24,
+        "id": "24",
         "title": "Fix Security Vulnerabilities in Password Reset Functionality",
         "description": "Address multiple security vulnerabilities in the password reset process, including email enumeration and lack of input validation. This task involves generalizing user feedback messages, implementing rate limiting, and cleaning up redundant code.",
         "details": "In `src/screens/ForgotPasswordScreen.js`, implement client-side email format validation using a regular expression before calling the Firebase service. Upon submission, regardless of whether the email exists in the database, display a generic message using the global toast system (Task 19), such as 'If your email is registered, you will receive a password reset link.' This prevents email enumeration attacks. Additionally, implement simple rate-limiting by disabling the submit button for 30 seconds after a request is made. In `src/services/firebaseService.js`, identify and remove the unused, duplicate `sendPasswordResetEmail` function to reduce code redundancy and potential confusion.",
         "testStrategy": "1. Go to the Forgot Password screen. Enter an invalid email format (e.g., 'test@test') and verify that a validation error is shown and the form cannot be submitted. 2. Enter a valid email that is known to be registered. Submit the form and verify that the generic success toast appears and an email is received. 3. Enter a valid email that is NOT registered. Submit the form and verify that the exact same generic success toast appears, giving no indication that the user does not exist. 4. After submitting a request, confirm the submit button is disabled for a period of time to test rate limiting. 5. Inspect the `src/services/firebaseService.js` file to confirm the duplicate function has been removed.",
         "status": "done",
         "dependencies": [
-          12,
-          19
+          "12",
+          "19"
         ],
         "priority": "high",
         "subtasks": [
@@ -1720,7 +1731,8 @@
             "dependencies": [],
             "details": "In `src/screens/ForgotPasswordScreen.js`, use a state variable for the email input. Implement a validation function using a regular expression (e.g., /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/) that checks the email format. Display an error message if the format is invalid and disable the submit button.",
             "status": "done",
-            "testStrategy": "Enter an invalid email format (e.g., 'test@test') and verify that a validation error is shown and the form cannot be submitted. Enter a valid format and confirm the error disappears."
+            "testStrategy": "Enter an invalid email format (e.g., 'test@test') and verify that a validation error is shown and the form cannot be submitted. Enter a valid format and confirm the error disappears.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -1731,7 +1743,8 @@
             ],
             "details": "In the `handleSubmit` function of `src/screens/ForgotPasswordScreen.js`, after calling the Firebase password reset function, always display a generic toast message. Use the global toast system from Task 19 to show: 'If your email is registered, you will receive a password reset link.' This should appear even if Firebase returns a 'user-not-found' error.",
             "status": "done",
-            "testStrategy": "Submit the form with an email known not to be registered. Verify the generic toast appears. Submit with a registered email and verify the same toast appears and an email is sent."
+            "testStrategy": "Submit the form with an email known not to be registered. Verify the generic toast appears. Submit with a registered email and verify the same toast appears and an email is sent.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -1742,7 +1755,8 @@
             ],
             "details": "In `src/screens/ForgotPasswordScreen.js`, introduce a new state variable (e.g., `isSubmitting`). When the submit button is pressed, set this state to true to disable the button. Use `setTimeout` to reset the state to false after 30 seconds, re-enabling the button.",
             "status": "done",
-            "testStrategy": "Click the submit button. Verify it becomes disabled. Confirm it remains disabled for less than 30 seconds and becomes enabled again after 30 seconds have passed."
+            "testStrategy": "Click the submit button. Verify it becomes disabled. Confirm it remains disabled for less than 30 seconds and becomes enabled again after 30 seconds have passed.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -1751,7 +1765,8 @@
             "dependencies": [],
             "details": "Analyze the file `src/services/firebaseService.js`. Identify the duplicate or unused version of the `sendPasswordResetEmail` function. Use project-wide search to confirm it has no callers. Once confirmed as unused, remove the function definition entirely.",
             "status": "done",
-            "testStrategy": "After removing the function, perform a password reset to ensure the correct, remaining function is being used and the feature still works. Run any available static analysis or linting tools to check for broken references."
+            "testStrategy": "After removing the function, perform a password reset to ensure the correct, remaining function is being used and the feature still works. Run any available static analysis or linting tools to check for broken references.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -1763,22 +1778,120 @@
             ],
             "details": "This task involves testing the complete user flow on the Forgot Password screen. Verify that: 1. Invalid email formats are rejected. 2. Submitting a valid email triggers the generic toast message. 3. The submit button is disabled for 30 seconds after submission. 4. A password reset email is successfully received for a registered account.",
             "status": "done",
-            "testStrategy": "Execute a manual test plan covering all scenarios: invalid email, unregistered email, and a registered email. Check the UI for validation errors, toast messages, and button state changes. Check the email inbox for the reset link."
+            "testStrategy": "Execute a manual test plan covering all scenarios: invalid email, unregistered email, and a registered email. Check the UI for validation errors, toast messages, and button state changes. Check the email inbox for the reset link.",
+            "parentId": "undefined"
           }
         ]
+      },
+      {
+        "id": 25,
+        "title": "Refactor AdminVehiclesListScreen with JCar Design System",
+        "description": "Overhaul the AdminVehiclesListScreen to align with the user-facing visual style by implementing the JCar Design System. This involves replacing hardcoded styles and plain components with themed, standardized components for layout, vehicle items, and actions.",
+        "details": "Refactor the entire screen, starting with the root view. Replace the current root with `<SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background.secondary }}>`. Use a FlatList to render vehicle items. Each item, previously a View, should be wrapped in a `<Card>` component. Inside the card, display vehicle details using `<theme.typography.Body>` and similar components. The vehicle type should be rendered using `<Badge text={item.vehicleType} />`. The delete button must be replaced with `<Button variant=\"danger\" onPress={() => handleDelete(item.id)}>Delete</Button>`. For loading states, use the `<SkeletonLoader>` component, displaying 3-4 placeholder cards. For the empty state, conditionally render `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다.\" />` when the vehicle list is empty. Add a header card with `<Card><theme.typography.H4>차량 관리</theme.typography.H4></Card>`.",
+        "testStrategy": "Verify the screen's background color matches `theme.colors.background.secondary`. Confirm all vehicle items are rendered inside `Card` components. Check that `Badge` components correctly display the vehicle type. Test the delete `Button` functionality, ensuring it triggers the Firebase Function. Manually set the data source to an empty array and confirm the `StateScreen` appears. Simulate a loading state and ensure the `SkeletonLoader` is displayed. Use a code linter or manual inspection to ensure no hardcoded color, font, or spacing values exist.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Refactor AdminVehicleDetailScreen with JCar Design System",
+        "description": "Rebuild the AdminVehicleDetailScreen to use `Card` components for information grouping and apply the JCar Design System for all UI elements, including typography, spacing, and colors. This will eliminate hardcoded styles and improve visual consistency.",
+        "details": "Replace the main container with a themed view, likely a `ScrollView`. Group related information ('차량 정보', '부품 정보', '등록자 정보') into separate `<Card>` components, each with a title using `<theme.typography.H5>`. Use `<Badge>` components to display the vehicle type and status. The current loading text should be replaced with a full-screen `<StateScreen icon=\"directions-car\" message=\"Loading vehicle details...\" />`. Remove the manually implemented back button and ensure the screen relies on the default React Navigation header. All `Text` components must be replaced with the appropriate components from `theme.typography` (e.g., `Body`, `Caption`). All padding and margin values must be derived from `theme.spacing`.",
+        "testStrategy": "Navigate from the AdminVehiclesListScreen to this screen. Verify that information is correctly grouped within three distinct `Card` components. Check that `Badge` components are used for vehicle type and status. Simulate a loading state and confirm the `StateScreen` is shown. Ensure the manual back button is gone and the standard navigation header works. Inspect the component tree to confirm all text uses `theme.typography` and no inline styles for spacing or color are present.",
+        "priority": "high",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Enhance AdminScheduleScreen with Design System Components",
+        "description": "Refactor the AdminScheduleScreen to standardize the display of consultation items and actions using `Card` and `Button` components from the JCar Design System. Integrate the theme for calendar markers and handle empty states.",
+        "details": "Use the `react-native-calendars` library, which is likely already in use, and provide a `theme` prop to style it. The theme object should map calendar-specific keys to `theme.colors`. Example: `markedDates` should use `theme.colors.primary.main` for selected, `theme.colors.feedback.success` for approved, etc. Each consultation item in the list for a selected date should be wrapped in a `<Card>`. The 'Approve' and 'Reject' actions, currently `TouchableOpacity`, must be replaced with `<Button variant=\"success\">Approve</Button>` and `<Button variant=\"danger\">Reject</Button>`. When a date is selected that has no consultations, display the `<StateScreen icon=\"event-busy\" title=\"No consultations scheduled\" />`.",
+        "testStrategy": "Select various dates on the calendar. Verify that marked dates use colors from the application theme. Confirm each consultation item is rendered within a `Card`. Test the 'Approve' and 'Reject' buttons to ensure they are the design system's `Button` components and that their functionality is preserved. Select a date with no scheduled consultations and verify that the correct `StateScreen` is displayed. Check for consistent theme-based spacing and typography.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "Polish AdminPageScreen for Visual Consistency",
+        "description": "Perform minor but important UI cleanup on the AdminPageScreen to align it with other refactored admin screens. This includes removing informal elements like emojis and ensuring standardized components like `Badge` and `StateScreen` are used.",
+        "details": "Locate the Crashlytics test button and update its text to remove the '🧪' emoji, rewording to 'Test Crashlytics' if necessary. In the vehicle list section on this screen, map over the vehicles and render a `<Badge text={item.vehicleType} />` for each item, similar to the main vehicle list. Implement the empty state for this list by conditionally rendering `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다\" />` when the user has no registered vehicles. Review all spacing on the `Card` components to ensure it matches the standard `theme.spacing` values used on other screens.",
+        "testStrategy": "Load the AdminPageScreen. Verify the Crashlytics test button has no emoji. If the logged-in admin has registered vehicles, confirm each one in the list displays a `Badge` with the vehicle type. If the admin has no vehicles, verify the `StateScreen` is shown instead of an empty list. Visually compare the spacing and layout to the `AdminConsultationScreen` and `MyPageScreen` to ensure consistency.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Implement Filter and Search on AdminVehiclesListScreen",
+        "description": "Enhance the AdminVehiclesListScreen by adding controls to filter the list by vehicle status and type, and a search bar to find vehicles by name or manufacturer. The filter state should be preserved during the user's session.",
+        "details": "Above the `FlatList` on `AdminVehiclesListScreen`, add a search bar using a themed `<TextInput icon=\"search\">`. Below it, add a horizontal `ScrollView` containing filter chips for status and type. These can be implemented using `<TouchableOpacity>` styled to look like chips, or a dedicated `<FilterChip>` component if one exists in the design system. Manage the active filters and search query using `useState` hooks. The data fetching logic from Firestore should be updated to incorporate these state values into the query using `.where()` clauses. To persist state, consider passing filter values via React Navigation params or using a simple state management solution like a React Context provider scoped to the admin stack.",
+        "testStrategy": "On the AdminVehiclesListScreen, verify the search input and filter chips are displayed correctly. Test typing in the search bar and confirm the list updates to show only matching vehicles. Click on various filter chips (e.g., 'approved', 'pending') and verify the list filters accordingly. Apply multiple filters at once. Navigate away from the screen and back again to ensure the filter and search state is correctly persisted and reapplied.",
+        "priority": "medium",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "Add Statistics Dashboard Cards to List Screens",
+        "description": "Display high-level summary statistics on the AdminVehiclesListScreen and AdminConsultationScreen using `Card` components to give admins a quick overview of key metrics like total counts and status breakdowns.",
+        "details": "On `AdminVehiclesListScreen`, fetch aggregate data from Firestore. This may require a separate query or could be calculated client-side if the dataset is small. Display the counts (Total, Pending, Approved, Rejected) in a horizontal `ScrollView` of `<Card>` components at the top of the screen. Each card should contain an icon from `@expo/vector-icons/MaterialIcons` (e.g., 'directions-car' for total) and the statistic. Repeat this process for `AdminConsultationScreen`, showing counts for total consultations and breakdowns by status. The data should update in real-time by listening to Firestore collection changes.",
+        "testStrategy": "Load the AdminVehiclesListScreen and AdminConsultationScreen. Verify that the statistics cards are displayed at the top. Confirm the numbers shown are accurate by manually counting items in the database or list. Add, update, or delete a vehicle/consultation and verify that the corresponding statistic card updates in real-time without a manual refresh. Check that icons and colors are applied correctly according to the design system.",
+        "priority": "low",
+        "dependencies": [
+          25,
+          27
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 31,
+        "title": "Implement Pull-to-Refresh on Admin Lists",
+        "description": "Add pull-to-refresh functionality to all `FlatList` and `ScrollView` components on admin screens to provide a standard way for users to manually refresh data from Firestore.",
+        "details": "For each screen containing a `FlatList` (`AdminVehiclesListScreen`, `AdminScheduleScreen`, `AdminPageScreen`), add the `RefreshControl` component from 'react-native'. Pass it to the `refreshControl` prop of the list. The `RefreshControl` should have its `refreshing` prop tied to a state variable (e.g., `isRefreshing`) and its `onRefresh` prop should call the function that re-fetches the data from Firestore. Set the `colors` prop of `RefreshControl` to `[theme.colors.primary.main]` to match the app theme. The data fetching function called by `onRefresh` should set `isRefreshing` to true at the beginning and false upon completion.",
+        "testStrategy": "Navigate to each admin screen with a list. Pull down from the top of the list. Verify that a refresh indicator appears with the theme's primary color. Confirm that the list data is re-fetched from Firestore. Check that the refresh indicator disappears after the data has been loaded. Ensure the functionality works smoothly without causing any UI glitches or crashes.",
+        "priority": "low",
+        "dependencies": [
+          25,
+          27,
+          28
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 32,
+        "title": "Conduct and Document Design System Compliance Audit",
+        "description": "Perform a comprehensive audit of all admin screens to ensure they fully comply with the JCar Design System. Create a checklist to standardize the process and document any findings or necessary exceptions.",
+        "details": "Create a checklist in a markdown file (e.g., `ADMIN_UI_AUDIT.md`). The checklist should include items for every requirement: usage of `SafeAreaView`, `theme.colors`, `theme.typography`, `theme.spacing`, and components like `Card`, `Badge`, `Button`, `StateScreen`. Manually go through each admin screen (`AdminVehiclesListScreen`, `AdminVehicleDetailScreen`, `AdminScheduleScreen`, `AdminPageScreen`) and check off each item. Use a tool like `react-native-debugger` to inspect styles and ensure no hardcoded values remain. Any identified deviations should be fixed. If a deviation is intentional and necessary, it must be documented in the audit file with a clear justification.",
+        "testStrategy": "Execute the audit against all refactored admin screens. The final deliverable is the completed checklist document. The test is successful if all items on the checklist are passed for all screens, or if any failures have a corresponding documented and justified exception. A final code search for hardcoded color hex codes (e.g., `#`), `fontSize`, and `margin`/`padding` with integer values in the admin screen files should return no results.",
+        "priority": "high",
+        "dependencies": [
+          25,
+          26,
+          27,
+          28
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
-      "version": "1.0.0",
-      "lastModified": "2025-11-29T23:56:59.782Z",
-      "taskCount": 20,
-      "completedCount": 20,
-      "tags": [
-        "master"
-      ],
-      "created": "2025-11-30T13:50:11.583Z",
-      "description": "Tasks for master context",
-      "updated": "2025-12-01T15:33:27.591Z"
+      "created": "2025-12-02T03:38:55.599Z",
+      "updated": "2025-12-02T03:38:55.599Z",
+      "description": "Tasks for master context"
     }
   }
 }
