@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
 import firestore, { collection, getDocs } from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import { formatPrice } from '../utils/format';
+import { useTheme } from '../theme/ThemeProvider';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
+import Button from '../components/Button';
+import StateScreen from '../components/StateScreen';
+import SkeletonLoader from '../components/SkeletonLoader';
 
 const AdminVehiclesListScreen = ({ navigation }) => {
+  const theme = useTheme();
   const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [deletingVehicleId, setDeletingVehicleId] = useState(null);
 
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
+        setLoading(true);
         const snapshot = await getDocs(collection(firestore(), 'vehicles'));
         const vehiclesData = snapshot.docs.map(d => ({
           id: d.id,
@@ -20,6 +30,8 @@ const AdminVehiclesListScreen = ({ navigation }) => {
         setVehicles(vehiclesData);
       } catch (error) {
         console.error('차량 목록 불러오기 오류:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -75,54 +87,91 @@ const AdminVehiclesListScreen = ({ navigation }) => {
     const isDeleting = deletingVehicleId === item.id;
 
     return (
-      <View style={styles.vehicleItem}>
-        <TouchableOpacity
-          style={styles.vehicleInfo}
-          onPress={() => navigation.navigate('AdminVehicleDetail', { vehicleId: item.id })}
-        >
-          <Text style={styles.vehicleName}>
-            [{item.vehicleType || '승용차'}] {item.vehicleName}
-          </Text>
-          <Text>제조사: {item.manufacturer}</Text>
-          <Text>가격: {formatPrice(item.price)}</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('AdminVehicleDetail', { vehicleId: item.id })}
+        activeOpacity={0.7}
+      >
+        <Card style={{ marginHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+          <View style={styles.cardContent}>
+            <View style={styles.vehicleInfo}>
+              {/* Vehicle Type Badge */}
+              <View style={styles.header}>
+                <Badge label={item.vehicleType || '승용차'} />
+                <Text style={[styles.vehicleName, {
+                  fontSize: theme.typography.fontSize.h3,
+                  fontWeight: theme.typography.fontWeight.semiBold,
+                  color: theme.colors.text.primary,
+                }]}>{item.vehicleName}</Text>
+              </View>
 
-        <TouchableOpacity
-          style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
-          onPress={() => handleDeleteVehicle(item.id)}
-          disabled={isDeleting}
-        >
-          {isDeleting ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.deleteText}>삭제</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+              {/* Vehicle Details */}
+              <Text style={[styles.detailText, {
+                fontSize: theme.typography.fontSize.bodySmall,
+                color: theme.colors.text.secondary,
+                marginTop: theme.spacing.xs,
+              }]}>제조사: {item.manufacturer}</Text>
+              <Text style={[styles.detailText, {
+                fontSize: theme.typography.fontSize.bodySmall,
+                color: theme.colors.text.secondary,
+              }]}>가격: {formatPrice(item.price)}</Text>
+            </View>
+
+            {/* Delete Button */}
+            <Button
+              variant="danger"
+              title={isDeleting ? '' : '삭제'}
+              onPress={() => handleDeleteVehicle(item.id)}
+              disabled={isDeleting}
+              style={{ minWidth: 60 }}
+            >
+              {isDeleting && <ActivityIndicator size="small" color="#fff" />}
+            </Button>
+          </View>
+        </Card>
+      </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={vehicles}
-        renderItem={renderVehicle}
-        keyExtractor={(item) => item.id}
-      />
-    </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+      {/* Header Card */}
+      <Card style={{ margin: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+        <Text style={[styles.title, {
+          fontSize: theme.typography.fontSize.h2,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.text.primary,
+        }]}>차량 관리</Text>
+      </Card>
+
+      {/* Loading State */}
+      {loading ? (
+        <View style={{ paddingHorizontal: theme.spacing.md }}>
+          <SkeletonLoader count={4} height={120} />
+        </View>
+      ) : (
+        <FlatList
+          data={vehicles}
+          renderItem={renderVehicle}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            <StateScreen
+              icon="directions-car"
+              title="등록된 차량이 없습니다"
+              message="차량을 등록해주세요."
+            />
+          }
+        />
+      )}
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
   },
-  vehicleItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+  title: {},
+  cardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -131,29 +180,13 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
   },
-  vehicleName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  deleteButton: {
-    backgroundColor: '#dc3545',
-    padding: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    minWidth: 60,
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
   },
-  deleteButtonDisabled: {
-    backgroundColor: '#999',
-    opacity: 0.6,
-  },
-  deleteText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
+  vehicleName: {},
+  detailText: {},
 });
 
 AdminVehiclesListScreen.propTypes = {
