@@ -27,7 +27,8 @@ const Card = ({ children, style }) => {
           backgroundColor: theme.colors.background.card,
           borderRadius: theme.borderRadius.large,
           padding: theme.spacing.md,
-          ...theme.shadows.card,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
         },
         style,
       ]}
