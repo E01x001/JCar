@@ -1784,114 +1784,181 @@
         ]
       },
       {
-        "id": 25,
+        "id": "25",
         "title": "Refactor AdminVehiclesListScreen with JCar Design System",
         "description": "Overhaul the AdminVehiclesListScreen to align with the user-facing visual style by implementing the JCar Design System. This involves replacing hardcoded styles and plain components with themed, standardized components for layout, vehicle items, and actions.",
         "details": "Refactor the entire screen, starting with the root view. Replace the current root with `<SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background.secondary }}>`. Use a FlatList to render vehicle items. Each item, previously a View, should be wrapped in a `<Card>` component. Inside the card, display vehicle details using `<theme.typography.Body>` and similar components. The vehicle type should be rendered using `<Badge text={item.vehicleType} />`. The delete button must be replaced with `<Button variant=\"danger\" onPress={() => handleDelete(item.id)}>Delete</Button>`. For loading states, use the `<SkeletonLoader>` component, displaying 3-4 placeholder cards. For the empty state, conditionally render `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다.\" />` when the vehicle list is empty. Add a header card with `<Card><theme.typography.H4>차량 관리</theme.typography.H4></Card>`.",
         "testStrategy": "Verify the screen's background color matches `theme.colors.background.secondary`. Confirm all vehicle items are rendered inside `Card` components. Check that `Badge` components correctly display the vehicle type. Test the delete `Button` functionality, ensuring it triggers the Firebase Function. Manually set the data source to an empty array and confirm the `StateScreen` appears. Simulate a loading state and ensure the `SkeletonLoader` is displayed. Use a code linter or manual inspection to ensure no hardcoded color, font, or spacing values exist.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refactor AdminVehiclesListScreen Root Layout and Add Header",
+            "description": "Replace the current root `<View>` with a themed `<SafeAreaView>` and add a `<Card>` component to serve as the screen header containing the title '차량 관리'.",
+            "dependencies": [],
+            "details": "Use the `useTheme` hook to access theme properties. The root component should be a `SafeAreaView` with its style set to `{ flex: 1, backgroundColor: theme.colors.background.secondary }`. Add a `<Card>` component at the top of the screen containing `<theme.typography.H4>차량 관리</theme.typography.H4>`.",
+            "status": "done",
+            "testStrategy": "Verify the screen background color matches `theme.colors.background.secondary` and that the '차량 관리' title is displayed within a Card component at the top.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Replace ScrollView with a Performant FlatList",
+            "description": "Upgrade the vehicle list rendering from the current implementation (likely a `ScrollView` with a `.map()` function) to a more performant and standard `FlatList` component.",
+            "dependencies": [
+              1
+            ],
+            "details": "Import `FlatList` from 'react-native'. Configure its `data` prop with the fetched vehicles array, `keyExtractor` to use `item.id`, and `renderItem` which will render the new vehicle item component. Add appropriate spacing between items using `ItemSeparatorComponent` or content container styles.",
+            "status": "done",
+            "testStrategy": "Confirm that the list of vehicles is rendered using a `FlatList` component. Check for any rendering or scrolling performance issues with a large list of items.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Create and Integrate the JCar VehicleListItem Component",
+            "description": "Create a new component for rendering a single vehicle item using the JCar Design System, including `Card`, `Badge`, and themed typography, and integrate it into the `FlatList`.",
+            "dependencies": [
+              2
+            ],
+            "details": "The new component will receive a vehicle `item` as a prop. The root element will be a `<Card>`. Inside the card, display vehicle details using `<theme.typography.Body>`. The vehicle type must be rendered using `<Badge text={item.vehicleType} />`. This component will be returned by the `FlatList`'s `renderItem` function.",
+            "status": "done",
+            "testStrategy": "Visually inspect each list item to ensure it's wrapped in a `Card`. Verify that vehicle details use the correct typography and that the `Badge` component correctly displays the vehicle type.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Loading and Empty States using Design System Components",
+            "description": "Replace the simple text-based loading and empty state indicators with the standardized `SkeletonLoader` and `StateScreen` components for a consistent user experience.",
+            "dependencies": [
+              1
+            ],
+            "details": "When the data is loading, render the `<SkeletonLoader>` component, configured to display 3-4 placeholders that mimic the `Card` layout. If the data has loaded and the vehicle list is empty, render `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다.\" />`.",
+            "status": "done",
+            "testStrategy": "Simulate a loading state and verify the `SkeletonLoader` is displayed. Simulate an empty data response and confirm the `StateScreen` is shown with the correct icon and title.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Refactor Delete Action with Design System Button",
+            "description": "Replace the old `TouchableOpacity` delete button within each vehicle item with the JCar Design System `<Button>` component and ensure its functionality.",
+            "dependencies": [
+              3
+            ],
+            "details": "Inside the new `VehicleListItem` component, add a `<Button variant=\"danger\" onPress={() => handleDelete(item.id)}>Delete</Button>`. Ensure the `handleDelete` function is correctly passed as a prop and is triggered when the button is pressed.",
+            "status": "done",
+            "testStrategy": "Press the 'Delete' button on a vehicle item. Confirm that the `handleDelete` function is called with the correct vehicle ID and that a confirmation modal or action is triggered as expected.",
+            "parentId": "undefined"
+          }
+        ]
       },
       {
-        "id": 26,
+        "id": "26",
         "title": "Refactor AdminVehicleDetailScreen with JCar Design System",
         "description": "Rebuild the AdminVehicleDetailScreen to use `Card` components for information grouping and apply the JCar Design System for all UI elements, including typography, spacing, and colors. This will eliminate hardcoded styles and improve visual consistency.",
         "details": "Replace the main container with a themed view, likely a `ScrollView`. Group related information ('차량 정보', '부품 정보', '등록자 정보') into separate `<Card>` components, each with a title using `<theme.typography.H5>`. Use `<Badge>` components to display the vehicle type and status. The current loading text should be replaced with a full-screen `<StateScreen icon=\"directions-car\" message=\"Loading vehicle details...\" />`. Remove the manually implemented back button and ensure the screen relies on the default React Navigation header. All `Text` components must be replaced with the appropriate components from `theme.typography` (e.g., `Body`, `Caption`). All padding and margin values must be derived from `theme.spacing`.",
         "testStrategy": "Navigate from the AdminVehiclesListScreen to this screen. Verify that information is correctly grouped within three distinct `Card` components. Check that `Badge` components are used for vehicle type and status. Simulate a loading state and confirm the `StateScreen` is shown. Ensure the manual back button is gone and the standard navigation header works. Inspect the component tree to confirm all text uses `theme.typography` and no inline styles for spacing or color are present.",
         "priority": "high",
         "dependencies": [
-          25
+          "25"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-03T16:55:05.545Z"
       },
       {
-        "id": 27,
+        "id": "27",
         "title": "Enhance AdminScheduleScreen with Design System Components",
         "description": "Refactor the AdminScheduleScreen to standardize the display of consultation items and actions using `Card` and `Button` components from the JCar Design System. Integrate the theme for calendar markers and handle empty states.",
         "details": "Use the `react-native-calendars` library, which is likely already in use, and provide a `theme` prop to style it. The theme object should map calendar-specific keys to `theme.colors`. Example: `markedDates` should use `theme.colors.primary.main` for selected, `theme.colors.feedback.success` for approved, etc. Each consultation item in the list for a selected date should be wrapped in a `<Card>`. The 'Approve' and 'Reject' actions, currently `TouchableOpacity`, must be replaced with `<Button variant=\"success\">Approve</Button>` and `<Button variant=\"danger\">Reject</Button>`. When a date is selected that has no consultations, display the `<StateScreen icon=\"event-busy\" title=\"No consultations scheduled\" />`.",
         "testStrategy": "Select various dates on the calendar. Verify that marked dates use colors from the application theme. Confirm each consultation item is rendered within a `Card`. Test the 'Approve' and 'Reject' buttons to ensure they are the design system's `Button` components and that their functionality is preserved. Select a date with no scheduled consultations and verify that the correct `StateScreen` is displayed. Check for consistent theme-based spacing and typography.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-02T09:08:07.973Z"
       },
       {
-        "id": 28,
+        "id": "28",
         "title": "Polish AdminPageScreen for Visual Consistency",
         "description": "Perform minor but important UI cleanup on the AdminPageScreen to align it with other refactored admin screens. This includes removing informal elements like emojis and ensuring standardized components like `Badge` and `StateScreen` are used.",
         "details": "Locate the Crashlytics test button and update its text to remove the '🧪' emoji, rewording to 'Test Crashlytics' if necessary. In the vehicle list section on this screen, map over the vehicles and render a `<Badge text={item.vehicleType} />` for each item, similar to the main vehicle list. Implement the empty state for this list by conditionally rendering `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다\" />` when the user has no registered vehicles. Review all spacing on the `Card` components to ensure it matches the standard `theme.spacing` values used on other screens.",
         "testStrategy": "Load the AdminPageScreen. Verify the Crashlytics test button has no emoji. If the logged-in admin has registered vehicles, confirm each one in the list displays a `Badge` with the vehicle type. If the admin has no vehicles, verify the `StateScreen` is shown instead of an empty list. Visually compare the spacing and layout to the `AdminConsultationScreen` and `MyPageScreen` to ensure consistency.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-03T16:56:31.117Z"
       },
       {
-        "id": 29,
+        "id": "29",
         "title": "Implement Filter and Search on AdminVehiclesListScreen",
         "description": "Enhance the AdminVehiclesListScreen by adding controls to filter the list by vehicle status and type, and a search bar to find vehicles by name or manufacturer. The filter state should be preserved during the user's session.",
         "details": "Above the `FlatList` on `AdminVehiclesListScreen`, add a search bar using a themed `<TextInput icon=\"search\">`. Below it, add a horizontal `ScrollView` containing filter chips for status and type. These can be implemented using `<TouchableOpacity>` styled to look like chips, or a dedicated `<FilterChip>` component if one exists in the design system. Manage the active filters and search query using `useState` hooks. The data fetching logic from Firestore should be updated to incorporate these state values into the query using `.where()` clauses. To persist state, consider passing filter values via React Navigation params or using a simple state management solution like a React Context provider scoped to the admin stack.",
         "testStrategy": "On the AdminVehiclesListScreen, verify the search input and filter chips are displayed correctly. Test typing in the search bar and confirm the list updates to show only matching vehicles. Click on various filter chips (e.g., 'approved', 'pending') and verify the list filters accordingly. Apply multiple filters at once. Navigate away from the screen and back again to ensure the filter and search state is correctly persisted and reapplied.",
         "priority": "medium",
         "dependencies": [
-          25
+          "25"
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 30,
+        "id": "30",
         "title": "Add Statistics Dashboard Cards to List Screens",
         "description": "Display high-level summary statistics on the AdminVehiclesListScreen and AdminConsultationScreen using `Card` components to give admins a quick overview of key metrics like total counts and status breakdowns.",
         "details": "On `AdminVehiclesListScreen`, fetch aggregate data from Firestore. This may require a separate query or could be calculated client-side if the dataset is small. Display the counts (Total, Pending, Approved, Rejected) in a horizontal `ScrollView` of `<Card>` components at the top of the screen. Each card should contain an icon from `@expo/vector-icons/MaterialIcons` (e.g., 'directions-car' for total) and the statistic. Repeat this process for `AdminConsultationScreen`, showing counts for total consultations and breakdowns by status. The data should update in real-time by listening to Firestore collection changes.",
         "testStrategy": "Load the AdminVehiclesListScreen and AdminConsultationScreen. Verify that the statistics cards are displayed at the top. Confirm the numbers shown are accurate by manually counting items in the database or list. Add, update, or delete a vehicle/consultation and verify that the corresponding statistic card updates in real-time without a manual refresh. Check that icons and colors are applied correctly according to the design system.",
         "priority": "low",
         "dependencies": [
-          25,
-          27
+          "25",
+          "27"
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 31,
+        "id": "31",
         "title": "Implement Pull-to-Refresh on Admin Lists",
         "description": "Add pull-to-refresh functionality to all `FlatList` and `ScrollView` components on admin screens to provide a standard way for users to manually refresh data from Firestore.",
         "details": "For each screen containing a `FlatList` (`AdminVehiclesListScreen`, `AdminScheduleScreen`, `AdminPageScreen`), add the `RefreshControl` component from 'react-native'. Pass it to the `refreshControl` prop of the list. The `RefreshControl` should have its `refreshing` prop tied to a state variable (e.g., `isRefreshing`) and its `onRefresh` prop should call the function that re-fetches the data from Firestore. Set the `colors` prop of `RefreshControl` to `[theme.colors.primary.main]` to match the app theme. The data fetching function called by `onRefresh` should set `isRefreshing` to true at the beginning and false upon completion.",
         "testStrategy": "Navigate to each admin screen with a list. Pull down from the top of the list. Verify that a refresh indicator appears with the theme's primary color. Confirm that the list data is re-fetched from Firestore. Check that the refresh indicator disappears after the data has been loaded. Ensure the functionality works smoothly without causing any UI glitches or crashes.",
         "priority": "low",
         "dependencies": [
-          25,
-          27,
-          28
+          "25",
+          "27",
+          "28"
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 32,
+        "id": "32",
         "title": "Conduct and Document Design System Compliance Audit",
         "description": "Perform a comprehensive audit of all admin screens to ensure they fully comply with the JCar Design System. Create a checklist to standardize the process and document any findings or necessary exceptions.",
         "details": "Create a checklist in a markdown file (e.g., `ADMIN_UI_AUDIT.md`). The checklist should include items for every requirement: usage of `SafeAreaView`, `theme.colors`, `theme.typography`, `theme.spacing`, and components like `Card`, `Badge`, `Button`, `StateScreen`. Manually go through each admin screen (`AdminVehiclesListScreen`, `AdminVehicleDetailScreen`, `AdminScheduleScreen`, `AdminPageScreen`) and check off each item. Use a tool like `react-native-debugger` to inspect styles and ensure no hardcoded values remain. Any identified deviations should be fixed. If a deviation is intentional and necessary, it must be documented in the audit file with a clear justification.",
         "testStrategy": "Execute the audit against all refactored admin screens. The final deliverable is the completed checklist document. The test is successful if all items on the checklist are passed for all screens, or if any failures have a corresponding documented and justified exception. A final code search for hardcoded color hex codes (e.g., `#`), `fontSize`, and `margin`/`padding` with integer values in the admin screen files should return no results.",
         "priority": "high",
         "dependencies": [
-          25,
-          26,
-          27,
-          28
+          "25",
+          "26",
+          "27",
+          "28"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-03T16:57:54.695Z"
       }
     ],
     "metadata": {
-      "created": "2025-12-02T03:38:55.599Z",
-      "updated": "2025-12-02T03:38:55.599Z",
-      "description": "Tasks for master context"
+      "version": "1.0.0",
+      "lastModified": "2025-12-03T16:57:54.696Z",
+      "taskCount": 32,
+      "completedCount": 28,
+      "tags": [
+        "master"
+      ]
     }
   }
 }

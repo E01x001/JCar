@@ -134,15 +134,6 @@ const AdminVehiclesListScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      {/* Header Card */}
-      <Card style={{ margin: theme.spacing.md, marginBottom: theme.spacing.sm }}>
-        <Text style={[styles.title, {
-          fontSize: theme.typography.fontSize.h2,
-          fontWeight: theme.typography.fontWeight.bold,
-          color: theme.colors.text.primary,
-        }]}>차량 관리</Text>
-      </Card>
-
       {/* Loading State */}
       {loading ? (
         <View style={{ paddingHorizontal: theme.spacing.md }}>

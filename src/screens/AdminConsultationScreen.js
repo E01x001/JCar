@@ -7,9 +7,9 @@ import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
-import PendingConsultationsTab from './AdminConsultation/tabs/PendingConsultationsTab';
-import ApprovedConsultationsTab from './AdminConsultation/tabs/ApprovedConsultationsTab';
-import RejectedConsultationsTab from './AdminConsultation/tabs/RejectedConsultationsTab';
+import BuyConsultationsTab from './AdminConsultation/tabs/BuyConsultationsTab';
+import SellConsultationsTab from './AdminConsultation/tabs/SellConsultationsTab';
+import MeetingConsultationsTab from './AdminConsultation/tabs/MeetingConsultationsTab';
 
 const AdminConsultationScreen = () => {
   const { user } = useContext(AuthContext);
@@ -18,9 +18,9 @@ const AdminConsultationScreen = () => {
   const [consultations, setConsultations] = useState([]);
   const [index, setIndex] = useState(0);
   const [routes] = useState([
-    { key: 'pending', title: '대기중' },
-    { key: 'approved', title: '승인됨' },
-    { key: 'rejected', title: '거절됨' },
+    { key: 'buy', title: '구매상담' },
+    { key: 'sell', title: '판매상담' },
+    { key: 'meeting', title: '미팅' },
   ]);
 
   useEffect(() => {
@@ -41,24 +41,24 @@ const AdminConsultationScreen = () => {
 
   const renderScene = ({ route }) => {
     switch (route.key) {
-      case 'pending':
+      case 'buy':
         return (
-          <PendingConsultationsTab
-            consultations={consultations.filter(c => c.status === 'pending')}
+          <BuyConsultationsTab
+            consultations={consultations}
             onNavigateToVehicle={handleNavigateToVehicleDetail}
           />
         );
-      case 'approved':
+      case 'sell':
         return (
-          <ApprovedConsultationsTab
-            consultations={consultations.filter(c => c.status === 'approved')}
+          <SellConsultationsTab
+            consultations={consultations}
             onNavigateToVehicle={handleNavigateToVehicleDetail}
           />
         );
-      case 'rejected':
+      case 'meeting':
         return (
-          <RejectedConsultationsTab
-            consultations={consultations.filter(c => c.status === 'rejected')}
+          <MeetingConsultationsTab
+            consultations={consultations}
             onNavigateToVehicle={handleNavigateToVehicleDetail}
           />
         );
@@ -83,25 +83,13 @@ const AdminConsultationScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      <View style={styles.container}>
-        {/* Header Card */}
-        <Card style={{ margin: theme.spacing.md, marginBottom: theme.spacing.sm }}>
-          <Text style={[styles.title, {
-            fontSize: theme.typography.fontSize.h2,
-            fontWeight: theme.typography.fontWeight.bold,
-            color: theme.colors.text.primary,
-          }]}>상담 관리</Text>
-        </Card>
-
-        {/* TabView */}
-        <TabView
-          navigationState={{ index, routes }}
-          renderScene={renderScene}
-          renderTabBar={renderTabBar}
-          onIndexChange={setIndex}
-          initialLayout={{ width: Dimensions.get('window').width }}
-        />
-      </View>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        renderTabBar={renderTabBar}
+        onIndexChange={setIndex}
+        initialLayout={{ width: Dimensions.get('window').width }}
+      />
     </SafeAreaView>
   );
 };

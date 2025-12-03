@@ -9,6 +9,8 @@ import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import Badge from '../components/Badge';
+import StateScreen from '../components/StateScreen';
 
 const AdminPageScreen = () => {
   const { user } = useContext(AuthContext);
@@ -97,12 +99,6 @@ const AdminPageScreen = () => {
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md }}>
         {/* User Info Card */}
         <Card style={{ marginBottom: theme.spacing.lg }}>
-          <Text style={[styles.title, {
-            fontSize: theme.typography.fontSize.h2,
-            fontWeight: theme.typography.fontWeight.bold,
-            color: theme.colors.text.primary,
-            marginBottom: theme.spacing.sm,
-          }]}>관리자 페이지</Text>
           <Text style={[styles.userInfo, {
             fontSize: theme.typography.fontSize.body,
             color: theme.colors.text.secondary,
@@ -117,26 +113,41 @@ const AdminPageScreen = () => {
           marginBottom: theme.spacing.md,
         }]}>등록한 차량</Text>
 
-        {vehicles.map((item) => (
-          <Card key={item.id} style={{ marginBottom: theme.spacing.sm }}>
-            <Text style={[styles.vehicleName, {
-              fontSize: theme.typography.fontSize.body,
-              fontWeight: theme.typography.fontWeight.semiBold,
-              color: theme.colors.text.primary,
-              marginBottom: theme.spacing.xs,
-            }]}>모델: {item.model}</Text>
-            <Text style={{
-              fontSize: theme.typography.fontSize.body,
-              color: theme.colors.text.secondary,
-              marginBottom: theme.spacing.sm,
-            }}>가격: {item.price}</Text>
-            <Button
-              variant="danger"
-              title="삭제"
-              onPress={() => handleDeleteVehicle(item.id)}
-            />
-          </Card>
-        ))}
+        {vehicles.length === 0 ? (
+          <StateScreen
+            icon="directions-car"
+            title="등록된 차량이 없습니다"
+            message="아직 등록한 차량이 없습니다."
+          />
+        ) : (
+          vehicles.map((item) => (
+            <Card key={item.id} style={{ marginBottom: theme.spacing.sm }}>
+              {item.vehicleType && (
+                <Badge
+                  status="pending"
+                  label={item.vehicleType}
+                  style={{ marginBottom: theme.spacing.xs }}
+                />
+              )}
+              <Text style={[styles.vehicleName, {
+                fontSize: theme.typography.fontSize.body,
+                fontWeight: theme.typography.fontWeight.semiBold,
+                color: theme.colors.text.primary,
+                marginBottom: theme.spacing.xs,
+              }]}>모델: {item.model}</Text>
+              <Text style={{
+                fontSize: theme.typography.fontSize.body,
+                color: theme.colors.text.secondary,
+                marginBottom: theme.spacing.sm,
+              }}>가격: {item.price}</Text>
+              <Button
+                variant="danger"
+                title="삭제"
+                onPress={() => handleDeleteVehicle(item.id)}
+              />
+            </Card>
+          ))
+        )}
 
         {/* Action Buttons */}
         <Button
@@ -157,7 +168,7 @@ const AdminPageScreen = () => {
         {__DEV__ && (
           <Button
             variant="primary"
-            title="🧪 Crashlytics 테스트"
+            title="Test Crashlytics"
             onPress={handleTestCrash}
             style={{
               marginTop: theme.spacing.lg,

@@ -137,12 +137,6 @@ const MyPageScreen = ({ navigation }) => {
       <View style={styles.container}>
         {/* User Info Card */}
         <Card style={{ margin: theme.spacing.md, marginBottom: theme.spacing.sm }}>
-          <Text style={[styles.title, {
-            fontSize: theme.typography.fontSize.h2,
-            fontWeight: theme.typography.fontWeight.bold,
-            color: theme.colors.text.primary,
-            marginBottom: theme.spacing.sm,
-          }]}>마이페이지</Text>
           <Text style={[styles.userInfo, {
             fontSize: theme.typography.fontSize.body,
             color: theme.colors.text.secondary,

@@ -1,8 +1,13 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import firestore, { collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeProvider';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import StateScreen from '../components/StateScreen';
 
 // Calendar 한글 설정
 LocaleConfig.locales.ko = {
@@ -16,6 +21,7 @@ LocaleConfig.defaultLocale = 'ko';
 
 const AdminScheduleScreen = () => {
   const { user } = useContext(AuthContext);
+  const theme = useTheme();
   const [markedDates, setMarkedDates] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [consultations, setConsultations] = useState([]);
@@ -32,9 +38,9 @@ const AdminScheduleScreen = () => {
         const data = d.data();
         const date = data.preferredDate;
         const color =
-          data.status === 'approved' ? '#28a745'
-            : data.status === 'rejected' ? '#dc3545'
-              : '#6c757d';
+          data.status === 'approved' ? theme.colors.success.main
+            : data.status === 'rejected' ? theme.colors.danger.main
+              : theme.colors.text.tertiary;
 
         all.push({ id: d.id, ...data });
 
@@ -84,71 +90,114 @@ const AdminScheduleScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>상담 일정 캘린더</Text>
-
-      <Calendar
-        markedDates={markedDates}
-        markingType="multi-dot"
-        onDayPress={(day) => setSelectedDate(day.dateString)}
-        monthFormat={'yyyy년 MM월'}
-        firstDay={0}
-        theme={{
-          textDayFontWeight: '600',
-          textMonthFontWeight: 'bold',
-          textDayHeaderFontWeight: '600',
-          textDayHeaderFontSize: 14,
-        }}
-        dayNames={['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']}
-        dayNamesShort={['일', '월', '화', '수', '목', '금', '토']}
-      />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+      <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.md }}>
+        <Calendar
+          markedDates={markedDates}
+          markingType="multi-dot"
+          onDayPress={(day) => setSelectedDate(day.dateString)}
+          monthFormat={'yyyy년 MM월'}
+          firstDay={0}
+          theme={{
+            backgroundColor: theme.colors.background.card,
+            calendarBackground: theme.colors.background.card,
+            textSectionTitleColor: theme.colors.text.primary,
+            selectedDayBackgroundColor: theme.colors.primary.main,
+            selectedDayTextColor: '#ffffff',
+            todayTextColor: theme.colors.primary.main,
+            dayTextColor: theme.colors.text.primary,
+            textDisabledColor: theme.colors.text.tertiary,
+            dotColor: theme.colors.primary.main,
+            selectedDotColor: '#ffffff',
+            arrowColor: theme.colors.primary.main,
+            monthTextColor: theme.colors.text.primary,
+            textDayFontWeight: '600',
+            textMonthFontWeight: 'bold',
+            textDayHeaderFontWeight: '600',
+            textDayHeaderFontSize: 14,
+            textMonthFontSize: theme.typography.fontSize.h3,
+            textDayFontSize: theme.typography.fontSize.body,
+          }}
+          dayNames={['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']}
+          dayNamesShort={['일', '월', '화', '수', '목', '금', '토']}
+        />
+      </View>
 
       {selectedDate && (
         <>
-          <Text style={styles.listTitle}>{selectedDate} 상담 내역</Text>
-          <FlatList
-            data={filteredConsultations}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <Text style={styles.itemText}>차량명: {item.vehicleName}</Text>
-                <Text style={styles.itemText}>시간: {item.preferredTime}</Text>
-                <Text style={styles.itemText}>상태: {translateStatus(item.status)}</Text>
+          <Text style={[styles.listTitle, {
+            fontSize: theme.typography.fontSize.h3,
+            fontWeight: theme.typography.fontWeight.semiBold,
+            color: theme.colors.text.primary,
+            marginTop: theme.spacing.md,
+            marginHorizontal: theme.spacing.md,
+            marginBottom: theme.spacing.xs,
+          }]}>{selectedDate} 상담 내역</Text>
 
-                <View style={styles.buttonGroup}>
-                  <TouchableOpacity onPress={() => updateStatus(item.id, 'approved')} style={styles.approveBtn}>
-                    <Text style={styles.btnText}>승인</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => confirmReject(item.id)} style={styles.rejectBtn}>
-                    <Text style={styles.btnText}>거절</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          />
+          {filteredConsultations.length === 0 ? (
+            <StateScreen
+              icon="event-busy"
+              title="예정된 상담이 없습니다"
+              message={`${selectedDate}에 예정된 상담이 없습니다.`}
+            />
+          ) : (
+            <FlatList
+              data={filteredConsultations}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{
+                paddingHorizontal: theme.spacing.md,
+                paddingBottom: theme.spacing.md,
+              }}
+              renderItem={({ item }) => (
+                <Card style={{ marginBottom: theme.spacing.sm }}>
+                  <Text style={[styles.itemText, {
+                    fontSize: theme.typography.fontSize.body,
+                    color: theme.colors.text.primary,
+                    marginBottom: theme.spacing.xs,
+                  }]}>차량명: {item.vehicleName}</Text>
+                  <Text style={[styles.itemText, {
+                    fontSize: theme.typography.fontSize.bodySmall,
+                    color: theme.colors.text.secondary,
+                  }]}>시간: {item.preferredTime}</Text>
+                  <Text style={[styles.itemText, {
+                    fontSize: theme.typography.fontSize.bodySmall,
+                    color: theme.colors.text.secondary,
+                  }]}>상태: {translateStatus(item.status)}</Text>
+
+                  <View style={[styles.buttonGroup, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>
+                    <Button
+                      variant="primary"
+                      title="승인"
+                      onPress={() => updateStatus(item.id, 'approved')}
+                      style={{ flex: 1 }}
+                    />
+                    <Button
+                      variant="danger"
+                      title="거절"
+                      onPress={() => confirmReject(item.id)}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                </Card>
+              )}
+            />
+          )}
         </>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  listTitle: { fontSize: 16, fontWeight: '600', marginTop: 15, marginBottom: 5 },
-  card: {
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginBottom: 10,
+  container: {
+    flex: 1,
   },
-  itemText: { fontSize: 14, color: '#333', marginBottom: 3 },
-  buttonGroup: { flexDirection: 'row', gap: 10, marginTop: 10 },
-  approveBtn: { backgroundColor: '#28a745', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4 },
-  rejectBtn: { backgroundColor: '#dc3545', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4 },
-  btnText: { color: '#fff', fontWeight: 'bold' },
+  title: {},
+  listTitle: {},
+  itemText: {},
+  buttonGroup: {
+    flexDirection: 'row',
+  },
 });
 
 export default AdminScheduleScreen;

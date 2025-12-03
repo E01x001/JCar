@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatPrice, formatPhone } from '../utils/format';
+import { useTheme } from '../theme/ThemeProvider';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
+import StateScreen from '../components/StateScreen';
 
 const { width } = Dimensions.get('window');
 
 const AdminVehicleDetailScreen = ({ route, navigation }) => {
   const { vehicleId } = route.params;
+  const theme = useTheme();
   const [vehicle, setVehicle] = useState(null);
 
   useEffect(() => {
@@ -28,90 +33,216 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
 
   if (!vehicle) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>차량 정보를 불러오는 중...</Text>
-      </View>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+        <StateScreen
+          icon="directions-car"
+          title="차량 정보를 불러오는 중..."
+          message="잠시만 기다려주세요."
+        />
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <ScrollView 
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+      <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 50 }}
+        contentContainerStyle={{
+          paddingHorizontal: theme.spacing.md,
+          paddingBottom: theme.spacing.xl,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <Image source={{ uri: vehicle.imageUrl }} style={styles.image} />
-        <Text style={styles.title}>[{vehicle.vehicleType || '승용차'}] {vehicle.vehicleName}</Text>
-        <Text style={styles.subTitle}>{vehicle.subModel}</Text>
+        {/* Vehicle Image */}
+        <Image
+          source={{ uri: vehicle.imageUrl }}
+          style={[styles.image, {
+            borderRadius: theme.borderRadius.lg,
+            marginBottom: theme.spacing.md,
+          }]}
+        />
 
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>제조사</Text><Text>{vehicle.manufacturer}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연식</Text><Text>{vehicle.year}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연료 종류</Text><Text>{vehicle.fuelType}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>변속기</Text><Text>{vehicle.transmission}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>구동 방식</Text><Text>{vehicle.driveType}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>배기량</Text><Text>{vehicle.cc} cc</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연비</Text><Text>{vehicle.fuelEco} km/L</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>연료탱크 용량</Text><Text>{vehicle.fuelTank} L</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>가격</Text><Text>{formatPrice(vehicle.price)}</Text></View>
+        {/* Title and Badges */}
+        <View style={{ marginBottom: theme.spacing.md }}>
+          <View style={[styles.badgeContainer, { marginBottom: theme.spacing.xs }]}>
+            <Badge
+              status={vehicle.status || 'pending'}
+              label={vehicle.vehicleType || '승용차'}
+            />
+            <Badge
+              status={vehicle.status || 'pending'}
+              label={vehicle.status === 'approved' ? '승인됨' : vehicle.status === 'rejected' ? '거절됨' : '대기중'}
+            />
+          </View>
+          <Text style={[styles.title, {
+            fontSize: theme.typography.fontSize.h1,
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.xs,
+          }]}>{vehicle.vehicleName}</Text>
+          <Text style={[styles.subTitle, {
+            fontSize: theme.typography.fontSize.h3,
+            fontWeight: theme.typography.fontWeight.semiBold,
+            color: theme.colors.text.secondary,
+          }]}>{vehicle.subModel}</Text>
+        </View>
 
-        <Text style={styles.sectionTitle}>부품 정보</Text>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>앞 타이어</Text><Text>{vehicle.frontTire}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>뒤 타이어</Text><Text>{vehicle.rearTire}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>엔진 오일 용량</Text><Text>{vehicle.engineOilLiter} L</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>와이퍼 정보</Text><Text>{vehicle.wiperInfo}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>배터리 모델</Text><Text>{vehicle.battery}</Text></View>
+        {/* 차량 정보 Card */}
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text style={[styles.sectionTitle, {
+            fontSize: theme.typography.fontSize.h3,
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.sm,
+          }]}>차량 정보</Text>
 
-        <Text style={styles.sectionTitle}>등록자 정보</Text>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>이름</Text><Text>{vehicle.sellerName}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>전화번호</Text><Text>{formatPhone(vehicle.sellerPhone)}</Text></View>
-        <View style={styles.infoCard}><Text style={styles.infoTitle}>이메일</Text><Text>{vehicle.sellerEmail}</Text></View>
+          {[
+            { label: '제조사', value: vehicle.manufacturer },
+            { label: '연식', value: vehicle.year },
+            { label: '연료 종류', value: vehicle.fuelType },
+            { label: '변속기', value: vehicle.transmission },
+            { label: '구동 방식', value: vehicle.driveType },
+            { label: '배기량', value: `${vehicle.cc} cc` },
+            { label: '연비', value: `${vehicle.fuelEco} km/L` },
+            { label: '연료탱크 용량', value: `${vehicle.fuelTank} L` },
+            { label: '가격', value: formatPrice(vehicle.price) },
+          ].map((item, index) => (
+            <View
+              key={index}
+              style={[styles.infoRow, {
+                marginBottom: index < 8 ? theme.spacing.xs : 0,
+                paddingBottom: index < 8 ? theme.spacing.xs : 0,
+                borderBottomWidth: index < 8 ? 1 : 0,
+                borderBottomColor: theme.colors.border.light,
+              }]}
+            >
+              <Text style={[styles.infoLabel, {
+                fontSize: theme.typography.fontSize.bodySmall,
+                fontWeight: theme.typography.fontWeight.semiBold,
+                color: theme.colors.text.secondary,
+              }]}>{item.label}</Text>
+              <Text style={[styles.infoValue, {
+                fontSize: theme.typography.fontSize.body,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.primary,
+              }]}>{item.value}</Text>
+            </View>
+          ))}
+        </Card>
+
+        {/* 부품 정보 Card */}
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <Text style={[styles.sectionTitle, {
+            fontSize: theme.typography.fontSize.h3,
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.sm,
+          }]}>부품 정보</Text>
+
+          {[
+            { label: '앞 타이어', value: vehicle.frontTire },
+            { label: '뒤 타이어', value: vehicle.rearTire },
+            { label: '엔진 오일 용량', value: `${vehicle.engineOilLiter} L` },
+            { label: '와이퍼 정보', value: vehicle.wiperInfo },
+            { label: '배터리 모델', value: vehicle.battery },
+          ].map((item, index) => (
+            <View
+              key={index}
+              style={[styles.infoRow, {
+                marginBottom: index < 4 ? theme.spacing.xs : 0,
+                paddingBottom: index < 4 ? theme.spacing.xs : 0,
+                borderBottomWidth: index < 4 ? 1 : 0,
+                borderBottomColor: theme.colors.border.light,
+              }]}
+            >
+              <Text style={[styles.infoLabel, {
+                fontSize: theme.typography.fontSize.bodySmall,
+                fontWeight: theme.typography.fontWeight.semiBold,
+                color: theme.colors.text.secondary,
+              }]}>{item.label}</Text>
+              <Text style={[styles.infoValue, {
+                fontSize: theme.typography.fontSize.body,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.primary,
+              }]}>{item.value}</Text>
+            </View>
+          ))}
+        </Card>
+
+        {/* 등록자 정보 Card */}
+        <Card>
+          <Text style={[styles.sectionTitle, {
+            fontSize: theme.typography.fontSize.h3,
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.sm,
+          }]}>등록자 정보</Text>
+
+          {[
+            { label: '이름', value: vehicle.sellerName },
+            { label: '전화번호', value: formatPhone(vehicle.sellerPhone) },
+            { label: '이메일', value: vehicle.sellerEmail },
+          ].map((item, index) => (
+            <View
+              key={index}
+              style={[styles.infoRow, {
+                marginBottom: index < 2 ? theme.spacing.xs : 0,
+                paddingBottom: index < 2 ? theme.spacing.xs : 0,
+                borderBottomWidth: index < 2 ? 1 : 0,
+                borderBottomColor: theme.colors.border.light,
+              }]}
+            >
+              <Text style={[styles.infoLabel, {
+                fontSize: theme.typography.fontSize.bodySmall,
+                fontWeight: theme.typography.fontWeight.semiBold,
+                color: theme.colors.text.secondary,
+              }]}>{item.label}</Text>
+              <Text style={[styles.infoValue, {
+                fontSize: theme.typography.fontSize.body,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.primary,
+              }]}>{item.value}</Text>
+            </View>
+          ))}
+        </Card>
       </ScrollView>
-
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>뒤로 가기</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
   image: {
-    width: width - 40,
+    width: width - 32,
     height: undefined,
     aspectRatio: 16 / 9,
-    marginBottom: 20,
-    borderRadius: 10,
     resizeMode: 'cover',
     alignSelf: 'center',
   },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#333' },
-  subTitle: { fontSize: 18, fontWeight: '600', color: '#666', marginBottom: 15 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10, color: '#2B4593' },
-  infoCard: {
-    marginBottom: 10,
-    padding: 12,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
+  title: {},
+  subTitle: {},
+  sectionTitle: {},
+  badgeContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  infoTitle: { fontSize: 16, fontWeight: '600', color: '#555', flex: 1 },
-  backButton: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 14,
-    backgroundColor: '#2B4593',
-    borderRadius: 8,
-    alignItems: 'center',
+  infoLabel: {
+    flex: 1,
   },
-  backButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  infoValue: {
+    flex: 1,
+    textAlign: 'right',
+  },
 });
 
 export default AdminVehicleDetailScreen;
