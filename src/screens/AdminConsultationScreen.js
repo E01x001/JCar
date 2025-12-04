@@ -2,37 +2,44 @@ import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
-import firestore, { collection, query, orderBy, onSnapshot } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
-import Card from '../components/Card';
+import {
+  subscribeToBuyConsultations,
+  subscribeToSellConsultations,
+  subscribeToCompletedConsultations,
+} from '../services/firebaseService';
 import BuyConsultationsTab from './AdminConsultation/tabs/BuyConsultationsTab';
 import SellConsultationsTab from './AdminConsultation/tabs/SellConsultationsTab';
-import MeetingConsultationsTab from './AdminConsultation/tabs/MeetingConsultationsTab';
+import CompletedConsultationsTab from './AdminConsultation/tabs/CompletedConsultationsTab';
 
 const AdminConsultationScreen = () => {
   const { user } = useContext(AuthContext);
   const theme = useTheme();
   const navigation = useNavigation();
-  const [consultations, setConsultations] = useState([]);
+  const [buyConsultations, setBuyConsultations] = useState([]);
+  const [sellConsultations, setSellConsultations] = useState([]);
+  const [completedConsultations, setCompletedConsultations] = useState([]);
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'buy', title: '구매상담' },
     { key: 'sell', title: '판매상담' },
-    { key: 'meeting', title: '미팅' },
+    { key: 'completed', title: '거래완료' },
   ]);
 
   useEffect(() => {
     if (!user) {return () => {};}
 
-    const q = query(collection(firestore(), 'consultation_requests'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setConsultations(all);
-    });
+    const unsubscribeBuy = subscribeToBuyConsultations(setBuyConsultations);
+    const unsubscribeSell = subscribeToSellConsultations(setSellConsultations);
+    const unsubscribeCompleted = subscribeToCompletedConsultations(setCompletedConsultations);
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeBuy();
+      unsubscribeSell();
+      unsubscribeCompleted();
+    };
   }, [user]);
 
   const handleNavigateToVehicleDetail = (vehicleId) => {
@@ -44,21 +51,21 @@ const AdminConsultationScreen = () => {
       case 'buy':
         return (
           <BuyConsultationsTab
-            consultations={consultations}
+            consultations={buyConsultations}
             onNavigateToVehicle={handleNavigateToVehicleDetail}
           />
         );
       case 'sell':
         return (
           <SellConsultationsTab
-            consultations={consultations}
+            consultations={sellConsultations}
             onNavigateToVehicle={handleNavigateToVehicleDetail}
           />
         );
-      case 'meeting':
+      case 'completed':
         return (
-          <MeetingConsultationsTab
-            consultations={consultations}
+          <CompletedConsultationsTab
+            consultations={completedConsultations}
             onNavigateToVehicle={handleNavigateToVehicleDetail}
           />
         );

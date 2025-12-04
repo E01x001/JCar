@@ -11,8 +11,6 @@ import firestore, { doc, updateDoc, getDoc } from '@react-native-firebase/firest
 const BuyConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
   const theme = useTheme();
 
-  const buyConsultations = consultations.filter(c => c.type !== 'sell' && c.type !== 'meeting');
-
   const handleStatusUpdate = async (id, newStatus) => {
     try {
       const docRef = doc(firestore(), 'consultation_requests', id);
@@ -86,7 +84,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
     </TouchableOpacity>
   );
 
-  if (buyConsultations.length === 0) {
+  if (consultations.length === 0) {
     return (
       <StateScreen
         icon="event"
@@ -104,7 +102,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
         paddingVertical: theme.spacing.sm,
       }}
     >
-      {buyConsultations.map(item => renderItem(item))}
+      {consultations.map(item => renderItem(item))}
     </ScrollView>
   );
 };

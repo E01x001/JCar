@@ -64,6 +64,11 @@ export const saveConsultationRequest = async (data) => {
       preferredTime: data.preferredTime || null,
       status: data.status || 'pending',
       type: data.type || 'buy',
+      consultationStatus: data.consultationStatus || 'pending',
+      completedAt: data.completedAt || null,
+      completedBy: data.completedBy || null,
+      dealAmount: data.dealAmount || null,
+      adminNotes: data.adminNotes || '',
       createdAt: firestore.FieldValue.serverTimestamp(),
     };
 
@@ -177,5 +182,281 @@ export const deleteConsultationAdmin = async (consultationId) => {
     crashlytics().recordError(error);
     crashlytics().log('deleteConsultationAdmin failed');
     Alert.alert('오류', error.message || '상담 삭제 중 오류가 발생했습니다.');
+  }
+};
+
+// --------------------
+// 상담 상태 업데이트
+// --------------------
+export const updateConsultationStatus = async (consultationId, newStatus, adminId = null, notes = '') => {
+  try {
+    const updateData = {
+      consultationStatus: newStatus,
+      adminNotes: notes,
+    };
+
+    if (adminId) {
+      updateData.completedBy = adminId;
+    }
+
+    await firestore()
+      .collection('consultation_requests')
+      .doc(consultationId)
+      .update(updateData);
+
+    return { success: true };
+  } catch (error) {
+    console.error('상담 상태 업데이트 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('updateConsultationStatus failed');
+    Alert.alert('오류', '상담 상태 업데이트에 실패했습니다.');
+    return { success: false, error };
+  }
+};
+
+// --------------------
+// 거래완료 처리 (트랜잭션)
+// --------------------
+export const completeConsultationDeal = async ({
+  consultationId,
+  dealAmount,
+  adminId,
+  adminNotes = '',
+  shouldAddToOwnedVehicles = false,
+  vehicleData = null,
+}) => {
+  try {
+    const result = await firestore().runTransaction(async (transaction) => {
+      const consultationRef = firestore().collection('consultation_requests').doc(consultationId);
+      const consultationDoc = await transaction.get(consultationRef);
+
+      if (!consultationDoc.exists) {
+        throw new Error('상담 정보를 찾을 수 없습니다.');
+      }
+
+      const consultationData = consultationDoc.data();
+
+      transaction.update(consultationRef, {
+        consultationStatus: 'completed',
+        completedAt: firestore.FieldValue.serverTimestamp(),
+        completedBy: adminId,
+        dealAmount: dealAmount,
+        adminNotes: adminNotes,
+      });
+
+      if (shouldAddToOwnedVehicles && vehicleData) {
+        const vehicleRef = firestore().collection('vehicles').doc(consultationData.vehicleId);
+        transaction.update(vehicleRef, {
+          status: 'sold',
+        });
+
+        const ownedVehicleRef = firestore().collection('admin_owned_vehicles').doc();
+        transaction.set(ownedVehicleRef, {
+          vehicleId: consultationData.vehicleId,
+          vehicleName: consultationData.vehicleName,
+          purchasePrice: dealAmount,
+          purchaseDate: firestore.FieldValue.serverTimestamp(),
+          consultationId: consultationId,
+          previousOwnerId: consultationData.userId,
+          previousOwnerName: consultationData.userName,
+          status: 'owned',
+          soldDate: null,
+          soldPrice: null,
+          createdAt: firestore.FieldValue.serverTimestamp(),
+          ...vehicleData,
+        });
+      }
+
+      return { success: true };
+    });
+
+    Alert.alert('알림', '거래가 완료되었습니다.');
+    return result;
+  } catch (error) {
+    console.error('거래완료 처리 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('completeConsultationDeal failed');
+    Alert.alert('오류', error.message || '거래완료 처리에 실패했습니다.');
+    return { success: false, error };
+  }
+};
+
+// --------------------
+// 관리자 소유 차량 생성
+// --------------------
+export const createAdminOwnedVehicle = async (vehicleData) => {
+  try {
+    const validData = {
+      vehicleId: vehicleData.vehicleId,
+      vehicleName: vehicleData.vehicleName,
+      purchasePrice: vehicleData.purchasePrice,
+      purchaseDate: vehicleData.purchaseDate || firestore.FieldValue.serverTimestamp(),
+      consultationId: vehicleData.consultationId,
+      previousOwnerId: vehicleData.previousOwnerId,
+      previousOwnerName: vehicleData.previousOwnerName,
+      status: vehicleData.status || 'owned',
+      soldDate: vehicleData.soldDate || null,
+      soldPrice: vehicleData.soldPrice || null,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    };
+
+    const docRef = await firestore().collection('admin_owned_vehicles').add(validData);
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('관리자 소유 차량 생성 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('createAdminOwnedVehicle failed');
+    Alert.alert('오류', '차량 등록에 실패했습니다.');
+    return { success: false, error };
+  }
+};
+
+// --------------------
+// 관리자 소유 차량 조회
+// --------------------
+export const getAdminOwnedVehicles = async (statusFilter = null) => {
+  try {
+    let query = firestore()
+      .collection('admin_owned_vehicles')
+      .orderBy('purchaseDate', 'desc');
+
+    if (statusFilter) {
+      query = query.where('status', '==', statusFilter);
+    }
+
+    const snapshot = await query.get();
+    const vehicles = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return { success: true, vehicles };
+  } catch (error) {
+    console.error('관리자 소유 차량 조회 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('getAdminOwnedVehicles failed');
+    return { success: false, error, vehicles: [] };
+  }
+};
+
+// --------------------
+// 관리자 소유 차량 업데이트
+// --------------------
+export const updateAdminOwnedVehicle = async (vehicleId, updateData) => {
+  try {
+    await firestore()
+      .collection('admin_owned_vehicles')
+      .doc(vehicleId)
+      .update(updateData);
+
+    return { success: true };
+  } catch (error) {
+    console.error('관리자 소유 차량 업데이트 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('updateAdminOwnedVehicle failed');
+    Alert.alert('오류', '차량 정보 업데이트에 실패했습니다.');
+    return { success: false, error };
+  }
+};
+
+// --------------------
+// 구매상담 실시간 구독
+// --------------------
+export const subscribeToBuyConsultations = (callback) => {
+  try {
+    const unsubscribe = firestore()
+      .collection('consultation_requests')
+      .where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected'])
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        (snapshot) => {
+          const consultations = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(c => c.type !== 'sell');
+          callback(consultations);
+        },
+        (error) => {
+          console.error('구매상담 구독 오류:', error);
+          crashlytics().recordError(error);
+          crashlytics().log('subscribeToBuyConsultations failed');
+          callback([]);
+        }
+      );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('구매상담 구독 설정 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('subscribeToBuyConsultations setup failed');
+    return () => {};
+  }
+};
+
+// --------------------
+// 판매상담 실시간 구독
+// --------------------
+export const subscribeToSellConsultations = (callback) => {
+  try {
+    const unsubscribe = firestore()
+      .collection('consultation_requests')
+      .where('type', '==', 'sell')
+      .where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected'])
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        (snapshot) => {
+          const consultations = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          callback(consultations);
+        },
+        (error) => {
+          console.error('판매상담 구독 오류:', error);
+          crashlytics().recordError(error);
+          crashlytics().log('subscribeToSellConsultations failed');
+          callback([]);
+        }
+      );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('판매상담 구독 설정 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('subscribeToSellConsultations setup failed');
+    return () => {};
+  }
+};
+
+// --------------------
+// 거래완료 상담 실시간 구독
+// --------------------
+export const subscribeToCompletedConsultations = (callback) => {
+  try {
+    const unsubscribe = firestore()
+      .collection('consultation_requests')
+      .where('consultationStatus', '==', 'completed')
+      .orderBy('completedAt', 'desc')
+      .onSnapshot(
+        (snapshot) => {
+          const consultations = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          callback(consultations);
+        },
+        (error) => {
+          console.error('거래완료 상담 구독 오류:', error);
+          crashlytics().recordError(error);
+          crashlytics().log('subscribeToCompletedConsultations failed');
+          callback([]);
+        }
+      );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('거래완료 상담 구독 설정 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('subscribeToCompletedConsultations setup failed');
+    return () => {};
   }
 };

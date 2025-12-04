@@ -96,7 +96,7 @@ const AdminVehiclesListScreen = ({ navigation }) => {
             <View style={styles.vehicleInfo}>
               {/* Vehicle Type Badge */}
               <View style={styles.header}>
-                <Badge label={item.vehicleType || '승용차'} />
+                <Badge status="completed" label={item.vehicleType || '승용차'} />
                 <Text style={[styles.vehicleName, {
                   fontSize: theme.typography.fontSize.h3,
                   fontWeight: theme.typography.fontWeight.semiBold,
