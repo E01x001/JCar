@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import firestore, { collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -25,6 +25,7 @@ const AdminScheduleScreen = () => {
   const [markedDates, setMarkedDates] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [consultations, setConsultations] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -57,6 +58,14 @@ const AdminScheduleScreen = () => {
 
     return () => unsubscribe();
   }, [user]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // onSnapshot이 실시간으로 업데이트하므로, 약간의 딜레이 후 refreshing을 false로 설정
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  };
 
   const updateStatus = async (id, status) => {
     try {
@@ -144,6 +153,14 @@ const AdminScheduleScreen = () => {
             <FlatList
               data={filteredConsultations}
               keyExtractor={(item) => item.id}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={[theme.colors.primary.main]}
+                  tintColor={theme.colors.primary.main}
+                />
+              }
               contentContainerStyle={{
                 paddingHorizontal: theme.spacing.md,
                 paddingBottom: theme.spacing.md,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Text, StyleSheet, ScrollView, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import firestore, { collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
@@ -11,12 +12,15 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
+import OwnedVehiclesList from '../components/OwnedVehiclesList';
 
 const AdminPageScreen = () => {
+  const navigation = useNavigation();
   const { user } = useContext(AuthContext);
   const theme = useTheme();
   const toast = useToast();
   const [vehicles, setVehicles] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -32,6 +36,14 @@ const AdminPageScreen = () => {
 
     return () => unsubscribe();
   }, [user]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // onSnapshot이 실시간으로 업데이트하므로, 약간의 딜레이 후 refreshing을 false로 설정
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  };
 
   const handleDeleteVehicle = async (vehicleId) => {
     try {
@@ -96,7 +108,17 @@ const AdminPageScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      <ScrollView contentContainerStyle={{ padding: theme.spacing.md }}>
+      <ScrollView
+        contentContainerStyle={{ padding: theme.spacing.md }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary.main]}
+            tintColor={theme.colors.primary.main}
+          />
+        }
+      >
         {/* User Info Card */}
         <Card style={{ marginBottom: theme.spacing.lg }}>
           <Text style={[styles.userInfo, {
@@ -105,12 +127,27 @@ const AdminPageScreen = () => {
           }]}>이메일: {user?.email ?? '이메일 없음'}</Text>
         </Card>
 
+        {/* Owned Vehicles Section */}
+        <Text style={[styles.sectionTitle, {
+          fontSize: theme.typography.fontSize.h3,
+          fontWeight: theme.typography.fontWeight.semiBold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing.md,
+        }]}>보유 차량</Text>
+
+        <OwnedVehiclesList
+          onVehiclePress={(vehicle) => {
+            navigation.navigate('AdminOwnedVehicleDetail', { vehicleId: vehicle.id });
+          }}
+        />
+
         {/* Vehicles Section */}
         <Text style={[styles.sectionTitle, {
           fontSize: theme.typography.fontSize.h3,
           fontWeight: theme.typography.fontWeight.semiBold,
           color: theme.colors.text.primary,
           marginBottom: theme.spacing.md,
+          marginTop: theme.spacing.xl,
         }]}>등록한 차량</Text>
 
         {vehicles.length === 0 ? (
