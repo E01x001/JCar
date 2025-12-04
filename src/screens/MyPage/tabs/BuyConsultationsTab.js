@@ -14,7 +14,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
     if (status === 'approved') {
       return <Badge status="completed" label="승인됨" />;
     } else if (status === 'rejected') {
-      return <Badge status="failed" label="거절됨" />;
+      return <Badge status="rejected" label="거절됨" />;
     }
     return <Badge status="pending" label="대기중" />;
   };
