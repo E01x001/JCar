@@ -20,6 +20,7 @@ import MyVehiclesScreen from '../screens/MyVehiclesScreen'; // ✅ 추가
 import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen';
 import AdminPageScreen from '../screens/AdminPageScreen';
 import AdminVehicleDetailScreen from '../screens/AdminVehicleDetailScreen';
+import AdminOwnedVehicleDetailScreen from '../screens/AdminOwnedVehicleDetailScreen';
 import AdminConsultationScreen from '../screens/AdminConsultationScreen';
 import AdminScheduleScreen from '../screens/AdminScheduleScreen';
 import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
@@ -137,6 +138,11 @@ const AppNavigator = () => {
               name="AdminVehicleDetail"
               component={AdminVehicleDetailScreen}
               options={{ headerShown: true, title: '차량 상세' }}
+            />
+            <Stack.Screen
+              name="AdminOwnedVehicleDetail"
+              component={AdminOwnedVehicleDetailScreen}
+              options={{ headerShown: true, title: '보유 차량 상세' }}
             />
           </>
         )}

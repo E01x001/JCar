@@ -52,19 +52,32 @@ service cloud.firestore {
                     (request.auth.uid == resource.data.sellerId || isAdmin());
     }
 
-    // Consultation requests collection: Only active users can create, admins have full access
+    // Consultation requests collection: Active users can create/update their own, admins have full access
     match /consultation_requests/{requestId} {
-      // Users can read their own requests, admins can read all requests
-      allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.userId || isAdmin());
+      // Authenticated users can read all requests
+      allow read: if request.auth != null;
 
       // Only active users can create requests for themselves
       allow create: if request.auth != null &&
         isActiveUser() &&
         request.auth.uid == request.resource.data.userId;
 
-      // Only active admins can update or delete requests
-      allow update, delete: if isAdmin() && isActiveUser();
+      // Active users can update their own requests, admins can update all requests
+      allow update: if request.auth != null &&
+        isActiveUser() &&
+        (request.auth.uid == resource.data.userId || isAdmin());
+
+      // Only active admins can delete requests
+      allow delete: if isAdmin() && isActiveUser();
+    }
+
+    // Admin owned vehicles collection: Only admins can access
+    match /admin_owned_vehicles/{vehicleId} {
+      // Only admins can read
+      allow read: if isAdmin();
+
+      // Only active admins can create, update, or delete
+      allow create, update, delete: if isAdmin() && isActiveUser();
     }
 
     // Admin activity log collection: Only admins can write, no one can delete
