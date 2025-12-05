@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
 import firestore, { collection, getDocs } from '@react-native-firebase/firestore';
@@ -11,12 +11,19 @@ import Badge from '../components/Badge';
 import Button from '../components/Button';
 import StateScreen from '../components/StateScreen';
 import SkeletonLoader from '../components/SkeletonLoader';
+import InputField from '../components/InputField';
+import FilterChip from '../components/FilterChip';
 
 const AdminVehiclesListScreen = ({ navigation }) => {
   const theme = useTheme();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingVehicleId, setDeletingVehicleId] = useState(null);
+
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedVehicleType, setSelectedVehicleType] = useState('all');
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -37,6 +44,27 @@ const AdminVehiclesListScreen = ({ navigation }) => {
 
     fetchVehicles();
   }, []);
+
+  // Filter vehicles based on search query and filters
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter(vehicle => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = searchQuery === '' ||
+        vehicle.vehicleName?.toLowerCase().includes(searchLower) ||
+        vehicle.manufacturer?.toLowerCase().includes(searchLower);
+
+      // Status filter
+      const matchesStatus = selectedStatus === 'all' ||
+        vehicle.status === selectedStatus;
+
+      // Vehicle type filter
+      const matchesType = selectedVehicleType === 'all' ||
+        vehicle.vehicleType === selectedVehicleType;
+
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [vehicles, searchQuery, selectedStatus, selectedVehicleType]);
 
   const handleDeleteVehicle = async (vehicleId) => {
     Alert.alert(
@@ -134,6 +162,73 @@ const AdminVehiclesListScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+      {/* Search Bar */}
+      <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.sm }}>
+        <InputField
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="차량명 또는 제조사로 검색..."
+          style={{ marginBottom: theme.spacing.xs }}
+        />
+      </View>
+
+      {/* Filter Chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: theme.spacing.md,
+          paddingBottom: theme.spacing.sm,
+        }}
+      >
+        {/* Status Filters */}
+        <FilterChip
+          label="전체"
+          active={selectedStatus === 'all'}
+          onPress={() => setSelectedStatus('all')}
+        />
+        <FilterChip
+          label="대기중"
+          active={selectedStatus === 'pending'}
+          onPress={() => setSelectedStatus('pending')}
+        />
+        <FilterChip
+          label="승인됨"
+          active={selectedStatus === 'approved'}
+          onPress={() => setSelectedStatus('approved')}
+        />
+        <FilterChip
+          label="거절됨"
+          active={selectedStatus === 'rejected'}
+          onPress={() => setSelectedStatus('rejected')}
+        />
+
+        {/* Divider */}
+        <View style={{ width: theme.spacing.md }} />
+
+        {/* Vehicle Type Filters */}
+        <FilterChip
+          label="전체 타입"
+          active={selectedVehicleType === 'all'}
+          onPress={() => setSelectedVehicleType('all')}
+        />
+        <FilterChip
+          label="승용차"
+          active={selectedVehicleType === '승용차'}
+          onPress={() => setSelectedVehicleType('승용차')}
+        />
+        <FilterChip
+          label="SUV"
+          active={selectedVehicleType === 'SUV'}
+          onPress={() => setSelectedVehicleType('SUV')}
+        />
+        <FilterChip
+          label="트럭"
+          active={selectedVehicleType === '트럭'}
+          onPress={() => setSelectedVehicleType('트럭')}
+        />
+      </ScrollView>
+
       {/* Loading State */}
       {loading ? (
         <View style={{ paddingHorizontal: theme.spacing.md }}>
@@ -141,14 +236,14 @@ const AdminVehiclesListScreen = ({ navigation }) => {
         </View>
       ) : (
         <FlatList
-          data={vehicles}
+          data={filteredVehicles}
           renderItem={renderVehicle}
           keyExtractor={(item) => item.id}
           ListEmptyComponent={
             <StateScreen
               icon="directions-car"
-              title="등록된 차량이 없습니다"
-              message="차량을 등록해주세요."
+              title={vehicles.length === 0 ? '등록된 차량이 없습니다' : '검색 결과가 없습니다'}
+              message={vehicles.length === 0 ? '차량을 등록해주세요.' : '다른 검색어나 필터를 시도해보세요.'}
             />
           }
         />
