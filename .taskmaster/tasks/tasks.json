@@ -2545,7 +2545,7 @@
         "dependencies": [
           "42"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2553,7 +2553,7 @@
             "description": "Create the basic file structure for the new screen component, `AdminOwnedVehicleDetailScreen`, and add it to the admin navigation stack to make it accessible within the app.",
             "dependencies": [],
             "details": "Create a new file at `src/screens/admin/AdminOwnedVehicleDetailScreen.js`. Define a basic functional component. Import this screen into the admin navigator (e.g., `AdminStackNavigator.js`) and add it as a new `Stack.Screen` so that it can be navigated to from the vehicle list.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that you can navigate from the admin owned vehicles list to the new, initially blank, screen by passing a vehicleId."
           },
           {
@@ -2564,7 +2564,7 @@
               1
             ],
             "details": "Inside `AdminOwnedVehicleDetailScreen`, use the `useRoute` hook to get the `vehicleId` parameter. Use a `useEffect` hook to fetch the document from `firestore().collection('admin_owned_vehicles').doc(vehicleId)`. Manage loading and error states. Render the vehicle's data using appropriate components like `Text` and `View` within a `ScrollView`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate to the screen for a known vehicle and verify that all its details from the Firestore document are correctly displayed. Check the loading state indicator as well."
           },
           {
@@ -2575,7 +2575,7 @@
               2
             ],
             "details": "Add a `TouchableOpacity` or a custom button component to the screen with the label '[판매완료 처리]'. Use `useState` to manage the visibility of a `Modal` component. The modal should contain a `TextInput` for the `soldPrice` (with `keyboardType='numeric'`), a 'Confirm' button, and a 'Cancel' button.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Tap the '[판매완료 처리]' button and verify that the modal appears correctly. Check that the input field is functional and the cancel button closes the modal."
           },
           {
@@ -2586,7 +2586,7 @@
               3
             ],
             "details": "Create an asynchronous function that will be called by the modal's 'Confirm' button. This function should perform a `firestore().collection('admin_owned_vehicles').doc(vehicleId).update()` operation. The data to update is `{ status: 'sold', soldPrice: <price_from_input>, soldDate: firestore.FieldValue.serverTimestamp() }`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use the modal to enter a sold price and confirm. Use the Firestore console or emulator to verify that the vehicle document's `status` is changed to 'sold' and that `soldPrice` and `soldDate` fields are correctly populated."
           },
           {
@@ -2597,7 +2597,7 @@
               4
             ],
             "details": "Upon a successful Firestore update, close the modal, display a success message to the admin (e.g., using a toast or an alert), and then use the `navigation.goBack()` method to return the user to the previous screen (the vehicle list). Implement error handling for the update operation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Successfully mark a vehicle as sold. Verify that a success message is shown and that the app automatically navigates back to the admin owned vehicles list. The list should now reflect the updated status of the vehicle."
           }
         ]
@@ -2613,8 +2613,63 @@
           "33",
           "43"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze Existing Rules and New Schemas",
+            "description": "Review the current `firestore.rules` file to understand the existing security structure. Cross-reference the updated schema for `consultation_requests` and the new schema for `admin_owned_vehicles` from Task 33 to prepare for the rule implementation.",
+            "dependencies": [],
+            "details": "Locate the `firestore.rules` file in the project. Read the existing rules for `users`, `vehicles`, and `consultation_requests` to understand current patterns and any helper functions. This will ensure the new rules are consistent with the existing structure.",
+            "status": "done",
+            "testStrategy": null
+          },
+          {
+            "id": 2,
+            "title": "Implement Security Rules for `admin_owned_vehicles`",
+            "description": "Add a new rule block in `firestore.rules` for the `admin_owned_vehicles` collection. This rule must restrict all read and write operations to authenticated users with a custom claim of `role == 'admin'`.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `firestore.rules`, add a new match block: `match /admin_owned_vehicles/{vehicleId} { allow read, write: if request.auth.token.role == 'admin'; }`. This ensures that no other user type can access this sensitive data.",
+            "status": "done",
+            "testStrategy": "Use the Firebase Rules Playground to simulate a non-admin authenticated user and an unauthenticated user attempting to read/write to `/admin_owned_vehicles/someId`. Both attempts should be denied. Simulate an admin user, which should be allowed."
+          },
+          {
+            "id": 3,
+            "title": "Update Security Rules for `consultation_requests`",
+            "description": "Modify the existing security rules for the `/consultation_requests/{docId}` path to align with the new logic. Admins should have full write access, while users can only update their own requests under specific conditions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Locate the `match /consultation_requests/{docId}` block. Update the `allow write` rule to be a combination of conditions: `(request.auth.token.role == 'admin') || (request.auth.uid == resource.data.userId && /* add other conditions from PRD */)`. Ensure the `create` rule still allows users to create their own requests.",
+            "status": "done",
+            "testStrategy": "Using the Rules Playground, test the following scenarios: 1. An admin can update any field. 2. A user can update a field on their own request. 3. A user is blocked from updating a request owned by another user. 4. A user is blocked from updating a request if its status is 'completed'."
+          },
+          {
+            "id": 4,
+            "title": "Execute Local Testing via Emulator Suite",
+            "description": "Using the Firebase Emulator Suite and the project's testing framework, write and execute unit tests for the newly added and updated security rules. This ensures all access paths are explicitly tested before deployment.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "In the existing security rules test file (e.g., `firestore.rules.spec.js`), add new test suites for `admin_owned_vehicles` and `consultation_requests`. Create mock data and simulate authenticated users (admin, non-admin) and unauthenticated users attempting valid and invalid operations.",
+            "status": "done",
+            "testStrategy": "Run the test script (e.g., `npm test`) and ensure all test cases pass. The test report should show coverage for all new and modified rule paths. Fix any failing tests before proceeding."
+          },
+          {
+            "id": 5,
+            "title": "Deploy `firestore.rules` and Verify in Console",
+            "description": "Deploy the updated and tested `firestore.rules` file to the live Firebase project using the Firebase CLI. After deployment, perform a final verification using the Firebase Console.",
+            "dependencies": [
+              4
+            ],
+            "details": "From the project root directory, run the command `firebase deploy --only firestore:rules`. After the CLI reports a successful deployment, navigate to the Firestore Rules tab in the Firebase Console to confirm the new rules are visible and active.",
+            "status": "done",
+            "testStrategy": "Perform a final smoke test using the Rules Playground in the live Firebase Console. Repeat one key test for each collection (e.g., admin access to `admin_owned_vehicles`, user access to their `consultation_request`) to confirm the deployed rules are working as expected in the production environment."
+          }
+        ]
       }
     ],
     "metadata": {
@@ -2627,7 +2682,7 @@
       ],
       "created": "2025-12-05T04:25:18.143Z",
       "description": "Tasks for master context",
-      "updated": "2025-12-05T07:37:14.286Z"
+      "updated": "2025-12-05T07:47:55.631Z"
     }
   }
 }
