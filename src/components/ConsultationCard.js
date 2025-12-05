@@ -4,11 +4,13 @@
  * Reusable consultation request card with dynamic status and action buttons.
  */
 
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPhone } from '../utils/format';
+import { updateConsultationStatus } from '../services/firebaseService';
+import { useToast } from '../hooks/useToast';
 import Card from './Card';
 import Badge from './Badge';
 import Button from './Button';
@@ -27,20 +29,18 @@ import Button from './Button';
  * @param {string} props.consultation.preferredDate - Preferred consultation date
  * @param {string} props.consultation.preferredTime - Preferred consultation time
  * @param {Function} [props.onNavigateToVehicle] - Navigate to vehicle detail
- * @param {Function} [props.onComplete] - Handle '채결' (complete) action
- * @param {Function} [props.onHold] - Handle '보류' (hold) action
- * @param {Function} [props.onReject] - Handle '거절' (reject) action
+ * @param {Function} [props.onUpdateSuccess] - Callback after successful status update
  * @param {Object} [props.style] - Additional styles
  */
 const ConsultationCard = ({
   consultation,
   onNavigateToVehicle,
-  onComplete,
-  onHold,
-  onReject,
+  onUpdateSuccess,
   style,
 }) => {
   const theme = useTheme();
+  const toast = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const {
     id,
@@ -53,27 +53,73 @@ const ConsultationCard = ({
     preferredTime,
   } = consultation;
 
+  /**
+   * Handle status update with loading state and error handling
+   * @param {string} newStatus - New consultation status
+   */
+  const handleStatusUpdate = async (newStatus) => {
+    setIsUpdating(true);
+    try {
+      await updateConsultationStatus(id, newStatus);
+      toast.showSuccess('상태가 성공적으로 변경되었습니다.');
+
+      // Notify parent to refresh data
+      if (onUpdateSuccess) {
+        onUpdateSuccess();
+      }
+    } catch (error) {
+      console.error('상태 업데이트 실패:', error);
+      toast.showError('업데이트 중 오류가 발생했습니다.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Render action buttons based on consultationStatus
   const renderActionButtons = () => {
+    // Show loading indicator if updating
+    if (isUpdating) {
+      return (
+        <View style={[styles.loadingContainer, { marginTop: theme.spacing.md }]}>
+          <ActivityIndicator size="small" color={theme.colors.primary.main} />
+          <Text
+            style={[
+              styles.loadingText,
+              {
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.bodySmall,
+                marginLeft: theme.spacing.sm,
+              },
+            ]}
+          >
+            업데이트 중...
+          </Text>
+        </View>
+      );
+    }
+
     if (consultationStatus === 'pending') {
       return (
         <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
           <Button
             variant="success"
             title="채결"
-            onPress={() => onComplete && onComplete(id)}
+            onPress={() => handleStatusUpdate('completed')}
+            disabled={isUpdating}
             style={{ flex: 1, marginRight: theme.spacing.xs }}
           />
           <Button
             variant="secondary"
             title="보류"
-            onPress={() => onHold && onHold(id)}
+            onPress={() => handleStatusUpdate('on-hold')}
+            disabled={isUpdating}
             style={{ flex: 1, marginHorizontal: theme.spacing.xs }}
           />
           <Button
             variant="danger"
             title="거절"
-            onPress={() => onReject && onReject(id)}
+            onPress={() => handleStatusUpdate('rejected')}
+            disabled={isUpdating}
             style={{ flex: 1, marginLeft: theme.spacing.xs }}
           />
         </View>
@@ -86,13 +132,15 @@ const ConsultationCard = ({
           <Button
             variant="success"
             title="채결"
-            onPress={() => onComplete && onComplete(id)}
+            onPress={() => handleStatusUpdate('completed')}
+            disabled={isUpdating}
             style={{ flex: 1, marginRight: theme.spacing.xs }}
           />
           <Button
             variant="danger"
             title="거절"
-            onPress={() => onReject && onReject(id)}
+            onPress={() => handleStatusUpdate('rejected')}
+            disabled={isUpdating}
             style={{ flex: 1, marginLeft: theme.spacing.xs }}
           />
         </View>
@@ -189,6 +237,12 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {},
 });
 
 ConsultationCard.propTypes = {
@@ -203,9 +257,7 @@ ConsultationCard.propTypes = {
     preferredTime: PropTypes.string.isRequired,
   }).isRequired,
   onNavigateToVehicle: PropTypes.func,
-  onComplete: PropTypes.func,
-  onHold: PropTypes.func,
-  onReject: PropTypes.func,
+  onUpdateSuccess: PropTypes.func,
   style: PropTypes.object,
 };
 

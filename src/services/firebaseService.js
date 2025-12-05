@@ -192,11 +192,21 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
   try {
     const updateData = {
       consultationStatus: newStatus,
-      adminNotes: notes,
     };
 
+    // Add adminNotes only if provided
+    if (notes) {
+      updateData.adminNotes = notes;
+    }
+
+    // Add completedBy only if adminId is provided
     if (adminId) {
       updateData.completedBy = adminId;
+    }
+
+    // Automatically add completedAt timestamp when status is 'completed'
+    if (newStatus === 'completed') {
+      updateData.completedAt = firestore.FieldValue.serverTimestamp();
     }
 
     await firestore()
@@ -209,8 +219,8 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
     console.error('상담 상태 업데이트 오류:', error);
     crashlytics().recordError(error);
     crashlytics().log('updateConsultationStatus failed');
-    Alert.alert('오류', '상담 상태 업데이트에 실패했습니다.');
-    return { success: false, error };
+    // Don't show Alert here - let the caller handle user feedback
+    throw error; // Re-throw error for caller to handle
   }
 };
 
