@@ -225,6 +225,37 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
 };
 
 // --------------------
+// 상담 거래 완료 (간단 버전)
+// --------------------
+export const completeConsultation = async ({ docId, dealAmount, adminNotes = '', completedBy }) => {
+  try {
+    const updateData = {
+      consultationStatus: 'completed',
+      completedAt: firestore.FieldValue.serverTimestamp(),
+      dealAmount: Number(dealAmount),
+      completedBy: completedBy,
+    };
+
+    // Add adminNotes only if provided
+    if (adminNotes) {
+      updateData.adminNotes = adminNotes;
+    }
+
+    await firestore()
+      .collection('consultation_requests')
+      .doc(docId)
+      .update(updateData);
+
+    return { success: true };
+  } catch (error) {
+    console.error('거래완료 처리 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('completeConsultation failed');
+    throw error; // Re-throw for caller to handle
+  }
+};
+
+// --------------------
 // 거래완료 처리 (트랜잭션)
 // --------------------
 export const completeConsultationDeal = async ({

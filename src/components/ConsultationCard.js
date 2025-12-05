@@ -4,16 +4,18 @@
  * Reusable consultation request card with dynamic status and action buttons.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPhone } from '../utils/format';
-import { updateConsultationStatus } from '../services/firebaseService';
+import { updateConsultationStatus, completeConsultation } from '../services/firebaseService';
 import { useToast } from '../hooks/useToast';
+import { AuthContext } from '../context/AuthContext';
 import Card from './Card';
 import Badge from './Badge';
 import Button from './Button';
+import CompleteDealModal from './modals/CompleteDealModal';
 
 /**
  * ConsultationCard Component
@@ -40,7 +42,9 @@ const ConsultationCard = ({
 }) => {
   const theme = useTheme();
   const toast = useToast();
+  const { user } = useContext(AuthContext);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const {
     id,
@@ -75,6 +79,43 @@ const ConsultationCard = ({
     }
   };
 
+  /**
+   * Handle complete deal button - opens modal
+   */
+  const handleCompleteButtonPress = () => {
+    setIsModalVisible(true);
+  };
+
+  /**
+   * Handle complete deal submission from modal
+   * @param {Object} formData - { dealAmount, adminNotes }
+   */
+  const handleCompleteDeal = async (formData) => {
+    setIsUpdating(true);
+    try {
+      await completeConsultation({
+        docId: id,
+        dealAmount: formData.dealAmount,
+        adminNotes: formData.adminNotes,
+        completedBy: user?.uid || null,
+      });
+
+      toast.showSuccess('거래가 완료되었습니다.');
+      setIsModalVisible(false);
+
+      // Notify parent to refresh data
+      if (onUpdateSuccess) {
+        onUpdateSuccess();
+      }
+    } catch (error) {
+      console.error('거래완료 처리 실패:', error);
+      toast.showError('거래완료 처리 중 오류가 발생했습니다.');
+      throw error; // Re-throw for modal to handle
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Render action buttons based on consultationStatus
   const renderActionButtons = () => {
     // Show loading indicator if updating
@@ -104,7 +145,7 @@ const ConsultationCard = ({
           <Button
             variant="success"
             title="채결"
-            onPress={() => handleStatusUpdate('completed')}
+            onPress={handleCompleteButtonPress}
             disabled={isUpdating}
             style={{ flex: 1, marginRight: theme.spacing.xs }}
           />
@@ -132,7 +173,7 @@ const ConsultationCard = ({
           <Button
             variant="success"
             title="채결"
-            onPress={() => handleStatusUpdate('completed')}
+            onPress={handleCompleteButtonPress}
             disabled={isUpdating}
             style={{ flex: 1, marginRight: theme.spacing.xs }}
           />
@@ -158,71 +199,81 @@ const ConsultationCard = ({
   };
 
   return (
-    <TouchableOpacity
-      onPress={handleCardPress}
-      activeOpacity={onNavigateToVehicle ? 0.7 : 1}
-      disabled={!onNavigateToVehicle}
-    >
-      <Card style={[{ marginBottom: theme.spacing.sm }, style]}>
-        {/* Header: Badge + User Name */}
-        <View style={styles.header}>
-          <Badge status={consultationStatus} />
+    <>
+      <TouchableOpacity
+        onPress={handleCardPress}
+        activeOpacity={onNavigateToVehicle ? 0.7 : 1}
+        disabled={!onNavigateToVehicle}
+      >
+        <Card style={[{ marginBottom: theme.spacing.sm }, style]}>
+          {/* Header: Badge + User Name */}
+          <View style={styles.header}>
+            <Badge status={consultationStatus} />
+            <Text
+              style={[
+                styles.userName,
+                {
+                  fontSize: theme.typography.fontSize.body,
+                  fontWeight: theme.typography.fontWeight.semiBold,
+                  color: theme.colors.text.primary,
+                },
+              ]}
+            >
+              {userName}
+            </Text>
+          </View>
+
+          {/* Consultation Details */}
           <Text
             style={[
-              styles.userName,
+              styles.infoText,
               {
-                fontSize: theme.typography.fontSize.body,
-                fontWeight: theme.typography.fontWeight.semiBold,
-                color: theme.colors.text.primary,
+                fontSize: theme.typography.fontSize.bodySmall,
+                color: theme.colors.text.secondary,
+                marginTop: theme.spacing.xs,
               },
             ]}
           >
-            {userName}
+            전화번호: {formatPhone(userPhone)}
           </Text>
-        </View>
 
-        {/* Consultation Details */}
-        <Text
-          style={[
-            styles.infoText,
-            {
-              fontSize: theme.typography.fontSize.bodySmall,
-              color: theme.colors.text.secondary,
-              marginTop: theme.spacing.xs,
-            },
-          ]}
-        >
-          전화번호: {formatPhone(userPhone)}
-        </Text>
+          <Text
+            style={[
+              styles.infoText,
+              {
+                fontSize: theme.typography.fontSize.bodySmall,
+                color: theme.colors.text.secondary,
+              },
+            ]}
+          >
+            차량명: {vehicleName}
+          </Text>
 
-        <Text
-          style={[
-            styles.infoText,
-            {
-              fontSize: theme.typography.fontSize.bodySmall,
-              color: theme.colors.text.secondary,
-            },
-          ]}
-        >
-          차량명: {vehicleName}
-        </Text>
+          <Text
+            style={[
+              styles.infoText,
+              {
+                fontSize: theme.typography.fontSize.bodySmall,
+                color: theme.colors.text.secondary,
+              },
+            ]}
+          >
+            상담 일정: {preferredDate} {preferredTime}
+          </Text>
 
-        <Text
-          style={[
-            styles.infoText,
-            {
-              fontSize: theme.typography.fontSize.bodySmall,
-              color: theme.colors.text.secondary,
-            },
-          ]}
-        >
-          상담 일정: {preferredDate} {preferredTime}
-        </Text>
+          {/* Action Buttons */}
+          {renderActionButtons()}
+        </Card>
+      </TouchableOpacity>
 
-        {/* Action Buttons */}
-        {renderActionButtons()}
-      </Card>
-    </TouchableOpacity>
+      {/* Complete Deal Modal */}
+      <CompleteDealModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onSubmit={handleCompleteDeal}
+        consultationId={id}
+      />
+    </>
   );
 };
 
