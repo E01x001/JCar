@@ -13,6 +13,8 @@ import StateScreen from '../components/StateScreen';
 import SkeletonLoader from '../components/SkeletonLoader';
 import InputField from '../components/InputField';
 import FilterChip from '../components/FilterChip';
+import StatisticsCard from '../components/StatisticsCard';
+import useVehicleStats from '../hooks/useVehicleStats';
 
 const AdminVehiclesListScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -24,6 +26,9 @@ const AdminVehiclesListScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedVehicleType, setSelectedVehicleType] = useState('all');
+
+  // Get vehicle statistics
+  const vehicleStats = useVehicleStats();
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -171,6 +176,43 @@ const AdminVehiclesListScreen = ({ navigation }) => {
           style={{ marginBottom: theme.spacing.xs }}
         />
       </View>
+
+      {/* Statistics Dashboard */}
+      {!vehicleStats.loading && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: theme.spacing.md,
+            paddingBottom: theme.spacing.sm,
+          }}
+        >
+          <StatisticsCard
+            iconName="directions-car"
+            label="전체"
+            count={vehicleStats.total}
+            variant="primary"
+          />
+          <StatisticsCard
+            iconName="schedule"
+            label="대기중"
+            count={vehicleStats.pending}
+            variant="warning"
+          />
+          <StatisticsCard
+            iconName="check-circle"
+            label="승인됨"
+            count={vehicleStats.approved}
+            variant="success"
+          />
+          <StatisticsCard
+            iconName="cancel"
+            label="거절됨"
+            count={vehicleStats.rejected}
+            variant="error"
+          />
+        </ScrollView>
+      )}
 
       {/* Filter Chips */}
       <ScrollView

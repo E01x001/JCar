@@ -1981,8 +1981,60 @@
           "25",
           "27"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Reusable StatisticsCard Component",
+            "description": "Develop a reusable `StatisticsCard` component that displays an icon, a label, and a numerical value. This component will be used to show key metrics on the admin list screens.",
+            "dependencies": [],
+            "details": "The component should accept `iconName`, `label`, and `count` as props. It will use the base `Card` component for its container and `MaterialIcons` from `@expo/vector-icons` for the icon. Style it for clarity and visual appeal, ensuring it is consistent with the app's design system.",
+            "status": "done",
+            "testStrategy": "Use Storybook or a temporary screen to render the component with different props (icon, label, count) to verify its appearance and responsiveness."
+          },
+          {
+            "id": 2,
+            "title": "Implement Real-time Vehicle Statistics Logic",
+            "description": "Create a custom hook (e.g., `useVehicleStats`) to fetch vehicle data from Firestore in real-time and calculate aggregate statistics for total count and status breakdowns (Pending, Approved, Rejected).",
+            "dependencies": [],
+            "details": "Use Firestore's `onSnapshot` listener on the 'vehicles' collection. The hook should process the collection snapshot to derive the counts for each status client-side. It should return a state object like `{ total: number, pending: number, approved: number, rejected: number, loading: boolean }`.",
+            "status": "done",
+            "testStrategy": "Unit test the hook's calculation logic with mock Firestore data. Manually verify the hook's output against the database in a development environment."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Statistics Cards into AdminVehiclesListScreen",
+            "description": "Add a statistics dashboard section to the top of the `AdminVehiclesListScreen` to display the real-time vehicle counts using the newly created components and logic.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "In `AdminVehiclesListScreen`, use the `useVehicleStats` hook to get the data. Render the statistics inside a horizontal `ScrollView` placed above the main vehicle list. Use the `StatisticsCard` component for each metric (Total, Pending, Approved, Rejected).",
+            "status": "done",
+            "testStrategy": "Load the screen and verify that the statistics cards are displayed correctly. Confirm the numbers are accurate by comparing them with the Firestore console. Add or update a vehicle to ensure the stats update in real-time."
+          },
+          {
+            "id": 4,
+            "title": "Implement Real-time Consultation Statistics Logic",
+            "description": "Create a custom hook (e.g., `useConsultationStats`) to fetch consultation data from Firestore in real-time and calculate aggregate statistics based on their status.",
+            "dependencies": [],
+            "details": "Similar to the vehicle stats hook, use Firestore's `onSnapshot` listener on the 'consultations' collection. The hook should process the snapshot to derive the total count and counts for each relevant status (e.g., pending, confirmed, completed). Return a state object with the counts and loading status.",
+            "status": "done",
+            "testStrategy": "Unit test the hook with mock consultation data. In a dev environment, check if the hook's output correctly reflects the data in the Firestore 'consultations' collection."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Statistics Cards into AdminConsultationScreen",
+            "description": "Add a statistics dashboard section to the top of the `AdminConsultationScreen` to display real-time consultation counts.",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "In `AdminConsultationScreen`, use the `useConsultationStats` hook. Render the `StatisticsCard` components for each metric inside a horizontal `ScrollView`. This section should be placed above the `TabView` component that handles the tabbed lists.",
+            "status": "done",
+            "testStrategy": "Load the screen and verify the stats cards appear above the tabs. Check the accuracy of the displayed numbers. Change a consultation's status and confirm that the counts update automatically."
+          }
+        ]
       },
       {
         "id": 31,
@@ -2682,7 +2734,7 @@
       ],
       "created": "2025-12-05T04:25:18.143Z",
       "description": "Tasks for master context",
-      "updated": "2025-12-05T07:47:55.631Z"
+      "updated": "2025-12-05T07:55:31.384Z"
     }
   }
 }
