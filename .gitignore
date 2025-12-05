@@ -96,7 +96,7 @@ jest.config.js
 __generated__/
 
 # Temp build/maintenance scripts
-/scripts/
+# /scripts/  # Allow scripts directory for migration scripts
 tmp/
 dist/
 
