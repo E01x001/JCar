@@ -79,6 +79,21 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Admin owned vehicles collection: Only admins can access
+    match /admin_owned_vehicles/{vehicleId} {
+      // Only admins can read owned vehicles
+      allow read: if isAdmin();
+
+      // Only active admins can create owned vehicles
+      allow create: if isAdmin() && isActiveUser();
+
+      // Only active admins can update owned vehicles
+      allow update: if isAdmin() && isActiveUser();
+
+      // Only active admins can delete owned vehicles
+      allow delete: if isAdmin() && isActiveUser();
+    }
+
     // Default deny-all policy for all other documents
     match /{document=**} {
       allow read, write: if false;

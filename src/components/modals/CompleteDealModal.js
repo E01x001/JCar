@@ -16,6 +16,7 @@ import {
   ScrollView,
 } from 'react-native';
 import PropTypes from 'prop-types';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../../theme/ThemeProvider';
 import Card from '../Card';
 import InputField from '../InputField';
@@ -27,13 +28,15 @@ import Button from '../Button';
  * @param {Object} props
  * @param {boolean} props.isVisible - Modal visibility
  * @param {Function} props.onClose - Close handler
- * @param {Function} props.onSubmit - Submit handler (dealAmount, adminNotes)
+ * @param {Function} props.onSubmit - Submit handler (dealAmount, adminNotes, addToOwnedVehicles)
  * @param {string} [props.consultationId] - Consultation ID for reference
+ * @param {boolean} [props.isSellType] - Whether this is a sell-type consultation
  */
-const CompleteDealModal = ({ isVisible, onClose, onSubmit, consultationId }) => {
+const CompleteDealModal = ({ isVisible, onClose, onSubmit, consultationId, isSellType = false }) => {
   const theme = useTheme();
   const [dealAmount, setDealAmount] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [addToOwnedVehicles, setAddToOwnedVehicles] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,6 +45,7 @@ const CompleteDealModal = ({ isVisible, onClose, onSubmit, consultationId }) => 
     if (!isVisible) {
       setDealAmount('');
       setAdminNotes('');
+      setAddToOwnedVehicles(false);
       setError('');
       setIsSubmitting(false);
     }
@@ -75,6 +79,7 @@ const CompleteDealModal = ({ isVisible, onClose, onSubmit, consultationId }) => 
       await onSubmit({
         dealAmount: Number(dealAmount),
         adminNotes: adminNotes.trim(),
+        addToOwnedVehicles: addToOwnedVehicles,
       });
       // onSubmit should handle closing the modal
     } catch (err) {
@@ -157,9 +162,40 @@ const CompleteDealModal = ({ isVisible, onClose, onSubmit, consultationId }) => 
                   placeholder="거래 관련 메모를 입력하세요"
                   multiline
                   numberOfLines={4}
-                  style={{ marginBottom: theme.spacing.lg }}
+                  style={{ marginBottom: theme.spacing.md }}
                   editable={!isSubmitting}
                 />
+
+                {/* Checkbox for Sell Type Consultations */}
+                {isSellType && (
+                  <TouchableOpacity
+                    style={[
+                      styles.checkboxContainer,
+                      { marginBottom: theme.spacing.lg },
+                    ]}
+                    onPress={() => setAddToOwnedVehicles(!addToOwnedVehicles)}
+                    disabled={isSubmitting}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons
+                      name={addToOwnedVehicles ? 'check-box' : 'check-box-outline-blank'}
+                      size={24}
+                      color={addToOwnedVehicles ? theme.colors.primary.main : theme.colors.text.secondary}
+                    />
+                    <Text
+                      style={[
+                        styles.checkboxLabel,
+                        {
+                          fontSize: theme.typography.fontSize.body,
+                          color: theme.colors.text.primary,
+                          marginLeft: theme.spacing.sm,
+                        },
+                      ]}
+                    >
+                      관리자 소유 차량으로 등록
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
                 {/* Action Buttons */}
                 <View style={styles.buttonRow}>
@@ -204,6 +240,11 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
   },
   title: {},
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkboxLabel: {},
   buttonRow: {
     flexDirection: 'row',
   },
@@ -214,6 +255,7 @@ CompleteDealModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   consultationId: PropTypes.string,
+  isSellType: PropTypes.bool,
 };
 
 export default CompleteDealModal;

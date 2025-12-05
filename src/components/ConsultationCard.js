@@ -55,6 +55,7 @@ const ConsultationCard = ({
     vehicleId,
     preferredDate,
     preferredTime,
+    type,
   } = consultation;
 
   /**
@@ -88,7 +89,7 @@ const ConsultationCard = ({
 
   /**
    * Handle complete deal submission from modal
-   * @param {Object} formData - { dealAmount, adminNotes }
+   * @param {Object} formData - { dealAmount, adminNotes, addToOwnedVehicles }
    */
   const handleCompleteDeal = async (formData) => {
     setIsUpdating(true);
@@ -98,6 +99,7 @@ const ConsultationCard = ({
         dealAmount: formData.dealAmount,
         adminNotes: formData.adminNotes,
         completedBy: user?.uid || null,
+        isSell: formData.addToOwnedVehicles, // Use transaction for sell-type with checkbox checked
       });
 
       toast.showSuccess('거래가 완료되었습니다.');
@@ -272,6 +274,7 @@ const ConsultationCard = ({
         onClose={() => setIsModalVisible(false)}
         onSubmit={handleCompleteDeal}
         consultationId={id}
+        isSellType={type === 'sell'}
       />
     </>
   );
@@ -306,6 +309,7 @@ ConsultationCard.propTypes = {
     vehicleId: PropTypes.string.isRequired,
     preferredDate: PropTypes.string.isRequired,
     preferredTime: PropTypes.string.isRequired,
+    type: PropTypes.oneOf(['buy', 'sell']),
   }).isRequired,
   onNavigateToVehicle: PropTypes.func,
   onUpdateSuccess: PropTypes.func,

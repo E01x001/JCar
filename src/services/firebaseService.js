@@ -225,28 +225,104 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
 };
 
 // --------------------
-// 상담 거래 완료 (간단 버전)
+// 상담 거래 완료
 // --------------------
-export const completeConsultation = async ({ docId, dealAmount, adminNotes = '', completedBy }) => {
+export const completeConsultation = async ({ docId, dealAmount, adminNotes = '', completedBy, isSell = false }) => {
   try {
-    const updateData = {
-      consultationStatus: 'completed',
-      completedAt: firestore.FieldValue.serverTimestamp(),
-      dealAmount: Number(dealAmount),
-      completedBy: completedBy,
-    };
+    // If NOT a sell-type consultation, use simple update
+    if (!isSell) {
+      const updateData = {
+        consultationStatus: 'completed',
+        completedAt: firestore.FieldValue.serverTimestamp(),
+        dealAmount: Number(dealAmount),
+        completedBy: completedBy,
+      };
 
-    // Add adminNotes only if provided
-    if (adminNotes) {
-      updateData.adminNotes = adminNotes;
+      // Add adminNotes only if provided
+      if (adminNotes) {
+        updateData.adminNotes = adminNotes;
+      }
+
+      await firestore()
+        .collection('consultation_requests')
+        .doc(docId)
+        .update(updateData);
+
+      return { success: true };
     }
 
-    await firestore()
-      .collection('consultation_requests')
-      .doc(docId)
-      .update(updateData);
+    // For sell-type consultations, use transaction
+    const result = await firestore().runTransaction(async (transaction) => {
+      const consultationRef = firestore().collection('consultation_requests').doc(docId);
+      const consultationDoc = await transaction.get(consultationRef);
 
-    return { success: true };
+      if (!consultationDoc.exists) {
+        throw new Error('상담 정보를 찾을 수 없습니다.');
+      }
+
+      const consultationData = consultationDoc.data();
+      const vehicleId = consultationData.vehicleId;
+
+      if (!vehicleId) {
+        throw new Error('차량 정보가 없습니다.');
+      }
+
+      // Read vehicle document
+      const vehicleRef = firestore().collection('vehicles').doc(vehicleId);
+      const vehicleDoc = await transaction.get(vehicleRef);
+
+      if (!vehicleDoc.exists) {
+        throw new Error('차량 정보를 찾을 수 없습니다.');
+      }
+
+      const vehicleData = vehicleDoc.data();
+
+      // 1. Update consultation status
+      const consultationUpdateData = {
+        consultationStatus: 'completed',
+        completedAt: firestore.FieldValue.serverTimestamp(),
+        dealAmount: Number(dealAmount),
+        completedBy: completedBy,
+      };
+
+      if (adminNotes) {
+        consultationUpdateData.adminNotes = adminNotes;
+      }
+
+      transaction.update(consultationRef, consultationUpdateData);
+
+      // 2. Create admin_owned_vehicles document
+      const ownedVehicleRef = firestore().collection('admin_owned_vehicles').doc();
+      transaction.set(ownedVehicleRef, {
+        vehicleId: vehicleId,
+        vehicleName: consultationData.vehicleName || vehicleData.vehicleName || '알 수 없음',
+        purchasePrice: Number(dealAmount),
+        purchaseDate: firestore.FieldValue.serverTimestamp(),
+        consultationId: docId,
+        previousOwnerId: consultationData.userId,
+        previousOwnerName: consultationData.userName,
+        status: 'owned',
+        soldDate: null,
+        soldPrice: null,
+        // Copy vehicle details
+        manufacturer: vehicleData.manufacturer,
+        model: vehicleData.model,
+        year: vehicleData.year,
+        mileage: vehicleData.mileage,
+        imageUrl: vehicleData.imageUrl,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+      // 3. Update vehicle status to 'sold'
+      transaction.update(vehicleRef, {
+        status: 'sold',
+        soldDate: firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { success: true };
+    });
+
+    return result;
   } catch (error) {
     console.error('거래완료 처리 오류:', error);
     crashlytics().recordError(error);
