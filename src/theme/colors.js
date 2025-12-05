@@ -30,6 +30,11 @@ export const colors = {
     light: '#E55565',
     dark: '#C82333',
   },
+  error: {
+    main: '#DC3545',
+    light: '#E55565',
+    dark: '#C82333',
+  },
   info: {
     main: '#17A2B8',
     light: '#3BB5C8',
