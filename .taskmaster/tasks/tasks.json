@@ -2409,7 +2409,7 @@
         "dependencies": [
           "36"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2417,7 +2417,7 @@
             "description": "Implement the user interface for filtering completed deals. This includes a dropdown for selecting the month and a segmented control for the deal type (All, Buy, Sell).",
             "dependencies": [],
             "details": "In the '거래완료' tab component file, add a `react-native-picker-select` component for month selection and a segmented control component for deal type. Position these controls above the list of deals.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Visually verify that the dropdown and segmented control render correctly. Ensure the month dropdown is populated with a relevant list of months (e.g., the last 12 months)."
           },
           {
@@ -2428,7 +2428,7 @@
               1
             ],
             "details": "In the '거래완료' screen component, declare two state variables, for example: `const [selectedMonth, setSelectedMonth] = useState(new Date());` and `const [selectedType, setSelectedType] = useState('All');`. Wire these to the filter components' `onValueChange` props.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use React Developer Tools to inspect the component's state. Change the filter values in the UI and confirm that the corresponding state variables are updated correctly to reflect the user's selection."
           },
           {
@@ -2439,7 +2439,7 @@
               2
             ],
             "details": "The query logic must construct a date range for the `completedAt` timestamp field, covering the start and end of the `selectedMonth`. If `selectedType` is not 'All', add a `where('type', '==', selectedType)` clause to the query.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "With mock data in Firestore, select a specific month and type in the UI. Verify that only the matching deals are fetched and displayed. Test the 'All' type filter to ensure it correctly removes the type constraint from the query."
           },
           {
@@ -2450,7 +2450,7 @@
               3
             ],
             "details": "Use the `useMemo` hook to process the array of fetched deals. The hook's dependency array must include the fetched data. The function should iterate through the deals, summing prices based on type to calculate total sales, purchases, and net profit.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a unit test for the calculation logic. Provide a mock array of deal objects and assert that the calculated statistics (count, amounts, profit) are correct. Test with an empty array of deals."
           },
           {
@@ -2461,7 +2461,7 @@
               4
             ],
             "details": "Create a new component, e.g., `DealsSummaryCard`, that accepts the calculated statistics as props. This component will render a `Card` containing styled `Text` elements for each statistic. Place this component within the `ListHeaderComponent` of the `FlatList`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Visually inspect the summary card in the UI. Change the filters to update the underlying data and verify that the numbers displayed in the card update correctly and are formatted properly (e.g., with currency symbols and commas)."
           }
         ]
@@ -2477,7 +2477,63 @@
           "40"
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create OwnedVehiclesList Component and Set Up Data Fetching",
+            "description": "Create a new file for the `OwnedVehiclesList` component and implement the Firestore query to fetch vehicles from the `admin_owned_vehicles` collection where the status is 'owned'.",
+            "dependencies": [],
+            "details": "Create the file `src/components/admin/OwnedVehiclesList.js`. Inside, set up a functional component. Use the existing Firebase utility or hook to create a query on the `admin_owned_vehicles` collection with a `where('status', '==', 'owned')` clause. Manage the fetched data in the component's state.",
+            "status": "pending",
+            "testStrategy": "Verify that the component correctly initiates a Firestore query upon mounting and that the data fetched matches the expected documents in the database."
+          },
+          {
+            "id": 2,
+            "title": "Implement the Vehicle Item Card UI",
+            "description": "Create the render function or sub-component responsible for displaying a single vehicle's information within a JCar `Card` component.",
+            "dependencies": [
+              1
+            ],
+            "details": "Within `OwnedVehiclesList`, create a function `renderVehicleItem({ item })`. This function will return a JCar `Card` component. The card should display the vehicle's image, name (e.g., `item.name`), purchase price, and purchase date using the JCar design system's typography components.",
+            "status": "pending",
+            "testStrategy": "Create a storybook or a temporary view to render the item card with mock data. Verify that the image, name, price, and date are displayed correctly and follow the design system styles."
+          },
+          {
+            "id": 3,
+            "title": "Build the Horizontal FlatList for Owned Vehicles",
+            "description": "Use the `FlatList` component to create a horizontally scrolling list of the vehicle item cards.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "In the `OwnedVehiclesList` component, implement a `FlatList`. Set its `data` prop to the fetched vehicles state. Set the `renderItem` prop to the `renderVehicleItem` function created in the previous task. Configure it for horizontal scrolling by setting `horizontal={true}` and `showsHorizontalScrollIndicator={false}`. Add appropriate styling for padding and item spacing.",
+            "status": "pending",
+            "testStrategy": "Render the component with multiple mock vehicle entries. Confirm that the list scrolls horizontally and that all items are rendered correctly with proper spacing between them."
+          },
+          {
+            "id": 4,
+            "title": "Handle Loading and Empty List States",
+            "description": "Implement UI states for when the vehicle data is loading and when the fetched list is empty.",
+            "dependencies": [
+              1
+            ],
+            "details": "Check the status of the data fetching hook. While loading, display a `Spinner` or similar loading indicator. If the fetch is complete and the data array is empty, render the `StateScreen` component with an appropriate icon and message, such as 'No owned vehicles to display'.",
+            "status": "pending",
+            "testStrategy": "Test the loading state by simulating a delay in the data fetch. Test the empty state by ensuring the `admin_owned_vehicles` collection has no documents with `status: 'owned'` and verifying the `StateScreen` appears."
+          },
+          {
+            "id": 5,
+            "title": "Integrate OwnedVehiclesList into AdminPageScreen",
+            "description": "Import and render the `OwnedVehiclesList` component within the `AdminPageScreen` layout and implement navigation to the detail screen.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Open `src/screens/admin/AdminPageScreen.js`. Import the `OwnedVehiclesList` component. Add a section title (e.g., using `theme.typography.H4`) like 'Owned Vehicles' and place the `<OwnedVehiclesList />` component below it. Add an `onPress` handler to the `Card` in `renderVehicleItem` that navigates to `AdminOwnedVehicleDetailScreen`, passing the `item.id` as a route parameter.",
+            "status": "pending",
+            "testStrategy": "Navigate to the Admin Page. Verify the 'Owned Vehicles' section and the list are displayed correctly. Tap on a vehicle card and confirm that the app navigates to the `AdminOwnedVehicleDetailScreen` with the correct vehicle ID."
+          }
+        ]
       },
       {
         "id": 43,
@@ -2517,7 +2573,7 @@
       ],
       "created": "2025-12-05T04:25:18.143Z",
       "description": "Tasks for master context",
-      "updated": "2025-12-05T07:25:45.846Z"
+      "updated": "2025-12-05T07:34:03.222Z"
     }
   }
 }

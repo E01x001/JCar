@@ -11,8 +11,9 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
+import OwnedVehiclesList from '../components/OwnedVehiclesList';
 
-const AdminPageScreen = () => {
+const AdminPageScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
   const theme = useTheme();
   const toast = useToast();
@@ -94,6 +95,10 @@ const AdminPageScreen = () => {
     toast.showInfo('테스트 완료', 'Crashlytics에 에러가 기록되었습니다. Firebase Console에서 확인하세요.');
   };
 
+  const handleOwnedVehiclePress = (vehicleId) => {
+    navigation.navigate('AdminOwnedVehicleDetailScreen', { vehicleId });
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md }}>
@@ -105,8 +110,19 @@ const AdminPageScreen = () => {
           }]}>이메일: {user?.email ?? '이메일 없음'}</Text>
         </Card>
 
+        {/* Owned Vehicles Section */}
+        <Text style={[styles.sectionTitle, {
+          fontSize: theme.typography.fontSize.h3,
+          fontWeight: theme.typography.fontWeight.semiBold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing.md,
+        }]}>소유 차량</Text>
+
+        <OwnedVehiclesList onVehiclePress={handleOwnedVehiclePress} />
+
         {/* Vehicles Section */}
         <Text style={[styles.sectionTitle, {
+          marginTop: theme.spacing.xl,
           fontSize: theme.typography.fontSize.h3,
           fontWeight: theme.typography.fontWeight.semiBold,
           color: theme.colors.text.primary,
