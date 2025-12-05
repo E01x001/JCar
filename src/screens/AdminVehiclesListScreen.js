@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
 import firestore, { collection, getDocs } from '@react-native-firebase/firestore';
@@ -21,6 +21,7 @@ const AdminVehiclesListScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingVehicleId, setDeletingVehicleId] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,25 +31,31 @@ const AdminVehiclesListScreen = ({ navigation }) => {
   // Get vehicle statistics
   const vehicleStats = useVehicleStats();
 
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        setLoading(true);
-        const snapshot = await getDocs(collection(firestore(), 'vehicles'));
-        const vehiclesData = snapshot.docs.map(d => ({
-          id: d.id,
-          ...d.data(),
-        }));
-        setVehicles(vehiclesData);
-      } catch (error) {
-        console.error('차량 목록 불러오기 오류:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true);
+      const snapshot = await getDocs(collection(firestore(), 'vehicles'));
+      const vehiclesData = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+      }));
+      setVehicles(vehiclesData);
+    } catch (error) {
+      console.error('차량 목록 불러오기 오류:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchVehicles();
   }, []);
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchVehicles();
+    setIsRefreshing(false);
+  };
 
   // Filter vehicles based on search query and filters
   const filteredVehicles = useMemo(() => {
@@ -281,6 +288,14 @@ const AdminVehiclesListScreen = ({ navigation }) => {
           data={filteredVehicles}
           renderItem={renderVehicle}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary.main]}
+              tintColor={theme.colors.primary.main}
+            />
+          }
           ListEmptyComponent={
             <StateScreen
               icon="directions-car"

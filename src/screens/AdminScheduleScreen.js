@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import firestore, { collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -25,6 +25,7 @@ const AdminScheduleScreen = () => {
   const [markedDates, setMarkedDates] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [consultations, setConsultations] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -89,6 +90,15 @@ const AdminScheduleScreen = () => {
     item => item.preferredDate === selectedDate
   );
 
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    // Since we're using onSnapshot, the data will automatically update
+    // Just simulate a refresh delay
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
       <View style={{ paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.md }}>
@@ -144,6 +154,14 @@ const AdminScheduleScreen = () => {
             <FlatList
               data={filteredConsultations}
               keyExtractor={(item) => item.id}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={onRefresh}
+                  colors={[theme.colors.primary.main]}
+                  tintColor={theme.colors.primary.main}
+                />
+              }
               contentContainerStyle={{
                 paddingHorizontal: theme.spacing.md,
                 paddingBottom: theme.spacing.md,

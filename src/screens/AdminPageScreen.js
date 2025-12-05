@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Text, StyleSheet, ScrollView, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import auth from '@react-native-firebase/auth';
 import firestore, { collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
@@ -18,6 +18,7 @@ const AdminPageScreen = ({ navigation }) => {
   const theme = useTheme();
   const toast = useToast();
   const [vehicles, setVehicles] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -99,9 +100,28 @@ const AdminPageScreen = ({ navigation }) => {
     navigation.navigate('AdminOwnedVehicleDetailScreen', { vehicleId });
   };
 
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    // Since we're using onSnapshot, the data will automatically update
+    // Just simulate a refresh delay
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      <ScrollView contentContainerStyle={{ padding: theme.spacing.md }}>
+      <ScrollView
+        contentContainerStyle={{ padding: theme.spacing.md }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary.main]}
+            tintColor={theme.colors.primary.main}
+          />
+        }
+      >
         {/* User Info Card */}
         <Card style={{ marginBottom: theme.spacing.lg }}>
           <Text style={[styles.userInfo, {

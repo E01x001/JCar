@@ -2048,8 +2048,53 @@
           "27",
           "28"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Pull-to-Refresh on AdminVehiclesListScreen",
+            "description": "Add the pull-to-refresh functionality to the vehicles list on the admin panel, allowing admins to manually refresh the list of vehicles from Firestore.",
+            "dependencies": [],
+            "details": "In `AdminVehiclesListScreen`, import `RefreshControl` from 'react-native'. Create a state variable `isRefreshing`. Create an `onRefresh` function that sets `isRefreshing` to true, calls the existing data fetching logic, and sets `isRefreshing` to false on completion. Pass a configured `RefreshControl` instance to the `FlatList`'s `refreshControl` prop, setting its `refreshing` and `onRefresh` props, and its `colors` prop to `[theme.colors.primary.main]`.",
+            "status": "done",
+            "testStrategy": "Navigate to the Admin Vehicles screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears."
+          },
+          {
+            "id": 2,
+            "title": "Implement Pull-to-Refresh on AdminScheduleScreen",
+            "description": "Add the pull-to-refresh functionality to the schedule list on the admin panel, following the pattern established for the vehicles list.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `AdminScheduleScreen`, replicate the pull-to-refresh implementation from the previous task. Introduce an `isRefreshing` state and an `onRefresh` handler. Wire the `RefreshControl` component to the `FlatList` with the correct state, handler, and theme color.",
+            "status": "done",
+            "testStrategy": "Navigate to the Admin Schedule screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears."
+          },
+          {
+            "id": 3,
+            "title": "Implement Pull-to-Refresh on AdminPageScreen",
+            "description": "Add the pull-to-refresh functionality to the page management list on the admin panel to complete the feature implementation across all specified admin lists.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `AdminPageScreen`, apply the same pull-to-refresh pattern. Add an `isRefreshing` state, an `onRefresh` callback that wraps the data fetching logic, and pass the `RefreshControl` component to the `FlatList`'s `refreshControl` prop with the correct configuration.",
+            "status": "done",
+            "testStrategy": "Navigate to the Admin Page screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears."
+          },
+          {
+            "id": 4,
+            "title": "Verify Consistency and Finalize Pull-to-Refresh Implementation",
+            "description": "Perform a final review of all three admin screens to ensure the pull-to-refresh functionality is consistent in behavior, appearance, and implementation quality.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Review the code for `AdminVehiclesListScreen`, `AdminScheduleScreen`, and `AdminPageScreen`. Ensure the state management, `onRefresh` function structure, and `RefreshControl` props are consistent. Manually test all three screens one after another to confirm the user experience is identical.",
+            "status": "done",
+            "testStrategy": "Perform end-to-end testing by navigating between the three admin list screens and using the pull-to-refresh feature on each. Confirm the visual indicator and data refresh behavior are identical and free of bugs."
+          }
+        ]
       },
       {
         "id": 32,
@@ -2734,7 +2779,7 @@
       ],
       "created": "2025-12-05T04:25:18.143Z",
       "description": "Tasks for master context",
-      "updated": "2025-12-05T07:55:31.384Z"
+      "updated": "2025-12-05T08:17:22.490Z"
     }
   }
 }
