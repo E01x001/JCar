@@ -2141,7 +2141,7 @@
         "dependencies": [
           "36"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2149,7 +2149,7 @@
             "description": "Create the basic file structure for the `ConsultationCard` component and define its props interface. The component should be built using the JCar `Card` as its root element.",
             "dependencies": [],
             "details": "Create a new file at `src/components/consultation/ConsultationCard.tsx`. Define a `ConsultationCardProps` interface that accepts a consultation object containing vehicle name, image URL, customer info, creation date, and consultationStatus.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the component file is created and it renders the base `Card` component without crashing. Check that the props interface is correctly defined in TypeScript."
           },
           {
@@ -2160,7 +2160,7 @@
               1
             ],
             "details": "Inside the `ConsultationCard` component, use `Text` and `Image` components to display the data received from props. Arrange the elements in a clean, readable layout within the base `Card` component.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Pass a mock consultation object to the component and visually verify that the vehicle name, customer info, and creation date are displayed correctly. Ensure the vehicle image loads properly."
           },
           {
@@ -2171,7 +2171,7 @@
               1
             ],
             "details": "Create a mapping object that links each `consultationStatus` (e.g., 'pending', 'confirmed', 'rejected') to a specific color from the theme (e.g., `theme.colors.warning.main`). Use this map to set the `color` prop of the `Badge` component.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a Storybook story or a test view where you can pass different `consultationStatus` props to the card. Verify that the badge displays the correct text and background color for each status."
           },
           {
@@ -2182,7 +2182,7 @@
               1
             ],
             "details": "Use a switch statement or a series of conditional checks on the `consultationStatus` prop. For each status, render the appropriate set of `Button` components. For 'pending', render '채결', '보류', '거절' buttons. For other statuses, render the relevant buttons or none at all.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "In the Storybook story or test view, cycle through all possible `consultationStatus` values. For each status, confirm that the correct set of action buttons (with the correct labels) is displayed, and that buttons for other statuses are hidden."
           },
           {
@@ -2195,7 +2195,7 @@
               4
             ],
             "details": "Create `ConsultationCard.stories.tsx`. Add a separate story for each possible `consultationStatus` (e.g., 'Pending', 'Confirmed', 'OnHold', 'Rejected'). Pass mock data to each story to ensure it accurately represents a real-world use case.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Review the Storybook build. Navigate through each story for the `ConsultationCard`. Verify that the information, badge color, and action buttons are all rendered correctly for every single state, matching the design specifications."
           }
         ]
@@ -2210,8 +2210,61 @@
         "dependencies": [
           "37"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create `updateConsultationStatus` Function in Firestore Service",
+            "description": "Implement the core backend logic in a dedicated Firestore service file to update the status of a consultation request. This function will serve as the single point of interaction with Firestore for status changes, ensuring the logic is centralized and reusable.",
+            "dependencies": [],
+            "details": "In a relevant service file, such as `src/services/firestoreService.ts`, create an async function `updateConsultationStatus(docId: string, newStatus: string)`. This function should use the Firebase SDK to update the `consultationStatus` field of the document in the `consultation_requests` collection. The call should be wrapped in a try/catch block to handle potential errors from Firestore.",
+            "status": "done",
+            "testStrategy": "Write a unit test for the service function using firebase-mock or a similar library. Verify that it attempts to call `firestore().collection().doc().update()` with the correct document ID and payload. Test the error path by mocking a rejected promise from the update call."
+          },
+          {
+            "id": 2,
+            "title": "Implement Loading State in ConsultationCard Component",
+            "description": "Add state management to the `ConsultationCard` to handle the loading state during the Firestore update operation. This will provide immediate visual feedback to the user and prevent multiple clicks on the action buttons while an update is in progress.",
+            "dependencies": [],
+            "details": "In the `ConsultationCard.tsx` component, introduce a new state variable using the `useState` hook, for example: `const [isUpdating, setIsUpdating] = useState(false);`. Bind the `disabled` prop of the action buttons to this `isUpdating` state. Conditionally render an `ActivityIndicator` over the buttons or in place of the button text when `isUpdating` is true.",
+            "status": "done",
+            "testStrategy": "Manually test the component in a storybook or on a development screen. Create a mock function that simulates a delay and toggles the `isUpdating` state. Verify that buttons are disabled and a loading indicator appears as expected during the simulated update."
+          },
+          {
+            "id": 3,
+            "title": "Wire `onPress` Handlers in `ConsultationCard` to Service Function",
+            "description": "Connect the `onPress` events of the action buttons within the `ConsultationCard` to the newly created Firestore service function, passing the correct document ID and target status for the update.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Import the `updateConsultationStatus` function into `ConsultationCard.tsx`. Create a new async handler function, `handleStatusUpdate(newStatus: string)`, inside the component. This handler will call `setIsUpdating(true)`, then `await updateConsultationStatus(props.consultation.id, newStatus)`, and finally `setIsUpdating(false)` in a `finally` block. Attach this handler to the `onPress` prop of each action button, passing the appropriate new status string.",
+            "status": "done",
+            "testStrategy": "Using a development build, press an action button on the card. Check the Firestore console to confirm that the `consultationStatus` field for the corresponding document has been updated to the new value. Verify network logs to see the request being made."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Toast Messages for User Feedback",
+            "description": "Use the existing global toast message system (from Task 19) to provide clear feedback to the user upon the success or failure of the status update operation.",
+            "dependencies": [
+              3
+            ],
+            "details": "In `ConsultationCard.tsx`, get access to the toast context using the `useToast` hook. Enhance the `handleStatusUpdate` function's try/catch block. Upon a successful update (after the await call in the `try` block), show a success message like `toast.showSuccess('상태가 성공적으로 변경되었습니다.')`. In the `catch` block, log the error and show an error message like `toast.showError('업데이트 중 오류가 발생했습니다.')`.",
+            "status": "done",
+            "testStrategy": "Trigger a status update and confirm a success toast message appears. Manually introduce an error in the service function (e.g., reference a wrong collection) or use network throttling to simulate a failure, and confirm that an error toast message is displayed correctly."
+          },
+          {
+            "id": 5,
+            "title": "Propagate State Change to Parent List Screen",
+            "description": "Ensure the UI of the parent list screen is updated immediately after a consultation's status changes. This prevents stale data from being shown and avoids the need for a manual pull-to-refresh.",
+            "dependencies": [
+              4
+            ],
+            "details": "Modify the `ConsultationCard` component to accept a new function prop, such as `onUpdateSuccess: () => void;`. In the parent screen that renders the list of cards (e.g., `AdminScheduleScreen.tsx`), pass its data-refetching function as this prop. Inside `ConsultationCard.tsx`, within the `handleStatusUpdate` function, call `onUpdateSuccess()` after the status is successfully updated and the success toast is shown.",
+            "status": "done",
+            "testStrategy": "Navigate to the screen containing the list of consultations. Perform a status update on one of the cards. Verify that the card's UI (e.g., buttons, status label) changes and the list re-orders or refreshes automatically without any manual user action."
+          }
+        ]
       },
       {
         "id": 39,
@@ -2223,8 +2276,61 @@
         "dependencies": [
           "38"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create `completeConsultation` Function in Firestore Service",
+            "description": "Implement the backend logic in a Firestore service file to update a consultation document, setting its status to 'completed' and adding the final deal information.",
+            "dependencies": [],
+            "details": "In the primary Firestore service file (e.g., `src/services/firestoreService.js`), create a new async function `completeConsultation({ docId, dealAmount, adminNotes, completedBy })`. This function will use `updateDoc` to update the specified consultation document with `consultationStatus: 'completed'`, `completedAt: serverTimestamp()`, `dealAmount`, `adminNotes`, and `completedBy` fields.",
+            "status": "done",
+            "testStrategy": "Write a unit test for the service function using the Firebase testing library. Mock the `updateDoc` call and verify it's called with the correct document ID and payload. Ensure `serverTimestamp()` is used for `completedAt`."
+          },
+          {
+            "id": 2,
+            "title": "Create `CompleteDealModal` Component File and Structure",
+            "description": "Create the new reusable modal component, setting up its basic structure, props for visibility, and callbacks.",
+            "dependencies": [],
+            "details": "Create a new file at `src/components/modals/CompleteDealModal.js`. The component should be built upon React Native's `Modal` component and accept props like `isVisible`, `onClose`, and `onSubmit`. The main content area should use the existing `Card` component to ensure consistent styling.",
+            "status": "done",
+            "testStrategy": "Visually test that the modal can be opened and closed by controlling the `isVisible` prop from a parent component. Verify the `onClose` callback is triggered correctly."
+          },
+          {
+            "id": 3,
+            "title": "Add Form Inputs and Buttons to CompleteDealModal",
+            "description": "Populate the modal with the necessary input fields for deal amount, admin notes, and the confirm/cancel action buttons using existing shared components.",
+            "dependencies": [
+              2
+            ],
+            "details": "Inside `CompleteDealModal.js`, use the existing `InputField` component for 'Deal Amount' (setting `keyboardType=\"numeric\"`) and 'Admin Notes'. Use the existing `Button` component for 'Confirm' and 'Cancel' actions. The cancel button should call the `onClose` prop.",
+            "status": "done",
+            "testStrategy": "Use Storybook or a similar tool to visually inspect the modal's layout. Ensure the numeric keyboard appears for the deal amount field and that all components are styled correctly according to the theme."
+          },
+          {
+            "id": 4,
+            "title": "Implement Form State Management and Validation Logic",
+            "description": "Add local state management for the form inputs within the modal and implement validation logic, specifically making the deal amount required.",
+            "dependencies": [
+              3
+            ],
+            "details": "Use `useState` hooks in `CompleteDealModal.js` to manage the values for `dealAmount` and `adminNotes`. Implement validation logic that checks if `dealAmount` is a non-empty, positive number. The 'Confirm' button should be disabled until the form is valid. An error message should be displayed via the `InputField`'s `error` prop if validation fails on an attempt to submit.",
+            "status": "done",
+            "testStrategy": "Unit test the component's state logic. Verify the 'Confirm' button's `disabled` prop is true when the deal amount is empty or invalid. Verify the `onSubmit` prop is called with the correct state values when the form is valid and the button is pressed."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Modal into the Consultation Admin View",
+            "description": "Connect the '거래완료' button on the consultation card/view to trigger the modal, pass the necessary document ID, and handle the submission callback.",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "In the relevant admin screen component, manage state for the modal's visibility and the selected consultation ID. When the '거래완료' button is pressed, update the state to show the modal and pass the `docId` as a prop. The modal's `onSubmit` callback should invoke the `completeConsultation` service function with the form data, then close the modal and refresh the data.",
+            "status": "done",
+            "testStrategy": "Perform end-to-end testing. Click the '거래완료' button, fill out the modal form, and submit. Verify in the Firestore console or emulator that the document is updated with the correct `consultationStatus`, `dealAmount`, `adminNotes`, and `completedAt` timestamp. Also, test the cancel flow."
+          }
+        ]
       },
       {
         "id": 40,
@@ -2236,8 +2342,62 @@
         "dependencies": [
           "39"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Modify 'completeConsultation' Service to Handle 'Sell' Type",
+            "description": "Update the `completeConsultation` service function to accept a new boolean parameter, `isSell`, to differentiate between standard completions and 'sell' type completions. Add an `if` condition to branch the logic based on this parameter.",
+            "dependencies": [],
+            "details": "Locate the `completeConsultation` function in the Firestore services file. Change its signature to accept the consultation ID and an `isSell` boolean. Inside the function, add a conditional block: `if (isSell) { /* New transaction logic */ } else { /* Existing completion logic */ }`.",
+            "status": "done",
+            "testStrategy": "Write a unit test for the service function to verify that the correct logical branch is executed based on the `isSell` parameter's value."
+          },
+          {
+            "id": 2,
+            "title": "Set Up Firestore Transaction and Initial Data Reads",
+            "description": "Within the `isSell` block of the `completeConsultation` function, implement the `runTransaction` method from the Firestore SDK. Inside the transaction, get references to and read the consultation document and the associated vehicle document.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use `db.runTransaction(async (transaction) => { ... })`. Inside the transaction callback, get the document reference for `consultation_requests/{consultationId}` and the `vehicleRef` using the `vehicleId` from the consultation data. Use `transaction.get()` for both documents and validate that they exist before proceeding.",
+            "status": "done",
+            "testStrategy": "Use a testing library with mocks to verify that `runTransaction` is called and that `transaction.get` is invoked with the correct document references for the consultation and vehicle."
+          },
+          {
+            "id": 3,
+            "title": "Implement Write Operations within the Transaction",
+            "description": "Implement the three required write operations within the Firestore transaction: update the consultation status, create a new `admin_owned_vehicles` document, and update the original vehicle's status to 'sold'.",
+            "dependencies": [
+              2
+            ],
+            "details": "Inside the transaction callback, after reading the documents: 1. Use `transaction.update(consultationRef, { consultationStatus: 'completed' })`. 2. Define a new reference in `admin_owned_vehicles` and use `transaction.set()` to create the new document, merging data from the vehicle and consultation. 3. Use `transaction.update(vehicleRef, { status: 'sold' })`.",
+            "status": "done",
+            "testStrategy": "Using the Firebase Emulator Suite, execute the function and assert that all three database modifications (consultation update, new admin vehicle creation, vehicle status update) occur correctly and atomically."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Transaction Logic with UI Component",
+            "description": "Modify the relevant UI component, likely `ConsultationCard` or a detail screen, to call the updated `completeConsultation` service. This includes passing the `isSell` flag based on user input (e.g., a checkbox) and handling loading/feedback states.",
+            "dependencies": [
+              3
+            ],
+            "details": "In the 'Complete' button's `onPress` handler, pass the `isSell` flag to `completeConsultation`. Manage a loading state to disable the button during the transaction. On a successful promise resolution, use the existing `useToast` hook to show a success message.",
+            "status": "done",
+            "testStrategy": "Manually test the UI flow. Check the 'sell' box, click 'complete,' and verify the button enters a loading state. Confirm a success toast appears on completion and the UI updates accordingly."
+          },
+          {
+            "id": 5,
+            "title": "Add Error Handling and Update Security Rules",
+            "description": "Wrap the `runTransaction` call in a `try/catch` block to handle potential failures. On error, log it and display a user-facing error message. Update `firestore.rules` to secure the new `admin_owned_vehicles` collection.",
+            "dependencies": [
+              3
+            ],
+            "details": "Surround the `db.runTransaction(...)` call with `try/catch`. In the `catch` block, log the error and ensure the promise is rejected so the UI can handle it. In the UI, catch the error and display a toast message. In `firestore.rules`, add a rule for `admin_owned_vehicles/{docId}` allowing reads and writes only for authenticated admin users.",
+            "status": "done",
+            "testStrategy": "Force a transaction failure (e.g., by violating a security rule in a test) and verify an error toast is shown. Use the emulator to test the new security rule, ensuring non-admins cannot write to `admin_owned_vehicles`."
+          }
+        ]
       },
       {
         "id": 41,
@@ -2250,7 +2410,61 @@
           "36"
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Month and Type Filter UI to 'Completed Deals' Tab",
+            "description": "Implement the user interface for filtering completed deals. This includes a dropdown for selecting the month and a segmented control for the deal type (All, Buy, Sell).",
+            "dependencies": [],
+            "details": "In the '거래완료' tab component file, add a `react-native-picker-select` component for month selection and a segmented control component for deal type. Position these controls above the list of deals.",
+            "status": "pending",
+            "testStrategy": "Visually verify that the dropdown and segmented control render correctly. Ensure the month dropdown is populated with a relevant list of months (e.g., the last 12 months)."
+          },
+          {
+            "id": 2,
+            "title": "Implement State Management for Filters",
+            "description": "Create and manage the state for the selected month and deal type using React's `useState` hook. Connect the UI components from the previous task to update this state when their values change.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the '거래완료' screen component, declare two state variables, for example: `const [selectedMonth, setSelectedMonth] = useState(new Date());` and `const [selectedType, setSelectedType] = useState('All');`. Wire these to the filter components' `onValueChange` props.",
+            "status": "pending",
+            "testStrategy": "Use React Developer Tools to inspect the component's state. Change the filter values in the UI and confirm that the corresponding state variables are updated correctly to reflect the user's selection."
+          },
+          {
+            "id": 3,
+            "title": "Modify Firestore Query to Apply Filters",
+            "description": "Update the Firestore query hook or service function to filter the 'deals' collection based on the `selectedMonth` and `selectedType` state. The query must dynamically adjust to the selected filters.",
+            "dependencies": [
+              2
+            ],
+            "details": "The query logic must construct a date range for the `completedAt` timestamp field, covering the start and end of the `selectedMonth`. If `selectedType` is not 'All', add a `where('type', '==', selectedType)` clause to the query.",
+            "status": "pending",
+            "testStrategy": "With mock data in Firestore, select a specific month and type in the UI. Verify that only the matching deals are fetched and displayed. Test the 'All' type filter to ensure it correctly removes the type constraint from the query."
+          },
+          {
+            "id": 4,
+            "title": "Calculate and Memoize Deal Statistics",
+            "description": "Create logic to calculate key statistics (total deals, total purchase amount, total sales amount, net profit) from the filtered list of completed deals. Memoize the result to prevent unnecessary recalculations on re-renders.",
+            "dependencies": [
+              3
+            ],
+            "details": "Use the `useMemo` hook to process the array of fetched deals. The hook's dependency array must include the fetched data. The function should iterate through the deals, summing prices based on type to calculate total sales, purchases, and net profit.",
+            "status": "pending",
+            "testStrategy": "Create a unit test for the calculation logic. Provide a mock array of deal objects and assert that the calculated statistics (count, amounts, profit) are correct. Test with an empty array of deals."
+          },
+          {
+            "id": 5,
+            "title": "Display Statistics in a Summary Card",
+            "description": "Develop and integrate a UI component, using the existing JCar `Card` component as a base, to display the calculated statistics at the top of the 'Completed Deals' list.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create a new component, e.g., `DealsSummaryCard`, that accepts the calculated statistics as props. This component will render a `Card` containing styled `Text` elements for each statistic. Place this component within the `ListHeaderComponent` of the `FlatList`.",
+            "status": "pending",
+            "testStrategy": "Visually inspect the summary card in the UI. Change the filters to update the underlying data and verify that the numbers displayed in the card update correctly and are formatted properly (e.g., with currency symbols and commas)."
+          }
+        ]
       },
       {
         "id": 42,
@@ -2302,7 +2516,8 @@
         "master"
       ],
       "created": "2025-12-05T04:25:18.143Z",
-      "description": "Tasks for master context"
+      "description": "Tasks for master context",
+      "updated": "2025-12-05T07:25:45.846Z"
     }
   }
 }

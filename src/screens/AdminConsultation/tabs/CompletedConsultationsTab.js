@@ -9,6 +9,7 @@ import StateScreen from '../../../components/StateScreen';
 const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
   const theme = useTheme();
   const [selectedMonth, setSelectedMonth] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
 
   const completedConsultations = consultations.filter(
     c => c.consultationStatus === 'completed'
@@ -27,16 +28,29 @@ const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
   }, [completedConsultations]);
 
   const filteredConsultations = useMemo(() => {
-    if (selectedMonth === 'all') {
-      return completedConsultations;
+    let filtered = completedConsultations;
+
+    // Filter by month
+    if (selectedMonth !== 'all') {
+      filtered = filtered.filter(c => {
+        if (!c.completedAt) {return false;}
+        const date = c.completedAt.toDate ? c.completedAt.toDate() : new Date(c.completedAt);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        return monthKey === selectedMonth;
+      });
     }
-    return completedConsultations.filter(c => {
-      if (!c.completedAt) {return false;}
-      const date = c.completedAt.toDate ? c.completedAt.toDate() : new Date(c.completedAt);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      return monthKey === selectedMonth;
-    });
-  }, [completedConsultations, selectedMonth]);
+
+    // Filter by type
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(c => {
+        if (selectedType === 'buy') {return c.type !== 'sell';}
+        if (selectedType === 'sell') {return c.type === 'sell';}
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [completedConsultations, selectedMonth, selectedType]);
 
   const statistics = useMemo(() => {
     const totalCount = filteredConsultations.length;
@@ -185,6 +199,96 @@ const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
         </ScrollView>
       </Card>
 
+      {/* Type Filter */}
+      <Card style={{ marginBottom: theme.spacing.md }}>
+        <Text style={[styles.filterTitle, {
+          fontSize: theme.typography.fontSize.body,
+          fontWeight: theme.typography.fontWeight.semiBold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing.sm,
+        }]}>상담 유형</Text>
+
+        <View style={styles.typeFilterRow}>
+          <TouchableOpacity
+            style={[
+              styles.typeButton,
+              {
+                backgroundColor: selectedType === 'all'
+                  ? theme.colors.primary.main
+                  : theme.colors.background.secondary,
+                borderRadius: theme.borderRadius.md,
+                paddingVertical: theme.spacing.xs,
+                paddingHorizontal: theme.spacing.md,
+                marginRight: theme.spacing.xs,
+                flex: 1,
+              },
+            ]}
+            onPress={() => setSelectedType('all')}
+          >
+            <Text style={{
+              fontSize: theme.typography.fontSize.bodySmall,
+              fontWeight: theme.typography.fontWeight.medium,
+              color: selectedType === 'all'
+                ? theme.colors.text.white
+                : theme.colors.text.secondary,
+              textAlign: 'center',
+            }}>전체</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.typeButton,
+              {
+                backgroundColor: selectedType === 'buy'
+                  ? theme.colors.primary.main
+                  : theme.colors.background.secondary,
+                borderRadius: theme.borderRadius.md,
+                paddingVertical: theme.spacing.xs,
+                paddingHorizontal: theme.spacing.md,
+                marginHorizontal: theme.spacing.xs,
+                flex: 1,
+              },
+            ]}
+            onPress={() => setSelectedType('buy')}
+          >
+            <Text style={{
+              fontSize: theme.typography.fontSize.bodySmall,
+              fontWeight: theme.typography.fontWeight.medium,
+              color: selectedType === 'buy'
+                ? theme.colors.text.white
+                : theme.colors.text.secondary,
+              textAlign: 'center',
+            }}>구매상담</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.typeButton,
+              {
+                backgroundColor: selectedType === 'sell'
+                  ? theme.colors.primary.main
+                  : theme.colors.background.secondary,
+                borderRadius: theme.borderRadius.md,
+                paddingVertical: theme.spacing.xs,
+                paddingHorizontal: theme.spacing.md,
+                marginLeft: theme.spacing.xs,
+                flex: 1,
+              },
+            ]}
+            onPress={() => setSelectedType('sell')}
+          >
+            <Text style={{
+              fontSize: theme.typography.fontSize.bodySmall,
+              fontWeight: theme.typography.fontWeight.medium,
+              color: selectedType === 'sell'
+                ? theme.colors.text.white
+                : theme.colors.text.secondary,
+              textAlign: 'center',
+            }}>판매상담</Text>
+          </TouchableOpacity>
+        </View>
+      </Card>
+
       {/* Statistics Card */}
       <Card style={{ marginBottom: theme.spacing.md }}>
         <Text style={[styles.statsTitle, {
@@ -278,6 +382,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   monthButton: {},
+  typeFilterRow: {
+    flexDirection: 'row',
+  },
+  typeButton: {},
   statsTitle: {},
   statsRow: {
     flexDirection: 'row',
