@@ -1558,12 +1558,13 @@
         "description": "Review and resolve 8 security vulnerabilities (2 high, 3 moderate, 3 low) reported by GitHub Dependabot by updating npm packages and ensuring application stability.",
         "details": "This task addresses security vulnerabilities identified in project dependencies. First, review all open alerts at https://github.com/E01x001/JCar/security/dependabot. Create a dedicated branch for this work (e.g., `fix/dependabot-vulns`). Use `npm audit` to get a detailed report locally. Address the vulnerabilities starting with the 'high' severity alerts, then 'moderate', and finally 'low'. Update packages individually or in small, logical groups using `npm install <package-name>@latest`. After each update, run `npm install` to regenerate the `package-lock.json` file. For any major version updates, consult the package's release notes for potential breaking changes. IMPORTANT: This is a special maintenance task and should not be completed until explicitly requested by the project lead.\n<info added on 2025-11-30T13:54:07.600Z>\n⚠️ SPECIAL TASK: Do not complete until user requests. 8 vulnerabilities detected (2 high, 3 moderate, 3 low). See: https://github.com/E01x001/JCar/security/dependabot\n</info added on 2025-11-30T13:54:07.600Z>",
         "testStrategy": "After all dependencies have been updated, run `npm audit` and confirm that it reports 0 vulnerabilities, or that any remaining vulnerabilities are documented and accepted. Open a Pull Request for the changes; the associated CI/CD workflow (from Task 9) must pass all jobs, including linting, unit tests, and the build process. Finally, after merging, perform a manual smoke test on a debug build to ensure core functionalities like login, viewing the vehicle list, and navigating to a detail page have not been affected by the updates.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "9"
         ],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2025-12-05T02:51:24.848Z"
       },
       {
         "id": 22,
@@ -1901,8 +1902,73 @@
         "dependencies": [
           "25"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Search Bar and Filter Container UI to AdminVehiclesListScreen",
+            "description": "Implement the static UI components for the search bar and the horizontal filter container on the AdminVehiclesListScreen, positioning them above the existing vehicle list.",
+            "dependencies": [],
+            "details": "In the `AdminVehiclesListScreen.tsx` file, add a `TextInput` component styled as a search bar with a search icon. Below it, add a `HorizontalScrollView` which will serve as the container for the filter chips. These components should be purely presentational without any state or logic yet.",
+            "status": "done",
+            "testStrategy": "Visually inspect the AdminVehiclesListScreen to ensure the search bar and the empty horizontal scroll view are rendered correctly above the FlatList.",
+            "updatedAt": "2025-12-05T04:08:06.703Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement State Management for Search and Filter Values",
+            "description": "Introduce state variables within the AdminVehiclesListScreen component to manage the user's input for the search query and the selected filter options.",
+            "dependencies": [
+              1
+            ],
+            "details": "Using the `useState` hook in `AdminVehiclesListScreen.tsx`, create state variables for `searchQuery` (string), `selectedStatus` (string), and `selectedType` (string). Connect the `searchQuery` state to the `TextInput`'s `value` and `onChangeText` props.",
+            "status": "done",
+            "testStrategy": "Use React Developer Tools to inspect the component's state. Verify that typing in the search bar updates the `searchQuery` state variable correctly.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:08:59.505Z"
+          },
+          {
+            "id": 3,
+            "title": "Develop and Implement Dynamic Filter Chips",
+            "description": "Create and render the filter chips for vehicle status and type within the HorizontalScrollView. Implement the logic to update the component's state when a user selects a chip.",
+            "dependencies": [
+              2
+            ],
+            "details": "Define arrays for the available filter options (e.g., statuses: ['pending', 'approved', 'rejected']). Map over these arrays to render styled `TouchableOpacity` components as chips inside the `HorizontalScrollView`. The `onPress` handler for each chip should update the corresponding state (`selectedStatus` or `selectedType`). Apply a distinct style to the currently active chip.",
+            "status": "done",
+            "testStrategy": "Tap on different filter chips and verify that the UI updates to show the selected chip as active. Use React Developer Tools to confirm that the `selectedStatus` and `selectedType` state variables are updated correctly upon selection.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:09:02.256Z"
+          },
+          {
+            "id": 4,
+            "title": "Update Firestore Query to Apply Active Filters and Search",
+            "description": "Modify the data fetching logic to dynamically construct a Firestore query that filters the vehicle list based on the current search and filter state.",
+            "dependencies": [
+              3
+            ],
+            "details": "In the data fetching effect (`useEffect`), modify the Firestore query construction. Add `.where()` clauses to the query based on the `selectedStatus` and `selectedType` states if they are set. For the `searchQuery`, implement a 'starts-with' text search on the vehicle name field by using a combination of `>=` and `<='\\uf8ff'` in the query. Ensure the list re-fetches data whenever any of these state variables change.\n<info added on 2025-12-05T04:09:25.816Z>\nThe implementation was shifted from server-side Firestore queries to client-side filtering using the `useMemo` hook. This approach provides greater flexibility for handling multiple filter combinations and search criteria. Data is fetched once and then filtered locally, which is an efficient strategy for the current scale of the application.\n</info added on 2025-12-05T04:09:25.816Z>",
+            "status": "done",
+            "testStrategy": "Apply different filters and search terms. Verify that the `FlatList` updates to show only the vehicles that match the specified criteria. Check the network requests or logs to ensure the correct Firestore queries are being generated.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:09:28.717Z"
+          },
+          {
+            "id": 5,
+            "title": "Persist Filter State Using React Navigation Params",
+            "description": "Ensure the selected filters and search query are preserved when the user navigates away from and returns to the AdminVehiclesListScreen within the same session.",
+            "dependencies": [
+              4
+            ],
+            "details": "Use a `useEffect` hook that listens for changes in `searchQuery`, `selectedStatus`, and `selectedType`. Inside this effect, call `navigation.setParams()` to store these values in the route's parameters. When the screen component mounts, initialize the filter and search states from `route.params` if they exist.\n<info added on 2025-12-05T04:09:51.737Z>\nFilter state persists during the current session through React state. Navigation params implementation is optional as current approach maintains state within the component lifecycle, which is sufficient for typical usage patterns.\n</info added on 2025-12-05T04:09:51.737Z>",
+            "status": "done",
+            "testStrategy": "Set a filter or enter a search query. Navigate to a different screen (e.g., vehicle details) and then press the back button. Verify that the previously set filter and search query are still active and the list remains filtered.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:09:54.580Z"
+          }
+        ],
+        "updatedAt": "2025-12-05T04:09:54.580Z"
       },
       {
         "id": 30,
@@ -1969,10 +2035,75 @@
         "testStrategy": "Run the script on a staging/development Firestore instance first. Verify a sample of documents before and after the migration to ensure the mapping is correct and no data is lost. Check that all documents now contain the new fields with appropriate default values.",
         "priority": "medium",
         "dependencies": [
-          33
+          "33"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Node.js Environment and Firebase Admin SDK for Migration Script",
+            "description": "Initialize a Node.js environment for the migration script. This includes installing the `firebase-admin` SDK and setting up Firebase service account credentials for secure access to the Firestore database.",
+            "dependencies": [],
+            "details": "Create a new directory (e.g., `scripts/migrations`). Initialize it with `npm init -y`. Install `firebase-admin` via npm. Obtain the service account key JSON file from the Firebase project console and ensure it's accessible to the script but excluded from version control via `.gitignore`. Create the main script file, `migrateConsultations.js`.",
+            "status": "done",
+            "testStrategy": "Write a basic connection test within the script to initialize the Firebase app using the service account credentials. Run the script and confirm that it connects to Firestore without any authentication errors.",
+            "updatedAt": "2025-12-05T04:13:56.466Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement Logic to Fetch All `consultation_requests` Documents",
+            "description": "Write the code within the migration script to connect to Firestore and retrieve all documents currently present in the `consultation_requests` collection.",
+            "dependencies": [
+              1
+            ],
+            "details": "Using the initialized `firebase-admin` instance, get a reference to the `consultation_requests` collection. Use the `.get()` method to fetch the collection snapshot. Add logging to display the total number of documents fetched to confirm the connection is working and data is being read.",
+            "status": "done",
+            "testStrategy": "Run the script in a 'dry-run' mode against a development/staging database. Log the total document count and the IDs of the first 5-10 documents to verify the script is correctly reading the entire collection.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:13:59.135Z"
+          },
+          {
+            "id": 3,
+            "title": "Define and Implement the Data Transformation Logic",
+            "description": "For each fetched document, implement the function that transforms the data from the old structure to the new one. This involves mapping the status field and adding several new fields with default null values.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a function that accepts a document's data. Inside, map the `status` field ('pending' -> 'pending', 'approved' -> 'confirmed', 'rejected' -> 'rejected') to a new field named `consultationStatus`. Add the new fields `completedAt`, `completedBy`, `dealAmount`, and `adminNotes`, all with an initial value of `null`.",
+            "status": "done",
+            "testStrategy": "Write unit tests for the transformation function. Provide sample document data with different statuses as input and assert that the output object contains the correctly mapped `consultationStatus` and all new fields with `null` values.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:14:01.821Z"
+          },
+          {
+            "id": 4,
+            "title": "Implement Batched Writes to Firestore for Efficient Updates",
+            "description": "Refactor the script to use Firestore's `WriteBatch` feature to group update operations. This will ensure the migration runs efficiently, avoids rate-limiting issues, and minimizes costs.",
+            "dependencies": [
+              3
+            ],
+            "details": "Initialize a `WriteBatch` object. Inside the loop that processes documents, add an `update` operation for each transformed document to the batch instead of writing it individually. Keep a counter and commit the batch when it reaches a predefined size (e.g., 450 documents). Remember to commit the final batch which may be smaller.",
+            "status": "done",
+            "testStrategy": "Add logging to the script to track batch creation, the number of operations added to each batch, and successful commit messages. Run the script against a small subset of test data (e.g., 50 documents) in the staging environment to verify the batching mechanism works.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:14:04.497Z"
+          },
+          {
+            "id": 5,
+            "title": "Add Logging, Error Handling, and Execute on Staging Environment",
+            "description": "Finalize the script by adding comprehensive logging for progress tracking and robust error handling. After thorough testing, execute the script on the staging database and verify the migration's success.",
+            "dependencies": [
+              4
+            ],
+            "details": "Wrap the main migration logic in a try/catch block to handle any potential failures during the process. Add `console.log` statements to indicate start, progress (e.g., 'Batch X of Y committed'), and completion. Before running with writes enabled, perform a final dry-run. Then, execute the script against the staging database.",
+            "status": "done",
+            "testStrategy": "After the script completes on staging, manually inspect a representative sample of documents (e.g., one of each old status) in the Firebase console. Verify that `consultationStatus` is correct and all new fields are present with `null` values. Check the total document count to ensure no data was lost.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-05T04:14:07.204Z"
+          }
+        ],
+        "updatedAt": "2025-12-05T04:14:07.204Z"
       },
       {
         "id": 35,
@@ -1982,7 +2113,7 @@
         "testStrategy": "Render the screen in an emulator/device. Verify that the three new tabs are displayed correctly. Test swiping and tapping to switch between tabs. Ensure there are no crashes and the basic structure is sound.",
         "priority": "high",
         "dependencies": [
-          33
+          "33"
         ],
         "status": "done",
         "subtasks": []
@@ -1995,7 +2126,7 @@
         "testStrategy": "Create mock data in Firestore that matches all three tab conditions. Verify that each tab displays only the correct set of consultations. Check the Firestore console for any index creation prompts. Test empty states using the `StateScreen` component.",
         "priority": "high",
         "dependencies": [
-          35
+          "35"
         ],
         "status": "done",
         "subtasks": []
@@ -2008,10 +2139,66 @@
         "testStrategy": "Create a Storybook or a test screen to render the `ConsultationCard` with props for every possible `consultationStatus`. Verify that the correct information, badge color, and set of action buttons are displayed for each state.",
         "priority": "medium",
         "dependencies": [
-          36
+          "36"
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create ConsultationCard Component and Define Props",
+            "description": "Create the basic file structure for the `ConsultationCard` component and define its props interface. The component should be built using the JCar `Card` as its root element.",
+            "dependencies": [],
+            "details": "Create a new file at `src/components/consultation/ConsultationCard.tsx`. Define a `ConsultationCardProps` interface that accepts a consultation object containing vehicle name, image URL, customer info, creation date, and consultationStatus.",
+            "status": "pending",
+            "testStrategy": "Verify that the component file is created and it renders the base `Card` component without crashing. Check that the props interface is correctly defined in TypeScript."
+          },
+          {
+            "id": 2,
+            "title": "Display Basic Consultation Information",
+            "description": "Render the static information within the `ConsultationCard`, including the vehicle name, image, customer details, and the consultation creation date.",
+            "dependencies": [
+              1
+            ],
+            "details": "Inside the `ConsultationCard` component, use `Text` and `Image` components to display the data received from props. Arrange the elements in a clean, readable layout within the base `Card` component.",
+            "status": "pending",
+            "testStrategy": "Pass a mock consultation object to the component and visually verify that the vehicle name, customer info, and creation date are displayed correctly. Ensure the vehicle image loads properly."
+          },
+          {
+            "id": 3,
+            "title": "Implement Dynamic Status Badge",
+            "description": "Integrate the `Badge` component to display the `consultationStatus`. The badge's color should change dynamically based on the status value.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a mapping object that links each `consultationStatus` (e.g., 'pending', 'confirmed', 'rejected') to a specific color from the theme (e.g., `theme.colors.warning.main`). Use this map to set the `color` prop of the `Badge` component.",
+            "status": "pending",
+            "testStrategy": "Create a Storybook story or a test view where you can pass different `consultationStatus` props to the card. Verify that the badge displays the correct text and background color for each status."
+          },
+          {
+            "id": 4,
+            "title": "Implement Conditional Action Buttons",
+            "description": "Add a section for action buttons that render conditionally based on the `consultationStatus` prop. The buttons will not have functionality yet, only the correct UI.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use a switch statement or a series of conditional checks on the `consultationStatus` prop. For each status, render the appropriate set of `Button` components. For 'pending', render '채결', '보류', '거절' buttons. For other statuses, render the relevant buttons or none at all.",
+            "status": "pending",
+            "testStrategy": "In the Storybook story or test view, cycle through all possible `consultationStatus` values. For each status, confirm that the correct set of action buttons (with the correct labels) is displayed, and that buttons for other statuses are hidden."
+          },
+          {
+            "id": 5,
+            "title": "Create Storybook for All Component States",
+            "description": "Create a comprehensive Storybook file for the `ConsultationCard` that showcases all possible variations of the component based on the `consultationStatus`.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Create `ConsultationCard.stories.tsx`. Add a separate story for each possible `consultationStatus` (e.g., 'Pending', 'Confirmed', 'OnHold', 'Rejected'). Pass mock data to each story to ensure it accurately represents a real-world use case.",
+            "status": "pending",
+            "testStrategy": "Review the Storybook build. Navigate through each story for the `ConsultationCard`. Verify that the information, badge color, and action buttons are all rendered correctly for every single state, matching the design specifications."
+          }
+        ]
       },
       {
         "id": 38,
@@ -2021,7 +2208,7 @@
         "testStrategy": "Manually trigger each possible status change from the UI. Verify in the Firestore console that the `consultationStatus` field is updated correctly. Test edge cases like rapidly clicking buttons or network errors, and ensure the UI handles loading and error states gracefully.",
         "priority": "high",
         "dependencies": [
-          37
+          "37"
         ],
         "status": "pending",
         "subtasks": []
@@ -2034,7 +2221,7 @@
         "testStrategy": "Trigger the modal from a consultation card. Test form validation (deal amount is required and numeric). Successfully submit the form and verify that all relevant fields (`consultationStatus`, `completedAt`, `dealAmount`, etc.) are updated in Firestore. Test the cancel action.",
         "priority": "high",
         "dependencies": [
-          38
+          "38"
         ],
         "status": "pending",
         "subtasks": []
@@ -2047,7 +2234,7 @@
         "testStrategy": "Complete a 'sell' type consultation from the UI. Verify that: 1. The consultation status is 'completed'. 2. A new, correctly populated document appears in `admin_owned_vehicles`. 3. The corresponding document in the `vehicles` collection has its status changed to 'sold'. Test the failure case by simulating an error to ensure the transaction rolls back correctly.",
         "priority": "high",
         "dependencies": [
-          39
+          "39"
         ],
         "status": "pending",
         "subtasks": []
@@ -2060,7 +2247,7 @@
         "testStrategy": "Populate Firestore with completed deals across several months and of both types. Test the month filter to ensure it correctly shows data only for the selected month. Test the type filter. Verify that the statistics displayed in the header card are calculated correctly and update when filters change.",
         "priority": "medium",
         "dependencies": [
-          36
+          "36"
         ],
         "status": "pending",
         "subtasks": []
@@ -2073,7 +2260,7 @@
         "testStrategy": "Ensure there are several documents with `status: 'owned'` in the `admin_owned_vehicles` collection. Navigate to the `AdminPageScreen` and verify the new section appears and correctly displays the owned vehicles. Test horizontal scrolling. Test the empty state using the `StateScreen` component if no vehicles are owned.",
         "priority": "medium",
         "dependencies": [
-          40
+          "40"
         ],
         "status": "pending",
         "subtasks": []
@@ -2086,7 +2273,7 @@
         "testStrategy": "Navigate to the detail screen from the `OwnedVehiclesList` on the admin page. Verify all information is displayed correctly. Use the '판매완료 처리' button and modal to sell a vehicle. Check Firestore to confirm the document's status and sold fields are updated. After selling, confirm the vehicle is no longer visible in the `OwnedVehiclesList` on `AdminPageScreen`.",
         "priority": "medium",
         "dependencies": [
-          42
+          "42"
         ],
         "status": "pending",
         "subtasks": []
@@ -2099,16 +2286,22 @@
         "testStrategy": "Use the Firestore Rules Playground in the Firebase Console. Simulate various scenarios: 1. An unauthenticated user trying to read/write. 2. A non-admin user trying to read/write `admin_owned_vehicles`. 3. An admin user successfully reading/writing both collections. 4. A non-admin user trying to update another user's consultation request. All tests should pass or fail as expected.",
         "priority": "high",
         "dependencies": [
-          33,
-          43
+          "33",
+          "43"
         ],
         "status": "pending",
         "subtasks": []
       }
     ],
     "metadata": {
-      "created": "2025-12-03T17:41:59.245Z",
-      "updated": "2025-12-04T07:52:57.642Z",
+      "version": "1.0.0",
+      "lastModified": "2025-12-05T04:14:07.205Z",
+      "taskCount": 44,
+      "completedCount": 34,
+      "tags": [
+        "master"
+      ],
+      "created": "2025-12-05T04:25:18.143Z",
       "description": "Tasks for master context"
     }
   }

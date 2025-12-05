@@ -1,88 +1,71 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { ScrollView, Alert } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
-import { formatPhone } from '../../../utils/format';
-import Card from '../../../components/Card';
-import Badge from '../../../components/Badge';
-import Button from '../../../components/Button';
+import ConsultationCard from '../../../components/ConsultationCard';
 import StateScreen from '../../../components/StateScreen';
-import firestore, { doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
+import firestore, { doc, updateDoc, getDoc, serverTimestamp } from '@react-native-firebase/firestore';
 
 const SellConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
   const theme = useTheme();
 
-  const handleStatusUpdate = async (id, newStatus) => {
+  // Handle '채결' (Complete) - Mark consultation as completed
+  const handleComplete = async (id) => {
     try {
       const docRef = doc(firestore(), 'consultation_requests', id);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        await updateDoc(docRef, { status: newStatus });
-        Alert.alert('완료', `요청이 '${newStatus}'로 변경되었습니다.`);
+        await updateDoc(docRef, {
+          consultationStatus: 'completed',
+          completedAt: serverTimestamp(),
+          // completedBy and dealAmount should be set via CompleteDealModal (Task #39)
+        });
+        Alert.alert('완료', '상담이 채결 완료로 변경되었습니다.');
       }
     } catch (error) {
       Alert.alert('오류', '상태 업데이트 중 문제가 발생했습니다.');
     }
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'pending': return '대기중';
-      case 'approved': return '승인됨';
-      case 'rejected': return '거절됨';
-      default: return status;
+  // Handle '보류' (Hold) - Mark consultation as on-hold
+  const handleHold = async (id) => {
+    try {
+      const docRef = doc(firestore(), 'consultation_requests', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await updateDoc(docRef, {
+          consultationStatus: 'on-hold',
+        });
+        Alert.alert('완료', '상담이 보류되었습니다.');
+      }
+    } catch (error) {
+      Alert.alert('오류', '상태 업데이트 중 문제가 발생했습니다.');
     }
   };
 
-  const renderItem = (item) => (
-    <TouchableOpacity key={item.id} onPress={() => onNavigateToVehicle(item.vehicleId)}>
-      <Card style={{ marginBottom: theme.spacing.sm }}>
-        <View style={styles.header}>
-          <Badge
-            status={item.status}
-            label={getStatusLabel(item.status)}
-          />
-          <Text style={[styles.userName, {
-            fontSize: theme.typography.fontSize.body,
-            fontWeight: theme.typography.fontWeight.semiBold,
-            color: theme.colors.text.primary,
-          }]}>{item.userName}</Text>
-        </View>
+  // Handle '거절' (Reject) - Mark consultation as rejected
+  const handleReject = async (id) => {
+    try {
+      const docRef = doc(firestore(), 'consultation_requests', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await updateDoc(docRef, {
+          consultationStatus: 'rejected',
+        });
+        Alert.alert('완료', '상담이 거절되었습니다.');
+      }
+    } catch (error) {
+      Alert.alert('오류', '상태 업데이트 중 문제가 발생했습니다.');
+    }
+  };
 
-        <Text style={[styles.infoText, {
-          fontSize: theme.typography.fontSize.bodySmall,
-          color: theme.colors.text.secondary,
-          marginTop: theme.spacing.xs,
-        }]}>전화번호: {formatPhone(item.userPhone)}</Text>
-
-        <Text style={[styles.infoText, {
-          fontSize: theme.typography.fontSize.bodySmall,
-          color: theme.colors.text.secondary,
-        }]}>차량명: {item.vehicleName}</Text>
-
-        <Text style={[styles.infoText, {
-          fontSize: theme.typography.fontSize.bodySmall,
-          color: theme.colors.text.secondary,
-        }]}>상담 일정: {item.preferredDate} {item.preferredTime}</Text>
-
-        {item.status === 'pending' && (
-          <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
-            <Button
-              variant="primary"
-              title="승인"
-              onPress={() => handleStatusUpdate(item.id, 'approved')}
-              style={{ flex: 1, marginRight: theme.spacing.xs }}
-            />
-            <Button
-              variant="danger"
-              title="거절"
-              onPress={() => handleStatusUpdate(item.id, 'rejected')}
-              style={{ flex: 1, marginLeft: theme.spacing.xs }}
-            />
-          </View>
-        )}
-      </Card>
-    </TouchableOpacity>
-  );
+  // Transform consultation data to ensure consultationStatus field exists
+  const normalizeConsultation = (item) => {
+    return {
+      ...item,
+      // Use consultationStatus if available, fallback to status (for backward compatibility)
+      consultationStatus: item.consultationStatus || item.status || 'pending',
+    };
+  };
 
   if (consultations.length === 0) {
     return (
@@ -102,22 +85,18 @@ const SellConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
         paddingVertical: theme.spacing.sm,
       }}
     >
-      {consultations.map(item => renderItem(item))}
+      {consultations.map(item => (
+        <ConsultationCard
+          key={item.id}
+          consultation={normalizeConsultation(item)}
+          onNavigateToVehicle={onNavigateToVehicle}
+          onComplete={handleComplete}
+          onHold={handleHold}
+          onReject={handleReject}
+        />
+      ))}
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  userName: {},
-  infoText: {},
-  buttonRow: {
-    flexDirection: 'row',
-  },
-});
 
 export default SellConsultationsTab;
