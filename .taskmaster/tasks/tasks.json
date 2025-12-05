@@ -2476,7 +2476,7 @@
         "dependencies": [
           "40"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2484,7 +2484,7 @@
             "description": "Create a new file for the `OwnedVehiclesList` component and implement the Firestore query to fetch vehicles from the `admin_owned_vehicles` collection where the status is 'owned'.",
             "dependencies": [],
             "details": "Create the file `src/components/admin/OwnedVehiclesList.js`. Inside, set up a functional component. Use the existing Firebase utility or hook to create a query on the `admin_owned_vehicles` collection with a `where('status', '==', 'owned')` clause. Manage the fetched data in the component's state.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the component correctly initiates a Firestore query upon mounting and that the data fetched matches the expected documents in the database."
           },
           {
@@ -2495,7 +2495,7 @@
               1
             ],
             "details": "Within `OwnedVehiclesList`, create a function `renderVehicleItem({ item })`. This function will return a JCar `Card` component. The card should display the vehicle's image, name (e.g., `item.name`), purchase price, and purchase date using the JCar design system's typography components.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a storybook or a temporary view to render the item card with mock data. Verify that the image, name, price, and date are displayed correctly and follow the design system styles."
           },
           {
@@ -2507,7 +2507,7 @@
               2
             ],
             "details": "In the `OwnedVehiclesList` component, implement a `FlatList`. Set its `data` prop to the fetched vehicles state. Set the `renderItem` prop to the `renderVehicleItem` function created in the previous task. Configure it for horizontal scrolling by setting `horizontal={true}` and `showsHorizontalScrollIndicator={false}`. Add appropriate styling for padding and item spacing.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Render the component with multiple mock vehicle entries. Confirm that the list scrolls horizontally and that all items are rendered correctly with proper spacing between them."
           },
           {
@@ -2518,7 +2518,7 @@
               1
             ],
             "details": "Check the status of the data fetching hook. While loading, display a `Spinner` or similar loading indicator. If the fetch is complete and the data array is empty, render the `StateScreen` component with an appropriate icon and message, such as 'No owned vehicles to display'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test the loading state by simulating a delay in the data fetch. Test the empty state by ensuring the `admin_owned_vehicles` collection has no documents with `status: 'owned'` and verifying the `StateScreen` appears."
           },
           {
@@ -2530,7 +2530,7 @@
               4
             ],
             "details": "Open `src/screens/admin/AdminPageScreen.js`. Import the `OwnedVehiclesList` component. Add a section title (e.g., using `theme.typography.H4`) like 'Owned Vehicles' and place the `<OwnedVehiclesList />` component below it. Add an `onPress` handler to the `Card` in `renderVehicleItem` that navigates to `AdminOwnedVehicleDetailScreen`, passing the `item.id` as a route parameter.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate to the Admin Page. Verify the 'Owned Vehicles' section and the list are displayed correctly. Tap on a vehicle card and confirm that the app navigates to the `AdminOwnedVehicleDetailScreen` with the correct vehicle ID."
           }
         ]
@@ -2546,7 +2546,61 @@
           "42"
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create AdminOwnedVehicleDetailScreen File and Configure Navigation",
+            "description": "Create the basic file structure for the new screen component, `AdminOwnedVehicleDetailScreen`, and add it to the admin navigation stack to make it accessible within the app.",
+            "dependencies": [],
+            "details": "Create a new file at `src/screens/admin/AdminOwnedVehicleDetailScreen.js`. Define a basic functional component. Import this screen into the admin navigator (e.g., `AdminStackNavigator.js`) and add it as a new `Stack.Screen` so that it can be navigated to from the vehicle list.",
+            "status": "pending",
+            "testStrategy": "Verify that you can navigate from the admin owned vehicles list to the new, initially blank, screen by passing a vehicleId."
+          },
+          {
+            "id": 2,
+            "title": "Fetch and Display Vehicle Details from Firestore",
+            "description": "Implement the data fetching logic to retrieve the specific vehicle's details from the `admin_owned_vehicles` collection in Firestore using the `vehicleId` passed through navigation parameters, and then display this information on the screen.",
+            "dependencies": [
+              1
+            ],
+            "details": "Inside `AdminOwnedVehicleDetailScreen`, use the `useRoute` hook to get the `vehicleId` parameter. Use a `useEffect` hook to fetch the document from `firestore().collection('admin_owned_vehicles').doc(vehicleId)`. Manage loading and error states. Render the vehicle's data using appropriate components like `Text` and `View` within a `ScrollView`.",
+            "status": "pending",
+            "testStrategy": "Navigate to the screen for a known vehicle and verify that all its details from the Firestore document are correctly displayed. Check the loading state indicator as well."
+          },
+          {
+            "id": 3,
+            "title": "Add '판매완료 처리' Button and 'Sold Price' Modal",
+            "description": "Implement the UI for the '[판매완료 처리]' (Mark as Sold) button. Pressing this button should display a modal asking the admin to input the final selling price (`soldPrice`).",
+            "dependencies": [
+              2
+            ],
+            "details": "Add a `TouchableOpacity` or a custom button component to the screen with the label '[판매완료 처리]'. Use `useState` to manage the visibility of a `Modal` component. The modal should contain a `TextInput` for the `soldPrice` (with `keyboardType='numeric'`), a 'Confirm' button, and a 'Cancel' button.",
+            "status": "pending",
+            "testStrategy": "Tap the '[판매완료 처리]' button and verify that the modal appears correctly. Check that the input field is functional and the cancel button closes the modal."
+          },
+          {
+            "id": 4,
+            "title": "Implement Firestore Update Logic for Selling Vehicle",
+            "description": "Develop the function that executes when the admin confirms the sale in the modal. This function will update the corresponding vehicle document in Firestore with the new status, sold price, and sold date.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create an asynchronous function that will be called by the modal's 'Confirm' button. This function should perform a `firestore().collection('admin_owned_vehicles').doc(vehicleId).update()` operation. The data to update is `{ status: 'sold', soldPrice: <price_from_input>, soldDate: firestore.FieldValue.serverTimestamp() }`.",
+            "status": "pending",
+            "testStrategy": "Use the modal to enter a sold price and confirm. Use the Firestore console or emulator to verify that the vehicle document's `status` is changed to 'sold' and that `soldPrice` and `soldDate` fields are correctly populated."
+          },
+          {
+            "id": 5,
+            "title": "Add Post-Update Feedback and Navigation",
+            "description": "After successfully updating the vehicle's status to 'sold' in Firestore, provide feedback to the user and navigate them away from the detail screen.",
+            "dependencies": [
+              4
+            ],
+            "details": "Upon a successful Firestore update, close the modal, display a success message to the admin (e.g., using a toast or an alert), and then use the `navigation.goBack()` method to return the user to the previous screen (the vehicle list). Implement error handling for the update operation.",
+            "status": "pending",
+            "testStrategy": "Successfully mark a vehicle as sold. Verify that a success message is shown and that the app automatically navigates back to the admin owned vehicles list. The list should now reflect the updated status of the vehicle."
+          }
+        ]
       },
       {
         "id": 44,
@@ -2573,7 +2627,7 @@
       ],
       "created": "2025-12-05T04:25:18.143Z",
       "description": "Tasks for master context",
-      "updated": "2025-12-05T07:34:03.222Z"
+      "updated": "2025-12-05T07:37:14.286Z"
     }
   }
 }

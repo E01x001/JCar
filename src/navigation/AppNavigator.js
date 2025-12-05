@@ -23,6 +23,7 @@ import AdminVehicleDetailScreen from '../screens/AdminVehicleDetailScreen';
 import AdminConsultationScreen from '../screens/AdminConsultationScreen';
 import AdminScheduleScreen from '../screens/AdminScheduleScreen';
 import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
+import AdminOwnedVehicleDetailScreen from '../screens/AdminOwnedVehicleDetailScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -137,6 +138,11 @@ const AppNavigator = () => {
               name="AdminVehicleDetail"
               component={AdminVehicleDetailScreen}
               options={{ headerShown: true, title: '차량 상세' }}
+            />
+            <Stack.Screen
+              name="AdminOwnedVehicleDetailScreen"
+              component={AdminOwnedVehicleDetailScreen}
+              options={{ headerShown: true, title: '소유 차량 상세' }}
             />
           </>
         )}
