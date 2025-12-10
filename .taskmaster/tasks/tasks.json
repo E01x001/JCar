@@ -2875,10 +2875,10 @@
               1
             ],
             "details": "On the admin's consultation detail screen, add a section 'Suggest Alternative Times'. This section will have a button to open a date/time picker. Each selected time should be added to a list displayed in the UI. A 'Save Suggestions' button will update the `suggestedSlots` array field in the Firestore document with the list of Firestore Timestamps.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "As an admin, open a consultation detail view. Add three different time slots using the date-time picker. Save the suggestions and confirm the `suggestedSlots` array in Firestore is populated with the correct Timestamp values. Test removing a suggestion before saving.",
             "parentId": "undefined",
-            "updatedAt": "2025-12-10T19:20:52.437Z"
+            "updatedAt": "2025-12-10T19:25:20.251Z"
           },
           {
             "id": 5,
@@ -2888,12 +2888,13 @@
               2
             ],
             "details": "Write a new `onUpdate` Cloud Function that triggers on the `consultation_requests` collection. The function logic should check if `consultationStatus` in the `after` data is 'rejected' and differs from the `before` data. If so, it should retrieve the user's FCM token, construct a notification payload including the `rejectionReason`, and send it using the existing FCM system (from Task 5).",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "Deploy the function. Using an admin account, reject a consultation for a test user and provide a reason. Monitor Cloud Function logs for successful execution and check that the test user's device receives a push notification containing the correct reason.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-12-10T19:29:17.762Z"
           }
         ],
-        "updatedAt": "2025-12-10T19:20:52.437Z"
+        "updatedAt": "2025-12-10T19:29:17.762Z"
       },
       {
         "id": "46",
@@ -2979,7 +2980,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-10T19:20:52.439Z",
+      "lastModified": "2025-12-10T19:29:17.764Z",
       "taskCount": 46,
       "completedCount": 45,
       "tags": [

@@ -74,6 +74,7 @@ export const registerUser = onCall(async (request) => {
  * - consultation_requests 문서가 업데이트될 때 트리거
  * - status 필드가 변경된 경우에만 알림 전송
  * - 사용자의 FCM 토큰을 조회하여 푸시 알림 발송
+ * - rejected 상태인 경우 거절 사유 및 대체 시간 제안 포함
  */
 export const sendConsultationNotification = onDocumentUpdated(
     "consultation_requests/{requestId}",
@@ -121,19 +122,55 @@ export const sendConsultationNotification = onDocumentUpdated(
         // 상태에 따른 알림 메시지 설정
         let title = "";
         let body = "";
+        const dataPayload: Record<string, string> = {
+          requestId: event.params.requestId,
+          status: newStatus,
+          vehicleName,
+        };
 
         switch (newStatus) {
           case "approved":
             title = "상담 요청이 승인되었습니다";
             body = `${vehicleName}에 대한 상담 요청이 승인되었습니다.`;
             break;
-          case "rejected":
+          case "rejected": {
             title = "상담 요청이 거절되었습니다";
-            body = `${vehicleName}에 대한 상담 요청이 거절되었습니다.`;
+            const rejectionReason = afterData.rejectionReason;
+            if (rejectionReason) {
+              body = `${vehicleName} 상담이 거절되었습니다.\n사유: ${rejectionReason}`;
+              dataPayload.rejectionReason = rejectionReason;
+            } else {
+              body = `${vehicleName}에 대한 상담 요청이 거절되었습니다.`;
+            }
+
+            // Include alternative slots if provided
+            const alternativeSlots = afterData.alternativeSlots;
+            if (alternativeSlots && Array.isArray(alternativeSlots) &&
+                alternativeSlots.length > 0) {
+              body += `\n\n대체 시간이 ${alternativeSlots.length}개 제안되었습니다.`;
+              dataPayload.hasAlternativeSlots = "true";
+            }
             break;
+          }
           case "pending":
             title = "상담 요청 상태 변경";
             body = `${vehicleName}에 대한 상담 요청이 대기 중입니다.`;
+            break;
+          case "on-hold":
+            title = "상담 요청 보류";
+            body = `${vehicleName}에 대한 상담 요청이 보류되었습니다.`;
+            break;
+          case "confirmed":
+            title = "상담 일정 확정";
+            body = `${vehicleName}에 대한 상담 일정이 확정되었습니다.`;
+            break;
+          case "meeting":
+            title = "상담 진행 중";
+            body = `${vehicleName}에 대한 상담이 진행 중입니다.`;
+            break;
+          case "completed":
+            title = "상담 완료";
+            body = `${vehicleName}에 대한 상담이 완료되었습니다.`;
             break;
           default:
             title = "상담 요청 상태 업데이트";
@@ -146,11 +183,7 @@ export const sendConsultationNotification = onDocumentUpdated(
             title,
             body,
           },
-          data: {
-            requestId: event.params.requestId,
-            status: newStatus,
-            vehicleName,
-          },
+          data: dataPayload,
           token: fcmToken,
         };
 
