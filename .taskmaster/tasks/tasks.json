@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Security Hardening: Remove Exposed Credentials and Secure Environment",
         "description": "Remove the exposed GitHub Personal Access Token (PAT) from the codebase and ensure the .env file is properly ignored by version control to prevent future credential leaks.",
         "details": "1. Locate the .env file containing the exposed GitHub PAT. 2. Remove the PAT from the file. If it's needed for a dependency, source it from a secure environment variable provider or a secure secret management system. 3. Ensure the `.gitignore` file at the root of the project contains a line for `.env` and `*.env`. 4. Verify that no history of the .env file exists in the Git repository. If it does, the history must be rewritten using tools like `git filter-repo` or BFG Repo-Cleaner to completely remove the sensitive data. 5. Rotate the leaked PAT on GitHub immediately.",
@@ -78,7 +78,7 @@
         "updatedAt": "2025-11-26T16:56:17.277Z"
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Implement Firestore Security Rules",
         "description": "Define and apply Firestore security rules for the users, vehicles, and consultation_requests collections to enforce proper access control and data validation.",
         "details": "Develop and deploy `firestore.rules`. The rules should enforce that: \n- `users`: A user can only read/write their own document (`allow read, write: if request.auth.uid == userId;`). Publicly readable fields should be explicitly allowed. \n- `vehicles`: Any authenticated user can read vehicle documents. Only authorized admins or the vehicle owner (if allowed) can create/update/delete. Writes should validate data types (e.g., `price` is a number). \n- `consultation_requests`: Users can only create requests for themselves. They can only read their own requests. Admins should have read/write access to all requests. \n- `Firebase Storage`: Rules for image uploads should ensure that only authenticated users can upload images and that file size and type are validated.",
@@ -156,7 +156,7 @@
         "updatedAt": "2025-11-27T01:07:03.819Z"
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Implement Global Error Handling & Logging",
         "description": "Establish a comprehensive error handling and logging strategy using a global error boundary and a structured logging service like Firebase Crashlytics.",
         "details": "1. Integrate `react-native-firebase/app` and `react-native-firebase/crashlytics`. Follow the setup instructions for both Android and iOS. 2. Create a global error boundary component using a class component with `componentDidCatch`. This boundary should wrap the root `App` component. When it catches an error, it should log the error to Crashlytics (`crashlytics().recordError(error)`) and display a user-friendly fallback UI. 3. Wrap all Firebase API calls (Firestore, Auth, Storage) in try/catch blocks. In the catch block, log the error to Crashlytics and display a localized, user-friendly message to the user via a toast or alert.",
@@ -233,7 +233,7 @@
         "updatedAt": "2025-11-27T04:30:00.578Z"
       },
       {
-        "id": 4,
+        "id": "4",
         "title": "Setup Testing Framework and Code Quality Tools",
         "description": "Configure Jest for unit testing, ESLint for static code analysis, and Husky for pre-commit hooks to enforce code quality and testing standards.",
         "details": "1. **Jest**: Install Jest and the `react-native` preset. Configure `jest.config.js` to set up mocks for native modules and assets. 2. **ESLint**: Initialize ESLint with a recommended ruleset like `@react-native-community/eslint-config`. Create a `.eslintrc.js` file and add rules to enforce project coding standards. Add an `npm run lint` script to `package.json`. 3. **Husky**: Install Husky and `lint-staged`. Configure a `pre-commit` hook in the Husky configuration to run ESLint and Jest on staged files (`npx lint-staged`). This will prevent commits with linting errors or failing tests.",
@@ -308,7 +308,7 @@
         "updatedAt": "2025-11-27T04:49:06.599Z"
       },
       {
-        "id": 5,
+        "id": "5",
         "title": "Implement Push Notification System using FCM",
         "description": "Integrate Firebase Cloud Messaging (FCM) to send and receive push notifications for critical app events, such as consultation status changes.",
         "details": "1. Add the `@react-native-firebase/messaging` package. 2. Configure FCM for the Android project by adding the necessary dependencies and plugins in `build.gradle` files. 3. In the app's entry point, implement logic to request notification permissions from the user using `messaging().requestPermission()`. 4. Retrieve the device's FCM token using `messaging().getToken()` and store it in the corresponding user's document in Firestore. 5. Set up background and foreground message handlers (`messaging().onMessage()` and `messaging().setBackgroundMessageHandler()`) to process incoming notifications and display them to the user. 6. Create a Firebase Function triggered by updates to the `consultation_requests` collection to send notifications to relevant users.",
@@ -387,7 +387,7 @@
         "updatedAt": "2025-11-27T13:53:40.252Z"
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "Write Unit Tests for Critical Functions",
         "description": "Write a suite of unit tests for existing critical business logic, focusing on services, formatters, and validators to improve code reliability.",
         "details": "Using the Jest framework set up in Task 4, create test files for the following: \n- `firebaseService.js`: Mock Firebase functions using `jest.mock` to test data fetching, vehicle registration, and consultation request logic without making actual API calls. \n- **Validators**: Test input validation functions for forms (e.g., email format, password strength, vehicle year). Test with both valid and invalid inputs. \n- **Formatters**: Test utility functions that format data for display (e.g., currency formatters for price, date formatters for timestamps).",
@@ -465,7 +465,7 @@
         "updatedAt": "2025-11-27T14:06:00.117Z"
       },
       {
-        "id": 7,
+        "id": "7",
         "title": "Enhance Admin Management Features",
         "description": "Implement high-priority admin features, including emergency vehicle deletion and a user management interface for suspending or activating accounts.",
         "details": "1. **Emergency Delete**: In the admin panel's vehicle view, add a 'Delete' button. On click, it should trigger a Firebase Function that performs a hard delete of the vehicle document and its associated images in Firebase Storage. This action should be logged in an admin activity log collection. 2. **User Management**: Create a new screen in the admin panel to list all users. Implement functionality to search and filter users. Each user item should have a toggle/button to change a `status` field in their user document (e.g., from 'active' to 'suspended'). Firestore security rules must be updated to deny writes from suspended users.",
@@ -541,7 +541,7 @@
         "updatedAt": "2025-11-28T09:54:23.687Z"
       },
       {
-        "id": 8,
+        "id": "8",
         "title": "Implement Advanced Vehicle Search and Filters",
         "description": "Develop an advanced search interface allowing users to filter and sort the vehicle list by multiple criteria such as price range, year, and manufacturer.",
         "details": "1. Create a 'Filter' modal or screen accessible from the main vehicle list. 2. Add UI components for filtering: sliders for price/year range, multi-select pickers for manufacturers. 3. When the user applies filters, construct a composite Firestore query. For example: `firestore().collection('vehicles').where('price', '>=', minPrice).where('price', '<=', maxPrice).orderBy('price').limit(20)`. Note Firestore's limitations on composite queries may require data duplication or a more advanced search solution like Algolia if complexity increases. 4. Implement sorting options (e.g., Price: Low to High) which will modify the `orderBy()` clause of the Firestore query.",
@@ -617,7 +617,7 @@
         "updatedAt": "2025-11-28T10:16:06.420Z"
       },
       {
-        "id": 9,
+        "id": "9",
         "title": "Set Up CI/CD Pipeline with GitHub Actions",
         "description": "Automate the build, linting, and testing process for the Android application using a GitHub Actions workflow.",
         "details": "1. Create a `.github/workflows` directory in the project root. 2. Create a YAML file (e.g., `android-ci.yml`). 3. Define a workflow that triggers on `pull_request` to the `main` or `develop` branch. 4. The workflow should have jobs for: \n   - `setup`: Check out the code, set up Node.js, and install npm dependencies. \n   - `lint`: Run the ESLint checks (`npm run lint`). \n   - `test`: Run the Jest unit tests (`npm run test`). \n   - `build`: Assemble the Android debug build (`cd android && ./gradlew assembleDebug`) to ensure the project builds successfully.",
@@ -696,7 +696,7 @@
         "updatedAt": "2025-11-28T10:06:38.763Z"
       },
       {
-        "id": 10,
+        "id": "10",
         "title": "Prepare Android for Production Release",
         "description": "Configure the Android project for a production release, including setting up app signing, enabling code shrinking, and generating a signed Android App Bundle (AAB).",
         "details": "1. **Keystore**: Generate a private signing key using `keytool`. Store the keystore file and its credentials securely (e.g., using environment variables or a secret manager), not in the repository. 2. **Gradle Configuration**: In `android/app/build.gradle`, create a signing configuration that loads the keystore credentials. Apply this signing config to the `release` build type. 3. **ProGuard/R8**: Enable code shrinking and obfuscation for the release build by setting `minifyEnabled true` in the `release` build type. Add any necessary ProGuard rules to `proguard-rules.pro` to prevent vital code from being stripped. 4. **Generate AAB**: Run the command `./gradlew bundleRelease` from the `android` directory to generate the signed AAB file, which will be located in `android/app/build/outputs/bundle/release/`.",
@@ -775,7 +775,7 @@
         "updatedAt": "2025-11-28T10:13:00.536Z"
       },
       {
-        "id": 11,
+        "id": "11",
         "title": "Establish Design System Foundation (Theme)",
         "description": "Create the core theme files for the design system, including color palettes, typography, spacing, border radius, and shadow styles. This will serve as the single source of truth for all UI styling.",
         "details": "Create a `src/theme` directory. Inside, create separate files for each design token category: `colors.js`, `typography.js`, `spacing.js`, `shadows.js`, `borderRadius.js`. Export constants from each file. For example, in `colors.js`: `export const colors = { primary: '#2B4593', success: '#28A745', ... }`. Create a main `index.js` in `src/theme` that exports all tokens as a single theme object. Use React's Context API to provide this theme object to the entire application tree via a `ThemeProvider` component.",
@@ -851,7 +851,7 @@
         "updatedAt": "2025-11-29T11:33:07.789Z"
       },
       {
-        "id": 12,
+        "id": "12",
         "title": "Develop Unified Button Component",
         "description": "Create a single, reusable Button component that supports all variants (Primary, Secondary, Danger, Success, Text) and states (Default, Hover, Pressed, Disabled) defined in the PRD.",
         "details": "Create a `src/components/Button.js` file. The component should accept props like `variant`, `onPress`, `disabled`, and `title`. Use the theme values from the context for styling. Implement dynamic styling based on the `variant` prop. For example: `const getBackgroundColor = () => { switch(variant) { case 'primary': return theme.colors.primary; case 'danger': return theme.colors.danger; default: return 'transparent'; } };`. Use `Pressable` to handle states like `onPressIn` and `onPressOut` to apply pressed styles (scale transform).",
@@ -928,7 +928,7 @@
         "updatedAt": "2025-11-29T11:46:30.533Z"
       },
       {
-        "id": 13,
+        "id": "13",
         "title": "Develop Unified Input Field Component",
         "description": "Create a reusable text input component with consistent styling for default, focus, and error states as specified in the PRD.",
         "details": "Create `src/components/InputField.js`. This component will wrap React Native's `TextInput`. It should accept props like `value`, `onChangeText`, `placeholder`, `error` (a string for the error message), etc. Use the `useState` hook to track focus state (`onFocus`, `onBlur`). Apply conditional styling based on focus and the presence of the `error` prop. The error message should be displayed below the input field using the 'Danger' color. All styling (height, padding, border radius, colors) should come from the theme.",
@@ -1006,7 +1006,7 @@
         "updatedAt": "2025-11-29T11:47:19.263Z"
       },
       {
-        "id": 14,
+        "id": "14",
         "title": "Develop Card and Status Badge Components",
         "description": "Create reusable Card and Badge components. The Card will be a container for content sections, and the Badge will be used to display status labels like '대기중', '승인', etc.",
         "details": "For `src/components/Card.js`, create a `View` with styles defined by the PRD (background, border radius, padding, shadow). It should accept `children` to render any content inside. For `src/components/Badge.js`, the component should take a `status` prop ('waiting', 'approved', 'rejected', 'completed'). Based on the status, it should apply the corresponding semantic color from the theme (Warning for waiting, Success for approved, etc.) for its background. All styling should be derived from the theme.",
@@ -1083,7 +1083,7 @@
         "updatedAt": "2025-11-29T11:48:16.021Z"
       },
       {
-        "id": 15,
+        "id": "15",
         "title": "Refactor Login and Sign-up Screens",
         "description": "Apply the new design system to the Login and Sign-up screens, replacing existing elements with the new unified Button and Input Field components and adjusting layout spacing.",
         "details": "Navigate to the authentication screen files. Replace all `<Button>` and `<TextInput>` instances with the new `<Button>` and `<InputField>` components. Use the 'primary' variant for the main action button and 'text' variant for links like '비밀번호 찾기'. Remove any hardcoded style values and use spacing tokens from the theme for margins and paddings between the logo, input fields, and buttons as per the PRD.",
@@ -1163,7 +1163,7 @@
         "updatedAt": "2025-11-29T17:31:31.472Z"
       },
       {
-        "id": 16,
+        "id": "16",
         "title": "Refactor Vehicle List and Detail Screens",
         "description": "Update the Vehicle List and Detail screens using the new design system components, including Card, Badge, and standardized typography and layout.",
         "details": "On the Vehicle List screen, wrap each list item in the new `<Card>` component. Use theme spacing for gaps between cards. Re-style the header according to the PRD. Inside the card, use the `<Badge>` for vehicle type and apply H3/Body typography from the theme. On the Vehicle Detail screen, structure content into sections with H4 titles. Use the theme for padding and spacing. Implement the fixed bottom action button using the primary `<Button>` component.",
@@ -1239,7 +1239,7 @@
         "updatedAt": "2025-11-29T17:37:40.737Z"
       },
       {
-        "id": 17,
+        "id": "17",
         "title": "Implement Standardized Navigation Headers and Tab Bar",
         "description": "Apply a consistent design to the global navigation header and bottom tab bar across the application, using the styles defined in the PRD.",
         "details": "This task likely involves configuring the navigation library (e.g., React Navigation). Define a common `headerStyle` object using theme colors (`primary` for background, `white` for text) and apply it as a default screen option. For the tab bar, configure `tabBarOptions` or `tabBarStyle` to set the background, height, and active/inactive tint colors using the theme. The active tab's top border can be implemented using a custom tab bar component if the library doesn't support it directly.",
@@ -1318,7 +1318,7 @@
         "updatedAt": "2025-11-29T17:40:54.287Z"
       },
       {
-        "id": 18,
+        "id": "18",
         "title": "Create Interaction State Components (Loading, Empty, Error)",
         "description": "Develop reusable components for displaying global loading spinners, skeleton loaders for lists, and full-page empty/error states.",
         "details": "1. `GlobalLoader`: A modal overlay with a semi-transparent background and an `ActivityIndicator` using the theme's primary color. 2. `SkeletonLoader`: A component that mimics the layout of a `<Card>` but with placeholder shapes and a shimmering animation. 3. `StateScreen`: A generic component accepting `icon`, `title`, `message`, and `onRetry` props to display consistent empty or error screens. It should use the secondary `<Button>` for the retry action.",
@@ -1396,7 +1396,7 @@
         "updatedAt": "2025-11-29T23:51:24.886Z"
       },
       {
-        "id": 19,
+        "id": "19",
         "title": "Implement Global Toast Message System",
         "description": "Set up a global system to display toast messages for success, error, and info feedback, accessible from anywhere in the app.",
         "details": "Use a library like `react-native-toast-message` or build a custom solution using a global context provider. Create a `ToastProvider` at the app's root. Define custom toast types ('success', 'danger', 'info') that map to the semantic colors in the theme. Expose a hook like `useToast()` which provides functions (`toast.showSuccess(message)`, `toast.showError(message)`) to trigger toasts from any component.",
@@ -1475,7 +1475,7 @@
         "updatedAt": "2025-11-29T23:47:50.173Z"
       },
       {
-        "id": 20,
+        "id": "20",
         "title": "Refactor MyPage and Admin Screens",
         "description": "Apply the new design system and components to the MyPage and Admin screens to ensure full app consistency.",
         "details": "For MyPage, use the `<Card>` component for the user info section and for each menu list item. Use appropriate button variants for 'Logout' (Secondary) and '회원탈퇴' (Danger Text). For Admin screens, implement the tab bar styling with the primary color bottom border for the active tab. Replace list items and buttons with the new `<Card>`, `<Badge>`, and `<Button>` (Success/Danger) components to standardize the interface.",
@@ -1553,7 +1553,7 @@
         "updatedAt": "2025-11-29T23:56:59.781Z"
       },
       {
-        "id": 21,
+        "id": "21",
         "title": "Resolve Dependabot Security Alerts",
         "description": "Review and resolve 8 security vulnerabilities (2 high, 3 moderate, 3 low) reported by GitHub Dependabot by updating npm packages and ensuring application stability.",
         "details": "This task addresses security vulnerabilities identified in project dependencies. First, review all open alerts at https://github.com/E01x001/JCar/security/dependabot. Create a dedicated branch for this work (e.g., `fix/dependabot-vulns`). Use `npm audit` to get a detailed report locally. Address the vulnerabilities starting with the 'high' severity alerts, then 'moderate', and finally 'low'. Update packages individually or in small, logical groups using `npm install <package-name>@latest`. After each update, run `npm install` to regenerate the `package-lock.json` file. For any major version updates, consult the package's release notes for potential breaking changes. IMPORTANT: This is a special maintenance task and should not be completed until explicitly requested by the project lead.\n<info added on 2025-11-30T13:54:07.600Z>\n⚠️ SPECIAL TASK: Do not complete until user requests. 8 vulnerabilities detected (2 high, 3 moderate, 3 low). See: https://github.com/E01x001/JCar/security/dependabot\n</info added on 2025-11-30T13:54:07.600Z>",
@@ -1567,7 +1567,7 @@
         "updatedAt": "2025-12-05T02:51:24.848Z"
       },
       {
-        "id": 22,
+        "id": "22",
         "title": "Implement Tab View on MyPage Screen for Improved UX",
         "description": "Refactor the MyPage screen to use a tab-based navigation for separating 'Buy Consultations', 'Sell Consultations', and 'My Vehicles'. This will replace the current single scroll view, improving UI clarity and user experience.",
         "details": "First, install and configure the 'react-native-tab-view' library. Refactor the existing MyPageScreen.js to serve as the main container, keeping the top user info card (from Task 20) positioned above the new tab view. Create three new child components: BuyConsultationsTab.js, SellConsultationsTab.js, and MyVehiclesTab.js. Each of these components will be responsible for fetching and displaying its respective data in a FlatList, reusing the standardized <Card> component (from Task 14) for list items. In MyPageScreen.js, implement the TabView component, configure the routes for the three tabs, and pass the new components as the scenes. The tab bar should be styled using the application theme (from Task 11), with the active tab indicator using the 'primary' theme color. For the 'Buy' and 'Sell' tabs, fetch the count of items and pass it to a custom tab bar renderer to display a numeric <Badge> component. Ensure the 'Logout' and 'Account Deletion' buttons remain accessible, positioned below the tab view container.",
@@ -1643,7 +1643,7 @@
         "updatedAt": "2025-12-02T03:05:38.980Z"
       },
       {
-        "id": 23,
+        "id": "23",
         "title": "Fix Permission-Denied Error on Logout from Uncleaned Firestore Listeners",
         "description": "Resolve a 'permission-denied' error that occurs on user logout by refactoring useEffect hooks in multiple screens to ensure Firestore snapshot listeners are always properly unsubscribed.",
         "details": "A 'permission-denied' error is being thrown from Firestore when a user logs out because active snapshot listeners are not being cleaned up. This happens in useEffect hooks that have an early return when the user object becomes null, which prevents the cleanup function from being registered. The fix is to refactor all affected hooks to ensure they always return a cleanup function. \n\nProblematic Pattern:\n```javascript\nuseEffect(() => {\n  if (!user) {\n    return; // This prevents the cleanup function for the previous effect from running\n  }\n  const unsubscribe = onSnapshot(query, ...);\n  return () => {\n    unsubscribe();\n  };\n}, [user]);\n```\n\nRequired Refactor:\n```javascript\nuseEffect(() => {\n  if (!user) {\n    return () => {}; // Always return a function, even if it's empty\n  }\n  const unsubscribe = onSnapshot(query, ...);\n  return () => {\n    unsubscribe();\n  };\n}, [user]);\n```\n\nAffected Files:\n- src/screens/MyPageScreen.js (2 listeners: vehicles, consultations)\n- src/screens/AdminConsultationScreen.js (1 listener)\n- src/screens/AdminPageScreen.js (1 listener)\n- src/screens/AdminScheduleScreen.js (1 listener)\n- src/screens/MyVehiclesScreen.js (1 listener)",
@@ -1713,7 +1713,7 @@
         ]
       },
       {
-        "id": 24,
+        "id": "24",
         "title": "Fix Security Vulnerabilities in Password Reset Functionality",
         "description": "Address multiple security vulnerabilities in the password reset process, including email enumeration and lack of input validation. This task involves generalizing user feedback messages, implementing rate limiting, and cleaning up redundant code.",
         "details": "In `src/screens/ForgotPasswordScreen.js`, implement client-side email format validation using a regular expression before calling the Firebase service. Upon submission, regardless of whether the email exists in the database, display a generic message using the global toast system (Task 19), such as 'If your email is registered, you will receive a password reset link.' This prevents email enumeration attacks. Additionally, implement simple rate-limiting by disabling the submit button for 30 seconds after a request is made. In `src/services/firebaseService.js`, identify and remove the unused, duplicate `sendPasswordResetEmail` function to reduce code redundancy and potential confusion.",
@@ -1785,7 +1785,7 @@
         ]
       },
       {
-        "id": 25,
+        "id": "25",
         "title": "Refactor AdminVehiclesListScreen with JCar Design System",
         "description": "Overhaul the AdminVehiclesListScreen to align with the user-facing visual style by implementing the JCar Design System. This involves replacing hardcoded styles and plain components with themed, standardized components for layout, vehicle items, and actions.",
         "details": "Refactor the entire screen, starting with the root view. Replace the current root with `<SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background.secondary }}>`. Use a FlatList to render vehicle items. Each item, previously a View, should be wrapped in a `<Card>` component. Inside the card, display vehicle details using `<theme.typography.Body>` and similar components. The vehicle type should be rendered using `<Badge text={item.vehicleType} />`. The delete button must be replaced with `<Button variant=\"danger\" onPress={() => handleDelete(item.id)}>Delete</Button>`. For loading states, use the `<SkeletonLoader>` component, displaying 3-4 placeholder cards. For the empty state, conditionally render `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다.\" />` when the vehicle list is empty. Add a header card with `<Card><theme.typography.H4>차량 관리</theme.typography.H4></Card>`.",
@@ -1855,7 +1855,7 @@
         ]
       },
       {
-        "id": 26,
+        "id": "26",
         "title": "Refactor AdminVehicleDetailScreen with JCar Design System",
         "description": "Rebuild the AdminVehicleDetailScreen to use `Card` components for information grouping and apply the JCar Design System for all UI elements, including typography, spacing, and colors. This will eliminate hardcoded styles and improve visual consistency.",
         "details": "Replace the main container with a themed view, likely a `ScrollView`. Group related information ('차량 정보', '부품 정보', '등록자 정보') into separate `<Card>` components, each with a title using `<theme.typography.H5>`. Use `<Badge>` components to display the vehicle type and status. The current loading text should be replaced with a full-screen `<StateScreen icon=\"directions-car\" message=\"Loading vehicle details...\" />`. Remove the manually implemented back button and ensure the screen relies on the default React Navigation header. All `Text` components must be replaced with the appropriate components from `theme.typography` (e.g., `Body`, `Caption`). All padding and margin values must be derived from `theme.spacing`.",
@@ -1869,7 +1869,7 @@
         "updatedAt": "2025-12-03T16:55:05.545Z"
       },
       {
-        "id": 27,
+        "id": "27",
         "title": "Enhance AdminScheduleScreen with Design System Components",
         "description": "Refactor the AdminScheduleScreen to standardize the display of consultation items and actions using `Card` and `Button` components from the JCar Design System. Integrate the theme for calendar markers and handle empty states.",
         "details": "Use the `react-native-calendars` library, which is likely already in use, and provide a `theme` prop to style it. The theme object should map calendar-specific keys to `theme.colors`. Example: `markedDates` should use `theme.colors.primary.main` for selected, `theme.colors.feedback.success` for approved, etc. Each consultation item in the list for a selected date should be wrapped in a `<Card>`. The 'Approve' and 'Reject' actions, currently `TouchableOpacity`, must be replaced with `<Button variant=\"success\">Approve</Button>` and `<Button variant=\"danger\">Reject</Button>`. When a date is selected that has no consultations, display the `<StateScreen icon=\"event-busy\" title=\"No consultations scheduled\" />`.",
@@ -1881,7 +1881,7 @@
         "updatedAt": "2025-12-02T09:08:07.973Z"
       },
       {
-        "id": 28,
+        "id": "28",
         "title": "Polish AdminPageScreen for Visual Consistency",
         "description": "Perform minor but important UI cleanup on the AdminPageScreen to align it with other refactored admin screens. This includes removing informal elements like emojis and ensuring standardized components like `Badge` and `StateScreen` are used.",
         "details": "Locate the Crashlytics test button and update its text to remove the '🧪' emoji, rewording to 'Test Crashlytics' if necessary. In the vehicle list section on this screen, map over the vehicles and render a `<Badge text={item.vehicleType} />` for each item, similar to the main vehicle list. Implement the empty state for this list by conditionally rendering `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다\" />` when the user has no registered vehicles. Review all spacing on the `Card` components to ensure it matches the standard `theme.spacing` values used on other screens.",
@@ -1893,7 +1893,7 @@
         "updatedAt": "2025-12-03T16:56:31.117Z"
       },
       {
-        "id": 29,
+        "id": "29",
         "title": "Implement Filter and Search on AdminVehiclesListScreen",
         "description": "Enhance the AdminVehiclesListScreen by adding controls to filter the list by vehicle status and type, and a search bar to find vehicles by name or manufacturer. The filter state should be preserved during the user's session.",
         "details": "Above the `FlatList` on `AdminVehiclesListScreen`, add a search bar using a themed `<TextInput icon=\"search\">`. Below it, add a horizontal `ScrollView` containing filter chips for status and type. These can be implemented using `<TouchableOpacity>` styled to look like chips, or a dedicated `<FilterChip>` component if one exists in the design system. Manage the active filters and search query using `useState` hooks. The data fetching logic from Firestore should be updated to incorporate these state values into the query using `.where()` clauses. To persist state, consider passing filter values via React Navigation params or using a simple state management solution like a React Context provider scoped to the admin stack.",
@@ -1971,7 +1971,7 @@
         "updatedAt": "2025-12-05T04:09:54.580Z"
       },
       {
-        "id": 30,
+        "id": "30",
         "title": "Add Statistics Dashboard Cards to List Screens",
         "description": "Display high-level summary statistics on the AdminVehiclesListScreen and AdminConsultationScreen using `Card` components to give admins a quick overview of key metrics like total counts and status breakdowns.",
         "details": "On `AdminVehiclesListScreen`, fetch aggregate data from Firestore. This may require a separate query or could be calculated client-side if the dataset is small. Display the counts (Total, Pending, Approved, Rejected) in a horizontal `ScrollView` of `<Card>` components at the top of the screen. Each card should contain an icon from `@expo/vector-icons/MaterialIcons` (e.g., 'directions-car' for total) and the statistic. Repeat this process for `AdminConsultationScreen`, showing counts for total consultations and breakdowns by status. The data should update in real-time by listening to Firestore collection changes.",
@@ -1990,7 +1990,8 @@
             "dependencies": [],
             "details": "The component should accept `iconName`, `label`, and `count` as props. It will use the base `Card` component for its container and `MaterialIcons` from `@expo/vector-icons` for the icon. Style it for clarity and visual appeal, ensuring it is consistent with the app's design system.",
             "status": "done",
-            "testStrategy": "Use Storybook or a temporary screen to render the component with different props (icon, label, count) to verify its appearance and responsiveness."
+            "testStrategy": "Use Storybook or a temporary screen to render the component with different props (icon, label, count) to verify its appearance and responsiveness.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -1999,7 +2000,8 @@
             "dependencies": [],
             "details": "Use Firestore's `onSnapshot` listener on the 'vehicles' collection. The hook should process the collection snapshot to derive the counts for each status client-side. It should return a state object like `{ total: number, pending: number, approved: number, rejected: number, loading: boolean }`.",
             "status": "done",
-            "testStrategy": "Unit test the hook's calculation logic with mock Firestore data. Manually verify the hook's output against the database in a development environment."
+            "testStrategy": "Unit test the hook's calculation logic with mock Firestore data. Manually verify the hook's output against the database in a development environment.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2011,7 +2013,8 @@
             ],
             "details": "In `AdminVehiclesListScreen`, use the `useVehicleStats` hook to get the data. Render the statistics inside a horizontal `ScrollView` placed above the main vehicle list. Use the `StatisticsCard` component for each metric (Total, Pending, Approved, Rejected).",
             "status": "done",
-            "testStrategy": "Load the screen and verify that the statistics cards are displayed correctly. Confirm the numbers are accurate by comparing them with the Firestore console. Add or update a vehicle to ensure the stats update in real-time."
+            "testStrategy": "Load the screen and verify that the statistics cards are displayed correctly. Confirm the numbers are accurate by comparing them with the Firestore console. Add or update a vehicle to ensure the stats update in real-time.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2020,7 +2023,8 @@
             "dependencies": [],
             "details": "Similar to the vehicle stats hook, use Firestore's `onSnapshot` listener on the 'consultations' collection. The hook should process the snapshot to derive the total count and counts for each relevant status (e.g., pending, confirmed, completed). Return a state object with the counts and loading status.",
             "status": "done",
-            "testStrategy": "Unit test the hook with mock consultation data. In a dev environment, check if the hook's output correctly reflects the data in the Firestore 'consultations' collection."
+            "testStrategy": "Unit test the hook with mock consultation data. In a dev environment, check if the hook's output correctly reflects the data in the Firestore 'consultations' collection.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2032,12 +2036,13 @@
             ],
             "details": "In `AdminConsultationScreen`, use the `useConsultationStats` hook. Render the `StatisticsCard` components for each metric inside a horizontal `ScrollView`. This section should be placed above the `TabView` component that handles the tabbed lists.",
             "status": "done",
-            "testStrategy": "Load the screen and verify the stats cards appear above the tabs. Check the accuracy of the displayed numbers. Change a consultation's status and confirm that the counts update automatically."
+            "testStrategy": "Load the screen and verify the stats cards appear above the tabs. Check the accuracy of the displayed numbers. Change a consultation's status and confirm that the counts update automatically.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 31,
+        "id": "31",
         "title": "Implement Pull-to-Refresh on Admin Lists",
         "description": "Add pull-to-refresh functionality to all `FlatList` and `ScrollView` components on admin screens to provide a standard way for users to manually refresh data from Firestore.",
         "details": "For each screen containing a `FlatList` (`AdminVehiclesListScreen`, `AdminScheduleScreen`, `AdminPageScreen`), add the `RefreshControl` component from 'react-native'. Pass it to the `refreshControl` prop of the list. The `RefreshControl` should have its `refreshing` prop tied to a state variable (e.g., `isRefreshing`) and its `onRefresh` prop should call the function that re-fetches the data from Firestore. Set the `colors` prop of `RefreshControl` to `[theme.colors.primary.main]` to match the app theme. The data fetching function called by `onRefresh` should set `isRefreshing` to true at the beginning and false upon completion.",
@@ -2057,7 +2062,8 @@
             "dependencies": [],
             "details": "In `AdminVehiclesListScreen`, import `RefreshControl` from 'react-native'. Create a state variable `isRefreshing`. Create an `onRefresh` function that sets `isRefreshing` to true, calls the existing data fetching logic, and sets `isRefreshing` to false on completion. Pass a configured `RefreshControl` instance to the `FlatList`'s `refreshControl` prop, setting its `refreshing` and `onRefresh` props, and its `colors` prop to `[theme.colors.primary.main]`.",
             "status": "done",
-            "testStrategy": "Navigate to the Admin Vehicles screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears."
+            "testStrategy": "Navigate to the Admin Vehicles screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2068,7 +2074,8 @@
             ],
             "details": "In `AdminScheduleScreen`, replicate the pull-to-refresh implementation from the previous task. Introduce an `isRefreshing` state and an `onRefresh` handler. Wire the `RefreshControl` component to the `FlatList` with the correct state, handler, and theme color.",
             "status": "done",
-            "testStrategy": "Navigate to the Admin Schedule screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears."
+            "testStrategy": "Navigate to the Admin Schedule screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2079,7 +2086,8 @@
             ],
             "details": "In `AdminPageScreen`, apply the same pull-to-refresh pattern. Add an `isRefreshing` state, an `onRefresh` callback that wraps the data fetching logic, and pass the `RefreshControl` component to the `FlatList`'s `refreshControl` prop with the correct configuration.",
             "status": "done",
-            "testStrategy": "Navigate to the Admin Page screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears."
+            "testStrategy": "Navigate to the Admin Page screen. Pull down from the top of the list. Verify a loading indicator with the primary theme color appears, the list data updates, and the indicator disappears.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2092,12 +2100,13 @@
             ],
             "details": "Review the code for `AdminVehiclesListScreen`, `AdminScheduleScreen`, and `AdminPageScreen`. Ensure the state management, `onRefresh` function structure, and `RefreshControl` props are consistent. Manually test all three screens one after another to confirm the user experience is identical.",
             "status": "done",
-            "testStrategy": "Perform end-to-end testing by navigating between the three admin list screens and using the pull-to-refresh feature on each. Confirm the visual indicator and data refresh behavior are identical and free of bugs."
+            "testStrategy": "Perform end-to-end testing by navigating between the three admin list screens and using the pull-to-refresh feature on each. Confirm the visual indicator and data refresh behavior are identical and free of bugs.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 32,
+        "id": "32",
         "title": "Conduct and Document Design System Compliance Audit",
         "description": "Perform a comprehensive audit of all admin screens to ensure they fully comply with the JCar Design System. Create a checklist to standardize the process and document any findings or necessary exceptions.",
         "details": "Create a checklist in a markdown file (e.g., `ADMIN_UI_AUDIT.md`). The checklist should include items for every requirement: usage of `SafeAreaView`, `theme.colors`, `theme.typography`, `theme.spacing`, and components like `Card`, `Badge`, `Button`, `StateScreen`. Manually go through each admin screen (`AdminVehiclesListScreen`, `AdminVehicleDetailScreen`, `AdminScheduleScreen`, `AdminPageScreen`) and check off each item. Use a tool like `react-native-debugger` to inspect styles and ensure no hardcoded values remain. Any identified deviations should be fixed. If a deviation is intentional and necessary, it must be documented in the audit file with a clear justification.",
@@ -2114,7 +2123,7 @@
         "updatedAt": "2025-12-03T16:57:54.695Z"
       },
       {
-        "id": 33,
+        "id": "33",
         "title": "Update Firestore Schema: `consultation_requests` and `admin_owned_vehicles`",
         "description": "Update the `consultation_requests` collection with new fields for detailed status tracking and create the new `admin_owned_vehicles` collection to manage vehicles acquired by the admin.",
         "details": "In your Firestore service files, update the type definitions/interfaces for `ConsultationRequest` to include `consultationStatus`, `completedAt`, `completedBy`, `dealAmount`, and `adminNotes`. Create a new service file and type definition for `AdminOwnedVehicle` with fields: `vehicleId`, `vehicleName`, `purchasePrice`, `purchaseDate`, `consultationId`, `previousOwnerId`, `previousOwnerName`, `status`, `soldDate`, `soldPrice`, and `createdAt`. This task does not involve migrating existing data, only defining the new structures and service file setup.",
@@ -2125,7 +2134,7 @@
         "subtasks": []
       },
       {
-        "id": 34,
+        "id": "34",
         "title": "Create One-Time Data Migration Script",
         "description": "Write and execute a script to migrate existing documents in the `consultation_requests` collection to the new data structure, ensuring backward compatibility and data integrity.",
         "details": "Using Firebase Admin SDK (e.g., in a Node.js environment), create a script that: 1. Fetches all documents from `consultation_requests`. 2. For each document, maps the old `status` ('pending', 'approved', 'rejected') to the new `consultationStatus` ('pending', 'confirmed', 'rejected'). 3. Adds the new fields (`completedAt`, `completedBy`, `dealAmount`, `adminNotes`) with default `null` values. 4. Uses a batched write to update all documents efficiently. The script should be run once.",
@@ -2203,7 +2212,7 @@
         "updatedAt": "2025-12-05T04:14:07.204Z"
       },
       {
-        "id": 35,
+        "id": "35",
         "title": "Refactor `AdminConsultationScreen` with New Tab Structure",
         "description": "Rebuild the `AdminConsultationScreen` using `react-native-tab-view` to replace the old status-based tabs with the new '구매상담', '판매상담', and '거래완료' tabs.",
         "details": "Install or update `react-native-tab-view`. Replace the existing tab navigation logic in `AdminConsultationScreen` with the `TabView` component. Define three routes: 'buy', 'sell', 'completed'. Each route will render a list component (e.g., `ConsultationList`). Use placeholders for the lists initially. Ensure the tab bar styles are consistent with the JCar Design System.",
@@ -2216,7 +2225,7 @@
         "subtasks": []
       },
       {
-        "id": 36,
+        "id": "36",
         "title": "Implement Firestore Queries for New Consultation Tabs",
         "description": "Create and integrate the Firestore query logic to fetch the correct data for the '구매상담', '판매상담', and '거래완료' tabs.",
         "details": "In your Firestore service, create three new functions: `getBuyConsultations`, `getSellConsultations`, `getCompletedConsultations`. `getBuyConsultations`: `where('type', '!=', 'sell').where('consultationStatus', '!=', 'completed')`. `getSellConsultations`: `where('type', '==', 'sell').where('consultationStatus', '!=', 'completed')`. `getCompletedConsultations`: `where('consultationStatus', '==', 'completed')`. These queries may require creating composite indexes in Firestore. Integrate these functions into the respective list components within the `AdminConsultationScreen` tabs.",
@@ -2229,7 +2238,7 @@
         "subtasks": []
       },
       {
-        "id": 37,
+        "id": "37",
         "title": "Redesign and Implement `ConsultationCard` Component",
         "description": "Update the existing consultation card or create a new one to display the required information and dynamic action buttons based on the `consultationStatus`.",
         "details": "Use the JCar `Card` component as a base. Display vehicle name, image, customer info, and creation date. Add a `Badge` component for `consultationStatus`, mapping statuses to colors as specified in the PRD (e.g., `pending` -> `theme.colors.warning.main`). Implement conditional rendering for action buttons (`Button` component) based on the `consultationStatus`: e.g., if status is 'pending', show '채결', '보류', '거절' buttons.",
@@ -2247,7 +2256,8 @@
             "dependencies": [],
             "details": "Create a new file at `src/components/consultation/ConsultationCard.tsx`. Define a `ConsultationCardProps` interface that accepts a consultation object containing vehicle name, image URL, customer info, creation date, and consultationStatus.",
             "status": "done",
-            "testStrategy": "Verify that the component file is created and it renders the base `Card` component without crashing. Check that the props interface is correctly defined in TypeScript."
+            "testStrategy": "Verify that the component file is created and it renders the base `Card` component without crashing. Check that the props interface is correctly defined in TypeScript.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2258,7 +2268,8 @@
             ],
             "details": "Inside the `ConsultationCard` component, use `Text` and `Image` components to display the data received from props. Arrange the elements in a clean, readable layout within the base `Card` component.",
             "status": "done",
-            "testStrategy": "Pass a mock consultation object to the component and visually verify that the vehicle name, customer info, and creation date are displayed correctly. Ensure the vehicle image loads properly."
+            "testStrategy": "Pass a mock consultation object to the component and visually verify that the vehicle name, customer info, and creation date are displayed correctly. Ensure the vehicle image loads properly.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2269,7 +2280,8 @@
             ],
             "details": "Create a mapping object that links each `consultationStatus` (e.g., 'pending', 'confirmed', 'rejected') to a specific color from the theme (e.g., `theme.colors.warning.main`). Use this map to set the `color` prop of the `Badge` component.",
             "status": "done",
-            "testStrategy": "Create a Storybook story or a test view where you can pass different `consultationStatus` props to the card. Verify that the badge displays the correct text and background color for each status."
+            "testStrategy": "Create a Storybook story or a test view where you can pass different `consultationStatus` props to the card. Verify that the badge displays the correct text and background color for each status.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2280,7 +2292,8 @@
             ],
             "details": "Use a switch statement or a series of conditional checks on the `consultationStatus` prop. For each status, render the appropriate set of `Button` components. For 'pending', render '채결', '보류', '거절' buttons. For other statuses, render the relevant buttons or none at all.",
             "status": "done",
-            "testStrategy": "In the Storybook story or test view, cycle through all possible `consultationStatus` values. For each status, confirm that the correct set of action buttons (with the correct labels) is displayed, and that buttons for other statuses are hidden."
+            "testStrategy": "In the Storybook story or test view, cycle through all possible `consultationStatus` values. For each status, confirm that the correct set of action buttons (with the correct labels) is displayed, and that buttons for other statuses are hidden.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2293,12 +2306,13 @@
             ],
             "details": "Create `ConsultationCard.stories.tsx`. Add a separate story for each possible `consultationStatus` (e.g., 'Pending', 'Confirmed', 'OnHold', 'Rejected'). Pass mock data to each story to ensure it accurately represents a real-world use case.",
             "status": "done",
-            "testStrategy": "Review the Storybook build. Navigate through each story for the `ConsultationCard`. Verify that the information, badge color, and action buttons are all rendered correctly for every single state, matching the design specifications."
+            "testStrategy": "Review the Storybook build. Navigate through each story for the `ConsultationCard`. Verify that the information, badge color, and action buttons are all rendered correctly for every single state, matching the design specifications.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 38,
+        "id": "38",
         "title": "Implement Consultation Status Update Logic",
         "description": "Develop the backend logic to handle status changes triggered by the action buttons on the `ConsultationCard`, ensuring data consistency using Firestore transactions.",
         "details": "Create a single Firestore service function, `updateConsultationStatus(docId, newStatus)`. This function will update the `consultationStatus` field of the specified document. Wire this function to the `onPress` handlers of the action buttons in the `ConsultationCard`. For example, the '채결' button on a 'pending' card will call `updateConsultationStatus(id, 'confirmed')`. Use loading states to provide user feedback during the update.",
@@ -2316,7 +2330,8 @@
             "dependencies": [],
             "details": "In a relevant service file, such as `src/services/firestoreService.ts`, create an async function `updateConsultationStatus(docId: string, newStatus: string)`. This function should use the Firebase SDK to update the `consultationStatus` field of the document in the `consultation_requests` collection. The call should be wrapped in a try/catch block to handle potential errors from Firestore.",
             "status": "done",
-            "testStrategy": "Write a unit test for the service function using firebase-mock or a similar library. Verify that it attempts to call `firestore().collection().doc().update()` with the correct document ID and payload. Test the error path by mocking a rejected promise from the update call."
+            "testStrategy": "Write a unit test for the service function using firebase-mock or a similar library. Verify that it attempts to call `firestore().collection().doc().update()` with the correct document ID and payload. Test the error path by mocking a rejected promise from the update call.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2325,7 +2340,8 @@
             "dependencies": [],
             "details": "In the `ConsultationCard.tsx` component, introduce a new state variable using the `useState` hook, for example: `const [isUpdating, setIsUpdating] = useState(false);`. Bind the `disabled` prop of the action buttons to this `isUpdating` state. Conditionally render an `ActivityIndicator` over the buttons or in place of the button text when `isUpdating` is true.",
             "status": "done",
-            "testStrategy": "Manually test the component in a storybook or on a development screen. Create a mock function that simulates a delay and toggles the `isUpdating` state. Verify that buttons are disabled and a loading indicator appears as expected during the simulated update."
+            "testStrategy": "Manually test the component in a storybook or on a development screen. Create a mock function that simulates a delay and toggles the `isUpdating` state. Verify that buttons are disabled and a loading indicator appears as expected during the simulated update.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2337,7 +2353,8 @@
             ],
             "details": "Import the `updateConsultationStatus` function into `ConsultationCard.tsx`. Create a new async handler function, `handleStatusUpdate(newStatus: string)`, inside the component. This handler will call `setIsUpdating(true)`, then `await updateConsultationStatus(props.consultation.id, newStatus)`, and finally `setIsUpdating(false)` in a `finally` block. Attach this handler to the `onPress` prop of each action button, passing the appropriate new status string.",
             "status": "done",
-            "testStrategy": "Using a development build, press an action button on the card. Check the Firestore console to confirm that the `consultationStatus` field for the corresponding document has been updated to the new value. Verify network logs to see the request being made."
+            "testStrategy": "Using a development build, press an action button on the card. Check the Firestore console to confirm that the `consultationStatus` field for the corresponding document has been updated to the new value. Verify network logs to see the request being made.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2348,7 +2365,8 @@
             ],
             "details": "In `ConsultationCard.tsx`, get access to the toast context using the `useToast` hook. Enhance the `handleStatusUpdate` function's try/catch block. Upon a successful update (after the await call in the `try` block), show a success message like `toast.showSuccess('상태가 성공적으로 변경되었습니다.')`. In the `catch` block, log the error and show an error message like `toast.showError('업데이트 중 오류가 발생했습니다.')`.",
             "status": "done",
-            "testStrategy": "Trigger a status update and confirm a success toast message appears. Manually introduce an error in the service function (e.g., reference a wrong collection) or use network throttling to simulate a failure, and confirm that an error toast message is displayed correctly."
+            "testStrategy": "Trigger a status update and confirm a success toast message appears. Manually introduce an error in the service function (e.g., reference a wrong collection) or use network throttling to simulate a failure, and confirm that an error toast message is displayed correctly.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2359,12 +2377,13 @@
             ],
             "details": "Modify the `ConsultationCard` component to accept a new function prop, such as `onUpdateSuccess: () => void;`. In the parent screen that renders the list of cards (e.g., `AdminScheduleScreen.tsx`), pass its data-refetching function as this prop. Inside `ConsultationCard.tsx`, within the `handleStatusUpdate` function, call `onUpdateSuccess()` after the status is successfully updated and the success toast is shown.",
             "status": "done",
-            "testStrategy": "Navigate to the screen containing the list of consultations. Perform a status update on one of the cards. Verify that the card's UI (e.g., buttons, status label) changes and the list re-orders or refreshes automatically without any manual user action."
+            "testStrategy": "Navigate to the screen containing the list of consultations. Perform a status update on one of the cards. Verify that the card's UI (e.g., buttons, status label) changes and the list re-orders or refreshes automatically without any manual user action.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 39,
+        "id": "39",
         "title": "Develop 'Complete Deal' Modal and Logic",
         "description": "Create a modal that appears when an admin clicks the '거래완료' button. This modal will capture the deal amount and admin notes, then update the consultation document.",
         "details": "Create a new reusable modal component. The modal should contain a numeric `TextInput` for `dealAmount` (required) and a `TextInput` for `adminNotes` (optional). On 'Confirm', call a new Firestore service function `completeConsultation(docId, dealAmount, notes, completedBy, isSellType)`. This function updates the document with `consultationStatus: 'completed'`, `completedAt: serverTimestamp()`, `dealAmount`, `adminNotes`, and `completedBy`. For sell-type consultations, the modal should include the specified checkbox.",
@@ -2382,7 +2401,8 @@
             "dependencies": [],
             "details": "In the primary Firestore service file (e.g., `src/services/firestoreService.js`), create a new async function `completeConsultation({ docId, dealAmount, adminNotes, completedBy })`. This function will use `updateDoc` to update the specified consultation document with `consultationStatus: 'completed'`, `completedAt: serverTimestamp()`, `dealAmount`, `adminNotes`, and `completedBy` fields.",
             "status": "done",
-            "testStrategy": "Write a unit test for the service function using the Firebase testing library. Mock the `updateDoc` call and verify it's called with the correct document ID and payload. Ensure `serverTimestamp()` is used for `completedAt`."
+            "testStrategy": "Write a unit test for the service function using the Firebase testing library. Mock the `updateDoc` call and verify it's called with the correct document ID and payload. Ensure `serverTimestamp()` is used for `completedAt`.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2391,7 +2411,8 @@
             "dependencies": [],
             "details": "Create a new file at `src/components/modals/CompleteDealModal.js`. The component should be built upon React Native's `Modal` component and accept props like `isVisible`, `onClose`, and `onSubmit`. The main content area should use the existing `Card` component to ensure consistent styling.",
             "status": "done",
-            "testStrategy": "Visually test that the modal can be opened and closed by controlling the `isVisible` prop from a parent component. Verify the `onClose` callback is triggered correctly."
+            "testStrategy": "Visually test that the modal can be opened and closed by controlling the `isVisible` prop from a parent component. Verify the `onClose` callback is triggered correctly.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2402,7 +2423,8 @@
             ],
             "details": "Inside `CompleteDealModal.js`, use the existing `InputField` component for 'Deal Amount' (setting `keyboardType=\"numeric\"`) and 'Admin Notes'. Use the existing `Button` component for 'Confirm' and 'Cancel' actions. The cancel button should call the `onClose` prop.",
             "status": "done",
-            "testStrategy": "Use Storybook or a similar tool to visually inspect the modal's layout. Ensure the numeric keyboard appears for the deal amount field and that all components are styled correctly according to the theme."
+            "testStrategy": "Use Storybook or a similar tool to visually inspect the modal's layout. Ensure the numeric keyboard appears for the deal amount field and that all components are styled correctly according to the theme.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2413,7 +2435,8 @@
             ],
             "details": "Use `useState` hooks in `CompleteDealModal.js` to manage the values for `dealAmount` and `adminNotes`. Implement validation logic that checks if `dealAmount` is a non-empty, positive number. The 'Confirm' button should be disabled until the form is valid. An error message should be displayed via the `InputField`'s `error` prop if validation fails on an attempt to submit.",
             "status": "done",
-            "testStrategy": "Unit test the component's state logic. Verify the 'Confirm' button's `disabled` prop is true when the deal amount is empty or invalid. Verify the `onSubmit` prop is called with the correct state values when the form is valid and the button is pressed."
+            "testStrategy": "Unit test the component's state logic. Verify the 'Confirm' button's `disabled` prop is true when the deal amount is empty or invalid. Verify the `onSubmit` prop is called with the correct state values when the form is valid and the button is pressed.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2425,12 +2448,13 @@
             ],
             "details": "In the relevant admin screen component, manage state for the modal's visibility and the selected consultation ID. When the '거래완료' button is pressed, update the state to show the modal and pass the `docId` as a prop. The modal's `onSubmit` callback should invoke the `completeConsultation` service function with the form data, then close the modal and refresh the data.",
             "status": "done",
-            "testStrategy": "Perform end-to-end testing. Click the '거래완료' button, fill out the modal form, and submit. Verify in the Firestore console or emulator that the document is updated with the correct `consultationStatus`, `dealAmount`, `adminNotes`, and `completedAt` timestamp. Also, test the cancel flow."
+            "testStrategy": "Perform end-to-end testing. Click the '거래완료' button, fill out the modal form, and submit. Verify in the Firestore console or emulator that the document is updated with the correct `consultationStatus`, `dealAmount`, `adminNotes`, and `completedAt` timestamp. Also, test the cancel flow.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 40,
+        "id": "40",
         "title": "Implement Transaction for 'Sell' Consultation Completion",
         "description": "When a 'sell' consultation is completed and the checkbox is checked, use a single Firestore transaction to update the consultation, create an `admin_owned_vehicles` document, and update the original vehicle's status.",
         "details": "Extend the `completeConsultation` service function. When `isSellType` is true, use `runTransaction`. The transaction should: 1. Read the `consultation_requests` document and the original `vehicles` document. 2. Update the `consultation_requests` document as in Task 39. 3. Create a new document in `admin_owned_vehicles` with data from the consultation and vehicle. 4. Update the status of the original `vehicles` document to 'sold'. All three operations must succeed or fail together.",
@@ -2448,7 +2472,8 @@
             "dependencies": [],
             "details": "Locate the `completeConsultation` function in the Firestore services file. Change its signature to accept the consultation ID and an `isSell` boolean. Inside the function, add a conditional block: `if (isSell) { /* New transaction logic */ } else { /* Existing completion logic */ }`.",
             "status": "done",
-            "testStrategy": "Write a unit test for the service function to verify that the correct logical branch is executed based on the `isSell` parameter's value."
+            "testStrategy": "Write a unit test for the service function to verify that the correct logical branch is executed based on the `isSell` parameter's value.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2459,7 +2484,8 @@
             ],
             "details": "Use `db.runTransaction(async (transaction) => { ... })`. Inside the transaction callback, get the document reference for `consultation_requests/{consultationId}` and the `vehicleRef` using the `vehicleId` from the consultation data. Use `transaction.get()` for both documents and validate that they exist before proceeding.",
             "status": "done",
-            "testStrategy": "Use a testing library with mocks to verify that `runTransaction` is called and that `transaction.get` is invoked with the correct document references for the consultation and vehicle."
+            "testStrategy": "Use a testing library with mocks to verify that `runTransaction` is called and that `transaction.get` is invoked with the correct document references for the consultation and vehicle.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2470,7 +2496,8 @@
             ],
             "details": "Inside the transaction callback, after reading the documents: 1. Use `transaction.update(consultationRef, { consultationStatus: 'completed' })`. 2. Define a new reference in `admin_owned_vehicles` and use `transaction.set()` to create the new document, merging data from the vehicle and consultation. 3. Use `transaction.update(vehicleRef, { status: 'sold' })`.",
             "status": "done",
-            "testStrategy": "Using the Firebase Emulator Suite, execute the function and assert that all three database modifications (consultation update, new admin vehicle creation, vehicle status update) occur correctly and atomically."
+            "testStrategy": "Using the Firebase Emulator Suite, execute the function and assert that all three database modifications (consultation update, new admin vehicle creation, vehicle status update) occur correctly and atomically.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2481,7 +2508,8 @@
             ],
             "details": "In the 'Complete' button's `onPress` handler, pass the `isSell` flag to `completeConsultation`. Manage a loading state to disable the button during the transaction. On a successful promise resolution, use the existing `useToast` hook to show a success message.",
             "status": "done",
-            "testStrategy": "Manually test the UI flow. Check the 'sell' box, click 'complete,' and verify the button enters a loading state. Confirm a success toast appears on completion and the UI updates accordingly."
+            "testStrategy": "Manually test the UI flow. Check the 'sell' box, click 'complete,' and verify the button enters a loading state. Confirm a success toast appears on completion and the UI updates accordingly.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2492,12 +2520,13 @@
             ],
             "details": "Surround the `db.runTransaction(...)` call with `try/catch`. In the `catch` block, log the error and ensure the promise is rejected so the UI can handle it. In the UI, catch the error and display a toast message. In `firestore.rules`, add a rule for `admin_owned_vehicles/{docId}` allowing reads and writes only for authenticated admin users.",
             "status": "done",
-            "testStrategy": "Force a transaction failure (e.g., by violating a security rule in a test) and verify an error toast is shown. Use the emulator to test the new security rule, ensuring non-admins cannot write to `admin_owned_vehicles`."
+            "testStrategy": "Force a transaction failure (e.g., by violating a security rule in a test) and verify an error toast is shown. Use the emulator to test the new security rule, ensuring non-admins cannot write to `admin_owned_vehicles`.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 41,
+        "id": "41",
         "title": "Implement 'Completed Deals' Tab with Filtering and Statistics",
         "description": "Build the UI and logic for the '거래완료' tab, including monthly and type filters, and a summary card displaying key statistics for the selected period.",
         "details": "In the '거래완료' tab component, add two filter controls: a dropdown for the month (e.g., `react-native-picker-select`) and segmented controls for the type (All/Buy/Sell). Create a state to hold the filter values. Modify the Firestore query to filter by `completedAt` (for the selected month) and `type`. On the client-side, calculate the required statistics (total deals, total amount, etc.) from the fetched data and display them in a JCar `Card` component at the top of the list.",
@@ -2515,7 +2544,8 @@
             "dependencies": [],
             "details": "In the '거래완료' tab component file, add a `react-native-picker-select` component for month selection and a segmented control component for deal type. Position these controls above the list of deals.",
             "status": "done",
-            "testStrategy": "Visually verify that the dropdown and segmented control render correctly. Ensure the month dropdown is populated with a relevant list of months (e.g., the last 12 months)."
+            "testStrategy": "Visually verify that the dropdown and segmented control render correctly. Ensure the month dropdown is populated with a relevant list of months (e.g., the last 12 months).",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2526,7 +2556,8 @@
             ],
             "details": "In the '거래완료' screen component, declare two state variables, for example: `const [selectedMonth, setSelectedMonth] = useState(new Date());` and `const [selectedType, setSelectedType] = useState('All');`. Wire these to the filter components' `onValueChange` props.",
             "status": "done",
-            "testStrategy": "Use React Developer Tools to inspect the component's state. Change the filter values in the UI and confirm that the corresponding state variables are updated correctly to reflect the user's selection."
+            "testStrategy": "Use React Developer Tools to inspect the component's state. Change the filter values in the UI and confirm that the corresponding state variables are updated correctly to reflect the user's selection.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2537,7 +2568,8 @@
             ],
             "details": "The query logic must construct a date range for the `completedAt` timestamp field, covering the start and end of the `selectedMonth`. If `selectedType` is not 'All', add a `where('type', '==', selectedType)` clause to the query.",
             "status": "done",
-            "testStrategy": "With mock data in Firestore, select a specific month and type in the UI. Verify that only the matching deals are fetched and displayed. Test the 'All' type filter to ensure it correctly removes the type constraint from the query."
+            "testStrategy": "With mock data in Firestore, select a specific month and type in the UI. Verify that only the matching deals are fetched and displayed. Test the 'All' type filter to ensure it correctly removes the type constraint from the query.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2548,7 +2580,8 @@
             ],
             "details": "Use the `useMemo` hook to process the array of fetched deals. The hook's dependency array must include the fetched data. The function should iterate through the deals, summing prices based on type to calculate total sales, purchases, and net profit.",
             "status": "done",
-            "testStrategy": "Create a unit test for the calculation logic. Provide a mock array of deal objects and assert that the calculated statistics (count, amounts, profit) are correct. Test with an empty array of deals."
+            "testStrategy": "Create a unit test for the calculation logic. Provide a mock array of deal objects and assert that the calculated statistics (count, amounts, profit) are correct. Test with an empty array of deals.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2559,12 +2592,13 @@
             ],
             "details": "Create a new component, e.g., `DealsSummaryCard`, that accepts the calculated statistics as props. This component will render a `Card` containing styled `Text` elements for each statistic. Place this component within the `ListHeaderComponent` of the `FlatList`.",
             "status": "done",
-            "testStrategy": "Visually inspect the summary card in the UI. Change the filters to update the underlying data and verify that the numbers displayed in the card update correctly and are formatted properly (e.g., with currency symbols and commas)."
+            "testStrategy": "Visually inspect the summary card in the UI. Change the filters to update the underlying data and verify that the numbers displayed in the card update correctly and are formatted properly (e.g., with currency symbols and commas).",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 42,
+        "id": "42",
         "title": "Add 'Owned Vehicles' Section to `AdminPageScreen`",
         "description": "Enhance the `AdminPageScreen` by adding a new section that displays a horizontally scrollable list of vehicles owned by the admin.",
         "details": "Create a new component, `OwnedVehiclesList`. This component will fetch data from the `admin_owned_vehicles` collection where `status` is 'owned'. Use a `FlatList` with `horizontal={true}`. Each item in the list will be a JCar `Card` component displaying the vehicle's image, name, purchase price, and purchase date. Integrate this `OwnedVehiclesList` component into the `AdminPageScreen` layout.",
@@ -2582,7 +2616,8 @@
             "dependencies": [],
             "details": "Create the file `src/components/admin/OwnedVehiclesList.js`. Inside, set up a functional component. Use the existing Firebase utility or hook to create a query on the `admin_owned_vehicles` collection with a `where('status', '==', 'owned')` clause. Manage the fetched data in the component's state.",
             "status": "done",
-            "testStrategy": "Verify that the component correctly initiates a Firestore query upon mounting and that the data fetched matches the expected documents in the database."
+            "testStrategy": "Verify that the component correctly initiates a Firestore query upon mounting and that the data fetched matches the expected documents in the database.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2593,7 +2628,8 @@
             ],
             "details": "Within `OwnedVehiclesList`, create a function `renderVehicleItem({ item })`. This function will return a JCar `Card` component. The card should display the vehicle's image, name (e.g., `item.name`), purchase price, and purchase date using the JCar design system's typography components.",
             "status": "done",
-            "testStrategy": "Create a storybook or a temporary view to render the item card with mock data. Verify that the image, name, price, and date are displayed correctly and follow the design system styles."
+            "testStrategy": "Create a storybook or a temporary view to render the item card with mock data. Verify that the image, name, price, and date are displayed correctly and follow the design system styles.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2605,7 +2641,8 @@
             ],
             "details": "In the `OwnedVehiclesList` component, implement a `FlatList`. Set its `data` prop to the fetched vehicles state. Set the `renderItem` prop to the `renderVehicleItem` function created in the previous task. Configure it for horizontal scrolling by setting `horizontal={true}` and `showsHorizontalScrollIndicator={false}`. Add appropriate styling for padding and item spacing.",
             "status": "done",
-            "testStrategy": "Render the component with multiple mock vehicle entries. Confirm that the list scrolls horizontally and that all items are rendered correctly with proper spacing between them."
+            "testStrategy": "Render the component with multiple mock vehicle entries. Confirm that the list scrolls horizontally and that all items are rendered correctly with proper spacing between them.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2616,7 +2653,8 @@
             ],
             "details": "Check the status of the data fetching hook. While loading, display a `Spinner` or similar loading indicator. If the fetch is complete and the data array is empty, render the `StateScreen` component with an appropriate icon and message, such as 'No owned vehicles to display'.",
             "status": "done",
-            "testStrategy": "Test the loading state by simulating a delay in the data fetch. Test the empty state by ensuring the `admin_owned_vehicles` collection has no documents with `status: 'owned'` and verifying the `StateScreen` appears."
+            "testStrategy": "Test the loading state by simulating a delay in the data fetch. Test the empty state by ensuring the `admin_owned_vehicles` collection has no documents with `status: 'owned'` and verifying the `StateScreen` appears.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2628,12 +2666,13 @@
             ],
             "details": "Open `src/screens/admin/AdminPageScreen.js`. Import the `OwnedVehiclesList` component. Add a section title (e.g., using `theme.typography.H4`) like 'Owned Vehicles' and place the `<OwnedVehiclesList />` component below it. Add an `onPress` handler to the `Card` in `renderVehicleItem` that navigates to `AdminOwnedVehicleDetailScreen`, passing the `item.id` as a route parameter.",
             "status": "done",
-            "testStrategy": "Navigate to the Admin Page. Verify the 'Owned Vehicles' section and the list are displayed correctly. Tap on a vehicle card and confirm that the app navigates to the `AdminOwnedVehicleDetailScreen` with the correct vehicle ID."
+            "testStrategy": "Navigate to the Admin Page. Verify the 'Owned Vehicles' section and the list are displayed correctly. Tap on a vehicle card and confirm that the app navigates to the `AdminOwnedVehicleDetailScreen` with the correct vehicle ID.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 43,
+        "id": "43",
         "title": "Create `AdminOwnedVehicleDetailScreen`",
         "description": "Build a new screen to show detailed information about an admin-owned vehicle and allow the admin to mark it as sold.",
         "details": "Create a new screen component `AdminOwnedVehicleDetailScreen`. This screen receives an `vehicleId` as a navigation parameter. It will fetch and display all data for that vehicle from the `admin_owned_vehicles` collection. Include a button '[판매완료 처리]'. Tapping this button will open a modal to input the `soldPrice`. On confirmation, update the vehicle's document in Firestore, setting `status` to 'sold', and adding `soldPrice` and `soldDate`.",
@@ -2651,7 +2690,8 @@
             "dependencies": [],
             "details": "Create a new file at `src/screens/admin/AdminOwnedVehicleDetailScreen.js`. Define a basic functional component. Import this screen into the admin navigator (e.g., `AdminStackNavigator.js`) and add it as a new `Stack.Screen` so that it can be navigated to from the vehicle list.",
             "status": "done",
-            "testStrategy": "Verify that you can navigate from the admin owned vehicles list to the new, initially blank, screen by passing a vehicleId."
+            "testStrategy": "Verify that you can navigate from the admin owned vehicles list to the new, initially blank, screen by passing a vehicleId.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2662,7 +2702,8 @@
             ],
             "details": "Inside `AdminOwnedVehicleDetailScreen`, use the `useRoute` hook to get the `vehicleId` parameter. Use a `useEffect` hook to fetch the document from `firestore().collection('admin_owned_vehicles').doc(vehicleId)`. Manage loading and error states. Render the vehicle's data using appropriate components like `Text` and `View` within a `ScrollView`.",
             "status": "done",
-            "testStrategy": "Navigate to the screen for a known vehicle and verify that all its details from the Firestore document are correctly displayed. Check the loading state indicator as well."
+            "testStrategy": "Navigate to the screen for a known vehicle and verify that all its details from the Firestore document are correctly displayed. Check the loading state indicator as well.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2673,7 +2714,8 @@
             ],
             "details": "Add a `TouchableOpacity` or a custom button component to the screen with the label '[판매완료 처리]'. Use `useState` to manage the visibility of a `Modal` component. The modal should contain a `TextInput` for the `soldPrice` (with `keyboardType='numeric'`), a 'Confirm' button, and a 'Cancel' button.",
             "status": "done",
-            "testStrategy": "Tap the '[판매완료 처리]' button and verify that the modal appears correctly. Check that the input field is functional and the cancel button closes the modal."
+            "testStrategy": "Tap the '[판매완료 처리]' button and verify that the modal appears correctly. Check that the input field is functional and the cancel button closes the modal.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2684,7 +2726,8 @@
             ],
             "details": "Create an asynchronous function that will be called by the modal's 'Confirm' button. This function should perform a `firestore().collection('admin_owned_vehicles').doc(vehicleId).update()` operation. The data to update is `{ status: 'sold', soldPrice: <price_from_input>, soldDate: firestore.FieldValue.serverTimestamp() }`.",
             "status": "done",
-            "testStrategy": "Use the modal to enter a sold price and confirm. Use the Firestore console or emulator to verify that the vehicle document's `status` is changed to 'sold' and that `soldPrice` and `soldDate` fields are correctly populated."
+            "testStrategy": "Use the modal to enter a sold price and confirm. Use the Firestore console or emulator to verify that the vehicle document's `status` is changed to 'sold' and that `soldPrice` and `soldDate` fields are correctly populated.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2695,12 +2738,13 @@
             ],
             "details": "Upon a successful Firestore update, close the modal, display a success message to the admin (e.g., using a toast or an alert), and then use the `navigation.goBack()` method to return the user to the previous screen (the vehicle list). Implement error handling for the update operation.",
             "status": "done",
-            "testStrategy": "Successfully mark a vehicle as sold. Verify that a success message is shown and that the app automatically navigates back to the admin owned vehicles list. The list should now reflect the updated status of the vehicle."
+            "testStrategy": "Successfully mark a vehicle as sold. Verify that a success message is shown and that the app automatically navigates back to the admin owned vehicles list. The list should now reflect the updated status of the vehicle.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 44,
+        "id": "44",
         "title": "Update Firebase Security Rules",
         "description": "Update and deploy Firebase Security Rules to secure the modified `consultation_requests` collection and the new `admin_owned_vehicles` collection.",
         "details": "Open the `firestore.rules` file. Update the rule for `/consultation_requests/{docId}` to reflect the logic in the PRD, allowing admins to write and users to update their own requests under specific conditions. Add a new rule block for `/admin_owned_vehicles/{docId}` that restricts all read and write access to authenticated users with an 'admin' role (`request.auth.token.role == 'admin'`).",
@@ -2719,7 +2763,8 @@
             "dependencies": [],
             "details": "Locate the `firestore.rules` file in the project. Read the existing rules for `users`, `vehicles`, and `consultation_requests` to understand current patterns and any helper functions. This will ensure the new rules are consistent with the existing structure.",
             "status": "done",
-            "testStrategy": null
+            "testStrategy": null,
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2730,7 +2775,8 @@
             ],
             "details": "In `firestore.rules`, add a new match block: `match /admin_owned_vehicles/{vehicleId} { allow read, write: if request.auth.token.role == 'admin'; }`. This ensures that no other user type can access this sensitive data.",
             "status": "done",
-            "testStrategy": "Use the Firebase Rules Playground to simulate a non-admin authenticated user and an unauthenticated user attempting to read/write to `/admin_owned_vehicles/someId`. Both attempts should be denied. Simulate an admin user, which should be allowed."
+            "testStrategy": "Use the Firebase Rules Playground to simulate a non-admin authenticated user and an unauthenticated user attempting to read/write to `/admin_owned_vehicles/someId`. Both attempts should be denied. Simulate an admin user, which should be allowed.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2741,7 +2787,8 @@
             ],
             "details": "Locate the `match /consultation_requests/{docId}` block. Update the `allow write` rule to be a combination of conditions: `(request.auth.token.role == 'admin') || (request.auth.uid == resource.data.userId && /* add other conditions from PRD */)`. Ensure the `create` rule still allows users to create their own requests.",
             "status": "done",
-            "testStrategy": "Using the Rules Playground, test the following scenarios: 1. An admin can update any field. 2. A user can update a field on their own request. 3. A user is blocked from updating a request owned by another user. 4. A user is blocked from updating a request if its status is 'completed'."
+            "testStrategy": "Using the Rules Playground, test the following scenarios: 1. An admin can update any field. 2. A user can update a field on their own request. 3. A user is blocked from updating a request owned by another user. 4. A user is blocked from updating a request if its status is 'completed'.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2753,7 +2800,8 @@
             ],
             "details": "In the existing security rules test file (e.g., `firestore.rules.spec.js`), add new test suites for `admin_owned_vehicles` and `consultation_requests`. Create mock data and simulate authenticated users (admin, non-admin) and unauthenticated users attempting valid and invalid operations.",
             "status": "done",
-            "testStrategy": "Run the test script (e.g., `npm test`) and ensure all test cases pass. The test report should show coverage for all new and modified rule paths. Fix any failing tests before proceeding."
+            "testStrategy": "Run the test script (e.g., `npm test`) and ensure all test cases pass. The test report should show coverage for all new and modified rule paths. Fix any failing tests before proceeding.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2764,22 +2812,176 @@
             ],
             "details": "From the project root directory, run the command `firebase deploy --only firestore:rules`. After the CLI reports a successful deployment, navigate to the Firestore Rules tab in the Firebase Console to confirm the new rules are visible and active.",
             "status": "done",
-            "testStrategy": "Perform a final smoke test using the Rules Playground in the live Firebase Console. Repeat one key test for each collection (e.g., admin access to `admin_owned_vehicles`, user access to their `consultation_request`) to confirm the deployed rules are working as expected in the production environment."
+            "testStrategy": "Perform a final smoke test using the Rules Playground in the live Firebase Console. Repeat one key test for each collection (e.g., admin access to `admin_owned_vehicles`, user access to their `consultation_request`) to confirm the deployed rules are working as expected in the production environment.",
+            "parentId": "undefined"
           }
         ]
+      },
+      {
+        "id": "45",
+        "title": "Enhance Admin Consultation Management with Rejection Reasons, Memos, and Time Slot Suggestions",
+        "description": "Extend the consultation management system to allow administrators to add rejection reasons, internal memos, and suggest alternative time slots when managing consultation requests. This involves updating the Firestore data model and creating new UI components for these admin actions.",
+        "details": "1. **Firestore Schema Update:** Modify the `consultation_requests` collection by adding three new optional fields:\n   - `rejectionReason` (string): To store the reason provided by an admin when rejecting a request.\n   - `adminMemo` (string): For internal notes visible only to admins.\n   - `suggestedSlots` (array of Firestore Timestamps): For admins to propose alternative times to the user.\n2. **Firestore Security Rules Update:** Based on Task 2, update `firestore.rules` for the `consultation_requests` collection. Ensure that only users with an 'admin' custom claim can write to `rejectionReason`, `adminMemo`, and `suggestedSlots`. Regular users should have read-only access to `rejectionReason` and `suggestedSlots`, and no access to `adminMemo`.\n3. **UI for Rejection Reason:** When an admin presses the 'Reject' button on a `ConsultationCard`, trigger a modal. This modal should contain a `TextInput` for the rejection reason. On submission, the `updateConsultationStatus` function from Task 38 must be extended to accept the reason, update the document's status to 'rejected', and populate the `rejectionReason` field.\n4. **UI for Admin Memo:** Add a new icon button (e.g., 'notebook-edit') to the admin's `ConsultationCard`. Tapping this button should open a modal allowing the admin to view, add, or edit the `adminMemo` field for that specific consultation.\n5. **UI for Time Slot Suggestion:** On the consultation detail screen for admins, add a new section titled 'Suggest Alternative Times'. This section should include a button to add a new time slot, which opens a date/time picker. Admins should be able to add multiple suggestions, which are displayed in a list. Saving these will update the `suggestedSlots` array in Firestore.\n6. **Notification Trigger:** Create or update a Cloud Function that triggers on write operations to `consultation_requests`. If `consultationStatus` changes to 'rejected' and `rejectionReason` is present, use the FCM system from Task 5 to send a push notification to the user, including the rejection reason in the message body.",
+        "testStrategy": "1. **Rejection Flow:** Log in as an admin, navigate to a 'pending' consultation, and tap 'Reject'. Verify the reason input modal appears. Enter a reason like 'Time slot unavailable' and submit. Confirm a success toast (from Task 19) is shown. Check the Firestore document to ensure `consultationStatus` is 'rejected' and `rejectionReason` is correctly populated. Log in as the user and confirm a push notification with the reason was received.\n2. **Admin Memo Flow:** As an admin, select any consultation and use the new memo button to add a note. Save the note and verify the `adminMemo` field is updated in Firestore. Reload the screen and confirm the memo persists. Log in as the user who created the request and verify there is no UI to see the memo and that a direct Firestore read for the field is denied by security rules (Task 2).\n3. **Time Slot Suggestion Flow:** As an admin, open a consultation and add two different time slots using the new UI. Save the changes. Verify the `suggestedSlots` array in Firestore contains two valid Timestamp objects. Attempt to add an invalid date to ensure proper validation is in place.\n4. **Error Handling:** Manually simulate a network failure or Firestore permission error during any of the above operations. Verify that the UI enters a loading state, the operation fails gracefully, and an error toast (Task 19) and logs (Task 3) are generated without crashing the app.",
+        "status": "pending",
+        "dependencies": [
+          "2",
+          "3",
+          "5",
+          "19",
+          "38"
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update Firestore Schema and Security Rules for Consultations",
+            "description": "Modify the `consultation_requests` collection in Firestore to include new fields for admin management: `rejectionReason`, `adminMemo`, and `suggestedSlots`. Update Firestore security rules to ensure only admins can write to these fields and user access is appropriately restricted.",
+            "dependencies": [],
+            "details": "Add `rejectionReason` (string), `adminMemo` (string), and `suggestedSlots` (array of Timestamps) as optional fields to the `consultation_requests` collection. In `firestore.rules`, update the rules for `consultation_requests/{requestId}` to grant write access on these fields only to users with an 'admin' claim. Ensure regular users have read-only access to `rejectionReason` and `suggestedSlots`, and no access to `adminMemo`.\n<info added on 2025-12-05T17:08:59.670Z>\nThe `consultation_requests` collection schema and `firestore.rules` have been updated. New optional fields `rejectionReason` (string), `adminMemo` (string), and `suggestedSlots` (array of Timestamps) have been added. Security rules now restrict write access to these fields to admins (`isAdmin() && isActiveUser()`) during update operations. A note has been added to the rules file acknowledging that `adminMemo` must be filtered out on the client-side for non-admin users due to Firestore limitations. The schema is now ready for the implementation of the UI components.\n</info added on 2025-12-05T17:08:59.670Z>",
+            "status": "done",
+            "testStrategy": "Use the Firestore Rules Playground to simulate requests from both admin and regular user roles. Verify that admins can write to the new fields, users can read the public-facing fields, and users are denied access to `adminMemo`.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement Rejection Reason Modal and Update Logic",
+            "description": "Enhance the admin's `ConsultationCard` by adding a modal that prompts for a rejection reason when a request is rejected. The existing `updateConsultationStatus` function must be updated to handle this new data.",
+            "dependencies": [
+              1
+            ],
+            "details": "On the `ConsultationCard` component, likely used in `AdminScheduleScreen`, modify the 'Reject' button's `onPress` handler to open a new modal. This modal will contain a `TextInput` for the reason and a 'Submit' button. On submit, call an extended version of the `updateConsultationStatus` function, passing the consultation ID, the new status 'rejected', and the reason string.\n<info added on 2025-12-05T17:12:22.266Z>\nA new RejectConsultationModal component has been created at src/components/modals/RejectConsultationModal.js, mirroring the design of the CompleteDealModal. It features a validated text input for the reason, an overlay, a keyboard avoiding view, and themed submit/cancel buttons with a loading state. The updateConsultationStatus function in firebaseService.js was enhanced to accept an optional rejectionReason parameter. It now automatically adds both the reason and a rejectedAt timestamp when a consultation status is set to 'rejected', ensuring backward compatibility. In ConsultationCard.js, state was added to manage the modal's visibility. The '거절' buttons for both pending and on-hold states now trigger the modal's opening, and a new handleRejectConsultation function handles the submission of the reason to the updated service function.\n</info added on 2025-12-05T17:12:22.266Z>",
+            "status": "done",
+            "testStrategy": "As an admin, navigate to a pending consultation and click 'Reject'. Verify the modal appears. Enter a reason and submit. Check the Firestore document to confirm its `consultationStatus` is 'rejected' and the `rejectionReason` field is populated correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Admin Memo UI and CRUD Functionality",
+            "description": "Add functionality for administrators to add, view, and edit internal memos on consultation requests. This involves adding a new icon to the `ConsultationCard` and creating a modal for memo management.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add a new `IconButton` (using an icon like 'notebook-edit') to the admin's `ConsultationCard`. This button will open a modal containing a `TextInput` pre-populated with the existing `adminMemo`. Implement a save function within the modal that updates the `adminMemo` field in the corresponding Firestore document.\n<info added on 2025-12-05T17:15:13.435Z>\nImplementation is complete.\nA new `AdminMemoModal` component has been created in `src/components/modals/AdminMemoModal.js`. This modal allows admins to view, add, or edit internal memos. It pre-populates with existing memo content and includes Save/Cancel buttons with a loading state.\nA corresponding `updateAdminMemo` service function was created in `firebaseService.js` to update the `adminMemo` field and add a `memoUpdatedAt` timestamp in the `consultation_requests` collection, including error handling.\nThe `ConsultationCard` component was updated to integrate the modal. A new memo icon button has been added to the card header, which dynamically changes its icon (`note` vs `note-add`) and color based on the existence of a memo. The component now includes `isMemoModalVisible` state and `handleMemoButtonPress`/`handleUpdateMemo` handlers to manage the modal's functionality.\n</info added on 2025-12-05T17:15:13.435Z>",
+            "status": "done",
+            "testStrategy": "As an admin, click the new memo icon on a consultation card. Add a memo and save; check Firestore for the update. Re-open the modal, edit the memo, and save; verify the change in Firestore. Ensure the icon is not visible to non-admin users.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Develop UI for Suggesting Alternative Time Slots",
+            "description": "Create a user interface for admins to suggest alternative time slots for a consultation. This includes a mechanism to add and save multiple date-time suggestions to the Firestore document.",
+            "dependencies": [
+              1
+            ],
+            "details": "On the admin's consultation detail screen, add a section 'Suggest Alternative Times'. This section will have a button to open a date/time picker. Each selected time should be added to a list displayed in the UI. A 'Save Suggestions' button will update the `suggestedSlots` array field in the Firestore document with the list of Firestore Timestamps.",
+            "status": "pending",
+            "testStrategy": "As an admin, open a consultation detail view. Add three different time slots using the date-time picker. Save the suggestions and confirm the `suggestedSlots` array in Firestore is populated with the correct Timestamp values. Test removing a suggestion before saving.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Configure Cloud Function for Rejection Notifications",
+            "description": "Create or modify a Cloud Function that triggers on write operations to `consultation_requests`. The function will send a push notification to the user when their request is rejected, including the admin's reason.",
+            "dependencies": [
+              2
+            ],
+            "details": "Write a new `onUpdate` Cloud Function that triggers on the `consultation_requests` collection. The function logic should check if `consultationStatus` in the `after` data is 'rejected' and differs from the `before` data. If so, it should retrieve the user's FCM token, construct a notification payload including the `rejectionReason`, and send it using the existing FCM system (from Task 5).",
+            "status": "pending",
+            "testStrategy": "Deploy the function. Using an admin account, reject a consultation for a test user and provide a reason. Monitor Cloud Function logs for successful execution and check that the test user's device receives a push notification containing the correct reason.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "46",
+        "title": "Implement User-Side Consultation Management Features",
+        "description": "Enable users to manage their consultations by adding features to cancel pending/approved requests, resubmit rejected requests with new times, and view a detailed history including rejection reasons.",
+        "details": "This task involves creating a comprehensive user-facing interface for managing consultation requests. \n1. **Create UserConsultationDetailScreen:** Develop a new screen that displays all details of a single consultation request. This screen will be the hub for all user actions. It should fetch and display all fields from the Firestore document, including the vehicle details, user information, selected time slots, current status, and any admin-provided `rejectionReason` or `alternativeSlots`.\n2. **Conditional Action Buttons:** On the `UserConsultationDetailScreen`, implement conditional rendering for action buttons based on `consultationStatus`:\n   - If status is 'pending' or 'approved', display a 'Cancel Consultation' button.\n   - If status is 'rejected', display the `rejectionReason` text and a 'Resubmit Consultation' button.\n   - For 'completed' or 'cancelled' statuses, no action buttons should be shown.\n3. **Cancellation Logic:** The 'Cancel' button should trigger a confirmation modal. Upon confirmation, call a service function that updates the consultation document's status to 'cancelled'. This will require updating Firestore Security Rules (from Task 2) to allow a user to write to their own consultation document if the change is to set the status to 'cancelled'. Use the global toast system (Task 19) to show a success message.\n4. **Resubmission Logic:** The 'Resubmit' button should navigate the user to the consultation request flow, pre-populating the form with the original data but allowing the user to select new time slots. Upon submission, the existing document in Firestore should be updated, changing its status back to 'pending', updating the `requestedTimeSlots` and clearing the `rejectionReason`. Security rules must also be updated to permit this specific state transition initiated by the user.\n5. **Enhance Consultation List:** Modify the user's main consultation list screen to fetch and display consultations of all statuses to serve as a complete history. Consider adding tabs or filter chips (e.g., 'Upcoming', 'Past') to help users navigate their history.",
+        "testStrategy": "1. **Detail View Verification:** Navigate to the detail screen for consultations in each state ('pending', 'approved', 'rejected', 'completed', 'cancelled'). Verify that all data is displayed correctly. For a rejected consultation, confirm the rejection reason is shown. For each state, confirm that only the appropriate action buttons are visible or hidden.\n2. **Cancellation Flow:** As a logged-in user, navigate to a 'pending' consultation. Tap 'Cancel'. Verify a confirmation modal appears. Confirm the action. Check Firestore to ensure the document's `consultationStatus` is now 'cancelled'. Verify the UI on the detail screen and list screen updates to reflect this change and a success toast (from Task 19) is displayed. Repeat for an 'approved' consultation.\n3. **Resubmission Flow:** As an admin, reject a user's consultation and provide a reason. As the user, navigate to the now 'rejected' consultation. Click 'Resubmit'. Verify you are taken to a pre-filled form. Select new time slots and submit. Check Firestore to confirm the same document's status is updated to 'pending', the `rejectionReason` is cleared, and the `requestedTimeSlots` are updated. Verify a success toast is displayed.\n4. **History Verification:** Go to the main user consultation list. Verify that consultations with all statuses are displayed correctly. Test any new filter controls to ensure they correctly filter the list.\n5. **Security Rules Test:** Using the Firebase Emulator, attempt to cancel or modify a consultation that does not belong to the authenticated user and verify the operation fails. Attempt to perform an invalid state transition (e.g., resubmit a 'completed' consultation) and verify it is blocked by security rules.",
+        "status": "in-progress",
+        "dependencies": [
+          "2",
+          "17",
+          "19",
+          "38"
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create UserConsultationDetailScreen and Setup Navigation",
+            "description": "Create a new screen component for viewing the details of a single consultation. This includes setting up the file structure and adding the new screen to the user-facing navigation stack.",
+            "dependencies": [],
+            "details": "Create the file at 'src/screens/user/UserConsultationDetailScreen.js'. Add this screen to the main user stack navigator. Modify the existing 'UserConsultationListScreen' so that each list item is pressable and navigates to this new detail screen, passing the Firestore document ID as a route parameter.\n<info added on 2025-12-10T11:56:41.963Z>\nThe UserConsultationDetailScreen (src/screens/user/UserConsultationDetailScreen.js) has been implemented with full design system integration. Navigation to this screen is set up in src/navigation/AppNavigator.js, and src/screens/user/MyPageScreen.js was updated to pass the consultation navigation handler. The onPress handlers in src/screens/user/BuyConsultationsTab.js and src/screens/user/SellConsultationsTab.js now navigate to UserConsultationDetailScreen instead of VehicleDetailScreen. Utility functions formatDate and formatTime were added to src/utils/format.js. The screen fetches consultation and vehicle data in real-time, displaying comprehensive information including the status badge, detailed vehicle information, consultation specifics, rejection reasons, and available alternative slots.\n</info added on 2025-12-10T11:56:41.963Z>",
+            "status": "done",
+            "testStrategy": "Navigate to the user consultation list. Tap on an item. Verify that the app navigates to the new, currently empty, UserConsultationDetailScreen and that the correct consultation ID is passed in the route params.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-10T11:56:24.077Z"
+          },
+          {
+            "id": 2,
+            "title": "Fetch and Display Consultation Details with Conditional Actions",
+            "description": "Implement the logic to fetch and display the full details of a consultation. The screen should also conditionally render action buttons based on the consultation's status.",
+            "dependencies": [
+              1
+            ],
+            "details": "In 'UserConsultationDetailScreen', use the consultation ID from route params to fetch the corresponding document from the 'consultation_requests' collection in Firestore. Display all relevant data. Implement UI logic: if status is 'pending' or 'approved', show a 'Cancel' button. If status is 'rejected', display the 'rejectionReason' text and a 'Resubmit' button. No buttons should appear for 'completed' or 'cancelled' statuses.\n<info added on 2025-12-10T17:58:44.331Z>\nThe UI logic for conditional action buttons has been refined. For 'pending', 'approved', or 'meeting' statuses, an 'outlined' 'Cancel' button is displayed. If the status is 'rejected', a 'primary' 'Resubmit' button is shown alongside the 'rejectionReason'. As before, no buttons appear for 'completed' or 'cancelled' statuses. The button handlers are currently placeholder functions, with their full implementation scheduled for subtasks 46.3 and 46.4.\n</info added on 2025-12-10T17:58:44.331Z>",
+            "status": "done",
+            "testStrategy": "For consultations in each of the five states (pending, approved, rejected, completed, cancelled), navigate to their detail screen. Verify that all data is displayed correctly and that the correct action buttons (or lack thereof) and rejection reason are shown according to the status.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-10T17:58:28.432Z"
+          },
+          {
+            "id": 3,
+            "title": "Implement Consultation Cancellation Flow",
+            "description": "Develop the full logic for a user to cancel a consultation. This includes a confirmation step, updating the backend data, modifying security rules, and providing user feedback.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a service function `cancelConsultation(consultationId)` that updates the Firestore document's status to 'cancelled'. Wire this to the 'Cancel' button's onPress handler, showing a confirmation modal first. Update 'firestore.rules' to allow a user to update their own consultation document if the status change is from 'pending' or 'approved' to 'cancelled'. Use the global toast system (Task 19) to show a success message upon completion.\n<info added on 2025-12-10T18:01:59.981Z>\nThe consultation cancellation flow has been fully implemented. A cancelConsultation function was added to firebaseService.js that updates the Firestore document's status field to 'cancelled'. In UserConsultationDetailScreen, the handleCancelConsultation function is triggered by the 'Cancel' button, first displaying an Alert confirmation dialog. Upon user confirmation, the cancelConsultation service function is invoked. A cancelling state is managed to disable the 'Cancel' button and provide visual feedback during the API call. Toast notifications, leveraging the useToast hook (Task 19), are used to provide success or error feedback to the user. Firestore security rules in firestore.rules (Task 2) have been updated to allow users to modify their own consultation document, specifically permitting the status field to change from 'pending', 'approved', or 'meeting' to 'cancelled'. During this cancellation, a new cancelledAt timestamp field is set, and the rules ensure that only the status and cancelledAt fields can be modified.\n</info added on 2025-12-10T18:01:59.981Z>",
+            "status": "done",
+            "testStrategy": "On the detail screen for a 'pending' and an 'approved' consultation, click the 'Cancel' button. Confirm the modal appears. Confirm the action. Verify the status in Firestore changes to 'cancelled' and a success toast is shown. The 'Cancel' button should then disappear.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-10T18:01:44.445Z"
+          },
+          {
+            "id": 4,
+            "title": "Implement Consultation Resubmission Flow",
+            "description": "Enable users to resubmit a rejected consultation request with new time slots. This involves pre-populating the request form and updating the existing document instead of creating a new one.",
+            "dependencies": [
+              2
+            ],
+            "details": "The 'Resubmit' button should navigate to the consultation request screen, passing the original consultation data as route params. Modify the request screen to detect these params, pre-populate the form, and change its submission logic. Instead of creating a new document, it must `update` the existing one, setting the status to 'pending', saving the new `requestedTimeSlots`, and clearing the `rejectionReason`. Update Firestore security rules to allow this specific state transition.",
+            "status": "in-progress",
+            "testStrategy": "For a 'rejected' consultation, click 'Resubmit'. Verify the request form appears with data pre-filled. Select new time slots and submit. Check Firestore to confirm the original document's status is now 'pending', the time slots are updated, and the rejection reason is gone.",
+            "parentId": "undefined",
+            "updatedAt": "2025-12-10T18:29:59.136Z"
+          },
+          {
+            "id": 5,
+            "title": "Enhance Consultation List to a Full History View",
+            "description": "Modify the user's consultation list to display consultations of all statuses, effectively turning it into a complete history log with filtering capabilities.",
+            "dependencies": [
+              1
+            ],
+            "details": "In 'UserConsultationListScreen', update the Firestore query to fetch all consultations for the current user, removing any status-based filters. Implement UI elements like filter chips or tabs (e.g., 'Upcoming', 'Past', 'All') to allow users to filter the list. Ensure each item in the list correctly navigates to the 'UserConsultationDetailScreen' created in subtask 1.",
+            "status": "pending",
+            "testStrategy": "Go to the user consultation list. Verify that consultations with all statuses ('pending', 'approved', 'rejected', 'completed', 'cancelled') are displayed. Test the filter chips to ensure they correctly filter the list. Confirm that tapping any item navigates to its detail page.",
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-12-10T18:29:59.136Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-05T04:14:07.205Z",
-      "taskCount": 44,
-      "completedCount": 34,
+      "lastModified": "2025-12-10T18:29:59.137Z",
+      "taskCount": 46,
+      "completedCount": 44,
       "tags": [
         "master"
-      ],
-      "created": "2025-12-05T04:25:18.143Z",
-      "description": "Tasks for master context",
-      "updated": "2025-12-05T08:17:22.490Z"
+      ]
     }
   }
 }

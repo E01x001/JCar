@@ -128,5 +128,5 @@ android/gradle.properties
 # tasks/ 
 
 # Other
-error.txt
+#error.txt
 rule.txt

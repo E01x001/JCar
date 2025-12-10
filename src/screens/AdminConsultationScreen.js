@@ -13,8 +13,6 @@ import {
 import BuyConsultationsTab from './AdminConsultation/tabs/BuyConsultationsTab';
 import SellConsultationsTab from './AdminConsultation/tabs/SellConsultationsTab';
 import CompletedConsultationsTab from './AdminConsultation/tabs/CompletedConsultationsTab';
-import StatisticsCard from '../components/StatisticsCard';
-import useConsultationStats from '../hooks/useConsultationStats';
 
 const AdminConsultationScreen = () => {
   const { user } = useContext(AuthContext);
@@ -29,9 +27,6 @@ const AdminConsultationScreen = () => {
     { key: 'sell', title: '판매상담' },
     { key: 'completed', title: '거래완료' },
   ]);
-
-  // Get consultation statistics
-  const consultationStats = useConsultationStats();
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -95,59 +90,13 @@ const AdminConsultationScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      <View style={{ flex: 1 }}>
-        {/* Statistics Dashboard */}
-        {!consultationStats.loading && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: theme.spacing.md,
-              paddingVertical: theme.spacing.sm,
-            }}
-          >
-            <StatisticsCard
-              iconName="question-answer"
-              label="전체"
-              count={consultationStats.total}
-              variant="primary"
-            />
-            <StatisticsCard
-              iconName="schedule"
-              label="대기중"
-              count={consultationStats.pending}
-              variant="warning"
-            />
-            <StatisticsCard
-              iconName="check-circle"
-              label="승인됨"
-              count={consultationStats.approved}
-              variant="success"
-            />
-            <StatisticsCard
-              iconName="cancel"
-              label="거절됨"
-              count={consultationStats.rejected}
-              variant="error"
-            />
-            <StatisticsCard
-              iconName="done-all"
-              label="완료됨"
-              count={consultationStats.completed}
-              variant="info"
-            />
-          </ScrollView>
-        )}
-
-        {/* TabView */}
-        <TabView
+      <TabView
           navigationState={{ index, routes }}
           renderScene={renderScene}
           renderTabBar={renderTabBar}
           onIndexChange={setIndex}
           initialLayout={{ width: Dimensions.get('window').width }}
-        />
-      </View>
+      />
     </SafeAreaView>
   );
 };

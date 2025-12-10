@@ -188,7 +188,7 @@ export const deleteConsultationAdmin = async (consultationId) => {
 // --------------------
 // 상담 상태 업데이트
 // --------------------
-export const updateConsultationStatus = async (consultationId, newStatus, adminId = null, notes = '') => {
+export const updateConsultationStatus = async (consultationId, newStatus, adminId = null, notes = '', rejectionReason = null) => {
   try {
     const updateData = {
       consultationStatus: newStatus,
@@ -197,6 +197,12 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
     // Add adminNotes only if provided
     if (notes) {
       updateData.adminNotes = notes;
+    }
+
+    // Add rejectionReason only if provided and status is 'rejected'
+    if (newStatus === 'rejected' && rejectionReason) {
+      updateData.rejectionReason = rejectionReason;
+      updateData.rejectedAt = firestore.FieldValue.serverTimestamp();
     }
 
     // Add completedBy only if adminId is provided
@@ -221,6 +227,55 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
     crashlytics().log('updateConsultationStatus failed');
     // Don't show Alert here - let the caller handle user feedback
     throw error; // Re-throw error for caller to handle
+  }
+};
+
+// --------------------
+// 관리자 메모 업데이트
+// --------------------
+export const updateAdminMemo = async (consultationId, adminMemo) => {
+  try {
+    await firestore()
+      .collection('consultation_requests')
+      .doc(consultationId)
+      .update({
+        adminMemo: adminMemo,
+        memoUpdatedAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+    return { success: true };
+  } catch (error) {
+    console.error('관리자 메모 업데이트 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('updateAdminMemo failed');
+    throw error; // Re-throw error for caller to handle
+  }
+};
+
+// --------------------
+// 대체 시간 제안 업데이트
+// --------------------
+export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
+  try {
+    // Convert Date objects to Firestore Timestamps
+    const timestamps = suggestedSlots.map(slot =>
+      firestore.Timestamp.fromDate(slot instanceof Date ? slot : new Date(slot))
+    );
+
+    await firestore()
+      .collection('consultation_requests')
+      .doc(consultationId)
+      .update({
+        suggestedSlots: timestamps,
+        slotsUpdatedAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+    return { success: true };
+  } catch (error) {
+    console.error('대체 시간 제안 업데이트 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('updateSuggestedSlots failed');
+    throw error; // Re-throw for caller to handle
   }
 };
 
@@ -575,5 +630,66 @@ export const subscribeToCompletedConsultations = (callback) => {
     crashlytics().recordError(error);
     crashlytics().log('subscribeToCompletedConsultations setup failed');
     return () => {};
+  }
+};
+
+// --------------------
+// 사용자 상담 취소
+// --------------------
+/**
+ * Cancel a consultation request by the user
+ * @param {string} consultationId - Firestore consultation document ID
+ * @returns {Promise<{success: boolean}>}
+ */
+export const cancelConsultation = async (consultationId) => {
+  try {
+    await firestore()
+      .collection('consultation_requests')
+      .doc(consultationId)
+      .update({
+        status: 'cancelled',
+        cancelledAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+    return { success: true };
+  } catch (error) {
+    console.error('상담 취소 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('cancelConsultation failed');
+    throw error; // Re-throw error for caller to handle
+  }
+};
+
+// --------------------
+// 상담 재신청
+// --------------------
+/**
+ * Resubmit a rejected consultation with new date/time
+ * @param {string} consultationId - Firestore consultation document ID
+ * @param {string} preferredDate - New preferred date (YYYY-MM-DD or formatted string)
+ * @param {string} preferredTime - New preferred time (HH:MM or formatted string)
+ * @returns {Promise<{success: boolean}>}
+ */
+export const resubmitConsultation = async (consultationId, preferredDate, preferredTime) => {
+  try {
+    await firestore()
+      .collection('consultation_requests')
+      .doc(consultationId)
+      .update({
+        status: 'pending',
+        preferredDate,
+        preferredTime,
+        rejectionReason: firestore.FieldValue.delete(),
+        alternativeSlots: firestore.FieldValue.delete(),
+        rejectedAt: firestore.FieldValue.delete(),
+        resubmittedAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+    return { success: true };
+  } catch (error) {
+    console.error('상담 재신청 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('resubmitConsultation failed');
+    throw error; // Re-throw error for caller to handle
   }
 };

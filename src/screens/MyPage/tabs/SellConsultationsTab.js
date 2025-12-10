@@ -5,7 +5,7 @@ import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
 import StateScreen from '../../../components/StateScreen';
 
-const SellConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
+const SellConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
   const theme = useTheme();
 
   const sellConsultations = consultations.filter(c => c.type === 'sell');
@@ -15,12 +15,18 @@ const SellConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
       return <Badge status="completed" label="승인됨" />;
     } else if (status === 'rejected') {
       return <Badge status="rejected" label="거절됨" />;
+    } else if (status === 'completed') {
+      return <Badge status="completed" label="완료됨" />;
+    } else if (status === 'cancelled') {
+      return <Badge status="cancelled" label="취소됨" />;
+    } else if (status === 'meeting') {
+      return <Badge status="approved" label="상담중" />;
     }
     return <Badge status="pending" label="대기중" />;
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => onNavigateToVehicle(item.vehicleId)}>
+    <TouchableOpacity onPress={() => onNavigateToConsultation(item.id)}>
       <Card style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.consultHeader}>
           <Text style={[styles.consultText, {

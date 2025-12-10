@@ -53,8 +53,12 @@ service cloud.firestore {
     }
 
     // Consultation requests collection: Only active users can create, admins have full access
+    // Fields: userId, vehicleId, preferredDate, preferredTime, type, status, createdAt
+    // Admin-only fields: rejectionReason, adminMemo, suggestedSlots
     match /consultation_requests/{requestId} {
       // Users can read their own requests, admins can read all requests
+      // Note: Client code must filter out adminMemo field for non-admin users as
+      // Firestore doesn't support field-level read permissions
       allow read: if request.auth != null &&
         (request.auth.uid == resource.data.userId || isAdmin());
 
@@ -63,8 +67,34 @@ service cloud.firestore {
         isActiveUser() &&
         request.auth.uid == request.resource.data.userId;
 
-      // Only active admins can update or delete requests
-      allow update, delete: if isAdmin() && isActiveUser();
+      // Update rules:
+      // 1. Admins can update any field for any consultation
+      // 2. Users can cancel their own consultation (set status to 'cancelled')
+      // 3. Users can resubmit their rejected consultation with new date/time
+      allow update: if (isAdmin() && isActiveUser()) ||
+                      // User cancellation
+                      (request.auth != null &&
+                       isActiveUser() &&
+                       request.auth.uid == resource.data.userId &&
+                       request.resource.data.status == 'cancelled' &&
+                       (resource.data.status == 'pending' ||
+                        resource.data.status == 'approved' ||
+                        resource.data.status == 'meeting') &&
+                       request.resource.data.keys().hasOnly(['status', 'cancelledAt'])) ||
+                      // User resubmission of rejected consultation
+                      (request.auth != null &&
+                       isActiveUser() &&
+                       request.auth.uid == resource.data.userId &&
+                       resource.data.status == 'rejected' &&
+                       request.resource.data.status == 'pending' &&
+                       request.resource.data.preferredDate is string &&
+                       request.resource.data.preferredTime is string &&
+                       !('rejectionReason' in request.resource.data) &&
+                       !('alternativeSlots' in request.resource.data) &&
+                       !('rejectedAt' in request.resource.data));
+
+      // Only active admins can delete requests
+      allow delete: if isAdmin() && isActiveUser();
     }
 
     // Admin activity log collection: Only admins can write, no one can delete

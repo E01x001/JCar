@@ -191,7 +191,8 @@ const AdminVehiclesListScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: theme.spacing.md,
-            paddingBottom: theme.spacing.sm,
+            paddingBottom: theme.spacing.xs,
+            paddingTop: theme.spacing.xs,
           }}
         >
           <StatisticsCard
@@ -199,38 +200,41 @@ const AdminVehiclesListScreen = ({ navigation }) => {
             label="전체"
             count={vehicleStats.total}
             variant="primary"
+            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
           />
           <StatisticsCard
             iconName="schedule"
             label="대기중"
             count={vehicleStats.pending}
             variant="warning"
+            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
           />
           <StatisticsCard
             iconName="check-circle"
             label="승인됨"
             count={vehicleStats.approved}
             variant="success"
+            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
           />
           <StatisticsCard
             iconName="cancel"
             label="거절됨"
             count={vehicleStats.rejected}
             variant="error"
+            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
           />
         </ScrollView>
       )}
 
-      {/* Filter Chips */}
+      {/* Status Filter Chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: theme.spacing.md,
-          paddingBottom: theme.spacing.sm,
+          paddingBottom: theme.spacing.xxs,
         }}
       >
-        {/* Status Filters */}
         <FilterChip
           label="전체"
           active={selectedStatus === 'all'}
@@ -251,11 +255,17 @@ const AdminVehiclesListScreen = ({ navigation }) => {
           active={selectedStatus === 'rejected'}
           onPress={() => setSelectedStatus('rejected')}
         />
+      </ScrollView>
 
-        {/* Divider */}
-        <View style={{ width: theme.spacing.md }} />
-
-        {/* Vehicle Type Filters */}
+      {/* Vehicle Type Filter Chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: theme.spacing.md,
+          paddingBottom: theme.spacing.xxs,
+        }}
+      >
         <FilterChip
           label="전체 타입"
           active={selectedVehicleType === 'all'}

@@ -4,11 +4,12 @@
  * Displays a horizontally scrollable list of admin-owned vehicles.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
 import firestore from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPrice } from '../utils/format';
 import Card from './Card';
@@ -21,11 +22,18 @@ import StateScreen from './StateScreen';
  * @param {Function} [props.onVehiclePress] - Callback when vehicle card is pressed
  */
 const OwnedVehiclesList = ({ onVehiclePress }) => {
+  const { user, role } = useContext(AuthContext);
   const theme = useTheme();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Don't fetch vehicles if user is not authenticated or not admin
+    if (!user || role !== 'admin') {
+      setVehicles([]);
+      setLoading(false);
+      return () => {};
+    }
     const unsubscribe = firestore()
       .collection('admin_owned_vehicles')
       .where('status', '==', 'owned')
@@ -48,7 +56,7 @@ const OwnedVehiclesList = ({ onVehiclePress }) => {
       );
 
     return () => unsubscribe();
-  }, []);
+  }, [user, role]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) {return '-';}

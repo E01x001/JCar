@@ -5,9 +5,10 @@
  * for total count and status breakdowns.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import firestore from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { AuthContext } from '../context/AuthContext';
 
 /**
  * Custom hook to fetch and calculate vehicle statistics in real-time
@@ -20,6 +21,7 @@ import crashlytics from '@react-native-firebase/crashlytics';
  * @returns {boolean} stats.loading - Loading state
  */
 const useVehicleStats = () => {
+  const { user, role } = useContext(AuthContext);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -29,6 +31,17 @@ const useVehicleStats = () => {
   });
 
   useEffect(() => {
+    // Don't fetch stats if user is not authenticated or not admin
+    if (!user || role !== 'admin') {
+      setStats({
+        total: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        loading: false,
+      });
+      return () => {};
+    }
     const unsubscribe = firestore()
       .collection('vehicles')
       .onSnapshot(
@@ -75,7 +88,7 @@ const useVehicleStats = () => {
       );
 
     return () => unsubscribe();
-  }, []);
+  }, [user, role]);
 
   return stats;
 };

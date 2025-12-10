@@ -16,6 +16,7 @@ import MyPageScreen from '../screens/MyPageScreen';
 import VehicleDetailScreen from '../screens/VehicleDetailScreen';
 import ConsultationRequestScreen from '../screens/ConsultationRequestScreen';
 import MyVehiclesScreen from '../screens/MyVehiclesScreen'; // ✅ 추가
+import UserConsultationDetailScreen from '../screens/UserConsultationDetailScreen';
 
 import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen';
 import AdminPageScreen from '../screens/AdminPageScreen';
@@ -163,6 +164,11 @@ const AppNavigator = () => {
               name="MyVehicles"
               component={MyVehiclesScreen}
               options={{ headerShown: true, title: '내 차량' }}
+            />
+            <Stack.Screen
+              name="UserConsultationDetail"
+              component={UserConsultationDetailScreen}
+              options={{ headerShown: true, title: '상담 상세' }}
             />
           </>
         )}

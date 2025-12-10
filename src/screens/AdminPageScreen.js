@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Text, StyleSheet, ScrollView, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TabView, TabBar } from 'react-native-tab-view';
 import auth from '@react-native-firebase/auth';
 import firestore, { collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
@@ -19,6 +20,11 @@ const AdminPageScreen = ({ navigation }) => {
   const toast = useToast();
   const [vehicles, setVehicles] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'owned', title: '소유 차량' },
+    { key: 'registered', title: '등록한 차량' },
+  ]);
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -109,110 +115,141 @@ const AdminPageScreen = ({ navigation }) => {
     }, 500);
   };
 
+  const renderScene = ({ route }) => {
+    switch (route.key) {
+      case 'owned':
+        return (
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={onRefresh}
+                colors={[theme.colors.primary.main]}
+                tintColor={theme.colors.primary.main}
+              />
+            }
+          >
+            <OwnedVehiclesList onVehiclePress={handleOwnedVehiclePress} />
+          </ScrollView>
+        );
+      case 'registered':
+        return (
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={onRefresh}
+                colors={[theme.colors.primary.main]}
+                tintColor={theme.colors.primary.main}
+              />
+            }
+          >
+            {vehicles.length === 0 ? (
+              <StateScreen
+                icon="directions-car"
+                title="등록된 차량이 없습니다"
+                message="아직 등록한 차량이 없습니다."
+              />
+            ) : (
+              vehicles.map((item) => (
+                <Card key={item.id} style={{ marginHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+                  {item.vehicleType && (
+                    <Badge
+                      status="pending"
+                      label={item.vehicleType}
+                      style={{ marginBottom: theme.spacing.xs }}
+                    />
+                  )}
+                  <Text style={[styles.vehicleName, {
+                    fontSize: theme.typography.fontSize.body,
+                    fontWeight: theme.typography.fontWeight.semiBold,
+                    color: theme.colors.text.primary,
+                    marginBottom: theme.spacing.xs,
+                  }]}>모델: {item.model}</Text>
+                  <Text style={{
+                    fontSize: theme.typography.fontSize.body,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.sm,
+                  }}>가격: {item.price}</Text>
+                  <Button
+                    variant="danger"
+                    title="삭제"
+                    onPress={() => handleDeleteVehicle(item.id)}
+                  />
+                </Card>
+              ))
+            )}
+          </ScrollView>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderTabBar = (props) => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: theme.colors.primary.main }}
+      style={{ backgroundColor: theme.colors.background.card }}
+      labelStyle={{
+        fontSize: theme.typography.fontSize.body,
+        fontWeight: theme.typography.fontWeight.semiBold,
+      }}
+      activeColor={theme.colors.primary.main}
+      inactiveColor={theme.colors.text.secondary}
+    />
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      <ScrollView
-        contentContainerStyle={{ padding: theme.spacing.md }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={onRefresh}
-            colors={[theme.colors.primary.main]}
-            tintColor={theme.colors.primary.main}
-          />
-        }
-      >
+      <View style={{ flex: 1 }}>
         {/* User Info Card */}
-        <Card style={{ marginBottom: theme.spacing.lg }}>
+        <Card style={{ marginHorizontal: theme.spacing.md, marginTop: theme.spacing.md, marginBottom: theme.spacing.sm }}>
           <Text style={[styles.userInfo, {
             fontSize: theme.typography.fontSize.body,
             color: theme.colors.text.secondary,
           }]}>이메일: {user?.email ?? '이메일 없음'}</Text>
         </Card>
 
-        {/* Owned Vehicles Section */}
-        <Text style={[styles.sectionTitle, {
-          fontSize: theme.typography.fontSize.h3,
-          fontWeight: theme.typography.fontWeight.semiBold,
-          color: theme.colors.text.primary,
-          marginBottom: theme.spacing.md,
-        }]}>소유 차량</Text>
-
-        <OwnedVehiclesList onVehiclePress={handleOwnedVehiclePress} />
-
-        {/* Vehicles Section */}
-        <Text style={[styles.sectionTitle, {
-          marginTop: theme.spacing.xl,
-          fontSize: theme.typography.fontSize.h3,
-          fontWeight: theme.typography.fontWeight.semiBold,
-          color: theme.colors.text.primary,
-          marginBottom: theme.spacing.md,
-        }]}>등록한 차량</Text>
-
-        {vehicles.length === 0 ? (
-          <StateScreen
-            icon="directions-car"
-            title="등록된 차량이 없습니다"
-            message="아직 등록한 차량이 없습니다."
-          />
-        ) : (
-          vehicles.map((item) => (
-            <Card key={item.id} style={{ marginBottom: theme.spacing.sm }}>
-              {item.vehicleType && (
-                <Badge
-                  status="pending"
-                  label={item.vehicleType}
-                  style={{ marginBottom: theme.spacing.xs }}
-                />
-              )}
-              <Text style={[styles.vehicleName, {
-                fontSize: theme.typography.fontSize.body,
-                fontWeight: theme.typography.fontWeight.semiBold,
-                color: theme.colors.text.primary,
-                marginBottom: theme.spacing.xs,
-              }]}>모델: {item.model}</Text>
-              <Text style={{
-                fontSize: theme.typography.fontSize.body,
-                color: theme.colors.text.secondary,
-                marginBottom: theme.spacing.sm,
-              }}>가격: {item.price}</Text>
-              <Button
-                variant="danger"
-                title="삭제"
-                onPress={() => handleDeleteVehicle(item.id)}
-              />
-            </Card>
-          ))
-        )}
+        {/* TabView for Vehicles */}
+        <TabView
+          navigationState={{ index, routes }}
+          renderScene={renderScene}
+          renderTabBar={renderTabBar}
+          onIndexChange={setIndex}
+          initialLayout={{ width: Dimensions.get('window').width }}
+          style={{ flex: 1 }}
+        />
 
         {/* Action Buttons */}
-        <Button
-          variant="secondary"
-          title="로그아웃"
-          onPress={handleLogout}
-          style={{ marginTop: theme.spacing.xl }}
-        />
-
-        <Button
-          variant="danger"
-          title="회원탈퇴"
-          onPress={handleDeleteAccount}
-          style={{ marginTop: theme.spacing.md }}
-        />
-
-        {/* Dev-only Test Button */}
-        {__DEV__ && (
+        <View style={{ padding: theme.spacing.md }}>
           <Button
-            variant="primary"
-            title="Test Crashlytics"
-            onPress={handleTestCrash}
-            style={{
-              marginTop: theme.spacing.lg,
-              backgroundColor: theme.colors.warning.main,
-            }}
+            variant="secondary"
+            title="로그아웃"
+            onPress={handleLogout}
+            style={{ marginBottom: theme.spacing.sm }}
           />
-        )}
-      </ScrollView>
+
+          <Button
+            variant="danger"
+            title="회원탈퇴"
+            onPress={handleDeleteAccount}
+          />
+
+          {/* Dev-only Test Button */}
+          {__DEV__ && (
+            <Button
+              variant="primary"
+              title="Test Crashlytics"
+              onPress={handleTestCrash}
+              style={{
+                marginTop: theme.spacing.sm,
+                backgroundColor: theme.colors.warning.main,
+              }}
+            />
+          )}
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

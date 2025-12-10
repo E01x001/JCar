@@ -5,7 +5,7 @@ import DatePicker from 'react-native-date-picker';
 import { AuthContext } from '../context/AuthContext';
 import firestore, { collection, query, where, getDocs } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
-import { saveConsultationRequest } from '../services/firebaseService';
+import { saveConsultationRequest, resubmitConsultation } from '../services/firebaseService';
 
 const ConsultationRequestScreen = ({ route }) => {
   const { user, sellerName, sellerPhone } = useContext(AuthContext);
@@ -13,7 +13,23 @@ const ConsultationRequestScreen = ({ route }) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [time, setTime] = useState(new Date());
   const [open, setOpen] = useState(false);
-  const { vehicle, isSell } = route.params;
+  const { vehicle, isSell, consultationId, existingDate, existingTime } = route.params;
+
+  // Detect resubmission mode
+  const isResubmitMode = !!consultationId;
+
+  // Pre-populate form when resubmitting
+  useEffect(() => {
+    if (isResubmitMode && existingDate && existingTime) {
+      setSelectedDate(existingDate);
+
+      // Parse existing time and set it
+      const [hours, minutes] = existingTime.split(':').map(Number);
+      const newTime = new Date();
+      newTime.setHours(hours, minutes, 0, 0);
+      setTime(newTime);
+    }
+  }, [isResubmitMode, existingDate, existingTime]);
 
   const adjustToNearestTenMinutes = (date) => {
     const minutes = date.getMinutes();
@@ -45,8 +61,8 @@ const ConsultationRequestScreen = ({ route }) => {
     return !snapshot.empty;
   };
 
-    const handleSubmit = async () => {
-    console.log('🟡 상담 요청 버튼 클릭됨');
+  const handleSubmit = async () => {
+    console.log(isResubmitMode ? '🟡 상담 재신청 버튼 클릭됨' : '🟡 상담 요청 버튼 클릭됨');
 
     if (!user) {
       console.warn('⛔ 사용자 정보 없음');
@@ -71,6 +87,35 @@ const ConsultationRequestScreen = ({ route }) => {
     console.log('📅 선택된 날짜:', formattedDate);
     console.log('⏰ 선택된 시간:', formattedTime);
 
+    // Handle resubmission mode
+    if (isResubmitMode) {
+      try {
+        // Check time conflict for resubmission
+        const hasConflict = await checkTimeConflict(vehicle.vehicleId, formattedDate, formattedTime);
+        console.log('⏳ 시간 중복 여부:', hasConflict);
+
+        if (hasConflict) {
+          Alert.alert('이미 선택된 시간입니다.', '다른 시간을 선택해주세요.');
+          return;
+        }
+
+        await resubmitConsultation(consultationId, formattedDate, formattedTime);
+        console.log('✅ 재신청 성공');
+
+        Alert.alert('상담 재신청 완료', '새로운 일정으로 재신청되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => navigation.goBack(),
+          },
+        ]);
+      } catch (error) {
+        console.error('❌ 재신청 실패:', error);
+        Alert.alert('재신청 실패', '상담 재신청 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+      return;
+    }
+
+    // Handle new consultation request mode
     const isDuplicate = await checkDuplicateConsultation(user.uid, vehicle.vehicleId);
     console.log('🔁 중복 상담 여부:', isDuplicate);
 
@@ -119,7 +164,9 @@ const ConsultationRequestScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>구매 상담 일정 선택</Text>
+      <Text style={styles.title}>
+        {isResubmitMode ? '상담 일정 재선택' : '구매 상담 일정 선택'}
+      </Text>
 
       <Calendar
         onDayPress={(day) => {
@@ -157,7 +204,9 @@ const ConsultationRequestScreen = ({ route }) => {
       />
 
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>상담 요청</Text>
+        <Text style={styles.submitButtonText}>
+          {isResubmitMode ? '상담 재신청' : '상담 요청'}
+        </Text>
       </TouchableOpacity>
     </View>
   );

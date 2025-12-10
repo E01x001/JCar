@@ -68,12 +68,26 @@ const MyPageScreen = ({ navigation }) => {
     navigation.navigate('VehicleDetail', { vehicleId });
   };
 
+  const handleNavigateToConsultationDetail = (consultationId) => {
+    navigation.navigate('UserConsultationDetail', { consultationId });
+  };
+
   const renderScene = ({ route }) => {
     switch (route.key) {
       case 'buy':
-        return <BuyConsultationsTab consultations={consultations} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
+        return (
+          <BuyConsultationsTab
+            consultations={consultations}
+            onNavigateToConsultation={handleNavigateToConsultationDetail}
+          />
+        );
       case 'sell':
-        return <SellConsultationsTab consultations={consultations} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
+        return (
+          <SellConsultationsTab
+            consultations={consultations}
+            onNavigateToConsultation={handleNavigateToConsultationDetail}
+          />
+        );
       case 'vehicles':
         return <MyVehiclesTab vehicles={vehicles} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
       default:

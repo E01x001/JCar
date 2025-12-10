@@ -7,15 +7,19 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPhone } from '../utils/format';
-import { updateConsultationStatus, completeConsultation } from '../services/firebaseService';
+import { updateConsultationStatus, completeConsultation, updateAdminMemo, updateSuggestedSlots } from '../services/firebaseService';
 import { useToast } from '../hooks/useToast';
 import { AuthContext } from '../context/AuthContext';
 import Card from './Card';
 import Badge from './Badge';
 import Button from './Button';
 import CompleteDealModal from './modals/CompleteDealModal';
+import RejectConsultationModal from './modals/RejectConsultationModal';
+import AdminMemoModal from './modals/AdminMemoModal';
+import SuggestAlternativeTimesModal from './modals/SuggestAlternativeTimesModal';
 
 /**
  * ConsultationCard Component
@@ -45,6 +49,9 @@ const ConsultationCard = ({
   const { user } = useContext(AuthContext);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isRejectModalVisible, setIsRejectModalVisible] = useState(false);
+  const [isMemoModalVisible, setIsMemoModalVisible] = useState(false);
+  const [isSuggestTimesModalVisible, setIsSuggestTimesModalVisible] = useState(false);
 
   const {
     id,
@@ -56,6 +63,8 @@ const ConsultationCard = ({
     preferredDate,
     preferredTime,
     type,
+    adminMemo = '',
+    suggestedSlots = [],
   } = consultation;
 
   /**
@@ -118,6 +127,99 @@ const ConsultationCard = ({
     }
   };
 
+  /**
+   * Handle reject button - opens rejection modal
+   */
+  const handleRejectButtonPress = () => {
+    setIsRejectModalVisible(true);
+  };
+
+  /**
+   * Handle rejection submission from modal
+   * @param {string} rejectionReason - Reason for rejection
+   */
+  const handleRejectConsultation = async (rejectionReason) => {
+    setIsUpdating(true);
+    try {
+      await updateConsultationStatus(id, 'rejected', null, '', rejectionReason);
+      toast.showSuccess('상담이 거절되었습니다.');
+      setIsRejectModalVisible(false);
+
+      // Notify parent to refresh data
+      if (onUpdateSuccess) {
+        onUpdateSuccess();
+      }
+    } catch (error) {
+      console.error('상담 거절 처리 실패:', error);
+      toast.showError('거절 처리 중 오류가 발생했습니다.');
+      throw error; // Re-throw for modal to handle
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  /**
+   * Handle memo button - opens admin memo modal
+   */
+  const handleMemoButtonPress = () => {
+    setIsMemoModalVisible(true);
+  };
+
+  /**
+   * Handle admin memo submission from modal
+   * @param {string} memo - Admin memo content
+   */
+  const handleUpdateMemo = async (memo) => {
+    setIsUpdating(true);
+    try {
+      await updateAdminMemo(id, memo);
+      toast.showSuccess('메모가 저장되었습니다.');
+      setIsMemoModalVisible(false);
+
+      // Notify parent to refresh data
+      if (onUpdateSuccess) {
+        onUpdateSuccess();
+      }
+    } catch (error) {
+      console.error('메모 저장 실패:', error);
+      toast.showError('메모 저장 중 오류가 발생했습니다.');
+      throw error; // Re-throw for modal to handle
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  /**
+   * Handle suggest times button - opens alternative times modal
+   */
+  const handleSuggestTimesButtonPress = () => {
+    setIsSuggestTimesModalVisible(true);
+  };
+
+  /**
+   * Handle suggested slots submission from modal
+   * @param {Array<Date>} slots - Array of suggested time slots
+   */
+  const handleUpdateSuggestedSlots = async (slots) => {
+    setIsUpdating(true);
+    try {
+      await updateSuggestedSlots(id, slots);
+      toast.showSuccess('대체 시간이 저장되었습니다.');
+      setIsSuggestTimesModalVisible(false);
+
+      // Notify parent to refresh data
+      if (onUpdateSuccess) {
+        onUpdateSuccess();
+      }
+    } catch (error) {
+      console.error('대체 시간 저장 실패:', error);
+      toast.showError('대체 시간 저장 중 오류가 발생했습니다.');
+      throw error; // Re-throw for modal to handle
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Render action buttons based on consultationStatus
   const renderActionButtons = () => {
     // Show loading indicator if updating
@@ -161,7 +263,7 @@ const ConsultationCard = ({
           <Button
             variant="danger"
             title="거절"
-            onPress={() => handleStatusUpdate('rejected')}
+            onPress={handleRejectButtonPress}
             disabled={isUpdating}
             style={{ flex: 1, marginLeft: theme.spacing.xs }}
           />
@@ -182,7 +284,7 @@ const ConsultationCard = ({
           <Button
             variant="danger"
             title="거절"
-            onPress={() => handleStatusUpdate('rejected')}
+            onPress={handleRejectButtonPress}
             disabled={isUpdating}
             style={{ flex: 1, marginLeft: theme.spacing.xs }}
           />
@@ -208,7 +310,7 @@ const ConsultationCard = ({
         disabled={!onNavigateToVehicle}
       >
         <Card style={[{ marginBottom: theme.spacing.sm }, style]}>
-          {/* Header: Badge + User Name */}
+          {/* Header: Badge + User Name + Memo Icon */}
           <View style={styles.header}>
             <Badge status={consultationStatus} />
             <Text
@@ -218,11 +320,44 @@ const ConsultationCard = ({
                   fontSize: theme.typography.fontSize.body,
                   fontWeight: theme.typography.fontWeight.semiBold,
                   color: theme.colors.text.primary,
+                  flex: 1,
                 },
               ]}
             >
               {userName}
             </Text>
+            {/* Admin Memo Icon Button */}
+            <TouchableOpacity
+              onPress={handleMemoButtonPress}
+              disabled={isUpdating}
+              activeOpacity={0.6}
+              style={{
+                padding: theme.spacing.xs,
+                marginLeft: theme.spacing.sm,
+              }}
+            >
+              <MaterialIcons
+                name={adminMemo ? 'note' : 'note-add'}
+                size={24}
+                color={adminMemo ? theme.colors.primary.main : theme.colors.text.tertiary}
+              />
+            </TouchableOpacity>
+
+            {/* Suggest Alternative Times Icon Button */}
+            <TouchableOpacity
+              onPress={handleSuggestTimesButtonPress}
+              disabled={isUpdating}
+              activeOpacity={0.6}
+              style={{
+                padding: theme.spacing.xs,
+              }}
+            >
+              <MaterialIcons
+                name={suggestedSlots.length > 0 ? 'schedule' : 'schedule-send'}
+                size={24}
+                color={suggestedSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.tertiary}
+              />
+            </TouchableOpacity>
           </View>
 
           {/* Consultation Details */}
@@ -275,6 +410,32 @@ const ConsultationCard = ({
         onSubmit={handleCompleteDeal}
         consultationId={id}
         isSellType={type === 'sell'}
+      />
+
+      {/* Reject Consultation Modal */}
+      <RejectConsultationModal
+        isVisible={isRejectModalVisible}
+        onClose={() => setIsRejectModalVisible(false)}
+        onSubmit={handleRejectConsultation}
+        consultationId={id}
+      />
+
+      {/* Admin Memo Modal */}
+      <AdminMemoModal
+        isVisible={isMemoModalVisible}
+        onClose={() => setIsMemoModalVisible(false)}
+        onSubmit={handleUpdateMemo}
+        initialMemo={adminMemo}
+        consultationId={id}
+      />
+
+      {/* Suggest Alternative Times Modal */}
+      <SuggestAlternativeTimesModal
+        isVisible={isSuggestTimesModalVisible}
+        onClose={() => setIsSuggestTimesModalVisible(false)}
+        onSubmit={handleUpdateSuggestedSlots}
+        initialSlots={suggestedSlots}
+        consultationId={id}
       />
     </>
   );

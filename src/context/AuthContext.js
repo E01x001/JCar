@@ -10,7 +10,7 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   // console.log('🔐 AuthProvider initializing...');
-  
+
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [sellerName, setSellerName] = useState(null);
