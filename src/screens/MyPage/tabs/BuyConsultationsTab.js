@@ -41,6 +41,28 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
           color: theme.colors.text.secondary,
           marginTop: theme.spacing.xs,
         }]}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
+
+        {/* Show rejection reason preview if rejected */}
+        {item.status === 'rejected' && item.rejectionReason && (
+          <Text style={[styles.rejectionPreview, {
+            fontSize: theme.typography.fontSize.bodySmall,
+            color: theme.colors.status.rejected,
+            marginTop: theme.spacing.xs,
+          }]} numberOfLines={2}>
+            거절 사유: {item.rejectionReason}
+          </Text>
+        )}
+
+        {/* Show alternative slots preview if available */}
+        {item.status === 'rejected' && item.alternativeSlots && item.alternativeSlots.length > 0 && (
+          <Text style={[styles.alternativePreview, {
+            fontSize: theme.typography.fontSize.bodySmall,
+            color: theme.colors.text.tertiary,
+            marginTop: theme.spacing.xs,
+          }]}>
+            대체 일정 {item.alternativeSlots.length}개 제안됨
+          </Text>
+        )}
       </Card>
     </TouchableOpacity>
   );
@@ -73,6 +95,10 @@ const styles = StyleSheet.create({
   },
   consultText: {},
   consultDetail: {},
+  rejectionPreview: {
+    fontStyle: 'italic',
+  },
+  alternativePreview: {},
 });
 
 export default BuyConsultationsTab;
