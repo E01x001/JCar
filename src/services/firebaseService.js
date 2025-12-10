@@ -255,19 +255,26 @@ export const updateAdminMemo = async (consultationId, adminMemo) => {
 // --------------------
 // 대체 시간 제안 업데이트
 // --------------------
+/**
+ * Update alternative time slot suggestions for a consultation
+ * @param {string} consultationId - Firestore consultation document ID
+ * @param {Array<Date>} suggestedSlots - Array of Date objects representing alternative time slots
+ * @returns {Promise<{success: boolean}>}
+ */
 export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
   try {
-    // Convert Date objects to Firestore Timestamps
-    const timestamps = suggestedSlots.map(slot =>
-      firestore.Timestamp.fromDate(slot instanceof Date ? slot : new Date(slot))
-    );
+    // Convert Date objects to alternativeSlots format {date, time}
+    const alternativeSlots = suggestedSlots.map(slot => ({
+      date: `${slot.getFullYear()}-${String(slot.getMonth() + 1).padStart(2, '0')}-${String(slot.getDate()).padStart(2, '0')}`,
+      time: `${String(slot.getHours()).padStart(2, '0')}:${String(slot.getMinutes()).padStart(2, '0')}`,
+    }));
 
     await firestore()
       .collection('consultation_requests')
       .doc(consultationId)
       .update({
-        suggestedSlots: timestamps,
-        slotsUpdatedAt: firestore.FieldValue.serverTimestamp(),
+        alternativeSlots,
+        alternativeSlotsUpdatedAt: firestore.FieldValue.serverTimestamp(),
       });
 
     return { success: true };

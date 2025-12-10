@@ -64,7 +64,7 @@ const ConsultationCard = ({
     preferredTime,
     type,
     adminMemo = '',
-    suggestedSlots = [],
+    alternativeSlots = [],
   } = consultation;
 
   /**
@@ -353,9 +353,9 @@ const ConsultationCard = ({
               }}
             >
               <MaterialIcons
-                name={suggestedSlots.length > 0 ? 'schedule' : 'schedule-send'}
+                name={alternativeSlots.length > 0 ? 'schedule' : 'schedule-send'}
                 size={24}
-                color={suggestedSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.tertiary}
+                color={alternativeSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.tertiary}
               />
             </TouchableOpacity>
           </View>
@@ -434,7 +434,7 @@ const ConsultationCard = ({
         isVisible={isSuggestTimesModalVisible}
         onClose={() => setIsSuggestTimesModalVisible(false)}
         onSubmit={handleUpdateSuggestedSlots}
-        initialSlots={suggestedSlots}
+        initialSlots={alternativeSlots}
         consultationId={id}
       />
     </>

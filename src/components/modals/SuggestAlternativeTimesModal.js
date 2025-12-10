@@ -38,9 +38,22 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load initial slots when modal opens
+  // Convert {date, time} format to Date objects
   useEffect(() => {
-    if (isVisible) {
-      setSuggestedSlots(initialSlots.map(slot => new Date(slot)));
+    if (isVisible && initialSlots && initialSlots.length > 0) {
+      const convertedSlots = initialSlots.map(slot => {
+        if (slot instanceof Date) {
+          return slot;
+        }
+        // Assume slot is {date: "YYYY-MM-DD", time: "HH:MM"}
+        if (slot.date && slot.time) {
+          const [year, month, day] = slot.date.split('-').map(Number);
+          const [hours, minutes] = slot.time.split(':').map(Number);
+          return new Date(year, month - 1, day, hours, minutes);
+        }
+        return new Date(slot);
+      });
+      setSuggestedSlots(convertedSlots);
     }
   }, [isVisible, initialSlots]);
 
