@@ -1,6 +1,6 @@
 // src/services/firebaseService.js
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, setDoc, updateDoc, addDoc, getDoc, getDocs, query, where, orderBy, limit, startAfter, onSnapshot, runTransaction, serverTimestamp, deleteField } from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import messaging from '@react-native-firebase/messaging';
 import crashlytics from '@react-native-firebase/crashlytics';
@@ -16,11 +16,13 @@ export const registerUser = async ({ email, password, name, phoneNumber }) => {
     const userId = userCredential.user.uid;
 
     // Firestore에 추가 정보 저장
-    await firestore().collection('users').doc(userId).set({
+    const db = getFirestore();
+    const userDocRef = doc(db, 'users', userId);
+    await setDoc(userDocRef, {
       name,
       phoneNumber,
       role: 'user', // 기본 역할
-      createdAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
     });
 
     return { success: true, userId };
@@ -62,17 +64,18 @@ export const saveConsultationRequest = async (data) => {
       vehicleName: data.vehicleName || '알 수 없음',
       preferredDate: data.preferredDate || null,
       preferredTime: data.preferredTime || null,
-      status: data.status || 'pending',
       type: data.type || 'buy',
       consultationStatus: data.consultationStatus || 'pending',
       completedAt: data.completedAt || null,
       completedBy: data.completedBy || null,
       dealAmount: data.dealAmount || null,
       adminNotes: data.adminNotes || '',
-      createdAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
     };
 
-    await firestore().collection('consultation_requests').add(validData);
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
+    await addDoc(consultationsRef, validData);
     return { success: true };
   } catch (error) {
     console.error('상담 요청 저장 오류:', error);
@@ -146,7 +149,9 @@ export const saveFcmToken = async (userId) => {
   try {
     const token = await messaging().getToken();
     if (token) {
-      await firestore().collection('users').doc(userId).update({ fcmToken: token });
+      const db = getFirestore();
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, { fcmToken: token });
       console.log('FCM 토큰 저장 완료:', token);
     }
   } catch (error) {
@@ -202,7 +207,7 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
     // Add rejectionReason only if provided and status is 'rejected'
     if (newStatus === 'rejected' && rejectionReason) {
       updateData.rejectionReason = rejectionReason;
-      updateData.rejectedAt = firestore.FieldValue.serverTimestamp();
+      updateData.rejectedAt = serverTimestamp();
     }
 
     // Add completedBy only if adminId is provided
@@ -212,13 +217,12 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
 
     // Automatically add completedAt timestamp when status is 'completed'
     if (newStatus === 'completed') {
-      updateData.completedAt = firestore.FieldValue.serverTimestamp();
+      updateData.completedAt = serverTimestamp();
     }
 
-    await firestore()
-      .collection('consultation_requests')
-      .doc(consultationId)
-      .update(updateData);
+    const db = getFirestore();
+    const consultationRef = doc(db, 'consultation_requests', consultationId);
+    await updateDoc(consultationRef, updateData);
 
     return { success: true };
   } catch (error) {
@@ -235,13 +239,12 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
 // --------------------
 export const updateAdminMemo = async (consultationId, adminMemo) => {
   try {
-    await firestore()
-      .collection('consultation_requests')
-      .doc(consultationId)
-      .update({
-        adminMemo: adminMemo,
-        memoUpdatedAt: firestore.FieldValue.serverTimestamp(),
-      });
+    const db = getFirestore();
+    const consultationRef = doc(db, 'consultation_requests', consultationId);
+    await updateDoc(consultationRef, {
+      adminMemo: adminMemo,
+      memoUpdatedAt: serverTimestamp(),
+    });
 
     return { success: true };
   } catch (error) {
@@ -269,13 +272,12 @@ export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
       time: `${String(slot.getHours()).padStart(2, '0')}:${String(slot.getMinutes()).padStart(2, '0')}`,
     }));
 
-    await firestore()
-      .collection('consultation_requests')
-      .doc(consultationId)
-      .update({
-        alternativeSlots,
-        alternativeSlotsUpdatedAt: firestore.FieldValue.serverTimestamp(),
-      });
+    const db = getFirestore();
+    const consultationRef = doc(db, 'consultation_requests', consultationId);
+    await updateDoc(consultationRef, {
+      alternativeSlots,
+      alternativeSlotsUpdatedAt: serverTimestamp(),
+    });
 
     return { success: true };
   } catch (error) {
@@ -291,11 +293,13 @@ export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
 // --------------------
 export const completeConsultation = async ({ docId, dealAmount, adminNotes = '', completedBy, isSell = false }) => {
   try {
+    const db = getFirestore();
+
     // If NOT a sell-type consultation, use simple update
     if (!isSell) {
       const updateData = {
         consultationStatus: 'completed',
-        completedAt: firestore.FieldValue.serverTimestamp(),
+        completedAt: serverTimestamp(),
         dealAmount: Number(dealAmount),
         completedBy: completedBy,
       };
@@ -305,20 +309,18 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
         updateData.adminNotes = adminNotes;
       }
 
-      await firestore()
-        .collection('consultation_requests')
-        .doc(docId)
-        .update(updateData);
+      const consultationRef = doc(db, 'consultation_requests', docId);
+      await updateDoc(consultationRef, updateData);
 
       return { success: true };
     }
 
     // For sell-type consultations, use transaction
-    const result = await firestore().runTransaction(async (transaction) => {
-      const consultationRef = firestore().collection('consultation_requests').doc(docId);
+    const result = await runTransaction(db, async (transaction) => {
+      const consultationRef = doc(db, 'consultation_requests', docId);
       const consultationDoc = await transaction.get(consultationRef);
 
-      if (!consultationDoc.exists) {
+      if (!consultationDoc.exists()) {
         throw new Error('상담 정보를 찾을 수 없습니다.');
       }
 
@@ -330,10 +332,10 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
       }
 
       // Read vehicle document
-      const vehicleRef = firestore().collection('vehicles').doc(vehicleId);
+      const vehicleRef = doc(db, 'vehicles', vehicleId);
       const vehicleDoc = await transaction.get(vehicleRef);
 
-      if (!vehicleDoc.exists) {
+      if (!vehicleDoc.exists()) {
         throw new Error('차량 정보를 찾을 수 없습니다.');
       }
 
@@ -342,7 +344,7 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
       // 1. Update consultation status
       const consultationUpdateData = {
         consultationStatus: 'completed',
-        completedAt: firestore.FieldValue.serverTimestamp(),
+        completedAt: serverTimestamp(),
         dealAmount: Number(dealAmount),
         completedBy: completedBy,
       };
@@ -354,12 +356,13 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
       transaction.update(consultationRef, consultationUpdateData);
 
       // 2. Create admin_owned_vehicles document
-      const ownedVehicleRef = firestore().collection('admin_owned_vehicles').doc();
+      const ownedVehiclesCol = collection(db, 'admin_owned_vehicles');
+      const ownedVehicleRef = doc(ownedVehiclesCol);
       transaction.set(ownedVehicleRef, {
         vehicleId: vehicleId,
         vehicleName: consultationData.vehicleName || vehicleData.vehicleName || '알 수 없음',
         purchasePrice: Number(dealAmount),
-        purchaseDate: firestore.FieldValue.serverTimestamp(),
+        purchaseDate: serverTimestamp(),
         consultationId: docId,
         previousOwnerId: consultationData.userId,
         previousOwnerName: consultationData.userName,
@@ -372,13 +375,13 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
         year: vehicleData.year,
         mileage: vehicleData.mileage,
         imageUrl: vehicleData.imageUrl,
-        createdAt: firestore.FieldValue.serverTimestamp(),
+        createdAt: serverTimestamp(),
       });
 
       // 3. Update vehicle status to 'sold'
       transaction.update(vehicleRef, {
         status: 'sold',
-        soldDate: firestore.FieldValue.serverTimestamp(),
+        soldDate: serverTimestamp(),
       });
 
       return { success: true };
@@ -405,11 +408,12 @@ export const completeConsultationDeal = async ({
   vehicleData = null,
 }) => {
   try {
-    const result = await firestore().runTransaction(async (transaction) => {
-      const consultationRef = firestore().collection('consultation_requests').doc(consultationId);
+    const db = getFirestore();
+    const result = await runTransaction(db, async (transaction) => {
+      const consultationRef = doc(db, 'consultation_requests', consultationId);
       const consultationDoc = await transaction.get(consultationRef);
 
-      if (!consultationDoc.exists) {
+      if (!consultationDoc.exists()) {
         throw new Error('상담 정보를 찾을 수 없습니다.');
       }
 
@@ -417,31 +421,32 @@ export const completeConsultationDeal = async ({
 
       transaction.update(consultationRef, {
         consultationStatus: 'completed',
-        completedAt: firestore.FieldValue.serverTimestamp(),
+        completedAt: serverTimestamp(),
         completedBy: adminId,
         dealAmount: dealAmount,
         adminNotes: adminNotes,
       });
 
       if (shouldAddToOwnedVehicles && vehicleData) {
-        const vehicleRef = firestore().collection('vehicles').doc(consultationData.vehicleId);
+        const vehicleRef = doc(db, 'vehicles', consultationData.vehicleId);
         transaction.update(vehicleRef, {
           status: 'sold',
         });
 
-        const ownedVehicleRef = firestore().collection('admin_owned_vehicles').doc();
+        const ownedVehiclesCol = collection(db, 'admin_owned_vehicles');
+        const ownedVehicleRef = doc(ownedVehiclesCol);
         transaction.set(ownedVehicleRef, {
           vehicleId: consultationData.vehicleId,
           vehicleName: consultationData.vehicleName,
           purchasePrice: dealAmount,
-          purchaseDate: firestore.FieldValue.serverTimestamp(),
+          purchaseDate: serverTimestamp(),
           consultationId: consultationId,
           previousOwnerId: consultationData.userId,
           previousOwnerName: consultationData.userName,
           status: 'owned',
           soldDate: null,
           soldPrice: null,
-          createdAt: firestore.FieldValue.serverTimestamp(),
+          createdAt: serverTimestamp(),
           ...vehicleData,
         });
       }
@@ -469,17 +474,19 @@ export const createAdminOwnedVehicle = async (vehicleData) => {
       vehicleId: vehicleData.vehicleId,
       vehicleName: vehicleData.vehicleName,
       purchasePrice: vehicleData.purchasePrice,
-      purchaseDate: vehicleData.purchaseDate || firestore.FieldValue.serverTimestamp(),
+      purchaseDate: vehicleData.purchaseDate || serverTimestamp(),
       consultationId: vehicleData.consultationId,
       previousOwnerId: vehicleData.previousOwnerId,
       previousOwnerName: vehicleData.previousOwnerName,
       status: vehicleData.status || 'owned',
       soldDate: vehicleData.soldDate || null,
       soldPrice: vehicleData.soldPrice || null,
-      createdAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
     };
 
-    const docRef = await firestore().collection('admin_owned_vehicles').add(validData);
+    const db = getFirestore();
+    const ownedVehiclesRef = collection(db, 'admin_owned_vehicles');
+    const docRef = await addDoc(ownedVehiclesRef, validData);
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error('관리자 소유 차량 생성 오류:', error);
@@ -495,15 +502,16 @@ export const createAdminOwnedVehicle = async (vehicleData) => {
 // --------------------
 export const getAdminOwnedVehicles = async (statusFilter = null) => {
   try {
-    let query = firestore()
-      .collection('admin_owned_vehicles')
-      .orderBy('purchaseDate', 'desc');
+    const db = getFirestore();
+    const ownedVehiclesRef = collection(db, 'admin_owned_vehicles');
 
+    const constraints = [orderBy('purchaseDate', 'desc')];
     if (statusFilter) {
-      query = query.where('status', '==', statusFilter);
+      constraints.push(where('status', '==', statusFilter));
     }
 
-    const snapshot = await query.get();
+    const q = query(ownedVehiclesRef, ...constraints);
+    const snapshot = await getDocs(q);
     const vehicles = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
@@ -523,10 +531,9 @@ export const getAdminOwnedVehicles = async (statusFilter = null) => {
 // --------------------
 export const updateAdminOwnedVehicle = async (vehicleId, updateData) => {
   try {
-    await firestore()
-      .collection('admin_owned_vehicles')
-      .doc(vehicleId)
-      .update(updateData);
+    const db = getFirestore();
+    const vehicleDocRef = doc(db, 'admin_owned_vehicles', vehicleId);
+    await updateDoc(vehicleDocRef, updateData);
 
     return { success: true };
   } catch (error) {
@@ -543,24 +550,29 @@ export const updateAdminOwnedVehicle = async (vehicleId, updateData) => {
 // --------------------
 export const subscribeToBuyConsultations = (callback) => {
   try {
-    const unsubscribe = firestore()
-      .collection('consultation_requests')
-      .where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected'])
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(
-        (snapshot) => {
-          const consultations = snapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(c => c.type !== 'sell');
-          callback(consultations);
-        },
-        (error) => {
-          console.error('구매상담 구독 오류:', error);
-          crashlytics().recordError(error);
-          crashlytics().log('subscribeToBuyConsultations failed');
-          callback([]);
-        }
-      );
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
+    const q = query(
+      consultationsRef,
+      where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected']),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const consultations = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(c => c.type !== 'sell');
+        callback(consultations);
+      },
+      (error) => {
+        console.error('구매상담 구독 오류:', error);
+        crashlytics().recordError(error);
+        crashlytics().log('subscribeToBuyConsultations failed');
+        callback([]);
+      }
+    );
 
     return unsubscribe;
   } catch (error) {
@@ -576,26 +588,31 @@ export const subscribeToBuyConsultations = (callback) => {
 // --------------------
 export const subscribeToSellConsultations = (callback) => {
   try {
-    const unsubscribe = firestore()
-      .collection('consultation_requests')
-      .where('type', '==', 'sell')
-      .where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected'])
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(
-        (snapshot) => {
-          const consultations = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          callback(consultations);
-        },
-        (error) => {
-          console.error('판매상담 구독 오류:', error);
-          crashlytics().recordError(error);
-          crashlytics().log('subscribeToSellConsultations failed');
-          callback([]);
-        }
-      );
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
+    const q = query(
+      consultationsRef,
+      where('type', '==', 'sell'),
+      where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected']),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const consultations = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        callback(consultations);
+      },
+      (error) => {
+        console.error('판매상담 구독 오류:', error);
+        crashlytics().recordError(error);
+        crashlytics().log('subscribeToSellConsultations failed');
+        callback([]);
+      }
+    );
 
     return unsubscribe;
   } catch (error) {
@@ -607,29 +624,61 @@ export const subscribeToSellConsultations = (callback) => {
 };
 
 // --------------------
-// 거래완료 상담 실시간 구독
+// 거래완료 상담 실시간 구독 (Task 50: includes both 'completed' and 'archived' statuses)
 // --------------------
+/**
+ * Subscribe to completed and archived consultations in real-time
+ *
+ * Performance Optimization (Task 56):
+ * - Server-side orderBy removed to avoid redundant sorting
+ * - Uses client-side sorting by archivedAt || completedAt for correct chronological order
+ * - Client-side sorting is acceptable because:
+ *   1. Small dataset: completed/archived consultations are typically limited
+ *   2. Custom logic: sorting by archivedAt OR completedAt requires client-side processing
+ *   3. Composite index: firestore.indexes.json includes consultationStatus + createdAt for efficient filtering
+ *
+ * Note: If dataset grows significantly (>1000 items), consider implementing server-side pagination
+ *
+ * @param {Function} callback - Function to call with consultation array
+ * @returns {Function} Unsubscribe function
+ */
 export const subscribeToCompletedConsultations = (callback) => {
   try {
-    const unsubscribe = firestore()
-      .collection('consultation_requests')
-      .where('consultationStatus', '==', 'completed')
-      .orderBy('completedAt', 'desc')
-      .onSnapshot(
-        (snapshot) => {
-          const consultations = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          callback(consultations);
-        },
-        (error) => {
-          console.error('거래완료 상담 구독 오류:', error);
-          crashlytics().recordError(error);
-          crashlytics().log('subscribeToCompletedConsultations failed');
-          callback([]);
-        }
-      );
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
+    const q = query(
+      consultationsRef,
+      where('consultationStatus', 'in', ['completed', 'archived'])
+      // No orderBy here - client-side sorting handles chronological order
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const consultations = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Client-side sort by archivedAt or completedAt (most recent first)
+        // This is necessary because consultations can have either field set
+        consultations.sort((a, b) => {
+          const aDate = a.archivedAt || a.completedAt;
+          const bDate = b.archivedAt || b.completedAt;
+          if (!aDate) {return 1;}  // Items without dates go to end
+          if (!bDate) {return -1;} // Items without dates go to end
+          return bDate.toMillis() - aDate.toMillis(); // Descending order
+        });
+
+        callback(consultations);
+      },
+      (error) => {
+        console.error('거래완료 상담 구독 오류:', error);
+        crashlytics().recordError(error);
+        crashlytics().log('subscribeToCompletedConsultations failed');
+        callback([]);
+      }
+    );
 
     return unsubscribe;
   } catch (error) {
@@ -637,6 +686,108 @@ export const subscribeToCompletedConsultations = (callback) => {
     crashlytics().recordError(error);
     crashlytics().log('subscribeToCompletedConsultations setup failed');
     return () => {};
+  }
+};
+
+// --------------------
+// 거래완료 상담 페이지네이션 조회 (Task 58)
+// --------------------
+/**
+ * Fetch completed/archived consultations with pagination support
+ *
+ * @param {Object} options - Query options
+ * @param {number} options.limit - Number of items per page (default: 50)
+ * @param {Object} options.startAfterDoc - Firestore DocumentSnapshot for pagination cursor
+ * @param {string} options.monthFilter - Month filter in 'YYYY-MM' format (optional)
+ * @param {string} options.typeFilter - Consultation type filter: 'buy', 'sell', or 'all' (default: 'all')
+ * @returns {Promise<{consultations: Array, lastVisibleDoc: Object, hasMore: boolean}>}
+ */
+export const fetchCompletedConsultationsPaginated = async ({
+  limit: pageLimit = 50,
+  startAfterDoc = null,
+  monthFilter = 'all',
+  typeFilter = 'all',
+}) => {
+  try {
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
+
+    const constraints = [
+      where('consultationStatus', 'in', ['completed', 'archived']),
+    ];
+
+    // Apply pagination cursor
+    if (startAfterDoc) {
+      constraints.push(startAfter(startAfterDoc));
+    }
+
+    // Apply limit + 1 to check if there are more results
+    constraints.push(limit(pageLimit + 1));
+
+    const q = query(consultationsRef, ...constraints);
+    const snapshot = await getDocs(q);
+    const docs = snapshot.docs;
+
+    // Check if there are more results
+    const hasMore = docs.length > pageLimit;
+
+    // Remove the extra document if exists
+    const consultationDocs = hasMore ? docs.slice(0, pageLimit) : docs;
+
+    let consultations = consultationDocs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      _doc: doc, // Store document reference for pagination
+    }));
+
+    // Client-side filtering by month
+    if (monthFilter !== 'all') {
+      consultations = consultations.filter(c => {
+        const timestamp = c.archivedAt || c.completedAt;
+        if (!timestamp) {return false;}
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        return monthKey === monthFilter;
+      });
+    }
+
+    // Client-side filtering by type
+    if (typeFilter !== 'all') {
+      consultations = consultations.filter(c => {
+        if (typeFilter === 'buy') {return c.type !== 'sell';}
+        if (typeFilter === 'sell') {return c.type === 'sell';}
+        return true;
+      });
+    }
+
+    // Client-side sort by archivedAt or completedAt (most recent first)
+    consultations.sort((a, b) => {
+      const aDate = a.archivedAt || a.completedAt;
+      const bDate = b.archivedAt || b.completedAt;
+      if (!aDate) {return 1;}
+      if (!bDate) {return -1;}
+      return bDate.toMillis() - aDate.toMillis();
+    });
+
+    // Get last visible document for next page
+    const lastVisibleDoc = consultationDocs.length > 0
+      ? consultationDocs[consultationDocs.length - 1]
+      : null;
+
+    return {
+      consultations,
+      lastVisibleDoc,
+      hasMore,
+    };
+  } catch (error) {
+    console.error('거래완료 상담 페이지네이션 조회 오류:', error);
+    crashlytics().recordError(error);
+    crashlytics().log('fetchCompletedConsultationsPaginated failed');
+    return {
+      consultations: [],
+      lastVisibleDoc: null,
+      hasMore: false,
+    };
   }
 };
 
@@ -650,13 +801,12 @@ export const subscribeToCompletedConsultations = (callback) => {
  */
 export const cancelConsultation = async (consultationId) => {
   try {
-    await firestore()
-      .collection('consultation_requests')
-      .doc(consultationId)
-      .update({
-        status: 'cancelled',
-        cancelledAt: firestore.FieldValue.serverTimestamp(),
-      });
+    const db = getFirestore();
+    const consultationRef = doc(db, 'consultation_requests', consultationId);
+    await updateDoc(consultationRef, {
+      consultationStatus: 'cancelled', // Fixed: use consultationStatus instead of status
+      cancelledAt: serverTimestamp(),
+    });
 
     return { success: true };
   } catch (error) {
@@ -679,18 +829,17 @@ export const cancelConsultation = async (consultationId) => {
  */
 export const resubmitConsultation = async (consultationId, preferredDate, preferredTime) => {
   try {
-    await firestore()
-      .collection('consultation_requests')
-      .doc(consultationId)
-      .update({
-        status: 'pending',
-        preferredDate,
-        preferredTime,
-        rejectionReason: firestore.FieldValue.delete(),
-        alternativeSlots: firestore.FieldValue.delete(),
-        rejectedAt: firestore.FieldValue.delete(),
-        resubmittedAt: firestore.FieldValue.serverTimestamp(),
-      });
+    const db = getFirestore();
+    const consultationRef = doc(db, 'consultation_requests', consultationId);
+    await updateDoc(consultationRef, {
+      status: 'pending',
+      preferredDate,
+      preferredTime,
+      rejectionReason: deleteField(),
+      alternativeSlots: deleteField(),
+      rejectedAt: deleteField(),
+      resubmittedAt: serverTimestamp(),
+    });
 
     return { success: true };
   } catch (error) {

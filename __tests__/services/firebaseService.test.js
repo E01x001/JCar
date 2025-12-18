@@ -7,13 +7,33 @@ jest.mock('react-native/Libraries/Alert/Alert', () => ({
 
 // Mock Firebase modules
 jest.mock('@react-native-firebase/auth');
-jest.mock('@react-native-firebase/firestore');
 jest.mock('@react-native-firebase/messaging');
 jest.mock('@react-native-firebase/crashlytics');
 jest.mock('@react-native-firebase/functions');
 
+// Mock Firestore Modular API
+jest.mock('@react-native-firebase/firestore', () => ({
+  getFirestore: jest.fn(),
+  collection: jest.fn(),
+  doc: jest.fn(),
+  setDoc: jest.fn(),
+  updateDoc: jest.fn(),
+  addDoc: jest.fn(),
+  getDoc: jest.fn(),
+  getDocs: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
+  orderBy: jest.fn(),
+  limit: jest.fn(),
+  startAfter: jest.fn(),
+  onSnapshot: jest.fn(),
+  runTransaction: jest.fn(),
+  serverTimestamp: jest.fn(() => ({ _methodName: 'FieldValue.serverTimestamp' })),
+  deleteField: jest.fn(() => ({ _methodName: 'FieldValue.delete' })),
+}));
+
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, setDoc, updateDoc, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
@@ -36,23 +56,15 @@ describe('firebaseService', () => {
       const mockUserCredential = { user: mockUser };
 
       const mockCreateUser = jest.fn().mockResolvedValue(mockUserCredential);
-      const mockSet = jest.fn().mockResolvedValue();
-      const mockServerTimestamp = jest.fn();
 
       auth.mockReturnValue({
         createUserWithEmailAndPassword: mockCreateUser,
       });
 
-      firestore.mockReturnValue({
-        collection: jest.fn(() => ({
-          doc: jest.fn(() => ({
-            set: mockSet,
-          })),
-        })),
-      });
-      firestore.FieldValue = {
-        serverTimestamp: mockServerTimestamp,
-      };
+      // Mock modular Firestore API
+      getFirestore.mockReturnValue({});
+      doc.mockReturnValue({ id: 'test-uid-123' });
+      setDoc.mockResolvedValue();
 
       const userData = {
         email: 'test@example.com',
@@ -66,6 +78,7 @@ describe('firebaseService', () => {
       expect(result.success).toBe(true);
       expect(result.userId).toBe('test-uid-123');
       expect(mockCreateUser).toHaveBeenCalledWith('test@example.com', 'password123');
+      expect(setDoc).toHaveBeenCalled();
     });
 
     it('should handle registration error', async () => {
@@ -124,16 +137,10 @@ describe('firebaseService', () => {
 
   describe('saveConsultationRequest', () => {
     it('should successfully save consultation request', async () => {
-      const mockServerTimestamp = jest.fn();
-
-      firestore.mockReturnValue({
-        collection: jest.fn(() => ({
-          add: jest.fn().mockResolvedValue({ id: 'consultation-123' }),
-        })),
-      });
-      firestore.FieldValue = {
-        serverTimestamp: mockServerTimestamp,
-      };
+      // Mock modular Firestore API
+      getFirestore.mockReturnValue({});
+      collection.mockReturnValue({ _collectionPath: 'consultation_requests' });
+      addDoc.mockResolvedValue({ id: 'consultation-123' });
 
       const consultationData = {
         userId: 'user-123',
@@ -150,23 +157,19 @@ describe('firebaseService', () => {
       const result = await saveConsultationRequest(consultationData);
 
       expect(result.success).toBe(true);
+      expect(addDoc).toHaveBeenCalled();
     });
 
     it('should handle missing fields with defaults', async () => {
-      const mockServerTimestamp = jest.fn();
-
-      firestore.mockReturnValue({
-        collection: jest.fn(() => ({
-          add: jest.fn().mockResolvedValue({ id: 'consultation-123' }),
-        })),
-      });
-      firestore.FieldValue = {
-        serverTimestamp: mockServerTimestamp,
-      };
+      // Mock modular Firestore API
+      getFirestore.mockReturnValue({});
+      collection.mockReturnValue({ _collectionPath: 'consultation_requests' });
+      addDoc.mockResolvedValue({ id: 'consultation-123' });
 
       const result = await saveConsultationRequest({});
 
       expect(result.success).toBe(true);
+      expect(addDoc).toHaveBeenCalled();
     });
   });
 
@@ -177,18 +180,14 @@ describe('firebaseService', () => {
         getToken: jest.fn().mockResolvedValue(mockToken),
       });
 
-      const mockUpdate = jest.fn().mockResolvedValue();
-      firestore.mockReturnValue({
-        collection: jest.fn(() => ({
-          doc: jest.fn(() => ({
-            update: mockUpdate,
-          })),
-        })),
-      });
+      // Mock modular Firestore API
+      getFirestore.mockReturnValue({});
+      doc.mockReturnValue({ id: 'user-123' });
+      updateDoc.mockResolvedValue();
 
       await saveFcmToken('user-123');
 
-      expect(mockUpdate).toHaveBeenCalledWith({ fcmToken: mockToken });
+      expect(updateDoc).toHaveBeenCalledWith(expect.anything(), { fcmToken: mockToken });
     });
 
     it('should handle case when token is null', async () => {

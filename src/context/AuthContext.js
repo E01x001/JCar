@@ -1,7 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
-import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import messaging from '@react-native-firebase/messaging';
 import { saveFcmToken } from '../services/firebaseService';
@@ -22,7 +22,8 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         try {
-          const userDocRef = doc(firestore(), 'users', currentUser.uid);
+          const db = getFirestore();
+          const userDocRef = doc(db, 'users', currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
@@ -60,10 +61,9 @@ export const AuthProvider = ({ children }) => {
       const currentUser = auth().currentUser;
       if (currentUser) {
         try {
-          await firestore()
-            .collection('users')
-            .doc(currentUser.uid)
-            .update({ fcmToken: newToken });
+          const db = getFirestore();
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userDocRef, { fcmToken: newToken });
           console.log('✅ 갱신된 FCM 토큰 저장 완료');
         } catch (error) {
           console.error('❌ 갱신된 FCM 토큰 저장 실패:', error);
