@@ -37,61 +37,85 @@ service cloud.firestore {
                     request.resource.data.manufacturer is string &&
                     request.resource.data.sellerId is string;
 
-      // Vehicle owner or active admin can update vehicles
+      // Vehicle update rules (Task 54 - Ownership Transfer):
+      // 1. Admin can update any field
+      // 2. Current owner (currentOwnerId or legacy sellerId) can update EXCEPT critical ownership fields
       allow update: if request.auth != null &&
                     isActiveUser() &&
-                    (request.auth.uid == resource.data.sellerId || isAdmin()) &&
-                    request.resource.data.vehicleId is string &&
-                    request.resource.data.vehicleName is string &&
-                    request.resource.data.manufacturer is string &&
-                    request.resource.data.sellerId is string;
+                    (
+                      // Admin can update everything
+                      isAdmin() ||
+                      // Current owner can update non-critical fields
+                      (
+                        (request.auth.uid == resource.data.get('currentOwnerId', resource.data.sellerId)) &&
+                        // Prevent owner from changing ownership fields
+                        (!('currentOwnerId' in request.resource.data) || request.resource.data.currentOwnerId == resource.data.get('currentOwnerId', null)) &&
+                        (!('isAdminOwned' in request.resource.data) || request.resource.data.isAdminOwned == resource.data.get('isAdminOwned', false)) &&
+                        (!('ownershipHistory' in request.resource.data) || request.resource.data.ownershipHistory == resource.data.get('ownershipHistory', []))
+                      )
+                    );
 
       // Vehicle owner or active admin can delete vehicles
       allow delete: if request.auth != null &&
                     isActiveUser() &&
-                    (request.auth.uid == resource.data.sellerId || isAdmin());
+                    ((request.auth.uid == resource.data.get('currentOwnerId', resource.data.sellerId)) || isAdmin());
     }
 
     // Consultation requests collection: Only active users can create, admins have full access
-    // Fields: userId, vehicleId, preferredDate, preferredTime, type, status, createdAt
-    // Admin-only fields: rejectionReason, adminMemo, suggestedSlots
+    // Fields: userId, vehicleId, preferredDate, preferredTime, type, consultationStatus, createdAt
+    // Admin-only fields: rejectionReason, adminMemo, alternativeSlots
+    // Task 47 fields: isOwnershipTransferred, transferId, dealAmount
     match /consultation_requests/{requestId} {
-      // Users can read their own requests, admins can read all requests
-      // Note: Client code must filter out adminMemo field for non-admin users as
-      // Firestore doesn't support field-level read permissions
+      // Read access (Task 54):
+      // 1. User who created the request (userId)
+      // 2. Vehicle seller/owner (if type is 'buy')
+      // 3. Admins
       allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.userId || isAdmin());
+        (
+          request.auth.uid == resource.data.userId ||
+          (resource.data.type == 'sell' && request.auth.uid == resource.data.get('sellerId', '')) ||
+          isAdmin()
+        );
 
       // Only active users can create requests for themselves
       allow create: if request.auth != null &&
         isActiveUser() &&
-        request.auth.uid == request.resource.data.userId;
+        request.auth.uid == request.resource.data.userId &&
+        request.resource.data.consultationStatus == 'pending';
 
-      // Update rules:
-      // 1. Admins can update any field for any consultation
-      // 2. Users can cancel their own consultation (set status to 'cancelled')
-      // 3. Users can resubmit their rejected consultation with new date/time
+      // Update rules (Task 54 - Enhanced):
+      // 1. Admins can update any field (including ownership transfer fields)
+      // 2. Users can cancel their own consultation
+      // 3. Users can resubmit rejected consultations
+      // 4. Ownership transfer fields (isOwnershipTransferred, transferId, dealAmount) are admin-only
       allow update: if (isAdmin() && isActiveUser()) ||
                       // User cancellation
                       (request.auth != null &&
                        isActiveUser() &&
                        request.auth.uid == resource.data.userId &&
-                       request.resource.data.status == 'cancelled' &&
-                       (resource.data.status == 'pending' ||
-                        resource.data.status == 'approved' ||
-                        resource.data.status == 'meeting') &&
-                       request.resource.data.keys().hasOnly(['status', 'cancelledAt'])) ||
+                       request.resource.data.consultationStatus == 'cancelled' &&
+                       (resource.data.consultationStatus == 'pending' ||
+                        resource.data.consultationStatus == 'approved' ||
+                        resource.data.consultationStatus == 'meeting') &&
+                       // Ensure user cannot set ownership transfer fields
+                       (!('isOwnershipTransferred' in request.resource.data) || request.resource.data.isOwnershipTransferred == false) &&
+                       (!('transferId' in request.resource.data)) &&
+                       (!('dealAmount' in request.resource.data))) ||
                       // User resubmission of rejected consultation
                       (request.auth != null &&
                        isActiveUser() &&
                        request.auth.uid == resource.data.userId &&
-                       resource.data.status == 'rejected' &&
-                       request.resource.data.status == 'pending' &&
+                       resource.data.consultationStatus == 'rejected' &&
+                       request.resource.data.consultationStatus == 'pending' &&
                        request.resource.data.preferredDate is string &&
                        request.resource.data.preferredTime is string &&
+                       // Ensure user cannot set admin-only or ownership fields
                        !('rejectionReason' in request.resource.data) &&
                        !('alternativeSlots' in request.resource.data) &&
-                       !('rejectedAt' in request.resource.data));
+                       !('rejectedAt' in request.resource.data) &&
+                       !('isOwnershipTransferred' in request.resource.data) &&
+                       !('transferId' in request.resource.data) &&
+                       !('dealAmount' in request.resource.data));
 
       // Only active admins can delete requests
       allow delete: if isAdmin() && isActiveUser();
@@ -122,6 +146,46 @@ service cloud.firestore {
 
       // Only active admins can delete owned vehicles
       allow delete: if isAdmin() && isActiveUser();
+    }
+
+    // Ownership transfers collection (Task 47, 54): Immutable admin-only records
+    match /ownership_transfers/{transferId} {
+      // Only admins can read ownership transfer records
+      allow read: if isAdmin();
+
+      // Only active admins can create ownership transfer records
+      // Validates all required fields are present
+      allow create: if isAdmin() &&
+                    isActiveUser() &&
+                    request.resource.data.transferId is string &&
+                    request.resource.data.vehicleId is string &&
+                    request.resource.data.transferType in ['sell_to_admin', 'admin_to_buyer'] &&
+                    request.resource.data.transferredAt is timestamp &&
+                    request.resource.data.price is number &&
+                    request.resource.data.price >= 0;
+
+      // NO ONE can update or delete ownership transfer records (immutable audit log)
+      allow update, delete: if false;
+    }
+
+    // Ownership transfer audit logs collection (Task 60): Comprehensive monitoring logs
+    match /ownership_transfer_audit_logs/{logId} {
+      // Only admins can read audit logs
+      allow read: if isAdmin();
+
+      // Only active admins can create audit log entries
+      // These are created automatically by ownershipTransferService
+      allow create: if isAdmin() &&
+                    isActiveUser() &&
+                    request.resource.data.transferType in ['sell_to_admin', 'admin_to_buyer'] &&
+                    request.resource.data.vehicleId is string &&
+                    request.resource.data.consultationId is string &&
+                    request.resource.data.status in ['completed', 'failed'] &&
+                    request.resource.data.duration is number &&
+                    request.resource.data.timestamp is timestamp;
+
+      // NO ONE can update or delete audit logs (immutable for compliance)
+      allow update, delete: if false;
     }
 
     // Default deny-all policy for all other documents

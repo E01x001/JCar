@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import firestore, { collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -30,7 +30,8 @@ const AdminScheduleScreen = () => {
   useEffect(() => {
     if (!user) {return () => {};}
 
-    const consultationCollection = collection(firestore(), 'consultation_requests');
+    const db = getFirestore();
+    const consultationCollection = collection(db, 'consultation_requests');
     const unsubscribe = onSnapshot(consultationCollection, snapshot => {
       const all = [];
       const marks = {};
@@ -39,8 +40,8 @@ const AdminScheduleScreen = () => {
         const data = d.data();
         const date = data.preferredDate;
         const color =
-          data.status === 'approved' ? theme.colors.success.main
-            : data.status === 'rejected' ? theme.colors.danger.main
+          data.consultationStatus === 'approved' ? theme.colors.success.main
+            : data.consultationStatus === 'rejected' ? theme.colors.danger.main
               : theme.colors.text.tertiary;
 
         all.push({ id: d.id, ...data });
@@ -61,8 +62,9 @@ const AdminScheduleScreen = () => {
 
   const updateStatus = async (id, status) => {
     try {
-      const docRef = doc(firestore(), 'consultation_requests', id);
-      await updateDoc(docRef, { status });
+      const db = getFirestore();
+      const docRef = doc(db, 'consultation_requests', id);
+      await updateDoc(docRef, { consultationStatus: status });
     } catch (error) {
       Alert.alert('오류', '상태 변경 실패');
       console.error(error);
@@ -180,7 +182,7 @@ const AdminScheduleScreen = () => {
                   <Text style={[styles.itemText, {
                     fontSize: theme.typography.fontSize.bodySmall,
                     color: theme.colors.text.secondary,
-                  }]}>상태: {translateStatus(item.status)}</Text>
+                  }]}>상태: {translateStatus(item.consultationStatus)}</Text>
 
                   <View style={[styles.buttonGroup, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>
                     <Button
