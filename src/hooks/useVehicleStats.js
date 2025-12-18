@@ -3,10 +3,12 @@
  *
  * Fetches vehicle data from Firestore in real-time and calculates aggregate statistics
  * for total count and status breakdowns.
+ *
+ * Migrated to React Native Firebase Modular API (v22+)
  */
 
 import { useState, useEffect, useContext } from 'react';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, onSnapshot } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 
@@ -42,10 +44,11 @@ const useVehicleStats = () => {
       });
       return () => {};
     }
-    const unsubscribe = firestore()
-      .collection('vehicles')
-      .onSnapshot(
-        (snapshot) => {
+    const db = getFirestore();
+    const vehiclesRef = collection(db, 'vehicles');
+    const unsubscribe = onSnapshot(
+      vehiclesRef,
+      (snapshot) => {
           // Calculate statistics from snapshot
           let total = 0;
           let pending = 0;

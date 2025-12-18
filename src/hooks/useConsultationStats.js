@@ -3,10 +3,12 @@
  *
  * Fetches consultation request data from Firestore in real-time and calculates
  * aggregate statistics for total count and status breakdowns.
+ *
+ * Migrated to React Native Firebase Modular API (v22+)
  */
 
 import { useState, useEffect, useContext } from 'react';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, onSnapshot } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 
@@ -45,10 +47,11 @@ const useConsultationStats = () => {
       });
       return () => {};
     }
-    const unsubscribe = firestore()
-      .collection('consultation_requests')
-      .onSnapshot(
-        (snapshot) => {
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
+    const unsubscribe = onSnapshot(
+      consultationsRef,
+      (snapshot) => {
           // Calculate statistics from snapshot
           let total = 0;
           let pending = 0;
@@ -59,7 +62,7 @@ const useConsultationStats = () => {
           snapshot.docs.forEach((doc) => {
             total++;
             const data = doc.data();
-            const status = data.status;
+            const status = data.consultationStatus;
 
             if (status === 'pending') {
               pending++;
