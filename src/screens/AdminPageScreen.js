@@ -2,8 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import auth from '@react-native-firebase/auth';
-import firestore, { collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -13,6 +14,7 @@ import Button from '../components/Button';
 import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
 import OwnedVehiclesList from '../components/OwnedVehiclesList';
+import { migrateConsultationStatusField } from '../scripts/migrateConsultationStatus';
 
 const AdminPageScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -29,7 +31,9 @@ const AdminPageScreen = ({ navigation }) => {
   useEffect(() => {
     if (!user) {return () => {};}
 
-    const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+    const db = getFirestore();
+    const vehiclesRef = collection(db, 'vehicles');
+    const q = query(vehiclesRef, where('sellerId', '==', user.uid));
     const unsubscribe = onSnapshot(q, snapshot => {
       const vehicleList = snapshot.docs.map(d => ({
         id: d.id,
@@ -43,7 +47,8 @@ const AdminPageScreen = ({ navigation }) => {
 
   const handleDeleteVehicle = async (vehicleId) => {
     try {
-      await deleteDoc(doc(firestore(), 'vehicles', vehicleId));
+      const db = getFirestore();
+      await deleteDoc(doc(db, 'vehicles', vehicleId));
       setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
       toast.showSuccess('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
@@ -71,10 +76,12 @@ const AdminPageScreen = ({ navigation }) => {
         text: '탈퇴', style: 'destructive', onPress: async () => {
           if (!user) {return;}
           try {
-            const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+            const db = getFirestore();
+            const vehiclesRef = collection(db, 'vehicles');
+            const q = query(vehiclesRef, where('sellerId', '==', user.uid));
             const querySnapshot = await getDocs(q);
 
-            const batch = writeBatch(firestore());
+            const batch = writeBatch(db);
             querySnapshot.forEach(documentSnapshot => {
               batch.delete(documentSnapshot.ref);
             });
@@ -100,6 +107,41 @@ const AdminPageScreen = ({ navigation }) => {
     crashlytics().recordError(testError);
 
     toast.showInfo('테스트 완료', 'Crashlytics에 에러가 기록되었습니다. Firebase Console에서 확인하세요.');
+  };
+
+  const handleMigration = () => {
+    Alert.alert(
+      '데이터 마이그레이션',
+      '모든 상담 요청의 status 필드를 consultationStatus로 마이그레이션합니다.\n\n⚠️ 이 작업은 한 번만 실행하면 됩니다.\n\n계속하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '실행',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              toast.showInfo('마이그레이션 시작', '데이터를 마이그레이션하는 중...');
+              const result = await migrateConsultationStatusField();
+
+              if (result.success) {
+                Alert.alert(
+                  '마이그레이션 완료',
+                  `✅ 성공적으로 완료되었습니다!\n\n마이그레이션: ${result.migrated}건\n스킵: ${result.skipped}건`,
+                  [{ text: '확인' }]
+                );
+                toast.showSuccess('완료', `${result.migrated}건 마이그레이션 완료`);
+              }
+            } catch (error) {
+              console.error('Migration error:', error);
+              crashlytics().recordError(error);
+              crashlytics().log('AdminPageScreen: Migration failed');
+              Alert.alert('오류', '마이그레이션 중 오류가 발생했습니다.\n\n' + error.message);
+              toast.showError('마이그레이션 실패', error.message);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleOwnedVehiclePress = (vehicleId) => {
@@ -224,6 +266,14 @@ const AdminPageScreen = ({ navigation }) => {
         {/* Action Buttons */}
         <View style={{ padding: theme.spacing.md }}>
           <Button
+            variant="primary"
+            title="소유권 이전 기록"
+            onPress={() => navigation.navigate('AdminOwnershipHistory')}
+            style={{ marginBottom: theme.spacing.sm }}
+            icon={<MaterialIcons name="history" size={20} color="#fff" style={{ marginRight: 8 }} />}
+          />
+
+          <Button
             variant="secondary"
             title="로그아웃"
             onPress={handleLogout}
@@ -236,17 +286,33 @@ const AdminPageScreen = ({ navigation }) => {
             onPress={handleDeleteAccount}
           />
 
-          {/* Dev-only Test Button */}
+          {/* Dev-only Test Buttons */}
           {__DEV__ && (
-            <Button
-              variant="primary"
-              title="Test Crashlytics"
-              onPress={handleTestCrash}
-              style={{
-                marginTop: theme.spacing.sm,
-                backgroundColor: theme.colors.warning.main,
-              }}
-            />
+            <>
+              {/* ⚠️ IMPORTANT: Remove or disable migration button before production release
+                  Migration should only be run ONCE to convert 'status' field to 'consultationStatus'
+                  After migration is complete, this button should be removed */}
+              {true && ( // Set to true if you need to run migration
+                <Button
+                  variant="primary"
+                  title="DB 마이그레이션 (status → consultationStatus)"
+                  onPress={handleMigration}
+                  style={{
+                    marginTop: theme.spacing.sm,
+                    backgroundColor: theme.colors.info.main,
+                  }}
+                />
+              )}
+              <Button
+                variant="primary"
+                title="Test Crashlytics"
+                onPress={handleTestCrash}
+                style={{
+                  marginTop: theme.spacing.sm,
+                  backgroundColor: theme.colors.warning.main,
+                }}
+              />
+            </>
           )}
         </View>
       </View>
