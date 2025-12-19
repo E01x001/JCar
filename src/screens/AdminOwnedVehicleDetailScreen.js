@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFirestore, collection, doc, onSnapshot, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
