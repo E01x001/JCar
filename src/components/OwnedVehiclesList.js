@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, orderBy, onSnapshot } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -34,26 +34,30 @@ const OwnedVehiclesList = ({ onVehiclePress }) => {
       setLoading(false);
       return () => {};
     }
-    const unsubscribe = firestore()
-      .collection('admin_owned_vehicles')
-      .where('status', '==', 'owned')
-      .orderBy('purchaseDate', 'desc')
-      .onSnapshot(
-        (snapshot) => {
-          const vehicleList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setVehicles(vehicleList);
-          setLoading(false);
-        },
-        (error) => {
-          console.error('OwnedVehiclesList: Failed to fetch vehicles', error);
-          crashlytics().recordError(error);
-          crashlytics().log('OwnedVehiclesList: Firestore query failed');
-          setLoading(false);
-        }
-      );
+    const db = getFirestore();
+    const vehiclesRef = collection(db, 'admin_owned_vehicles');
+    const q = query(
+      vehiclesRef,
+      where('status', '==', 'owned'),
+      orderBy('purchaseDate', 'desc')
+    );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const vehicleList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setVehicles(vehicleList);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('OwnedVehiclesList: Failed to fetch vehicles', error);
+        crashlytics().recordError(error);
+        crashlytics().log('OwnedVehiclesList: Firestore query failed');
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [user, role]);
