@@ -6,7 +6,7 @@ import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
 import Button from '../../../components/Button';
 import StateScreen from '../../../components/StateScreen';
-import firestore, { doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
+import { getFirestore, doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
 
 const PendingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
   const theme = useTheme();
@@ -16,10 +16,11 @@ const PendingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const docRef = doc(firestore(), 'consultation_requests', id);
+      const db = getFirestore();
+      const docRef = doc(db, 'consultation_requests', id);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        await updateDoc(docRef, { status: newStatus });
+        await updateDoc(docRef, { consultationStatus: newStatus });
         Alert.alert('완료', `요청이 '${newStatus}'로 변경되었습니다.`);
       }
     } catch (error) {
