@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import firestore, { collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -112,7 +112,9 @@ const VehicleRegistrationScreen = () => {
         uploadedImageUrl = await reference.getDownloadURL();
       }
 
-      const newVehicleRef = doc(collection(firestore(), 'vehicles'));
+      const db = getFirestore();
+      const vehiclesRef = collection(db, 'vehicles');
+      const newVehicleRef = doc(vehiclesRef);
 
       await setDoc(newVehicleRef, {
         vehicleId: newVehicleRef.id,

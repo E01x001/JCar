@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
-import firestore, { collection, getDocs } from '@react-native-firebase/firestore';
+import { getFirestore, collection, getDocs } from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
@@ -34,7 +34,9 @@ const AdminVehiclesListScreen = ({ navigation }) => {
   const fetchVehicles = async () => {
     try {
       setLoading(true);
-      const snapshot = await getDocs(collection(firestore(), 'vehicles'));
+      const db = getFirestore();
+      const vehiclesRef = collection(db, 'vehicles');
+      const snapshot = await getDocs(vehiclesRef);
       const vehiclesData = snapshot.docs.map(d => ({
         id: d.id,
         ...d.data(),

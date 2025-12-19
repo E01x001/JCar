@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
+import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 
 const ConsultationDetailScreen = ({ route }) => {
   const { id } = route.params; // 상담 ID
@@ -10,7 +10,8 @@ const ConsultationDetailScreen = ({ route }) => {
   useEffect(() => {
     const fetchConsultation = async () => {
       try {
-        const docRef = doc(firestore(), 'consultation_requests', id);
+        const db = getFirestore();
+        const docRef = doc(db, 'consultation_requests', id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setConsultation(docSnap.data());
