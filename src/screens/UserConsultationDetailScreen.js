@@ -56,9 +56,9 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
     const consultationDocRef = doc(db, 'consultation_requests', consultationId);
     const unsubscribe = onSnapshot(
       consultationDocRef,
-        async (doc) => {
-          if (doc.exists) {
-            const data = doc.data();
+        async (snapshot) => {
+          if (snapshot.exists) {
+            const data = snapshot.data();
 
             // Verify user owns this consultation
             if (data.userId !== user.uid) {
@@ -68,7 +68,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
               return;
             }
 
-            setConsultation({ id: doc.id, ...data });
+            setConsultation({ id: snapshot.id, ...data });
 
             // Fetch vehicle details
             if (data.vehicleId) {
