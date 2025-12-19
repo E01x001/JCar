@@ -836,7 +836,7 @@ export const resubmitConsultation = async (consultationId, preferredDate, prefer
     const db = getFirestore();
     const consultationRef = doc(db, 'consultation_requests', consultationId);
     await updateDoc(consultationRef, {
-      status: 'pending',
+      consultationStatus: 'pending', // Fixed: Use consultationStatus instead of status
       preferredDate,
       preferredTime,
       rejectionReason: deleteField(),
