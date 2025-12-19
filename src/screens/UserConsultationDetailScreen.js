@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, onSnapshot, getDoc } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -52,10 +52,10 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
     }
 
     // Real-time listener for consultation data
-    const unsubscribe = firestore()
-      .collection('consultation_requests')
-      .doc(consultationId)
-      .onSnapshot(
+    const db = getFirestore();
+    const consultationDocRef = doc(db, 'consultation_requests', consultationId);
+    const unsubscribe = onSnapshot(
+      consultationDocRef,
         async (doc) => {
           if (doc.exists) {
             const data = doc.data();
@@ -73,10 +73,8 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
             // Fetch vehicle details
             if (data.vehicleId) {
               try {
-                const vehicleDoc = await firestore()
-                  .collection('vehicles')
-                  .doc(data.vehicleId)
-                  .get();
+                const vehicleDocRef = doc(db, 'vehicles', data.vehicleId);
+                const vehicleDoc = await getDoc(vehicleDocRef);
 
                 if (vehicleDoc.exists) {
                   setVehicle({ id: vehicleDoc.id, ...vehicleDoc.data() });
@@ -172,7 +170,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
       <View style={[styles.statusSection, {
         marginBottom: theme.spacing.lg,
       }]}>
-        {getStatusBadge(consultation.status)}
+        {getStatusBadge(consultation.consultationStatus)}
       </View>
 
       {/* Vehicle Information Card */}
@@ -228,7 +226,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
       </Card>
 
       {/* Rejection Reason Card (only for rejected status) */}
-      {consultation.status === 'rejected' && consultation.rejectionReason && (
+      {consultation.consultationStatus === 'rejected' && consultation.rejectionReason && (
         <Card style={{
           marginBottom: theme.spacing.md,
           backgroundColor: theme.colors.status.rejected + '10',
@@ -251,7 +249,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
       )}
 
       {/* Alternative Slots Card (only for rejected status with suggestions) */}
-      {consultation.status === 'rejected' && consultation.alternativeSlots && consultation.alternativeSlots.length > 0 && (
+      {consultation.consultationStatus === 'rejected' && consultation.alternativeSlots && consultation.alternativeSlots.length > 0 && (
         <Card style={{ marginBottom: theme.spacing.md }}>
           <Text style={[styles.sectionTitle, {
             fontSize: theme.typography.fontSize.h4,
@@ -289,34 +287,33 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
   function renderActionButtons() {
     if (!consultation) {return null;}
 
-    const { status } = consultation;
+    const { consultationStatus } = consultation;
 
     // No action buttons for completed or cancelled consultations
-    if (status === 'completed' || status === 'cancelled') {
+    if (consultationStatus === 'completed' || consultationStatus === 'cancelled') {
       return null;
     }
 
     return (
       <View style={{ marginBottom: theme.spacing.xl }}>
         {/* Cancel button for pending or approved consultations */}
-        {(status === 'pending' || status === 'approved' || status === 'meeting') && (
+        {(consultationStatus === 'pending' || consultationStatus === 'approved' || consultationStatus === 'meeting') && (
           <Button
-            variant="outlined"
-            label={cancelling ? '취소 중...' : '상담 취소'}
+            variant="secondary"
+            title={cancelling ? '취소 중...' : '상담 취소'}
             onPress={handleCancelConsultation}
-            icon="cancel"
             style={{ marginBottom: theme.spacing.sm }}
             disabled={cancelling}
+            loading={cancelling}
           />
         )}
 
         {/* Resubmit button for rejected consultations */}
-        {status === 'rejected' && (
+        {consultationStatus === 'rejected' && (
           <Button
             variant="primary"
-            label="다시 신청하기"
+            title="다시 신청하기"
             onPress={handleResubmitConsultation}
-            icon="refresh"
           />
         )}
       </View>

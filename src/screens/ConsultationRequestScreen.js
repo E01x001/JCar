@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import DatePicker from 'react-native-date-picker';
 import { AuthContext } from '../context/AuthContext';
-import firestore, { collection, query, where, getDocs } from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, getDocs } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { saveConsultationRequest, resubmitConsultation } from '../services/firebaseService';
 
@@ -41,18 +41,44 @@ const ConsultationRequestScreen = ({ route }) => {
   };
 
   const checkDuplicateConsultation = async (userId, vehicleId) => {
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
     const q = query(
-      collection(firestore(), 'consultation_requests'),
+      consultationsRef,
       where('userId', '==', userId),
       where('vehicleId', '==', vehicleId)
     );
     const snapshot = await getDocs(q);
-    return !snapshot.empty;
+
+    // Debug: Log all consultations to see their status
+    console.log('🔍 중복 검사 - 총 상담 개수:', snapshot.docs.length);
+    snapshot.docs.forEach((doc, index) => {
+      const data = doc.data();
+      console.log(`  [${index + 1}] ID: ${doc.id}`);
+      console.log(`      consultationStatus: "${data.consultationStatus}"`);
+      console.log(`      status: "${data.status}"`);
+      console.log(`      type: "${data.type}"`);
+    });
+
+    // Filter out cancelled consultations - they should not count as duplicates
+    // Check both consultationStatus and status for backward compatibility
+    const activeConsultations = snapshot.docs.filter(doc => {
+      const data = doc.data();
+      const status = data.consultationStatus || data.status;
+      const isCancelled = status === 'cancelled';
+      console.log(`  - Filtering doc ${doc.id}: status="${status}", isCancelled=${isCancelled}`);
+      return !isCancelled;
+    });
+
+    console.log('✅ 활성 상담 개수 (취소 제외):', activeConsultations.length);
+    return activeConsultations.length > 0;
   };
 
   const checkTimeConflict = async (vehicleId, date, time) => {
+    const db = getFirestore();
+    const consultationsRef = collection(db, 'consultation_requests');
     const q = query(
-      collection(firestore(), 'consultation_requests'),
+      consultationsRef,
       where('vehicleId', '==', vehicleId),
       where('preferredDate', '==', date),
       where('preferredTime', '==', time)
@@ -140,7 +166,7 @@ const ConsultationRequestScreen = ({ route }) => {
       vehicleName: vehicle.vehicleName,
       preferredDate: formattedDate,
       preferredTime: formattedTime,
-      status: 'pending',
+      consultationStatus: 'pending',
       type: isSell ? 'sell' : 'buy',
     };
 

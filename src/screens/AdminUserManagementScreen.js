@@ -10,7 +10,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AuthContext } from '../context/AuthContext';
 
@@ -33,7 +33,9 @@ const AdminUserManagementScreen = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const snapshot = await firestore().collection('users').get();
+      const db = getFirestore();
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
       const usersData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -89,24 +91,24 @@ const AdminUserManagementScreen = () => {
           onPress: async () => {
             setUpdatingUserId(userId);
             try {
+              const db = getFirestore();
               // Firestore 업데이트
-              await firestore()
-                .collection('users')
-                .doc(userId)
-                .update({
-                  status: newStatus,
-                  statusUpdatedAt: firestore.FieldValue.serverTimestamp(),
-                });
+              const userDocRef = doc(db, 'users', userId);
+              await updateDoc(userDocRef, {
+                status: newStatus,
+                statusUpdatedAt: serverTimestamp(),
+              });
 
               // admin_activity_log에 기록
-              await firestore().collection('admin_activity_log').add({
+              const activityLogRef = collection(db, 'admin_activity_log');
+              await addDoc(activityLogRef, {
                 adminUid: currentUser?.uid,
                 action: newStatus === 'suspended' ? 'suspend_user' : 'activate_user',
                 targetUserId: userId,
                 targetUserName: userName,
                 previousStatus: currentStatus || 'active',
                 newStatus: newStatus,
-                timestamp: firestore.FieldValue.serverTimestamp(),
+                timestamp: serverTimestamp(),
               });
 
               // UI 업데이트
