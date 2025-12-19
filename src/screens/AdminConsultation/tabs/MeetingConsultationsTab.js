@@ -6,7 +6,7 @@ import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
 import Button from '../../../components/Button';
 import StateScreen from '../../../components/StateScreen';
-import firestore, { doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
+import { getFirestore, doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
 
 const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
   const theme = useTheme();
@@ -15,10 +15,11 @@ const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const docRef = doc(firestore(), 'consultation_requests', id);
+      const db = getFirestore();
+      const docRef = doc(db, 'consultation_requests', id);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        await updateDoc(docRef, { status: newStatus });
+        await updateDoc(docRef, { consultationStatus: newStatus });
         Alert.alert('완료', `요청이 '${newStatus}'로 변경되었습니다.`);
       }
     } catch (error) {
@@ -40,8 +41,8 @@ const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
       <Card style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.header}>
           <Badge
-            status={item.status}
-            label={getStatusLabel(item.status)}
+            status={item.consultationStatus}
+            label={getStatusLabel(item.consultationStatus)}
           />
           <Text style={[styles.userName, {
             fontSize: theme.typography.fontSize.body,
@@ -66,7 +67,7 @@ const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
           color: theme.colors.text.secondary,
         }]}>상담 일정: {item.preferredDate} {item.preferredTime}</Text>
 
-        {item.status === 'pending' && (
+        {item.consultationStatus === 'pending' && (
           <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
             <Button
               variant="primary"
