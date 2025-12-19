@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
-import firestore, { doc, getDoc } from '@react-native-firebase/firestore';
+import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatPrice, formatPhone } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
@@ -18,7 +18,8 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
   useEffect(() => {
     const fetchVehicleDetails = async () => {
       try {
-        const vehicleDocRef = doc(firestore(), 'vehicles', vehicleId);
+        const db = getFirestore();
+        const vehicleDocRef = doc(db, 'vehicles', vehicleId);
         const vehicleDoc = await getDoc(vehicleDocRef);
         if (vehicleDoc.exists()) {
           setVehicle(vehicleDoc.data());

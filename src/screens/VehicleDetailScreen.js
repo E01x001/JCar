@@ -15,6 +15,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
   const [isOwnVehicle, setIsOwnVehicle] = useState(false);
+  const [isSold, setIsSold] = useState(false);
 
   useEffect(() => {
     const fetchVehicleDetails = async () => {
@@ -25,8 +26,15 @@ const VehicleDetailScreen = ({ route, navigation }) => {
           const vehicleData = vehicleDoc.data();
           setVehicle(vehicleData);
 
+          // Check if vehicle is sold
+          if (vehicleData.status === 'sold') {
+            setIsSold(true);
+          }
+
           const currentUser = auth().currentUser;
-          if (currentUser && currentUser.uid === vehicleData.sellerId) {
+          // Check ownership: use currentOwnerId (new) or sellerId (legacy)
+          const ownerId = vehicleData.currentOwnerId || vehicleData.sellerId;
+          if (currentUser && currentUser.uid === ownerId) {
             setIsOwnVehicle(true);
           }
         }
@@ -146,10 +154,22 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         backgroundColor: theme.colors.background.primary,
         ...theme.shadows.card,
       }]}>
+        {isSold && (
+          <Text style={[styles.soldMessage, {
+            fontSize: theme.typography.fontSize.body,
+            fontWeight: theme.typography.fontWeight.semiBold,
+            color: theme.colors.danger.main,
+            textAlign: 'center',
+            marginBottom: theme.spacing.sm,
+          }]}>
+            이미 판매된 차량입니다
+          </Text>
+        )}
         <Button
           variant="primary"
           title={isOwnVehicle ? '판매 상담 신청' : '구매 상담 신청'}
           onPress={handleConsultationRequest}
+          disabled={isSold}
         />
       </View>
     </SafeAreaView>
@@ -193,6 +213,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  soldMessage: {},
 });
 
 export default VehicleDetailScreen;

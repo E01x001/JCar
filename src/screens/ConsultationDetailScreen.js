@@ -48,7 +48,7 @@ const ConsultationDetailScreen = ({ route }) => {
       <Text>전화번호: {consultation.userPhone}</Text>
       <Text>차량명: {consultation.vehicleName}</Text>
       <Text>상담 일정: {consultation.preferredDate} {consultation.preferredTime}</Text>
-      <Text>상태: {consultation.status}</Text>
+      <Text>상태: {consultation.consultationStatus}</Text>
     </View>
   );
 };
