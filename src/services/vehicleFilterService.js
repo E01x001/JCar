@@ -1,5 +1,5 @@
 // src/services/vehicleFilterService.js
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, orderBy, getDocs, onSnapshot } from '@react-native-firebase/firestore';
 
 /**
  * 필터를 적용하여 차량 목록 조회
@@ -16,10 +16,11 @@ import firestore from '@react-native-firebase/firestore';
  */
 export const getFilteredVehicles = async (filters) => {
   try {
+    const db = getFirestore();
+    const vehiclesRef = collection(db, 'vehicles');
+
     // 기본 쿼리: 승인된 차량만
-    let query = firestore()
-      .collection('vehicles')
-      .where('status', '==', 'approved');
+    const queryConstraints = [where('status', '==', 'approved')];
 
     // Firestore 쿼리로 처리할 수 있는 필터
     // 가격 필터 (Firestore에서 처리)
@@ -27,20 +28,21 @@ export const getFilteredVehicles = async (filters) => {
     const maxPrice = filters.maxPrice ? parseInt(filters.maxPrice) * 10000 : null;
 
     if (minPrice) {
-      query = query.where('price', '>=', minPrice);
+      queryConstraints.push(where('price', '>=', minPrice));
     }
     if (maxPrice) {
-      query = query.where('price', '<=', maxPrice);
+      queryConstraints.push(where('price', '<=', maxPrice));
     }
 
     // 정렬 적용
     if (filters.sortBy) {
       const [field, direction] = filters.sortBy.split('_');
-      query = query.orderBy(field, direction === 'asc' ? 'asc' : 'desc');
+      queryConstraints.push(orderBy(field, direction === 'asc' ? 'asc' : 'desc'));
     }
 
     // 쿼리 실행
-    const snapshot = await query.get();
+    const q = query(vehiclesRef, ...queryConstraints);
+    const snapshot = await getDocs(q);
 
     let vehicles = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -82,30 +84,33 @@ export const getFilteredVehicles = async (filters) => {
  */
 export const subscribeToFilteredVehicles = (filters, callback) => {
   try {
+    const db = getFirestore();
+    const vehiclesRef = collection(db, 'vehicles');
+
     // 기본 쿼리: 승인된 차량만
-    let query = firestore()
-      .collection('vehicles')
-      .where('status', '==', 'approved');
+    const queryConstraints = [where('status', '==', 'approved')];
 
     // 가격 필터 (Firestore에서 처리)
     const minPrice = filters.minPrice ? parseInt(filters.minPrice) * 10000 : null;
     const maxPrice = filters.maxPrice ? parseInt(filters.maxPrice) * 10000 : null;
 
     if (minPrice) {
-      query = query.where('price', '>=', minPrice);
+      queryConstraints.push(where('price', '>=', minPrice));
     }
     if (maxPrice) {
-      query = query.where('price', '<=', maxPrice);
+      queryConstraints.push(where('price', '<=', maxPrice));
     }
 
     // 정렬 적용
     if (filters.sortBy) {
       const [field, direction] = filters.sortBy.split('_');
-      query = query.orderBy(field, direction === 'asc' ? 'asc' : 'desc');
+      queryConstraints.push(orderBy(field, direction === 'asc' ? 'asc' : 'desc'));
     }
 
     // 실시간 구독
-    const unsubscribe = query.onSnapshot(
+    const q = query(vehiclesRef, ...queryConstraints);
+    const unsubscribe = onSnapshot(
+      q,
       (snapshot) => {
         let vehicles = snapshot.docs.map(doc => ({
           id: doc.id,
