@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Button, Alert, ActivityIndicator } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, getDoc } from '@react-native-firebase/firestore';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
 const UpdateChecker = () => {
@@ -15,9 +15,11 @@ const UpdateChecker = () => {
 
   const checkForUpdate = async () => {
     try {
+      // const db = getFirestore();
       // const localVersion = DeviceInfo.getVersion();
-      // const doc = await firestore().collection('app_settings').doc('latest_version').get();
-      // const data = doc.data();
+      // const versionDocRef = doc(db, 'app_settings', 'latest_version');
+      // const versionDoc = await getDoc(versionDocRef);
+      // const data = versionDoc.data();
       // if (data && data.version && isVersionNewer(data.version, localVersion)) {
       //   setUpdateInfo(data);
       // }
