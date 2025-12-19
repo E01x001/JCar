@@ -66,14 +66,16 @@ service cloud.firestore {
     // Admin-only fields: rejectionReason, adminMemo, alternativeSlots
     // Task 47 fields: isOwnershipTransferred, transferId, dealAmount
     match /consultation_requests/{requestId} {
-      // Read access (Task 54, Task 62):
+      // Read access (Task 54):
       // 1. User who created the request (userId)
-      // 2. Vehicle seller/owner (if type is 'buy')
+      // 2. Vehicle seller/owner (if type is 'sell')
       // 3. Admins
-      // 4. Any authenticated user (for time conflict checking)
-      // Note: #4 is safe because checkTimeConflict queries only return documents
-      // matching specific vehicleId/date/time, not exposing other users' personal info
-      allow read: if request.auth != null;
+      allow read: if request.auth != null &&
+        (
+          request.auth.uid == resource.data.userId ||
+          (resource.data.type == 'sell' && request.auth.uid == resource.data.get('sellerId', '')) ||
+          isAdmin()
+        );
 
       // Only active users can create requests for themselves
       allow create: if request.auth != null &&
@@ -107,10 +109,11 @@ service cloud.firestore {
                        request.resource.data.consultationStatus == 'pending' &&
                        request.resource.data.preferredDate is string &&
                        request.resource.data.preferredTime is string &&
-                       // Ensure user cannot set admin-only or ownership fields
-                       !('rejectionReason' in request.resource.data) &&
-                       !('alternativeSlots' in request.resource.data) &&
-                       !('rejectedAt' in request.resource.data) &&
+                       // Ensure user cannot set (but can delete) admin-only or ownership fields
+                       // Allow deletion by checking that if field exists in request, it must be null/deleted
+                       (!('rejectionReason' in request.resource.data) || request.resource.data.rejectionReason == null) &&
+                       (!('alternativeSlots' in request.resource.data) || request.resource.data.alternativeSlots == null) &&
+                       (!('rejectedAt' in request.resource.data) || request.resource.data.rejectedAt == null) &&
                        !('isOwnershipTransferred' in request.resource.data) &&
                        !('transferId' in request.resource.data) &&
                        !('dealAmount' in request.resource.data));

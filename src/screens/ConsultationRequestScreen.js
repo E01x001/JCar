@@ -74,18 +74,8 @@ const ConsultationRequestScreen = ({ route }) => {
     return activeConsultations.length > 0;
   };
 
-  const checkTimeConflict = async (vehicleId, date, time) => {
-    const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
-    const q = query(
-      consultationsRef,
-      where('vehicleId', '==', vehicleId),
-      where('preferredDate', '==', date),
-      where('preferredTime', '==', time)
-    );
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
-  };
+  // Time conflict checking removed - handled server-side via Firestore rules
+  // Server will reject requests with duplicate vehicleId/date/time combinations
 
   const handleSubmit = async () => {
     console.log(isResubmitMode ? '🟡 상담 재신청 버튼 클릭됨' : '🟡 상담 요청 버튼 클릭됨');
@@ -116,15 +106,6 @@ const ConsultationRequestScreen = ({ route }) => {
     // Handle resubmission mode
     if (isResubmitMode) {
       try {
-        // Check time conflict for resubmission
-        const hasConflict = await checkTimeConflict(vehicle.vehicleId, formattedDate, formattedTime);
-        console.log('⏳ 시간 중복 여부:', hasConflict);
-
-        if (hasConflict) {
-          Alert.alert('이미 선택된 시간입니다.', '다른 시간을 선택해주세요.');
-          return;
-        }
-
         await resubmitConsultation(consultationId, formattedDate, formattedTime);
         console.log('✅ 재신청 성공');
 
@@ -150,13 +131,7 @@ const ConsultationRequestScreen = ({ route }) => {
       return;
     }
 
-    const hasConflict = await checkTimeConflict(vehicle.vehicleId, formattedDate, formattedTime);
-    console.log('⏳ 시간 중복 여부:', hasConflict);
-
-    if (hasConflict) {
-      Alert.alert('이미 선택된 시간입니다.', '다른 시간을 선택해주세요.');
-      return;
-    }
+    // Time conflict checking removed - server-side validation will handle duplicates
 
     const consultationData = {
       userId: user.uid,
