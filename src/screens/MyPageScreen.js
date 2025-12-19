@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
 import auth from '@react-native-firebase/auth';
-import firestore, { collection, query, where, onSnapshot, orderBy, getDocs, writeBatch } from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot, orderBy, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -30,7 +30,9 @@ const MyPageScreen = ({ navigation }) => {
   useEffect(() => {
     if (!user) {return () => {};}
 
-    const vehiclesQuery = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+    const db = getFirestore();
+    const vehiclesRef = collection(db, 'vehicles');
+    const vehiclesQuery = query(vehiclesRef, where('sellerId', '==', user.uid));
     const unsubscribeVehicles = onSnapshot(vehiclesQuery, snapshot => {
       if (snapshot) {
         const vehicleList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -42,8 +44,9 @@ const MyPageScreen = ({ navigation }) => {
       crashlytics().log('MyPageScreen: Vehicle snapshot error');
     });
 
+    const consultationsRef = collection(db, 'consultation_requests');
     const consultationsQuery = query(
-      collection(firestore(), 'consultation_requests'),
+      consultationsRef,
       where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
@@ -127,10 +130,12 @@ const MyPageScreen = ({ navigation }) => {
         text: '탈퇴', style: 'destructive', onPress: async () => {
           if (!user) {return;}
           try {
-            const q = query(collection(firestore(), 'vehicles'), where('sellerId', '==', user.uid));
+            const db = getFirestore();
+            const vehiclesRef = collection(db, 'vehicles');
+            const q = query(vehiclesRef, where('sellerId', '==', user.uid));
             const querySnapshot = await getDocs(q);
 
-            const batch = writeBatch(firestore());
+            const batch = writeBatch(db);
             querySnapshot.forEach(documentSnapshot => batch.delete(documentSnapshot.ref));
             await batch.commit();
 
