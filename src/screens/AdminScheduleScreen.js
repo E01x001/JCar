@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFirestore, collection, onSnapshot, doc, updateDoc } from '@react-native-firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -64,10 +64,22 @@ const AdminScheduleScreen = () => {
     try {
       const db = getFirestore();
       const docRef = doc(db, 'consultation_requests', id);
+
+      // Check if document exists before updating
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        Alert.alert('오류', '상담 요청을 찾을 수 없습니다.');
+        return;
+      }
+
       await updateDoc(docRef, { consultationStatus: status });
+
+      // Provide user feedback
+      const statusText = status === 'approved' ? '승인' : status === 'rejected' ? '거절' : status;
+      Alert.alert('완료', `상담 요청이 ${statusText}되었습니다.`);
     } catch (error) {
-      Alert.alert('오류', '상태 변경 실패');
-      console.error(error);
+      Alert.alert('오류', '상태 변경 중 문제가 발생했습니다.');
+      console.error('AdminScheduleScreen: Failed to update status', error);
     }
   };
 

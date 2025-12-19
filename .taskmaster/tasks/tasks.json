@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Security Hardening: Remove Exposed Credentials and Secure Environment",
         "description": "Remove the exposed GitHub Personal Access Token (PAT) from the codebase and ensure the .env file is properly ignored by version control to prevent future credential leaks.",
         "details": "1. Locate the .env file containing the exposed GitHub PAT. 2. Remove the PAT from the file. If it's needed for a dependency, source it from a secure environment variable provider or a secure secret management system. 3. Ensure the `.gitignore` file at the root of the project contains a line for `.env` and `*.env`. 4. Verify that no history of the .env file exists in the Git repository. If it does, the history must be rewritten using tools like `git filter-repo` or BFG Repo-Cleaner to completely remove the sensitive data. 5. Rotate the leaked PAT on GitHub immediately.",
@@ -78,7 +78,7 @@
         "updatedAt": "2025-11-26T16:56:17.277Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Implement Firestore Security Rules",
         "description": "Define and apply Firestore security rules for the users, vehicles, and consultation_requests collections to enforce proper access control and data validation.",
         "details": "Develop and deploy `firestore.rules`. The rules should enforce that: \n- `users`: A user can only read/write their own document (`allow read, write: if request.auth.uid == userId;`). Publicly readable fields should be explicitly allowed. \n- `vehicles`: Any authenticated user can read vehicle documents. Only authorized admins or the vehicle owner (if allowed) can create/update/delete. Writes should validate data types (e.g., `price` is a number). \n- `consultation_requests`: Users can only create requests for themselves. They can only read their own requests. Admins should have read/write access to all requests. \n- `Firebase Storage`: Rules for image uploads should ensure that only authenticated users can upload images and that file size and type are validated.",
@@ -156,7 +156,7 @@
         "updatedAt": "2025-11-27T01:07:03.819Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Implement Global Error Handling & Logging",
         "description": "Establish a comprehensive error handling and logging strategy using a global error boundary and a structured logging service like Firebase Crashlytics.",
         "details": "1. Integrate `react-native-firebase/app` and `react-native-firebase/crashlytics`. Follow the setup instructions for both Android and iOS. 2. Create a global error boundary component using a class component with `componentDidCatch`. This boundary should wrap the root `App` component. When it catches an error, it should log the error to Crashlytics (`crashlytics().recordError(error)`) and display a user-friendly fallback UI. 3. Wrap all Firebase API calls (Firestore, Auth, Storage) in try/catch blocks. In the catch block, log the error to Crashlytics and display a localized, user-friendly message to the user via a toast or alert.",
@@ -233,7 +233,7 @@
         "updatedAt": "2025-11-27T04:30:00.578Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "Setup Testing Framework and Code Quality Tools",
         "description": "Configure Jest for unit testing, ESLint for static code analysis, and Husky for pre-commit hooks to enforce code quality and testing standards.",
         "details": "1. **Jest**: Install Jest and the `react-native` preset. Configure `jest.config.js` to set up mocks for native modules and assets. 2. **ESLint**: Initialize ESLint with a recommended ruleset like `@react-native-community/eslint-config`. Create a `.eslintrc.js` file and add rules to enforce project coding standards. Add an `npm run lint` script to `package.json`. 3. **Husky**: Install Husky and `lint-staged`. Configure a `pre-commit` hook in the Husky configuration to run ESLint and Jest on staged files (`npx lint-staged`). This will prevent commits with linting errors or failing tests.",
@@ -308,7 +308,7 @@
         "updatedAt": "2025-11-27T04:49:06.599Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "Implement Push Notification System using FCM",
         "description": "Integrate Firebase Cloud Messaging (FCM) to send and receive push notifications for critical app events, such as consultation status changes.",
         "details": "1. Add the `@react-native-firebase/messaging` package. 2. Configure FCM for the Android project by adding the necessary dependencies and plugins in `build.gradle` files. 3. In the app's entry point, implement logic to request notification permissions from the user using `messaging().requestPermission()`. 4. Retrieve the device's FCM token using `messaging().getToken()` and store it in the corresponding user's document in Firestore. 5. Set up background and foreground message handlers (`messaging().onMessage()` and `messaging().setBackgroundMessageHandler()`) to process incoming notifications and display them to the user. 6. Create a Firebase Function triggered by updates to the `consultation_requests` collection to send notifications to relevant users.",
@@ -387,7 +387,7 @@
         "updatedAt": "2025-11-27T13:53:40.252Z"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "Write Unit Tests for Critical Functions",
         "description": "Write a suite of unit tests for existing critical business logic, focusing on services, formatters, and validators to improve code reliability.",
         "details": "Using the Jest framework set up in Task 4, create test files for the following: \n- `firebaseService.js`: Mock Firebase functions using `jest.mock` to test data fetching, vehicle registration, and consultation request logic without making actual API calls. \n- **Validators**: Test input validation functions for forms (e.g., email format, password strength, vehicle year). Test with both valid and invalid inputs. \n- **Formatters**: Test utility functions that format data for display (e.g., currency formatters for price, date formatters for timestamps).",
@@ -465,7 +465,7 @@
         "updatedAt": "2025-11-27T14:06:00.117Z"
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "Enhance Admin Management Features",
         "description": "Implement high-priority admin features, including emergency vehicle deletion and a user management interface for suspending or activating accounts.",
         "details": "1. **Emergency Delete**: In the admin panel's vehicle view, add a 'Delete' button. On click, it should trigger a Firebase Function that performs a hard delete of the vehicle document and its associated images in Firebase Storage. This action should be logged in an admin activity log collection. 2. **User Management**: Create a new screen in the admin panel to list all users. Implement functionality to search and filter users. Each user item should have a toggle/button to change a `status` field in their user document (e.g., from 'active' to 'suspended'). Firestore security rules must be updated to deny writes from suspended users.",
@@ -541,7 +541,7 @@
         "updatedAt": "2025-11-28T09:54:23.687Z"
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "Implement Advanced Vehicle Search and Filters",
         "description": "Develop an advanced search interface allowing users to filter and sort the vehicle list by multiple criteria such as price range, year, and manufacturer.",
         "details": "1. Create a 'Filter' modal or screen accessible from the main vehicle list. 2. Add UI components for filtering: sliders for price/year range, multi-select pickers for manufacturers. 3. When the user applies filters, construct a composite Firestore query. For example: `firestore().collection('vehicles').where('price', '>=', minPrice).where('price', '<=', maxPrice).orderBy('price').limit(20)`. Note Firestore's limitations on composite queries may require data duplication or a more advanced search solution like Algolia if complexity increases. 4. Implement sorting options (e.g., Price: Low to High) which will modify the `orderBy()` clause of the Firestore query.",
@@ -617,7 +617,7 @@
         "updatedAt": "2025-11-28T10:16:06.420Z"
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "Set Up CI/CD Pipeline with GitHub Actions",
         "description": "Automate the build, linting, and testing process for the Android application using a GitHub Actions workflow.",
         "details": "1. Create a `.github/workflows` directory in the project root. 2. Create a YAML file (e.g., `android-ci.yml`). 3. Define a workflow that triggers on `pull_request` to the `main` or `develop` branch. 4. The workflow should have jobs for: \n   - `setup`: Check out the code, set up Node.js, and install npm dependencies. \n   - `lint`: Run the ESLint checks (`npm run lint`). \n   - `test`: Run the Jest unit tests (`npm run test`). \n   - `build`: Assemble the Android debug build (`cd android && ./gradlew assembleDebug`) to ensure the project builds successfully.",
@@ -696,7 +696,7 @@
         "updatedAt": "2025-11-28T10:06:38.763Z"
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "Prepare Android for Production Release",
         "description": "Configure the Android project for a production release, including setting up app signing, enabling code shrinking, and generating a signed Android App Bundle (AAB).",
         "details": "1. **Keystore**: Generate a private signing key using `keytool`. Store the keystore file and its credentials securely (e.g., using environment variables or a secret manager), not in the repository. 2. **Gradle Configuration**: In `android/app/build.gradle`, create a signing configuration that loads the keystore credentials. Apply this signing config to the `release` build type. 3. **ProGuard/R8**: Enable code shrinking and obfuscation for the release build by setting `minifyEnabled true` in the `release` build type. Add any necessary ProGuard rules to `proguard-rules.pro` to prevent vital code from being stripped. 4. **Generate AAB**: Run the command `./gradlew bundleRelease` from the `android` directory to generate the signed AAB file, which will be located in `android/app/build/outputs/bundle/release/`.",
@@ -775,7 +775,7 @@
         "updatedAt": "2025-11-28T10:13:00.536Z"
       },
       {
-        "id": "11",
+        "id": 11,
         "title": "Establish Design System Foundation (Theme)",
         "description": "Create the core theme files for the design system, including color palettes, typography, spacing, border radius, and shadow styles. This will serve as the single source of truth for all UI styling.",
         "details": "Create a `src/theme` directory. Inside, create separate files for each design token category: `colors.js`, `typography.js`, `spacing.js`, `shadows.js`, `borderRadius.js`. Export constants from each file. For example, in `colors.js`: `export const colors = { primary: '#2B4593', success: '#28A745', ... }`. Create a main `index.js` in `src/theme` that exports all tokens as a single theme object. Use React's Context API to provide this theme object to the entire application tree via a `ThemeProvider` component.",
@@ -851,7 +851,7 @@
         "updatedAt": "2025-11-29T11:33:07.789Z"
       },
       {
-        "id": "12",
+        "id": 12,
         "title": "Develop Unified Button Component",
         "description": "Create a single, reusable Button component that supports all variants (Primary, Secondary, Danger, Success, Text) and states (Default, Hover, Pressed, Disabled) defined in the PRD.",
         "details": "Create a `src/components/Button.js` file. The component should accept props like `variant`, `onPress`, `disabled`, and `title`. Use the theme values from the context for styling. Implement dynamic styling based on the `variant` prop. For example: `const getBackgroundColor = () => { switch(variant) { case 'primary': return theme.colors.primary; case 'danger': return theme.colors.danger; default: return 'transparent'; } };`. Use `Pressable` to handle states like `onPressIn` and `onPressOut` to apply pressed styles (scale transform).",
@@ -928,7 +928,7 @@
         "updatedAt": "2025-11-29T11:46:30.533Z"
       },
       {
-        "id": "13",
+        "id": 13,
         "title": "Develop Unified Input Field Component",
         "description": "Create a reusable text input component with consistent styling for default, focus, and error states as specified in the PRD.",
         "details": "Create `src/components/InputField.js`. This component will wrap React Native's `TextInput`. It should accept props like `value`, `onChangeText`, `placeholder`, `error` (a string for the error message), etc. Use the `useState` hook to track focus state (`onFocus`, `onBlur`). Apply conditional styling based on focus and the presence of the `error` prop. The error message should be displayed below the input field using the 'Danger' color. All styling (height, padding, border radius, colors) should come from the theme.",
@@ -1006,7 +1006,7 @@
         "updatedAt": "2025-11-29T11:47:19.263Z"
       },
       {
-        "id": "14",
+        "id": 14,
         "title": "Develop Card and Status Badge Components",
         "description": "Create reusable Card and Badge components. The Card will be a container for content sections, and the Badge will be used to display status labels like '대기중', '승인', etc.",
         "details": "For `src/components/Card.js`, create a `View` with styles defined by the PRD (background, border radius, padding, shadow). It should accept `children` to render any content inside. For `src/components/Badge.js`, the component should take a `status` prop ('waiting', 'approved', 'rejected', 'completed'). Based on the status, it should apply the corresponding semantic color from the theme (Warning for waiting, Success for approved, etc.) for its background. All styling should be derived from the theme.",
@@ -1083,7 +1083,7 @@
         "updatedAt": "2025-11-29T11:48:16.021Z"
       },
       {
-        "id": "15",
+        "id": 15,
         "title": "Refactor Login and Sign-up Screens",
         "description": "Apply the new design system to the Login and Sign-up screens, replacing existing elements with the new unified Button and Input Field components and adjusting layout spacing.",
         "details": "Navigate to the authentication screen files. Replace all `<Button>` and `<TextInput>` instances with the new `<Button>` and `<InputField>` components. Use the 'primary' variant for the main action button and 'text' variant for links like '비밀번호 찾기'. Remove any hardcoded style values and use spacing tokens from the theme for margins and paddings between the logo, input fields, and buttons as per the PRD.",
@@ -1163,7 +1163,7 @@
         "updatedAt": "2025-11-29T17:31:31.472Z"
       },
       {
-        "id": "16",
+        "id": 16,
         "title": "Refactor Vehicle List and Detail Screens",
         "description": "Update the Vehicle List and Detail screens using the new design system components, including Card, Badge, and standardized typography and layout.",
         "details": "On the Vehicle List screen, wrap each list item in the new `<Card>` component. Use theme spacing for gaps between cards. Re-style the header according to the PRD. Inside the card, use the `<Badge>` for vehicle type and apply H3/Body typography from the theme. On the Vehicle Detail screen, structure content into sections with H4 titles. Use the theme for padding and spacing. Implement the fixed bottom action button using the primary `<Button>` component.",
@@ -1239,7 +1239,7 @@
         "updatedAt": "2025-11-29T17:37:40.737Z"
       },
       {
-        "id": "17",
+        "id": 17,
         "title": "Implement Standardized Navigation Headers and Tab Bar",
         "description": "Apply a consistent design to the global navigation header and bottom tab bar across the application, using the styles defined in the PRD.",
         "details": "This task likely involves configuring the navigation library (e.g., React Navigation). Define a common `headerStyle` object using theme colors (`primary` for background, `white` for text) and apply it as a default screen option. For the tab bar, configure `tabBarOptions` or `tabBarStyle` to set the background, height, and active/inactive tint colors using the theme. The active tab's top border can be implemented using a custom tab bar component if the library doesn't support it directly.",
@@ -1318,7 +1318,7 @@
         "updatedAt": "2025-11-29T17:40:54.287Z"
       },
       {
-        "id": "18",
+        "id": 18,
         "title": "Create Interaction State Components (Loading, Empty, Error)",
         "description": "Develop reusable components for displaying global loading spinners, skeleton loaders for lists, and full-page empty/error states.",
         "details": "1. `GlobalLoader`: A modal overlay with a semi-transparent background and an `ActivityIndicator` using the theme's primary color. 2. `SkeletonLoader`: A component that mimics the layout of a `<Card>` but with placeholder shapes and a shimmering animation. 3. `StateScreen`: A generic component accepting `icon`, `title`, `message`, and `onRetry` props to display consistent empty or error screens. It should use the secondary `<Button>` for the retry action.",
@@ -1396,7 +1396,7 @@
         "updatedAt": "2025-11-29T23:51:24.886Z"
       },
       {
-        "id": "19",
+        "id": 19,
         "title": "Implement Global Toast Message System",
         "description": "Set up a global system to display toast messages for success, error, and info feedback, accessible from anywhere in the app.",
         "details": "Use a library like `react-native-toast-message` or build a custom solution using a global context provider. Create a `ToastProvider` at the app's root. Define custom toast types ('success', 'danger', 'info') that map to the semantic colors in the theme. Expose a hook like `useToast()` which provides functions (`toast.showSuccess(message)`, `toast.showError(message)`) to trigger toasts from any component.",
@@ -1475,7 +1475,7 @@
         "updatedAt": "2025-11-29T23:47:50.173Z"
       },
       {
-        "id": "20",
+        "id": 20,
         "title": "Refactor MyPage and Admin Screens",
         "description": "Apply the new design system and components to the MyPage and Admin screens to ensure full app consistency.",
         "details": "For MyPage, use the `<Card>` component for the user info section and for each menu list item. Use appropriate button variants for 'Logout' (Secondary) and '회원탈퇴' (Danger Text). For Admin screens, implement the tab bar styling with the primary color bottom border for the active tab. Replace list items and buttons with the new `<Card>`, `<Badge>`, and `<Button>` (Success/Danger) components to standardize the interface.",
@@ -1553,7 +1553,7 @@
         "updatedAt": "2025-11-29T23:56:59.781Z"
       },
       {
-        "id": "21",
+        "id": 21,
         "title": "Resolve Dependabot Security Alerts",
         "description": "Review and resolve 8 security vulnerabilities (2 high, 3 moderate, 3 low) reported by GitHub Dependabot by updating npm packages and ensuring application stability.",
         "details": "This task addresses security vulnerabilities identified in project dependencies. First, review all open alerts at https://github.com/E01x001/JCar/security/dependabot. Create a dedicated branch for this work (e.g., `fix/dependabot-vulns`). Use `npm audit` to get a detailed report locally. Address the vulnerabilities starting with the 'high' severity alerts, then 'moderate', and finally 'low'. Update packages individually or in small, logical groups using `npm install <package-name>@latest`. After each update, run `npm install` to regenerate the `package-lock.json` file. For any major version updates, consult the package's release notes for potential breaking changes. IMPORTANT: This is a special maintenance task and should not be completed until explicitly requested by the project lead.\n<info added on 2025-11-30T13:54:07.600Z>\n⚠️ SPECIAL TASK: Do not complete until user requests. 8 vulnerabilities detected (2 high, 3 moderate, 3 low). See: https://github.com/E01x001/JCar/security/dependabot\n</info added on 2025-11-30T13:54:07.600Z>",
@@ -1567,7 +1567,7 @@
         "updatedAt": "2025-12-05T02:51:24.848Z"
       },
       {
-        "id": "22",
+        "id": 22,
         "title": "Implement Tab View on MyPage Screen for Improved UX",
         "description": "Refactor the MyPage screen to use a tab-based navigation for separating 'Buy Consultations', 'Sell Consultations', and 'My Vehicles'. This will replace the current single scroll view, improving UI clarity and user experience.",
         "details": "First, install and configure the 'react-native-tab-view' library. Refactor the existing MyPageScreen.js to serve as the main container, keeping the top user info card (from Task 20) positioned above the new tab view. Create three new child components: BuyConsultationsTab.js, SellConsultationsTab.js, and MyVehiclesTab.js. Each of these components will be responsible for fetching and displaying its respective data in a FlatList, reusing the standardized <Card> component (from Task 14) for list items. In MyPageScreen.js, implement the TabView component, configure the routes for the three tabs, and pass the new components as the scenes. The tab bar should be styled using the application theme (from Task 11), with the active tab indicator using the 'primary' theme color. For the 'Buy' and 'Sell' tabs, fetch the count of items and pass it to a custom tab bar renderer to display a numeric <Badge> component. Ensure the 'Logout' and 'Account Deletion' buttons remain accessible, positioned below the tab view container.",
@@ -1643,7 +1643,7 @@
         "updatedAt": "2025-12-02T03:05:38.980Z"
       },
       {
-        "id": "23",
+        "id": 23,
         "title": "Fix Permission-Denied Error on Logout from Uncleaned Firestore Listeners",
         "description": "Resolve a 'permission-denied' error that occurs on user logout by refactoring useEffect hooks in multiple screens to ensure Firestore snapshot listeners are always properly unsubscribed.",
         "details": "A 'permission-denied' error is being thrown from Firestore when a user logs out because active snapshot listeners are not being cleaned up. This happens in useEffect hooks that have an early return when the user object becomes null, which prevents the cleanup function from being registered. The fix is to refactor all affected hooks to ensure they always return a cleanup function. \n\nProblematic Pattern:\n```javascript\nuseEffect(() => {\n  if (!user) {\n    return; // This prevents the cleanup function for the previous effect from running\n  }\n  const unsubscribe = onSnapshot(query, ...);\n  return () => {\n    unsubscribe();\n  };\n}, [user]);\n```\n\nRequired Refactor:\n```javascript\nuseEffect(() => {\n  if (!user) {\n    return () => {}; // Always return a function, even if it's empty\n  }\n  const unsubscribe = onSnapshot(query, ...);\n  return () => {\n    unsubscribe();\n  };\n}, [user]);\n```\n\nAffected Files:\n- src/screens/MyPageScreen.js (2 listeners: vehicles, consultations)\n- src/screens/AdminConsultationScreen.js (1 listener)\n- src/screens/AdminPageScreen.js (1 listener)\n- src/screens/AdminScheduleScreen.js (1 listener)\n- src/screens/MyVehiclesScreen.js (1 listener)",
@@ -1713,7 +1713,7 @@
         ]
       },
       {
-        "id": "24",
+        "id": 24,
         "title": "Fix Security Vulnerabilities in Password Reset Functionality",
         "description": "Address multiple security vulnerabilities in the password reset process, including email enumeration and lack of input validation. This task involves generalizing user feedback messages, implementing rate limiting, and cleaning up redundant code.",
         "details": "In `src/screens/ForgotPasswordScreen.js`, implement client-side email format validation using a regular expression before calling the Firebase service. Upon submission, regardless of whether the email exists in the database, display a generic message using the global toast system (Task 19), such as 'If your email is registered, you will receive a password reset link.' This prevents email enumeration attacks. Additionally, implement simple rate-limiting by disabling the submit button for 30 seconds after a request is made. In `src/services/firebaseService.js`, identify and remove the unused, duplicate `sendPasswordResetEmail` function to reduce code redundancy and potential confusion.",
@@ -1785,7 +1785,7 @@
         ]
       },
       {
-        "id": "25",
+        "id": 25,
         "title": "Refactor AdminVehiclesListScreen with JCar Design System",
         "description": "Overhaul the AdminVehiclesListScreen to align with the user-facing visual style by implementing the JCar Design System. This involves replacing hardcoded styles and plain components with themed, standardized components for layout, vehicle items, and actions.",
         "details": "Refactor the entire screen, starting with the root view. Replace the current root with `<SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background.secondary }}>`. Use a FlatList to render vehicle items. Each item, previously a View, should be wrapped in a `<Card>` component. Inside the card, display vehicle details using `<theme.typography.Body>` and similar components. The vehicle type should be rendered using `<Badge text={item.vehicleType} />`. The delete button must be replaced with `<Button variant=\"danger\" onPress={() => handleDelete(item.id)}>Delete</Button>`. For loading states, use the `<SkeletonLoader>` component, displaying 3-4 placeholder cards. For the empty state, conditionally render `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다.\" />` when the vehicle list is empty. Add a header card with `<Card><theme.typography.H4>차량 관리</theme.typography.H4></Card>`.",
@@ -1855,7 +1855,7 @@
         ]
       },
       {
-        "id": "26",
+        "id": 26,
         "title": "Refactor AdminVehicleDetailScreen with JCar Design System",
         "description": "Rebuild the AdminVehicleDetailScreen to use `Card` components for information grouping and apply the JCar Design System for all UI elements, including typography, spacing, and colors. This will eliminate hardcoded styles and improve visual consistency.",
         "details": "Replace the main container with a themed view, likely a `ScrollView`. Group related information ('차량 정보', '부품 정보', '등록자 정보') into separate `<Card>` components, each with a title using `<theme.typography.H5>`. Use `<Badge>` components to display the vehicle type and status. The current loading text should be replaced with a full-screen `<StateScreen icon=\"directions-car\" message=\"Loading vehicle details...\" />`. Remove the manually implemented back button and ensure the screen relies on the default React Navigation header. All `Text` components must be replaced with the appropriate components from `theme.typography` (e.g., `Body`, `Caption`). All padding and margin values must be derived from `theme.spacing`.",
@@ -1869,7 +1869,7 @@
         "updatedAt": "2025-12-03T16:55:05.545Z"
       },
       {
-        "id": "27",
+        "id": 27,
         "title": "Enhance AdminScheduleScreen with Design System Components",
         "description": "Refactor the AdminScheduleScreen to standardize the display of consultation items and actions using `Card` and `Button` components from the JCar Design System. Integrate the theme for calendar markers and handle empty states.",
         "details": "Use the `react-native-calendars` library, which is likely already in use, and provide a `theme` prop to style it. The theme object should map calendar-specific keys to `theme.colors`. Example: `markedDates` should use `theme.colors.primary.main` for selected, `theme.colors.feedback.success` for approved, etc. Each consultation item in the list for a selected date should be wrapped in a `<Card>`. The 'Approve' and 'Reject' actions, currently `TouchableOpacity`, must be replaced with `<Button variant=\"success\">Approve</Button>` and `<Button variant=\"danger\">Reject</Button>`. When a date is selected that has no consultations, display the `<StateScreen icon=\"event-busy\" title=\"No consultations scheduled\" />`.",
@@ -1881,7 +1881,7 @@
         "updatedAt": "2025-12-02T09:08:07.973Z"
       },
       {
-        "id": "28",
+        "id": 28,
         "title": "Polish AdminPageScreen for Visual Consistency",
         "description": "Perform minor but important UI cleanup on the AdminPageScreen to align it with other refactored admin screens. This includes removing informal elements like emojis and ensuring standardized components like `Badge` and `StateScreen` are used.",
         "details": "Locate the Crashlytics test button and update its text to remove the '🧪' emoji, rewording to 'Test Crashlytics' if necessary. In the vehicle list section on this screen, map over the vehicles and render a `<Badge text={item.vehicleType} />` for each item, similar to the main vehicle list. Implement the empty state for this list by conditionally rendering `<StateScreen icon=\"directions-car\" title=\"등록된 차량이 없습니다\" />` when the user has no registered vehicles. Review all spacing on the `Card` components to ensure it matches the standard `theme.spacing` values used on other screens.",
@@ -1893,7 +1893,7 @@
         "updatedAt": "2025-12-03T16:56:31.117Z"
       },
       {
-        "id": "29",
+        "id": 29,
         "title": "Implement Filter and Search on AdminVehiclesListScreen",
         "description": "Enhance the AdminVehiclesListScreen by adding controls to filter the list by vehicle status and type, and a search bar to find vehicles by name or manufacturer. The filter state should be preserved during the user's session.",
         "details": "Above the `FlatList` on `AdminVehiclesListScreen`, add a search bar using a themed `<TextInput icon=\"search\">`. Below it, add a horizontal `ScrollView` containing filter chips for status and type. These can be implemented using `<TouchableOpacity>` styled to look like chips, or a dedicated `<FilterChip>` component if one exists in the design system. Manage the active filters and search query using `useState` hooks. The data fetching logic from Firestore should be updated to incorporate these state values into the query using `.where()` clauses. To persist state, consider passing filter values via React Navigation params or using a simple state management solution like a React Context provider scoped to the admin stack.",
@@ -1971,7 +1971,7 @@
         "updatedAt": "2025-12-05T04:09:54.580Z"
       },
       {
-        "id": "30",
+        "id": 30,
         "title": "Add Statistics Dashboard Cards to List Screens",
         "description": "Display high-level summary statistics on the AdminVehiclesListScreen and AdminConsultationScreen using `Card` components to give admins a quick overview of key metrics like total counts and status breakdowns.",
         "details": "On `AdminVehiclesListScreen`, fetch aggregate data from Firestore. This may require a separate query or could be calculated client-side if the dataset is small. Display the counts (Total, Pending, Approved, Rejected) in a horizontal `ScrollView` of `<Card>` components at the top of the screen. Each card should contain an icon from `@expo/vector-icons/MaterialIcons` (e.g., 'directions-car' for total) and the statistic. Repeat this process for `AdminConsultationScreen`, showing counts for total consultations and breakdowns by status. The data should update in real-time by listening to Firestore collection changes.",
@@ -2042,7 +2042,7 @@
         ]
       },
       {
-        "id": "31",
+        "id": 31,
         "title": "Implement Pull-to-Refresh on Admin Lists",
         "description": "Add pull-to-refresh functionality to all `FlatList` and `ScrollView` components on admin screens to provide a standard way for users to manually refresh data from Firestore.",
         "details": "For each screen containing a `FlatList` (`AdminVehiclesListScreen`, `AdminScheduleScreen`, `AdminPageScreen`), add the `RefreshControl` component from 'react-native'. Pass it to the `refreshControl` prop of the list. The `RefreshControl` should have its `refreshing` prop tied to a state variable (e.g., `isRefreshing`) and its `onRefresh` prop should call the function that re-fetches the data from Firestore. Set the `colors` prop of `RefreshControl` to `[theme.colors.primary.main]` to match the app theme. The data fetching function called by `onRefresh` should set `isRefreshing` to true at the beginning and false upon completion.",
@@ -2106,7 +2106,7 @@
         ]
       },
       {
-        "id": "32",
+        "id": 32,
         "title": "Conduct and Document Design System Compliance Audit",
         "description": "Perform a comprehensive audit of all admin screens to ensure they fully comply with the JCar Design System. Create a checklist to standardize the process and document any findings or necessary exceptions.",
         "details": "Create a checklist in a markdown file (e.g., `ADMIN_UI_AUDIT.md`). The checklist should include items for every requirement: usage of `SafeAreaView`, `theme.colors`, `theme.typography`, `theme.spacing`, and components like `Card`, `Badge`, `Button`, `StateScreen`. Manually go through each admin screen (`AdminVehiclesListScreen`, `AdminVehicleDetailScreen`, `AdminScheduleScreen`, `AdminPageScreen`) and check off each item. Use a tool like `react-native-debugger` to inspect styles and ensure no hardcoded values remain. Any identified deviations should be fixed. If a deviation is intentional and necessary, it must be documented in the audit file with a clear justification.",
@@ -2123,7 +2123,7 @@
         "updatedAt": "2025-12-03T16:57:54.695Z"
       },
       {
-        "id": "33",
+        "id": 33,
         "title": "Update Firestore Schema: `consultation_requests` and `admin_owned_vehicles`",
         "description": "Update the `consultation_requests` collection with new fields for detailed status tracking and create the new `admin_owned_vehicles` collection to manage vehicles acquired by the admin.",
         "details": "In your Firestore service files, update the type definitions/interfaces for `ConsultationRequest` to include `consultationStatus`, `completedAt`, `completedBy`, `dealAmount`, and `adminNotes`. Create a new service file and type definition for `AdminOwnedVehicle` with fields: `vehicleId`, `vehicleName`, `purchasePrice`, `purchaseDate`, `consultationId`, `previousOwnerId`, `previousOwnerName`, `status`, `soldDate`, `soldPrice`, and `createdAt`. This task does not involve migrating existing data, only defining the new structures and service file setup.",
@@ -2134,7 +2134,7 @@
         "subtasks": []
       },
       {
-        "id": "34",
+        "id": 34,
         "title": "Create One-Time Data Migration Script",
         "description": "Write and execute a script to migrate existing documents in the `consultation_requests` collection to the new data structure, ensuring backward compatibility and data integrity.",
         "details": "Using Firebase Admin SDK (e.g., in a Node.js environment), create a script that: 1. Fetches all documents from `consultation_requests`. 2. For each document, maps the old `status` ('pending', 'approved', 'rejected') to the new `consultationStatus` ('pending', 'confirmed', 'rejected'). 3. Adds the new fields (`completedAt`, `completedBy`, `dealAmount`, `adminNotes`) with default `null` values. 4. Uses a batched write to update all documents efficiently. The script should be run once.",
@@ -2212,7 +2212,7 @@
         "updatedAt": "2025-12-05T04:14:07.204Z"
       },
       {
-        "id": "35",
+        "id": 35,
         "title": "Refactor `AdminConsultationScreen` with New Tab Structure",
         "description": "Rebuild the `AdminConsultationScreen` using `react-native-tab-view` to replace the old status-based tabs with the new '구매상담', '판매상담', and '거래완료' tabs.",
         "details": "Install or update `react-native-tab-view`. Replace the existing tab navigation logic in `AdminConsultationScreen` with the `TabView` component. Define three routes: 'buy', 'sell', 'completed'. Each route will render a list component (e.g., `ConsultationList`). Use placeholders for the lists initially. Ensure the tab bar styles are consistent with the JCar Design System.",
@@ -2225,7 +2225,7 @@
         "subtasks": []
       },
       {
-        "id": "36",
+        "id": 36,
         "title": "Implement Firestore Queries for New Consultation Tabs",
         "description": "Create and integrate the Firestore query logic to fetch the correct data for the '구매상담', '판매상담', and '거래완료' tabs.",
         "details": "In your Firestore service, create three new functions: `getBuyConsultations`, `getSellConsultations`, `getCompletedConsultations`. `getBuyConsultations`: `where('type', '!=', 'sell').where('consultationStatus', '!=', 'completed')`. `getSellConsultations`: `where('type', '==', 'sell').where('consultationStatus', '!=', 'completed')`. `getCompletedConsultations`: `where('consultationStatus', '==', 'completed')`. These queries may require creating composite indexes in Firestore. Integrate these functions into the respective list components within the `AdminConsultationScreen` tabs.",
@@ -2238,7 +2238,7 @@
         "subtasks": []
       },
       {
-        "id": "37",
+        "id": 37,
         "title": "Redesign and Implement `ConsultationCard` Component",
         "description": "Update the existing consultation card or create a new one to display the required information and dynamic action buttons based on the `consultationStatus`.",
         "details": "Use the JCar `Card` component as a base. Display vehicle name, image, customer info, and creation date. Add a `Badge` component for `consultationStatus`, mapping statuses to colors as specified in the PRD (e.g., `pending` -> `theme.colors.warning.main`). Implement conditional rendering for action buttons (`Button` component) based on the `consultationStatus`: e.g., if status is 'pending', show '채결', '보류', '거절' buttons.",
@@ -2312,7 +2312,7 @@
         ]
       },
       {
-        "id": "38",
+        "id": 38,
         "title": "Implement Consultation Status Update Logic",
         "description": "Develop the backend logic to handle status changes triggered by the action buttons on the `ConsultationCard`, ensuring data consistency using Firestore transactions.",
         "details": "Create a single Firestore service function, `updateConsultationStatus(docId, newStatus)`. This function will update the `consultationStatus` field of the specified document. Wire this function to the `onPress` handlers of the action buttons in the `ConsultationCard`. For example, the '채결' button on a 'pending' card will call `updateConsultationStatus(id, 'confirmed')`. Use loading states to provide user feedback during the update.",
@@ -2383,7 +2383,7 @@
         ]
       },
       {
-        "id": "39",
+        "id": 39,
         "title": "Develop 'Complete Deal' Modal and Logic",
         "description": "Create a modal that appears when an admin clicks the '거래완료' button. This modal will capture the deal amount and admin notes, then update the consultation document.",
         "details": "Create a new reusable modal component. The modal should contain a numeric `TextInput` for `dealAmount` (required) and a `TextInput` for `adminNotes` (optional). On 'Confirm', call a new Firestore service function `completeConsultation(docId, dealAmount, notes, completedBy, isSellType)`. This function updates the document with `consultationStatus: 'completed'`, `completedAt: serverTimestamp()`, `dealAmount`, `adminNotes`, and `completedBy`. For sell-type consultations, the modal should include the specified checkbox.",
@@ -2454,7 +2454,7 @@
         ]
       },
       {
-        "id": "40",
+        "id": 40,
         "title": "Implement Transaction for 'Sell' Consultation Completion",
         "description": "When a 'sell' consultation is completed and the checkbox is checked, use a single Firestore transaction to update the consultation, create an `admin_owned_vehicles` document, and update the original vehicle's status.",
         "details": "Extend the `completeConsultation` service function. When `isSellType` is true, use `runTransaction`. The transaction should: 1. Read the `consultation_requests` document and the original `vehicles` document. 2. Update the `consultation_requests` document as in Task 39. 3. Create a new document in `admin_owned_vehicles` with data from the consultation and vehicle. 4. Update the status of the original `vehicles` document to 'sold'. All three operations must succeed or fail together.",
@@ -2526,7 +2526,7 @@
         ]
       },
       {
-        "id": "41",
+        "id": 41,
         "title": "Implement 'Completed Deals' Tab with Filtering and Statistics",
         "description": "Build the UI and logic for the '거래완료' tab, including monthly and type filters, and a summary card displaying key statistics for the selected period.",
         "details": "In the '거래완료' tab component, add two filter controls: a dropdown for the month (e.g., `react-native-picker-select`) and segmented controls for the type (All/Buy/Sell). Create a state to hold the filter values. Modify the Firestore query to filter by `completedAt` (for the selected month) and `type`. On the client-side, calculate the required statistics (total deals, total amount, etc.) from the fetched data and display them in a JCar `Card` component at the top of the list.",
@@ -2598,7 +2598,7 @@
         ]
       },
       {
-        "id": "42",
+        "id": 42,
         "title": "Add 'Owned Vehicles' Section to `AdminPageScreen`",
         "description": "Enhance the `AdminPageScreen` by adding a new section that displays a horizontally scrollable list of vehicles owned by the admin.",
         "details": "Create a new component, `OwnedVehiclesList`. This component will fetch data from the `admin_owned_vehicles` collection where `status` is 'owned'. Use a `FlatList` with `horizontal={true}`. Each item in the list will be a JCar `Card` component displaying the vehicle's image, name, purchase price, and purchase date. Integrate this `OwnedVehiclesList` component into the `AdminPageScreen` layout.",
@@ -2672,7 +2672,7 @@
         ]
       },
       {
-        "id": "43",
+        "id": 43,
         "title": "Create `AdminOwnedVehicleDetailScreen`",
         "description": "Build a new screen to show detailed information about an admin-owned vehicle and allow the admin to mark it as sold.",
         "details": "Create a new screen component `AdminOwnedVehicleDetailScreen`. This screen receives an `vehicleId` as a navigation parameter. It will fetch and display all data for that vehicle from the `admin_owned_vehicles` collection. Include a button '[판매완료 처리]'. Tapping this button will open a modal to input the `soldPrice`. On confirmation, update the vehicle's document in Firestore, setting `status` to 'sold', and adding `soldPrice` and `soldDate`.",
@@ -2744,7 +2744,7 @@
         ]
       },
       {
-        "id": "44",
+        "id": 44,
         "title": "Update Firebase Security Rules",
         "description": "Update and deploy Firebase Security Rules to secure the modified `consultation_requests` collection and the new `admin_owned_vehicles` collection.",
         "details": "Open the `firestore.rules` file. Update the rule for `/consultation_requests/{docId}` to reflect the logic in the PRD, allowing admins to write and users to update their own requests under specific conditions. Add a new rule block for `/admin_owned_vehicles/{docId}` that restricts all read and write access to authenticated users with an 'admin' role (`request.auth.token.role == 'admin'`).",
@@ -2818,7 +2818,7 @@
         ]
       },
       {
-        "id": "45",
+        "id": 45,
         "title": "Enhance Admin Consultation Management with Rejection Reasons, Memos, and Time Slot Suggestions",
         "description": "Extend the consultation management system to allow administrators to add rejection reasons, internal memos, and suggest alternative time slots when managing consultation requests. This involves updating the Firestore data model and creating new UI components for these admin actions.",
         "details": "1. **Firestore Schema Update:** Modify the `consultation_requests` collection by adding three new optional fields:\n   - `rejectionReason` (string): To store the reason provided by an admin when rejecting a request.\n   - `adminMemo` (string): For internal notes visible only to admins.\n   - `suggestedSlots` (array of Firestore Timestamps): For admins to propose alternative times to the user.\n2. **Firestore Security Rules Update:** Based on Task 2, update `firestore.rules` for the `consultation_requests` collection. Ensure that only users with an 'admin' custom claim can write to `rejectionReason`, `adminMemo`, and `suggestedSlots`. Regular users should have read-only access to `rejectionReason` and `suggestedSlots`, and no access to `adminMemo`.\n3. **UI for Rejection Reason:** When an admin presses the 'Reject' button on a `ConsultationCard`, trigger a modal. This modal should contain a `TextInput` for the rejection reason. On submission, the `updateConsultationStatus` function from Task 38 must be extended to accept the reason, update the document's status to 'rejected', and populate the `rejectionReason` field.\n4. **UI for Admin Memo:** Add a new icon button (e.g., 'notebook-edit') to the admin's `ConsultationCard`. Tapping this button should open a modal allowing the admin to view, add, or edit the `adminMemo` field for that specific consultation.\n5. **UI for Time Slot Suggestion:** On the consultation detail screen for admins, add a new section titled 'Suggest Alternative Times'. This section should include a button to add a new time slot, which opens a date/time picker. Admins should be able to add multiple suggestions, which are displayed in a list. Saving these will update the `suggestedSlots` array in Firestore.\n6. **Notification Trigger:** Create or update a Cloud Function that triggers on write operations to `consultation_requests`. If `consultationStatus` changes to 'rejected' and `rejectionReason` is present, use the FCM system from Task 5 to send a push notification to the user, including the rejection reason in the message body.",
@@ -2897,7 +2897,7 @@
         "updatedAt": "2025-12-10T19:30:46.680Z"
       },
       {
-        "id": "46",
+        "id": 46,
         "title": "Implement User-Side Consultation Management Features",
         "description": "Enable users to manage their consultations by adding features to cancel pending/approved requests, resubmit rejected requests with new times, and view a detailed history including rejection reasons.",
         "details": "This task involves creating a comprehensive user-facing interface for managing consultation requests. \n1. **Create UserConsultationDetailScreen:** Develop a new screen that displays all details of a single consultation request. This screen will be the hub for all user actions. It should fetch and display all fields from the Firestore document, including the vehicle details, user information, selected time slots, current status, and any admin-provided `rejectionReason` or `alternativeSlots`.\n2. **Conditional Action Buttons:** On the `UserConsultationDetailScreen`, implement conditional rendering for action buttons based on `consultationStatus`:\n   - If status is 'pending' or 'approved', display a 'Cancel Consultation' button.\n   - If status is 'rejected', display the `rejectionReason` text and a 'Resubmit Consultation' button.\n   - For 'completed' or 'cancelled' statuses, no action buttons should be shown.\n3. **Cancellation Logic:** The 'Cancel' button should trigger a confirmation modal. Upon confirmation, call a service function that updates the consultation document's status to 'cancelled'. This will require updating Firestore Security Rules (from Task 2) to allow a user to write to their own consultation document if the change is to set the status to 'cancelled'. Use the global toast system (Task 19) to show a success message.\n4. **Resubmission Logic:** The 'Resubmit' button should navigate the user to the consultation request flow, pre-populating the form with the original data but allowing the user to select new time slots. Upon submission, the existing document in Firestore should be updated, changing its status back to 'pending', updating the `requestedTimeSlots` and clearing the `rejectionReason`. Security rules must also be updated to permit this specific state transition initiated by the user.\n5. **Enhance Consultation List:** Modify the user's main consultation list screen to fetch and display consultations of all statuses to serve as a complete history. Consider adding tabs or filter chips (e.g., 'Upcoming', 'Past') to help users navigate their history.",
@@ -2978,7 +2978,7 @@
         "updatedAt": "2025-12-10T19:20:26.582Z"
       },
       {
-        "id": "47",
+        "id": 47,
         "title": "Design Firestore Schema for Vehicle Ownership Transfer",
         "description": "Design new fields for the `vehicles` and `consultation_requests` collections and define a new `ownership_transfers` collection in Firestore to support vehicle ownership transfer logic.",
         "details": "This task involves defining the new Firestore data structure. Update the existing `Vehicle` and `ConsultationRequest` interfaces/types (likely found in `src/types/index.ts` or similar schema definition file) to include the new fields. Additionally, create a new interface/type `OwnershipTransfer` for the `ownership_transfers` collection.\n1.  **`vehicles` Collection Schema Update**:\n    *   Add `currentOwnerId: string | null` to reference the UID of the current owner. This field should replace any existing `sellerId` concept if applicable.\n    *   Add `ownershipHistory: Array<{ transferId: string; transferredAt: firebase.firestore.Timestamp; fromUserId: string | null; toUserId: string | null; transferType: 'sell_to_admin' | 'admin_to_buyer'; price: number; }>` to track all ownership changes. This array should grow with each transfer.\n    *   Add `isAdminOwned: boolean` (default `false`) to indicate if the vehicle is currently owned by the admin. This should be kept consistent with the `admin_owned_vehicles` collection created in Task 33.\n    *   Add `availableForPurchase: boolean` (default `true`) to control vehicle listing availability.\n2.  **`ownership_transfers` Collection Schema Definition**: Create a new top-level collection `ownership_transfers`. Each document will represent a single transfer event.\n    *   `transferId`: string (document ID, auto-generated by Firestore).\n    *   `vehicleId`: string (reference to the `vehicles` collection document ID).\n    *   `consultationId`: string | null (reference to the `consultation_requests` collection document ID, nullable as not all transfers originate from a consultation).\n    *   `fromUserId`: string | null (UID of the user selling, null if sold by admin or initial admin acquisition).\n    *   `toUserId`: string | null (UID of the user buying, null if sold to admin).\n    *   `transferType`: 'sell_to_admin' | 'admin_to_buyer' (enum, based on the specific transfer scenario).\n    *   `transferredAt`: firebase.firestore.Timestamp (timestamp of the transfer).\n    *   `price`: number (the agreed-upon price for the transfer).\n    *   `notes`: string | null (optional field for additional details).\n3.  **`consultation_requests` Collection Schema Update**:\n    *   Add `isOwnershipTransferred: boolean` (default `false`) to indicate if an associated vehicle's ownership has been transferred.\n    *   Add `transferId: string | null` to reference the `ownership_transfers` document ID if a transfer occurred as part of this consultation.\nEnsure all new fields are properly typed in the application's schema definitions (e.g., TypeScript interfaces). No data migration is required for this design task; focus solely on schema definition.",
@@ -2991,7 +2991,7 @@
         "subtasks": []
       },
       {
-        "id": "48",
+        "id": 48,
         "title": "Complete Sell Consultation: Transfer Vehicle to Admin",
         "description": "Implement the logic to transfer a vehicle to admin ownership upon completing a sell consultation, including backend transaction, frontend integration, and UI display updates.",
         "details": "1.  **`src/services/firebaseService.js`:** Create a new asynchronous function `transferVehicleToAdmin(consultationRequestId, vehicleId, adminId)` that utilizes a Firestore transaction to ensure atomicity. Inside the transaction:\n    *   Retrieve references for the `consultation_requests` document using `consultationRequestId` and the `vehicles` document using `vehicleId`.\n    *   Read the current state of both documents. If either does not exist, throw an error to rollback the transaction.\n    *   Update the `vehicles` document: Set `currentOwnerId` to `adminId`.\n    *   Create a new document in the `ownership_transfers` collection (as designed in Task 47). The document should include `vehicleId`, `previousOwnerId` (from the vehicle's `currentOwnerId` before update), `newOwnerId` (`adminId`), `transferDate` (using `serverTimestamp()`), `consultationId`, and `transferType: 'admin_acquisition'`.\n    *   Update the `consultation_requests` document: Set `isOwnershipTransferred` to `true`.\n    *   Ensure robust error handling within the transaction and for the function itself.\n2.  **`src/components/modals/CompleteDealModal.js`:** Modify the deal confirmation logic (e.g., in the `handleConfirm` function). After successfully marking the consultation as complete, if the deal involves a 'sell' type consultation and the checkbox to transfer ownership is confirmed:\n    *   Call the newly created `transferVehicleToAdmin` function with the relevant `consultationId`, `vehicleId`, and the admin's `uid`.\n    *   On success, display a user-friendly `Alert.alert('차량 이전 완료', '차량이 관리자에게 성공적으로 이전되었습니다.');` Implement a mechanism to refresh the consultation list displayed in the UI (e.g., by calling a callback prop `onConsultationCompleted`).\n    *   On failure (catch block), display an error `Alert.alert('오류 발생', '차량 이전 중 오류가 발생했습니다.');` and log the error.\n3.  **`src/screens/admin/AdminVehicleDetailScreen.js`:** Enhance the vehicle detail display to include ownership information.\n    *   Fetch the `vehicle` document and display its `currentOwnerId`. If it matches the admin's ID, display \"현재 소유자: 관리자\". Otherwise, display the previous owner or \"개인 소유\" (if `currentOwnerId` is null).\n    *   Implement logic to query the `ownership_transfers` collection for documents where `vehicleId` matches the currently viewed vehicle. This query should order results by `transferDate` descending.\n    *   Display a chronological list of these ownership transfer records (e.g., \"YYYY-MM-DD: From [Previous Owner Name/ID] to [New Owner Name/ID]\"). Consider creating a reusable component for displaying transfer history.",
@@ -3006,7 +3006,7 @@
         "subtasks": []
       },
       {
-        "id": "49",
+        "id": 49,
         "title": "Implement Vehicle Ownership Transfer on Buy Consultation Completion",
         "description": "Create a Firestore transaction to transfer vehicle ownership to the buyer upon confirmed purchase consultation, update vehicle status, and reflect changes in the UI.",
         "details": "This task involves implementing the core logic for transferring vehicle ownership and integrating it into the relevant UI components.\n\n**1. `firebaseService.js` modifications:**\n   - Create a new asynchronous function `transferVehicleToBuyer(consultationId, vehicleId, buyerId)`. This function will be responsible for orchestrating the ownership transfer.\n   - Inside `transferVehicleToBuyer`, utilize `db.runTransaction(async (transaction) => { ... })` to ensure atomicity of all operations.\n   - Within the transaction, perform the following steps:\n     - Obtain document references for `vehicles/{vehicleId}` and `consultation_requests/{consultationId}`.\n     - Read both documents using `transaction.get()`.\n     - **Validation**: Before proceeding, validate that the `vehicle` document exists and its current `status` is not already 'sold'. If it is, throw a `FirebaseFirestoreTypes.NativeFirebaseError` with a descriptive message.\n     - **Update `vehicles/{vehicleId}` document**:\n       - Set `currentOwnerId` to `buyerId`.\n       - Change `status` to `'sold'` (as defined in Task 47).\n       - Add `soldDate: FieldValue.serverTimestamp()`.\n     - **Update `consultation_requests/{consultationId}` document**:\n       - Set `isOwnershipTransferred: true` (as defined in Task 47).\n       - Set `consultationStatus: 'completed'`.\n     - **Create new document in `ownership_transfers` collection**:\n       - Use `transaction.set()` to create a new document in the `ownership_transfers` collection (as defined in Task 47).\n       - Fields to include: `vehicleId`, `previousOwnerId` (retrieved from the vehicle document's `currentOwnerId` before update), `newOwnerId` (`buyerId`), `transferDate: FieldValue.serverTimestamp()`, and `consultationId`.\n   - Ensure robust error handling for the transaction, catching specific Firestore errors and re-throwing custom application errors where appropriate.\n\n**2. `CompleteDealModal.js` modifications (for purchase consultations):**\n   - Locate the handler for confirming a purchase (e.g., a 'Confirm Deal' button press).\n   - When the purchase is confirmed for a 'buy' consultation:\n     - Extract the necessary `consultationId`, `vehicleId`, and `buyerId` (the currently authenticated user's UID).\n     - Call the new `transferVehicleToBuyer` function with these parameters.\n     - While the transaction is in progress, display a loading indicator or disable UI elements.\n     - On successful completion of `transferVehicleToBuyer`:\n       - Dismiss the modal.\n       - Show a success notification (e.g., using a `Toast` component).\n       - Refresh any relevant UI data (e.g., consultation lists, vehicle details) or navigate away.\n     - On failure of `transferVehicleToBuyer`:\n       - Display an error notification (e.g., `Toast`) with the error message.\n       - The modal might remain open for user retry or specific error handling.\n\n**3. `VehicleDetailScreen.js` modifications:**\n   - Update the component to fetch and monitor the `status` field of the displayed vehicle. This requires ensuring the `Vehicle` type includes `status` (from Task 47).\n   - Modify the conditional rendering of the \"Consultation Request\" button:\n     - If the `vehicle.status` is `'sold'`:\n       - Disable the \"Consultation Request\" button.\n       - Display a prominent message (e.g., using `theme.typography.Body` with `color: theme.colors.text.error`) stating \"이미 판매된 차량입니다\" (This vehicle has already been sold) below or near the button.\n     - Otherwise (if `status` is not 'sold'), the button should remain active.",
@@ -3021,7 +3021,7 @@
         "subtasks": []
       },
       {
-        "id": "50",
+        "id": 50,
         "title": "Implement Consultation Status Archiving and Admin View Filter",
         "description": "Develop a mechanism to 'archive' consultation requests by updating their status to 'archived', integrate this into vehicle ownership transfer transactions, and modify the admin screen to display archived consultations separately.",
         "details": "This task involves creating a new 'archived' status for consultation requests and updating the UI to reflect this change.\n\n1.  **`src/services/firebaseService.js` modifications:**\n    *   **No new `resetConsultationStatus` function is explicitly needed as a separate transaction.** Instead, the 'archived' status update will be integrated directly into the existing ownership transfer transactions to maintain atomicity and prevent nested transactions. The prompt's request for a `resetConsultationStatus` function will be fulfilled by making sure the status update logic is handled and reusable.\n2.  **Integrate Status Archiving into Ownership Transfer Functions:**\n    *   Locate the `transferVehicleToAdmin` (from Task 48) and `transferVehicleToBuyer` (from Task 49) functions in `src/services/firebaseService.js`. Both functions utilize `db.runTransaction`.\n    *   Within the transaction block of *each* of these functions, add an `transaction.update()` call for the respective `consultation_requests` document.\n    *   Set `consultationStatus` to `'archived'` and `archivedAt` to `FieldValue.serverTimestamp()` (Firestore's server timestamp) for the `consultation_requests` document that initiated the transfer. This ensures the consultation is marked as completed and archived as an atomic part of the vehicle ownership transfer.\n    *   Example snippet within the transaction for `transferVehicleToAdmin`:\n        `transaction.update(consultationRef, { consultationStatus: 'archived', archivedAt: FieldValue.serverTimestamp() });`\n3.  **`src/screens/AdminConsultationScreen.js` modifications:**\n    *   Update the `AdminConsultationScreen` (refactored in Task 35) to handle the new `'archived'` status.\n    *   **Filtering 'archived' consultations:** Modify the data fetching/filtering logic for the '구매상담' (Buy Consultation) and '판매상담' (Sell Consultation) tabs to explicitly *exclude* consultations with `consultationStatus: 'archived'`. These tabs should only show active or pending consultations.\n    *   **Displaying 'archived' consultations:** Decide on the best approach for displaying 'archived' consultations:\n        *   **Option A (Preferred):** Modify the existing '거래완료' (Completed) tab to include both `completed` and `archived` consultations. This might involve updating the query filter for this tab to fetch consultations where `consultationStatus` is either `'completed'` or `'archived'`. Consider renaming the tab to '완료 및 보관' (Completed & Archived) if this option is chosen to reflect its content accurately.\n        *   **Option B (Alternative):** Add a completely new tab, e.g., '보관' (Archived), to the `TabView` component. This new tab will render a `ConsultationList` component specifically configured to fetch consultations where `consultationStatus === 'archived'`.",
@@ -3038,7 +3038,7 @@
         "subtasks": []
       },
       {
-        "id": "51",
+        "id": 51,
         "title": "Implement Firestore Transactions for Vehicle Ownership Transfer",
         "description": "Implement two Firestore transactions, `transferVehicleToAdmin` and `transferVehicleToBuyer`, to ensure atomic updates for vehicle ownership changes, including updating vehicle, ownership transfer, and consultation request documents.",
         "details": "The core of this task is to implement robust, atomic updates for vehicle ownership using Firestore transactions. This will ensure data consistency across multiple collections. The implementation should reside in a new dedicated service file, for example, `src/services/ownershipTransferService.ts`, to manage the complexity and separation of concerns.\n\n1.  **`transferVehicleToAdmin` Transaction Implementation:**\n    *   **Function Signature:** `async transferVehicleToAdmin(vehicleId: string, sellerId: string, consultationRequestId: string, adminId: string)`\n    *   **Transaction Context:** Utilize `firestore().runTransaction(async (transaction) => { ... })` for atomic operations.\n    *   **Document Reads (within transaction):**\n        *   Read the `vehicle` document using `transaction.get(vehicleRef)` (e.g., `firestore().collection('vehicles').doc(vehicleId)`).\n        *   Read the `consultation_request` document using `transaction.get(consultationRequestRef)` (e.g., `firestore().collection('consultation_requests').doc(consultationRequestId)`).\n    *   **Validation:**\n        *   Verify both `vehicle` and `consultation_request` documents exist.\n        *   Verify `vehicle.currentOwnerId` (as defined in Task 47) matches the provided `sellerId`.\n        *   Verify the `consultation_request.consultationStatus` is not already `'archived'` or `'completed'`.\n    *   **`ownership_transfers` Document Creation:**\n        *   Generate a new unique ID for the `ownership_transfers` document.\n        *   Create a new document in the `ownership_transfers` collection (as per schema from Task 47) with fields:\n            *   `transferType: 'toAdmin'`\n            *   `vehicleId`\n            *   `previousOwnerId: sellerId`\n            *   `newOwnerId: adminId`\n            *   `transferDate: FieldValue.serverTimestamp()`\n            *   `consultationId: consultationRequestId`\n            *   Other relevant fields from Task 47 (e.g., `dealAmount`, `notes` if applicable).\n        *   Use `transaction.set(ownershipTransferRef, {...})`.\n    *   **`vehicles` Document Update:**\n        *   Update the `vehicle` document (`vehicleRef`) with:\n            *   `currentOwnerId: adminId`\n            *   `isAdminOwned: true`\n            *   Append to `ownershipHistory` array: `{ ownerId: adminId, fromDate: FieldValue.serverTimestamp(), transferId: newOwnershipTransferId }` (following Task 47 schema).\n        *   Use `transaction.update(vehicleRef, {...})`.\n    *   **`consultation_requests` Document Update:**\n        *   Update the `consultation_request` document (`consultationRequestRef`) with:\n            *   `consultationStatus: 'archived'`\n            *   `isOwnershipTransferred: true`\n            *   `transferId: newOwnershipTransferId`\n        *   Use `transaction.update(consultationRequestRef, {...})`.\n\n2.  **`transferVehicleToBuyer` Transaction Implementation:**\n    *   **Function Signature:** `async transferVehicleToBuyer(vehicleId: string, adminId: string, buyerId: string, consultationRequestId: string, soldPrice: number)`\n    *   **Transaction Context:** Similar `firestore().runTransaction` structure.\n    *   **Document Reads (within transaction):** Read `vehicle` and `consultation_request` documents.\n    *   **Validation:**\n        *   Verify documents exist.\n        *   Verify `vehicle.currentOwnerId` matches the provided `adminId` and `vehicle.isAdminOwned` is `true`.\n        *   Verify the `consultation_request.consultationStatus` is not already `'archived'` or `'completed'`.\n    *   **`ownership_transfers` Document Creation:**\n        *   Generate a new ID.\n        *   Create document with `transferType: 'toBuyer'`, `vehicleId`, `previousOwnerId: adminId`, `newOwnerId: buyerId`, `transferDate: FieldValue.serverTimestamp()`, `consultationId: consultationRequestId`, `dealAmount: soldPrice` (from Task 33 and Task 47), and other relevant fields.\n        *   Use `transaction.set(ownershipTransferRef, {...})`.\n    *   **`vehicles` Document Update:**\n        *   Update `vehicle` document (`vehicleRef`) with:\n            *   `currentOwnerId: buyerId`\n            *   `isAdminOwned: false`\n            *   `status: 'sold'` (ensure this status is available in the Vehicle schema).\n            *   Append to `ownershipHistory` array: `{ ownerId: buyerId, fromDate: FieldValue.serverTimestamp(), transferId: newOwnershipTransferId }`.\n        *   Use `transaction.update(vehicleRef, {...})`.\n    *   **`consultation_requests` Document Update:**\n        *   Update `consultation_request` document (`consultationRequestRef`) with:\n            *   `consultationStatus: 'archived'`\n            *   `isOwnershipTransferred: true`\n            *   `transferId: newOwnershipTransferId`\n            *   `dealAmount: soldPrice`.\n        *   Use `transaction.update(consultationRequestRef, {...})`.\n\n3.  **Error Handling and Logging:**\n    *   Wrap each transaction call in `try...catch` blocks.\n    *   In the catch block, use Firebase Crashlytics (e.g., `@react-native-firebase/crashlytics` if in a React Native client, or `firebase-admin` if in a Cloud Function context) to log the error details:\n        *   `crashlytics().recordError(error, 'Firestore transaction failed');`\n        *   Include context: `crashlytics().log('Context: transferVehicleToAdmin for vehicle ' + vehicleId + ' failed.');`\n    *   Throw a custom, user-friendly error message that can be displayed to the user (e.g., \"차량 소유권 이전 중 오류가 발생했습니다. 다시 시도해 주세요.\").",
@@ -3051,7 +3051,7 @@
         "subtasks": []
       },
       {
-        "id": "52",
+        "id": 52,
         "title": "UI/UX Improvement: Ownership Transfer Confirmation Modal",
         "description": "Create a new OwnershipTransferConfirmModal component to provide a final confirmation step before executing vehicle ownership transfers, integrating it into CompleteDealModal and displaying transaction status.",
         "details": "This task involves creating a new React modal component, OwnershipTransferConfirmModal.js, to enhance the user experience for vehicle ownership transfers. This modal will act as an intermediary confirmation step, requiring explicit user consent via a checkbox before initiating the backend transaction.\n\n1. Create src/components/modals/OwnershipTransferConfirmModal.js:\n    *   Props: The modal should accept props such as vehicleDetails (object with vehicle info), sellerDetails (object with seller user info), buyerDetails (object with buyer user info), onConfirm (callback function to execute on final confirmation), onCancel (callback for cancellation).\n    *   UI Elements:\n        *   Display read-only vehicle details (e.g., make, model, year, VIN).\n        *   Display relevant buyer/seller information.\n        *   Include a mandatory '최종 확인' (Final Confirmation) checkbox. The confirm button should remain disabled until this checkbox is checked.\n        *   '확인' (Confirm) and '취소' (Cancel) buttons.\n    *   Styling: Ensure the modal is visually consistent with existing modal components in the project, potentially utilizing shared styles or component libraries (e.g., Material-UI, Ant Design, or custom CSS classes found in src/styles/components/modals.css or similar).\n\n2. Integrate into src/components/modals/CompleteDealModal.js:\n    *   Locate the onConfirmed or equivalent handler within CompleteDealModal.js that triggers the vehicle ownership transfer (likely calls transferVehicleToAdmin or transferVehicleToBuyer from src/services/ownershipTransferService.ts or src/services/firebaseService.js as defined in Task 51, 48, 49).\n    *   Modify this handler: Instead of directly calling the transfer function, it should now open the OwnershipTransferConfirmModal.\n    *   Pass necessary data (vehicle, buyer, seller info) from CompleteDealModal to OwnershipTransferConfirmModal.\n    *   The onConfirm callback of OwnershipTransferConfirmModal will then execute the actual ownership transfer logic.\n\n3. Implement Loading State and Progress Display:\n    *   In OwnershipTransferConfirmModal or the calling component (CompleteDealModal):\n        *   Manage a loading state (isLoading: boolean) when the onConfirm callback is executed and the transaction is in progress.\n        *   Display a loading indicator (e.g., a spinner component like src/components/common/LoadingSpinner.js if it exists, or a simple progress bar) over the modal or on the confirm button during the transaction.\n        *   Disable the '확인' and '취소' buttons while isLoading is true.\n    *   Success Animation: Upon successful completion of the ownership transfer transaction, display a brief success animation or a success message within the modal before automatically closing it or allowing manual closure. Consider using an existing animation library or a simple CSS-based animation.\n\n4. Error Handling:\n    *   Implement robust error handling. If the transaction fails, display an appropriate error message to the user within the modal, keeping the modal open until dismissed or retried.",
@@ -3066,7 +3066,7 @@
         "subtasks": []
       },
       {
-        "id": "53",
+        "id": 53,
         "title": "관리자 대시보드에 소유권 이전 기록 표시",
         "description": "새로운 AdminOwnershipHistoryScreen을 생성하여 차량 소유권 이전 기록을 표시하고 관리하며, AdminPageScreen에 관련 메뉴 항목을 추가합니다. 날짜 및 차량별 필터링, 상세 정보 모달, 그리고 소유권 이전 통계 정보를 제공합니다.",
         "details": "1. AdminOwnershipHistoryScreen.js 생성:\n    *   경로: src/screens/AdminOwnershipHistoryScreen.js\n    *   데이터 조회: Firestore의 `ownership_transfers` 컬렉션에서 소유권 이전 기록을 조회합니다. 초기 로드 시 `transferDate` (내림차순) 기준으로 정렬합니다. 데이터 양에 따라 초기 단계에는 전체 조회를 구현하고, 향후 필요 시 페이지네이션을 고려합니다.\n    *   필터링 기능 구현:\n        *   **날짜 필터링**: UI 컴포넌트 (예: `DateTimePicker` 또는 `SegmentedControl`을 활용한 '지난 7일', '이번 달' 등)를 추가하여 `transferDate` 기준으로 기록을 필터링합니다.\n        *   **차량 필터링**: 검색 입력 필드를 추가하여 `vehicleId` 또는 `vehicleName` (ownership_transfers 문서에 포함되거나 별도 조회)으로 기록을 필터링합니다.\n    *   목록 표시: 필터링된 소유권 이전 기록을 `FlatList`를 사용하여 표시합니다. 각 목록 항목은 `Card` 컴포넌트를 활용하여 `vehicleName`, `previousOwnerName`, `newOwnerName`, `transferDate`, `transferAmount` 등의 핵심 정보를 요약하여 보여줍니다.\n    *   상세 정보 모달 구현:\n        *   새로운 모달 컴포넌트 (예: `OwnershipTransferDetailModal.js`)를 생성하여 목록 항목 탭 시 상세 정보를 표시합니다.\n        *   모달은 선택된 이전 기록의 모든 세부 정보(예: `transferReason`, `vehicleDetails`, `sellerDetails`, `buyerDetails`, 타임스탬프)를 포함해야 합니다. Task 52의 `OwnershipTransferConfirmModal`과 일관된 UI/UX를 유지합니다.\n\n2. AdminPageScreen.js 메뉴 추가:\n    *   경로: src/screens/AdminPageScreen.js\n    *   메뉴 항목 추가: 기존 관리자 메뉴/내비게이션 섹션에 '소유권 이전 기록' 텍스트를 가진 `TouchableOpacity` 또는 `Button` 컴포넌트를 추가합니다.\n    *   내비게이션 연결: 해당 버튼 클릭 시 `navigation.navigate('AdminOwnershipHistory')`를 통해 새로운 `AdminOwnershipHistoryScreen`으로 이동하도록 내비게이션 로직을 구현합니다. src/navigation/AdminNavigator.js 또는 관련 내비게이터에 새 화면을 등록합니다.\n\n3. 통계 정보 추가:\n    *   `useOwnershipStats` 훅 생성: `src/hooks/useOwnershipStats.js` 파일을 생성하여 소유권 이전 통계 로직을 캡슐화합니다.\n        *   이 훅은 특정 기간 (예: 월별, 연별 또는 사용자 지정 날짜 범위)에 대한 `ownership_transfers` 컬렉션을 쿼리합니다.\n        *   해당 기간의 총 이전 건수 및 총 거래액 (`transferAmount` 합계)을 계산하여 반환합니다.\n        *   Firestore 집계 쿼리를 활용하거나 클라이언트 측에서 데이터를 집계하여 최적화합니다.\n    *   통계 정보 표시: `AdminOwnershipHistoryScreen` 상단에 `useOwnershipStats` 훅을 통합하고, '월별 이전 건수: X건, 총 거래액: Y원'과 같이 요약 통계를 눈에 잘 띄게 표시합니다.",
@@ -3081,7 +3081,7 @@
         "subtasks": []
       },
       {
-        "id": "54",
+        "id": 54,
         "title": "Update Security Rules and Implement Client-side Permission Checks",
         "description": "Enhance Firestore Security Rules for `vehicles`, `ownership_transfers`, and `consultation_requests` collections, and implement client-side UI and error handling based on user roles and permissions.",
         "details": "This task involves both server-side Firestore Security Rules updates and client-side logic to enforce role-based access control.\n\n**1. Firestore Security Rules Update (in `firestore.rules`):**\n\n   *   **`vehicles` collection:**\n        *   Modify existing rules to allow `update` operations only if `request.auth.uid` is an administrator (by checking the `users` collection for `role: 'admin'`) OR `request.auth.uid == resource.data.currentOwnerId`.\n        *   Ensure that a non-admin user (even the `currentOwnerId`) cannot modify the `currentOwnerId` field itself. All other critical fields should also be validated.\n   *   **`ownership_transfers` collection:**\n        *   Define new rules to allow `read` and `create` operations exclusively if `request.auth.uid` is an administrator.\n        *   Explicitly deny `update` and `delete` operations for all users.\n   *   **`consultation_requests` collection:**\n        *   Update `read` rules to allow access if `request.auth.uid` is `resource.data.requesterId`, `resource.data.sellerId` (if applicable), or an administrator.\n        *   Refine `update` rules to permit administrators to modify any field, while allowing `requesterId` or `sellerId` to update specific status fields (e.g., `consultationStatus`) with strict validation.\n        *   Ensure new fields from Task 33 and Task 47 (e.g., `consultationStatus`, `dealAmount`, `transferId`) are correctly validated on write operations by authorized users.\n   *   **Admin Role Check Function:** Implement a reusable function within `firestore.rules` (e.g., `function isAdmin() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }`) to centralize admin role verification.\n\n**2. Client-side Permission Checks & UI Branching:**\n\n   *   **Ownership Transfer Button Control:** In relevant UI components (e.g., `src/screens/VehicleDetailScreen.js` or `src/components/AdminActions.js`), retrieve the current user's role from the authentication context or a user service. If the user's role is not 'admin', hide or disable the button that initiates vehicle ownership transfers (related to functionality from Task 51).\n   *   **Unauthorized Request Error Handling:** Implement global or specific error handling for Firestore operations. Catch `FirebaseError` instances with `code: 'permission-denied'` or `code: 'unauthenticated'`. Display a user-friendly message using the toast notification system (if available, otherwise an alert) such as \"Access denied: You do not have permission to perform this action.\" This should prevent app crashes from unauthorized requests.\n   *   **Role-based UI Branching:** Identify other UI elements that should only be visible or active for administrators (e.g., specific navigation items, tabs, editable fields). Implement conditional rendering or disabling based on the `currentUser.role` property. Reference existing `AdminPageScreen` (Task 42) for examples of admin-specific UI integration.",
@@ -3096,7 +3096,7 @@
         "subtasks": []
       },
       {
-        "id": "55",
+        "id": 55,
         "title": "Comprehensive Testing and Validation for Vehicle Ownership Transfers",
         "description": "Develop a comprehensive suite of unit and integration tests for vehicle ownership transfer functions, including transaction rollback scenarios, full sales flow, concurrency, and data integrity checks.",
         "details": "This task focuses on thoroughly testing the atomic vehicle ownership transfer mechanisms implemented in Task 51, ensuring robust functionality and data consistency across all related collections, and validating the archiving logic from Task 50. All tests should utilize the Firebase Emulator Suite to simulate a production-like environment.\n\n1.  **Unit Test Development (src/services/ownershipTransferService.ts):**\n    *   **`transferVehicleToAdmin` Function Tests:**\n        *   **Success Scenario:** Test a valid transfer from a seller to an admin. Verify `vehicles` document updates (`currentOwnerId`, `status`), `ownership_transfers` document creation, and `consultation_requests` status update to 'archived' (per Task 50).\n        *   **Invalid `vehicleId`:** Ensure the transaction fails gracefully if the `vehicleId` does not exist.\n        *   **Invalid `sellerId` (permissions):** Test cases where the `request.auth.uid` does not match the `currentOwnerId` of the vehicle, ensuring the transaction is rejected based on security rules (though core logic test, this should be noted).\n        *   **Consultation Not Found:** Test how the system behaves if a `consultationId` is provided but no matching `consultation_requests` document exists.\n        *   **Vehicle Already Transferred:** Test attempting to transfer a vehicle that is no longer 'forSale' or already transferred.\n    *   **`transferVehicleToBuyer` Function Tests:**\n        *   **Success Scenario:** Test a valid transfer from an admin to a buyer. Verify `vehicles` document updates (`currentOwnerId`, `status`), `ownership_transfers` document creation.\n        *   **Invalid `vehicleId`:** Ensure the transaction fails gracefully if the `vehicleId` does not exist.\n        *   **Invalid `buyerId`:** Test with non-existent or invalid buyer IDs.\n        *   **Vehicle Not Available for Sale (Admin Owned):** Test attempting to transfer a vehicle that is not currently owned by an admin and marked 'forSale' after being transferred from a previous seller.\n    *   **Transaction Rollback Scenarios:**\n        *   Introduce controlled failures within the transaction logic (e.g., using mock functions that throw errors after a specific write operation) to confirm that no partial updates occur and all changes are rolled back correctly.\n        *   Verify that if the `vehicles` update fails, the `ownership_transfers` document is not created and `consultation_requests` status is not updated.\n\n2.  **Integration Test Development:**\n    *   **Sales to Purchase Full Flow Test:**\n        *   Simulate an end-to-end scenario: A new vehicle is listed, a consultation request is made, the vehicle is transferred from a seller to an admin, and then from the admin to a buyer.\n        *   Verify the state of `vehicles`, `ownership_transfers`, `consultation_requests`, and `users` (if any user-specific counters are implemented) documents at each stage.\n    *   **Concurrency Problem Test:**\n        *   Simulate multiple users (or admin/buyer operations) attempting to purchase the same vehicle concurrently.\n        *   Use `Promise.all` with multiple calls to the `transferVehicleToBuyer` function with the same `vehicleId`.\n        *   Assert that only one transaction succeeds, and others fail gracefully due to transaction retry mechanisms or optimistic locking, preventing duplicate transfers and ensuring data integrity.\n\n3.  **Data Integrity Verification:**\n    *   After each successful transfer (unit and integration tests), programmatically query Firestore to confirm:\n        *   The `currentOwnerId` and `status` fields in the `vehicles` collection are updated correctly.\n        *   A new, accurate record exists in the `ownership_transfers` collection, containing correct `transferDate`, `amount`, `sellerId`, `buyerId`, and `vehicleId`.\n        *   For `transferVehicleToAdmin`, the associated `consultation_requests` document's status is correctly updated to 'archived' (from Task 50).\n        *   Attempting to re-transfer an already sold vehicle is prevented.\n        *   Verify that filtering by 'archived' status (as per Task 50) works as expected when querying consultation requests.",
@@ -3110,7 +3110,7 @@
         "subtasks": []
       },
       {
-        "id": "56",
+        "id": 56,
         "title": "Optimize Completed Consultations Query with Composite Index and Client-Side Sorting",
         "description": "Optimize the Firestore query for completed consultations by removing redundant server-side sorting, ensuring efficient client-side ordering, and defining a necessary composite index.",
         "details": "This task focuses on improving the performance and correctness of the `subscribeToCompletedConsultations` function within `src/services/firebaseService.js`. The current implementation has an inefficient double-sorting mechanism.\n\n**Implementation Steps:**\n1.  **Modify Firestore Query:** Locate the `subscribeToCompletedConsultations` function in `src/services/firebaseService.js`. Remove the `orderBy('createdAt', 'desc')` clause from the Firestore query. This eliminates redundant server-side sorting.\n2.  **Retain Client-Side Sorting:** Confirm that the existing client-side JavaScript `sort()` logic, which orders consultations by `archivedAt || completedAt` (most recent first), remains active and correctly applied after the Firestore data is fetched. This will be the primary sorting mechanism for completed/archived consultations.\n3.  **Define Composite Index:** Analyze the `where` clauses used in `subscribeToCompletedConsultations` (especially if an `in` query is present) to determine the exact fields required for an efficient composite index. Create or update the `firestore.indexes.json` file in the project root with the definition for this composite index. This index is crucial for supporting the remaining server-side filtering efficiently, even without server-side sorting.\n4.  **Update Documentation:** Add clear inline comments within the `subscribeToCompletedConsultations` function explaining the rationale for client-side sorting (e.g., small dataset, custom `archivedAt || completedAt` logic). Also, document the new composite index, its purpose, and its definition location (`firestore.indexes.json`), making it clear it's a performance recommendation.\n\n**Considerations:**\n*   The decision to use client-side sorting is based on the assumption that the dataset of completed/archived consultations remains relatively small. Monitor this data size; if it grows significantly, a future task for server-side pagination and sorting will be necessary.",
@@ -3124,7 +3124,7 @@
         "subtasks": []
       },
       {
-        "id": "57",
+        "id": 57,
         "title": "Configure Firestore Composite Indexes for Consultation Queries",
         "description": "Create the `firestore.indexes.json` file to define required composite indexes for consultation queries, and document index requirements and deployment procedures.",
         "details": "This task involves creating and documenting the necessary Firestore composite indexes for various consultation query patterns used in the application. These indexes are crucial for optimizing query performance and ensuring queries execute without error.\n\n**1. Create `firestore.indexes.json`:**\n   - At the project root (`./`), create a new file named `firestore.indexes.json`.\n   - This file will contain the array of index definitions.\n\n**2. Define Composite Indexes for `consultation_requests` collection:**\n   - **Index for general consultation lists (e.g., admin overview):**\n     ```json\n     {\n       \"collectionGroup\": \"consultation_requests\",\n       \"queryScope\": \"COLLECTION\",\n       \"fields\": [\n         { \"fieldPath\": \"consultationStatus\", \"order\": \"ASCENDING\" },\n         { \"fieldPath\": \"createdAt\", \"order\": \"DESCENDING\" }\n       ]\n     }\n     ```\n     This index supports queries like `.where('consultationStatus', 'in', [...]).orderBy('createdAt', 'desc')`.\n   - **Index for 'Buy/Sell Consultation' tabs:**\n     ```json\n     {\n       \"collectionGroup\": \"consultation_requests\",\n       \"queryScope\": \"COLLECTION\",\n       \"fields\": [\n         { \"fieldPath\": \"type\", \"order\": \"ASCENDING\" },\n         { \"fieldPath\": \"consultationStatus\", \"order\": \"ASCENDING\" }\n       ]\n     }\n     ```\n     This supports queries similar to those in `Task 36`, e.g., `.where('type', '==', 'buy').where('consultationStatus', '!=', 'completed')`.\n   - **Index for user-specific consultations (if applicable):**\n     ```json\n     {\n       \"collectionGroup\": \"consultation_requests\",\n       \"queryScope\": \"COLLECTION\",\n       \"fields\": [\n         { \"fieldPath\": \"userId\", \"order\": \"ASCENDING\" },\n         { \"fieldPath\": \"consultationStatus\", \"order\": \"ASCENDING\" }\n       ]\n     }\n     ```\n     Add this if there are queries filtering by `userId` and `consultationStatus`.\n\n**3. Document Index Requirements and Deployment:**\n   - Create a new Markdown file: `docs/FIRESTORE_INDEXES.md` (or update `CLAUDE.md` if preferred, but a dedicated file is recommended).\n   - **Content to include:**\n     - **Deployment Instructions:** Clearly state the Firebase CLI command: `firebase deploy --only firestore:indexes`.\n     - **Explanation of each index:** For each defined index, explain which specific query pattern it supports and why it's necessary (e.g., 'This index supports filtering by consultation status and ordering by creation date'). Reference relevant parts of `firestore.indexes.json`.\n     - **Performance Considerations:** Briefly discuss the impact of indexes on read/write costs and query speed.\n     - **Maintenance Notes:** Guidance on how to add or modify indexes in the future.\n\n**4. Update Deployment Checklist:**\n   - Add a step to the main deployment checklist (e.g., in a `DEPLOYMENT.md` or similar file) to \"Verify Firestore indexes are deployed and up-to-date\" using `firebase deploy --only firestore:indexes`.",
@@ -3137,7 +3137,7 @@
         "subtasks": []
       },
       {
-        "id": "58",
+        "id": 58,
         "title": "Implement Pagination for Completed Consultations Tab",
         "description": "Refactor the `subscribeToCompletedConsultations` service function to support pagination and integrate an infinite scroll/load-more mechanism into `CompletedConsultationsTab` for improved scalability.",
         "details": "This task involves modifying the data fetching layer and the UI component to handle large datasets efficiently. \n\n**1. Refactor `subscribeToCompletedConsultations` (src/services/firebaseService.js):**\n- Update the function signature to accept an optional `limit` parameter (number, default to 50) and an optional `startAfterDoc` parameter (Firestore `DocumentSnapshot` or a document ID string). \n- Construct the Firestore query using `.limit(limit)` and conditionally applying `.startAfter(startAfterDoc)` when provided. \n- The function should return an object containing:\n    - `consultations`: An array of consultation data for the current page.\n    - `lastVisibleDoc`: The `DocumentSnapshot` of the last document fetched in the current query result. This will serve as the cursor for the next page.\n    - `hasMore`: A boolean indicating if there are more documents to fetch.\n- Ensure existing filter functionality (if any) is correctly integrated and reset when filters change.\n\n**2. Update `CompletedConsultationsTab` (src/screens/AdminConsultation/tabs/CompletedConsultationsTab.js):**\n- Introduce new state variables to manage:\n    - `consultationsData`: An array to store and append paginated consultation items.\n    - `lastVisibleDoc`: The cursor for the next page, passed to the service function.\n    - `loadingMore`: A boolean to indicate when more data is being fetched (for loading indicators).\n    - `hasMore`: A boolean derived from the service response to control the visibility of the 'Load More' button/infinite scroll.\n- Implement a `loadMoreConsultations` function (or similar) that:\n    - Calls the paginated `subscribeToCompletedConsultations` with the current `limit` and `lastVisibleDoc`.\n    - Updates `consultationsData` by appending new data.\n    - Updates `lastVisibleDoc` with the new cursor and `hasMore` based on the response.\n    - Manages the `loadingMore` state.\n- Render a 'Load More' button at the bottom of the list, visible only if `hasMore` is true and not `loadingMore`. Utilize the `Button` component from Task 12 for consistency.\n- Display a loading indicator (e.g., `ActivityIndicator` or `LoadingOverlay`) when `loadingMore` is true during subsequent page loads.\n- When filters are changed, reset the `consultationsData`, `lastVisibleDoc`, and `hasMore` states, then initiate a fresh fetch for the first page with the new filters.\n- Consider implementing `FlatList` with `onEndReached` and `onEndReachedThreshold` for a smoother infinite scroll experience, ensuring proper loading state handling.\n- Handle edge cases gracefully:\n    - No more data to load: Hide the 'Load More' button.\n    - Network errors during pagination: Display an error message and provide a retry mechanism.",
@@ -3151,7 +3151,7 @@
         "subtasks": []
       },
       {
-        "id": "59",
+        "id": 59,
         "title": "Enhance Firestore Listeners with Robust Error Handling and Retry Logic",
         "description": "Implement a reusable utility to wrap Firestore real-time listeners, adding automatic retry with exponential backoff, connection state tracking, and specific error code handling, along with UI indicators for connection status and offline mode.",
         "details": "This task involves creating a new utility, `firestoreListenerHelper.js`, to provide advanced error handling and retry capabilities for Firestore `onSnapshot` listeners. This utility will integrate with existing services and the UI to provide a more resilient and informative user experience.\n\n**1. Create Reusable Listener Wrapper Utility:**\n   - **File Location:** `src/utils/firestoreListenerHelper.js` (new file).\n   - Define an async function, `createFirestoreListener(collectionRef, queryOptions, callback, onError)`. This function will encapsulate the `onSnapshot` call within a retry loop.\n   - Implement an exponential backoff mechanism for retries: Start with 1 second, doubling up to a maximum of 32 seconds. Define `maxRetries` as 5.\n   - Track connection state: Use React Context (e.g., `ConnectionContext` in `src/context/ConnectionContext.js` if it exists, otherwise create it) to expose `isConnected`, `isReconnecting`, `retryAttempt`, and `isOfflineMode` globally.\n   - The wrapper should manage internal timers and retry attempts, clearing timeouts on successful reconnection or when retries are exhausted.\n\n**2. Implement Retry Logic for Subscription Functions:**\n   - Modify the existing subscription functions in `src/services/consultationService.js` (or equivalent file) to use the new wrapper:\n     - `subscribeToBuyConsultations`\n     - `subscribeToSellConsultations`\n     - `subscribeToCompletedConsultations`\n   - Each function should now pass its `onSnapshot` logic to `createFirestoreListener`.\n\n**3. Add Connection Status Indicators in UI:**\n   - Create a global UI component (e.g., `src/components/ConnectionStatusBanner.js`) that listens to the `ConnectionContext`.\n   - Display a 'Reconnecting...' banner when `isReconnecting` is true, optionally showing `retryAttempt`.\n   - Display 'Offline Mode (Cached Data)' when `isOfflineMode` is true.\n   - Implement a manual 'Refresh' button within the banner or as a global option to trigger an immediate retry/reconnection attempt.\n\n**4. Handle Specific Error Codes Differently:**\n   - Inside the `onError` handler of the wrapper, parse the Firebase error code (e.g., `error.code`).\n   - `permission-denied`: Do not retry. Log the error and display an 'Authentication/Permission Error' message using `firestoreErrorHandler.js`. Redirect to an error screen or prompt user to contact support.\n   - `unavailable` (network issues, transient server errors): Retry with exponential backoff.\n   - `unauthenticated`: Do not retry. Redirect the user to the login screen and clear any authentication tokens.\n   - Other errors: Use `firestoreErrorHandler.js` for general error logging and consistent messaging. Decide on retry behavior based on error type (e.g., retry for temporary issues, no retry for permanent data errors).\n\n**5. Add Offline Support Indicators:**\n   - Leverage Firestore `snapshot.metadata.fromCache` within the `callback` function of the listener wrapper.\n   - If `fromCache` is true, set `isOfflineMode` to true in the `ConnectionContext` and ensure the UI reflects 'Offline Mode (Cached Data)'.\n   - When operations are performed while offline, they should be queued by Firestore automatically. The UI can show a 'Pending Upload' indicator if relevant to specific data types.\n\n**6. Integrate with `firestoreErrorHandler.js`:**\n   - Ensure all non-retryable or exhausted-retry errors are passed to the existing `firestoreErrorHandler.js` utility (as established in Task 3) for consistent logging and user-facing messages. This includes `permission-denied` and `unauthenticated` errors.\n\n**Technical Details:**\n- Use `NetInfo` from `@react-native-community/netinfo` to monitor network connectivity and trigger listener re-initialization if the network comes back up after a prolonged disconnection.\n- Exponential backoff sequence: 1s, 2s, 4s, 8s, 16s, up to max 32s delay.\n- Maximum 5 retry attempts before giving up and reporting a persistent error.\n- Implement a React Context provider/consumer pattern for global connection status state.\n- Use `snapshot.metadata.fromCache` to distinguish between real-time data and cached data.\n- Ensure cleanup: When a component unmounts or a listener is explicitly unsubscribed, clear any pending timeouts/retries.\n",
@@ -3167,7 +3167,7 @@
         "subtasks": []
       },
       {
-        "id": "60",
+        "id": 60,
         "title": "Add Comprehensive Monitoring and Analytics for Ownership Transfers",
         "description": "Implement detailed event tracking, performance monitoring, and enhanced dashboard metrics for vehicle ownership transfer operations, alongside robust logging for audit trails and critical alert mechanisms.",
         "details": "This task involves a multi-faceted approach to gain deep visibility into the ownership transfer process. Key integration points will be `src/services/ownershipTransferService.js` and `src/components/modals/CompleteDealModal.js` (and potentially `src/components/modals/OwnershipTransferConfirmModal.js`).\n\n1.  **Firebase Analytics Event Tracking:**\n    *   Integrate `@react-native-firebase/analytics` to log custom events at key transfer milestones.\n    *   **`ownership_transfer_initiated`:** Log when a user starts the transfer process. This should be integrated into `CompleteDealModal.js` or `OwnershipTransferConfirmModal.js` right before the backend call. Include parameters: `type` (e.g., 'toAdmin', 'toBuyer'), `vehicleId`, `price`, `consultationId`.\n    *   **`ownership_transfer_completed`:** Log upon successful completion of `transferVehicleToAdmin` or `transferVehicleToBuyer` in `ownershipTransferService.js`. Include parameters: `duration` (calculated from initiation), `success` (true), `vehicleId`, `dealAmount`.\n    *   **`ownership_transfer_failed`:** Log within error handling blocks in `ownershipTransferService.js` for `transferVehicleToAdmin` and `transferVehicleToBuyer`. Include parameters: `errorCode`, `errorMessage`, `step` (e.g., 'firestore_update', 'payment_gateway'), `vehicleId`, `consultationId`.\n    *   **`ownership_modal_opened` / `ownership_modal_closed`:** Track user engagement with the `CompleteDealModal.js` (or `OwnershipTransferConfirmModal.js`) lifecycle.\n\n2.  **Firebase Performance Monitoring Integration:**\n    *   Integrate `@react-native-firebase/perf` to monitor the performance of critical backend operations.\n    *   Create custom traces for `ownershipTransferService.transferVehicleToAdmin` and `ownershipTransferService.transferVehicleToBuyer` to measure their end-to-end execution duration.\n    *   Monitor Firestore read/write latencies automatically via Firebase Performance Monitoring for all relevant collections (`ownership_transfers`, `vehicles`, `users`, `consultation_requests`).\n\n3.  **Admin Dashboard Metrics Enhancement:**\n    *   Extend the `AdminOwnershipHistoryScreen.js` (Task 53) or create a new dedicated dashboard section to display advanced analytics.\n    *   Implement logic to calculate and display:\n        *   **Total Transfers:** Daily, weekly, monthly counts.\n        *   **Average Completion Time:** For successful transfers.\n        *   **Failure Rate:** Overall and broken down by `errorCode` or `errorMessage`.\n        *   **Revenue Metrics:** Total `dealAmount` from completed transfers (daily, weekly, monthly).\n    *   Consider storing aggregated metrics in a new Firestore document (e.g., `admin_metrics/ownership_transfer_summary`) for efficient dashboard loading, updated via a scheduled Firebase Function or daily batch process.\n\n4.  **Detailed Logging for Audit Trail:**\n    *   Enhance existing logging within `ownershipTransferService.js` to create a comprehensive audit trail.\n    *   Log all attempts to `transferVehicleToAdmin` and `transferVehicleToBuyer` (including initiation, success, and failure) to a new Firestore collection `ownership_transfer_audit_logs`.\n    *   Each log entry should include: `timestamp`, `userId`, `vehicleId`, `consultationId`, `transferType`, `status` (initiated, completed, failed), `dealAmount` (if applicable), and crucially, `beforeState` and `afterState` (JSON snapshots of the `vehicle` and `consultation` documents involved in the transfer for debugging and auditing).\n\n5.  **Critical Issue Alerting:**\n    *   Implement Firebase Cloud Functions that trigger alerts based on specific monitoring data.\n    *   **Failure Rate Alert:** Trigger if the `ownership_transfer_failed` event rate exceeds a defined threshold (e.g., 5% within a 15-minute window).\n    *   **Transaction Timeout Alert:** Trigger if custom performance traces for `transfer_vehicle_to_admin_transaction` or `transfer_vehicle_to_buyer_transaction` exceed a defined duration (e.g., > 10 seconds).\n    *   **Permission Denied Spike:** Monitor Firestore logs for a spike in 'permission denied' errors related to collections involved in ownership transfers.\n    *   Alerts should be sent to designated channels (e.g., email, Slack) with relevant contextual information.",
@@ -3186,7 +3186,7 @@
         "updatedAt": "2025-12-18T12:53:23.565Z"
       },
       {
-        "id": "61",
+        "id": 61,
         "title": "Implement Optimistic UI for Consultation Archiving",
         "description": "Implement optimistic UI updates for archived consultations, providing immediate user feedback with automatic rollback on transaction failure.",
         "details": "This task involves enhancing the user experience in the AdminConsultation tabs and `CompleteDealModal` by introducing optimistic UI updates for the consultation archiving process, which is often tied to the vehicle ownership transfer flow. This means the UI will update instantly upon user action, with a fallback mechanism to revert changes if the underlying Firestore transaction fails.\n\n1.  **Identify Archiving Action & Integration Point:** Locate the code responsible for triggering the 'archive' action for consultations. This will primarily be within the `AdminConsultation` tabs and specifically within the `CompleteDealModal` where vehicle ownership transfers are finalized. The optimistic update should wrap the call to the relevant Firestore transaction, such as `transferVehicleToAdmin` (from Task 51), or a similar function responsible for marking consultations as archived.\n2.  **Optimistic UI Update Logic:**\n    *   Before initiating the Firestore transaction, update the local React state (e.g., using `useState` or a `useReducer` for `ConsultationCard` components or the overall list) to immediately reflect the archived status (e.g., changing status badge, applying an 'archived' style, showing a temporary success animation).\n    *   Ensure the local state stores the original consultation state before the optimistic update, enabling a quick rollback.\n3.  **Rollback Mechanism Implementation:**\n    *   Integrate rollback logic into the `catch` block of the Firestore transaction call. If the transaction (e.g., `transferVehicleToAdmin`) fails, revert the local UI state to its original, pre-optimistic state.\n    *   Utilize the global error handling system (Task 3) to log the error and display an appropriate error message to the user using the global toast system (Task 19).\n    *   Consider a mechanism to refresh the specific consultation data from the server on failure to ensure data consistency, especially if real-time listeners are not immediate enough.\n4.  **Loading States & User Feedback:**\n    *   During the transaction, display a loading spinner on the specific consultation card being processed. Disable further actions on that consultation card to prevent concurrent or repeated attempts.\n    *   Upon success, trigger a success toast notification using the system from Task 19. For failures, trigger an error toast message with details about the rollback and potential recovery suggestions.\n    *   Provide inline status updates directly on the consultation cards for ongoing processes or temporary states.\n5.  **Conflict Resolution (Advanced Consideration):** While not explicitly the primary focus of optimistic updates, consider how concurrent updates might interact. If the consultation state is updated by another user or process *between* the optimistic UI update and the server confirmation, the current implementation should ideally handle this gracefully. For this task, focus on basic optimistic update and rollback. Future tasks may expand on sophisticated conflict resolution (e.g., using version fields if available). For now, a server-refresh on failure is sufficient for basic consistency.",
@@ -3201,12 +3201,12 @@
         "subtasks": []
       },
       {
-        "id": "62",
+        "id": 62,
         "title": "Migrate Firebase Namespaced API to Modular API",
         "description": "This critical task involves updating all Firebase client-side code, specifically 74 occurrences across 24 files, from the deprecated namespaced API (e.g., firebase.firestore()) to the new modular API (e.g., getFirestore()).",
         "details": "The migration requires a systematic approach to replace deprecated Firebase API calls with their modular counterparts, ensuring all imports are updated and functionalities remain intact. This specifically targets the Firebase client SDK, version 9 and above, often used in src/services/firebaseService.js or dedicated Firestore service files like src/services/firestoreService.js.1. Firebase Initialization: Update the main Firebase initialization file (e.g., src/firebaseConfig.js or src/services/firebaseService.js) to use initializeApp from firebase/app and getFirestore from firebase/firestore. Example: // Old // import firebase from 'firebase/app'; // import 'firebase/firestore'; // const app = firebase.initializeApp(firebaseConfig); // const db = app.firestore(); // New import { initializeApp } from 'firebase/app'; import { getFirestore } from 'firebase/firestore'; const app = initializeApp(firebaseConfig); const db = getFirestore(app);2. Firestore API Calls: Replace firestore() calls: All instances of firestore() will be replaced by the db instance obtained from getFirestore().Collection and Document References: Replace db.collection('collectionName') with collection(db, 'collectionName'). Replace db.collection('collectionName').doc('docId') with doc(db, 'collectionName', 'docId').CRUD Operations: addDoc(collectionRef, data) (replaces collectionRef.add(data)) setDoc(docRef, data, { merge: true/false }) (replaces docRef.set(data, { merge: true/false })) updateDoc(docRef, data) (replaces docRef.update(data)) getDoc(docRef) (replaces docRef.get()) deleteDoc(docRef) (replaces docRef.delete())Queries: Imports: query, where, orderBy, limit, etc. from firebase/firestore. Usage: query(collectionRef, where('field', '==', 'value'), orderBy('field'), limit(10)). getDocs(queryRef) (replaces queryRef.get())Real-time Listeners (onSnapshot): Import onSnapshot from firebase/firestore. Usage: onSnapshot(queryRef, (snapshot) => { ... }) or onSnapshot(docRef, (snapshot) => { ... }). This is particularly relevant for Task 59.Transactions: Import runTransaction from firebase/firestore. Usage: runTransaction(db, async (transaction) => { ... }). Inside the transaction, use transaction.get(docRef) and transaction.update(docRef, data). This is relevant for Task 51 and Task 61.3. Authentication (if present): While the focus is Firestore, ensure that Firebase Auth initializations are also modular. getAuth from firebase/auth. onAuthStateChanged(auth, (user) => { ... }).4. File Scan and Refactoring: Perform a global search (grep) for firebase.firestore(), .firestore(), db.collection, and other namespaced patterns to identify all affected files. The user specified 24 files with 74 occurrences. Prioritize core Firebase service files (e.g., src/services/firebaseService.js, src/services/consultationService.js, src/services/vehicleService.js). Update import statements in each affected file from import 'firebase/firestore' or import firebase from 'firebase/app' to specific modular imports (e.g., import { collection, query, where } from 'firebase/firestore';).5. Error Handling: Ensure existing error handling mechanisms are compatible with potential new error formats from the modular API.",
         "testStrategy": "1. Local Development Environment: Ensure the Firebase Emulator Suite is running locally to facilitate rapid testing without affecting production data.2. Deprecation Warning Verification: Run the application in development mode and carefully monitor the console for any lingering Firebase deprecation warnings related to the namespaced API. There should be none after the migration.3. Comprehensive Feature Regression Testing: Consultation Features (related to Task 36, 59, 61): Verify that all consultation tabs ('구매상담', '판매상담', '거래완료') correctly fetch and display data. Test real-time updates for consultations by making changes in the Firestore console and observing UI reflection. Test optimistic UI for consultation archiving in the AdminConsultation tabs and CompleteDealModal, ensuring correct updates and rollback on simulated failure. Verify robust error handling and retry logic for Firestore listeners.Vehicle Ownership Transfer (related to Task 51): Perform vehicle ownership transfers (to admin, to buyer) and verify that all related data (vehicles, consultation_requests, admin_owned_vehicles) are updated atomically and correctly. Test edge cases for transactions (e.g., concurrent updates, network issues) using the emulator.General CRUD Operations: Perform create, read, update, and delete operations across various collections (e.g., users, vehicles, consultation_requests) from different parts of the application. Ensure data consistency and correct behavior for all forms and data displays.4. Unit and Integration Tests: Run the existing suite of unit and integration tests (especially those covering firebaseService.js as mentioned in Task 6). Update any test mocks or setup that relied on the namespaced API. Ensure all tests pass.5. Code Review: Conduct a thorough code review focusing on: Correctness of modular imports. Proper use of modular API functions (getFirestore, collection, doc, etc.). Absence of any deprecated API calls. Consistency in API usage across the codebase.6. Performance Check: Briefly monitor the application's performance to ensure the migration hasn't introduced any significant regressions in load times or responsiveness.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           "36",
           "51",
@@ -3277,8 +3277,8 @@
               3,
               4
             ],
-            "details": "Perform a comprehensive global search across all 24 identified files (and potentially others) for any remaining instances of `firebase.firestore()`, `.firestore()`, or other deprecated patterns. Update all import statements to use specific modular imports (e.g., `import { collection, query } from 'firebase/firestore';` instead of `import 'firebase/firestore'`). Review existing error handling blocks (`try-catch`) to ensure they correctly capture and process errors potentially returned by the modular Firebase API. Remove any redundant or unused old Firebase imports.",
-            "status": "in-progress",
+            "details": "Perform a comprehensive global search across all 24 identified files (and potentially others) for any remaining instances of `firebase.firestore()`, `.firestore()`, or other deprecated patterns. Update all import statements to use specific modular imports (e.g., `import { collection, query } from 'firebase/firestore';` instead of `import 'firebase/firestore'`). Review existing error handling blocks (`try-catch`) to ensure they correctly capture and process errors potentially returned by the modular Firebase API. Remove any redundant or unused old Firebase imports.\n<info added on 2025-12-19T10:58:36.855Z>\nCompleted a comprehensive global cleanup and verification based on the migration to Firebase Modular API. All deprecated patterns including `firestore()` calls, `auth()` calls, old-style `.collection()` chaining, and old-style `.doc()` chaining have been successfully removed, with zero instances remaining across the codebase.\n\nPerformed targeted import cleanup:\n- In `src/components/UpdateChecker.js`, removed unused Firebase imports (`DeviceInfo`, `getFirestore`, `collection`, `doc`, `getDoc`). Also removed an unused `setUpdateInfo` function and added `eslint-disable` directives for specific console statements to manage linting rules.\n- In `src/screens/AdminOwnedVehicleDetailScreen.js`, removed an unused `collection` import.\n\nVerified that `crashlytics()` usage remains valid and is not subject to deprecation within the context of the modular migration. All aspects of the Firebase Modular API migration work are now complete, and the application is ready for testing.\n</info added on 2025-12-19T10:58:36.855Z>",
+            "status": "done",
             "testStrategy": "Conduct full end-to-end regression testing of the application. Closely monitor the browser console for any Firebase deprecation warnings or runtime errors. Perform manual checks of critical user flows to ensure all functionalities remain intact and error messages are handled gracefully.",
             "parentId": "undefined",
             "updatedAt": "2025-12-19T10:51:59.811Z"
@@ -3294,7 +3294,10 @@
       "completedCount": 61,
       "tags": [
         "master"
-      ]
+      ],
+      "created": "2025-12-19T10:58:23.795Z",
+      "description": "Tasks for master context",
+      "updated": "2025-12-19T10:58:49.624Z"
     }
   }
 }

@@ -17,14 +17,34 @@ const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
     try {
       const db = getFirestore();
       const docRef = doc(db, 'consultation_requests', id);
+
+      // Check if document exists before updating
       const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        await updateDoc(docRef, { consultationStatus: newStatus });
-        Alert.alert('완료', `요청이 '${newStatus}'로 변경되었습니다.`);
+      if (!docSnap.exists()) {
+        Alert.alert('오류', '상담 요청을 찾을 수 없습니다.');
+        return;
       }
+
+      await updateDoc(docRef, { consultationStatus: newStatus });
+
+      // Provide user feedback with Korean status text
+      const statusText = newStatus === 'approved' ? '승인' : newStatus === 'rejected' ? '거절' : newStatus;
+      Alert.alert('완료', `상담 요청이 ${statusText}되었습니다.`);
     } catch (error) {
       Alert.alert('오류', '상태 업데이트 중 문제가 발생했습니다.');
+      console.error('MeetingConsultationsTab: Failed to update status', error);
     }
+  };
+
+  const confirmReject = (id) => {
+    Alert.alert(
+      '거절 확인',
+      '정말 거절하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '거절', style: 'destructive', onPress: () => handleStatusUpdate(id, 'rejected') },
+      ]
+    );
   };
 
   const getStatusLabel = (status) => {
@@ -78,7 +98,7 @@ const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
             <Button
               variant="danger"
               title="거절"
-              onPress={() => handleStatusUpdate(item.id, 'rejected')}
+              onPress={() => confirmReject(item.id)}
               style={{ flex: 1, marginLeft: theme.spacing.xs }}
             />
           </View>
