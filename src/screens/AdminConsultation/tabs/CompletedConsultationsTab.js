@@ -1,25 +1,36 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { formatPhone, formatPrice } from '../../../utils/format';
+import { fetchCompletedConsultationsPaginated } from '../../../services/firebaseService';
 import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
+import Button from '../../../components/Button';
 import StateScreen from '../../../components/StateScreen';
 
-const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
+const CompletedConsultationsTab = ({ consultations: initialConsultations, onNavigateToVehicle }) => {
   const theme = useTheme();
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
 
-  const completedConsultations = consultations.filter(
-    c => c.consultationStatus === 'completed'
-  );
+  // Task 58: Pagination state
+  const [consultationsData, setConsultationsData] = useState([]);
+  const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [usePagination] = useState(false); // Toggle for pagination mode
+
+  // Use real-time data from parent or paginated data
+  const completedConsultations = usePagination ? consultationsData : initialConsultations;
 
   const months = useMemo(() => {
     const monthSet = new Set();
     completedConsultations.forEach(c => {
-      if (c.completedAt) {
-        const date = c.completedAt.toDate ? c.completedAt.toDate() : new Date(c.completedAt);
+      // Task 50: Check both completedAt and archivedAt for month extraction
+      const timestamp = c.archivedAt || c.completedAt;
+      if (timestamp) {
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         monthSet.add(monthKey);
       }
@@ -33,8 +44,10 @@ const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
     // Filter by month
     if (selectedMonth !== 'all') {
       filtered = filtered.filter(c => {
-        if (!c.completedAt) {return false;}
-        const date = c.completedAt.toDate ? c.completedAt.toDate() : new Date(c.completedAt);
+        // Task 50: Check both completedAt and archivedAt
+        const timestamp = c.archivedAt || c.completedAt;
+        if (!timestamp) {return false;}
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         return monthKey === selectedMonth;
       });
@@ -88,76 +101,142 @@ const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
     return type === 'sell' ? 'warning' : 'success';
   };
 
-  const renderItem = (item) => (
-    <TouchableOpacity key={item.id} onPress={() => onNavigateToVehicle(item.vehicleId)}>
-      <Card style={{ marginBottom: theme.spacing.sm }}>
-        <View style={styles.header}>
-          <Badge
-            status={getTypeBadgeStatus(item.type)}
-            label={getTypeLabel(item.type)}
-          />
-          <Badge
-            status="completed"
-            label="거래완료"
-          />
-        </View>
+  // Task 58: Load initial page on mount or filter change
+  useEffect(() => {
+    if (!usePagination) {return;}
 
-        <Text style={[styles.vehicleName, {
-          fontSize: theme.typography.fontSize.h4,
-          fontWeight: theme.typography.fontWeight.bold,
-          color: theme.colors.text.primary,
-          marginTop: theme.spacing.sm,
-        }]}>{item.vehicleName}</Text>
+    const loadInitialData = async () => {
+      setInitialLoading(true);
+      const result = await fetchCompletedConsultationsPaginated({
+        limit: 20,
+        monthFilter: selectedMonth,
+        typeFilter: selectedType,
+      });
 
-        <View style={{ marginTop: theme.spacing.sm }}>
-          <Text style={[styles.infoText, {
-            fontSize: theme.typography.fontSize.bodySmall,
-            color: theme.colors.text.secondary,
-          }]}>고객명: {item.userName} ({formatPhone(item.userPhone)})</Text>
+      setConsultationsData(result.consultations);
+      setLastVisibleDoc(result.lastVisibleDoc);
+      setHasMore(result.hasMore);
+      setInitialLoading(false);
+    };
 
-          <Text style={[styles.infoText, {
-            fontSize: theme.typography.fontSize.bodySmall,
-            color: theme.colors.text.secondary,
-            marginTop: theme.spacing.xxs,
-          }]}>거래 금액: {formatPrice(item.dealAmount || 0)}</Text>
+    loadInitialData();
+  }, [usePagination, selectedMonth, selectedType]);
 
-          <Text style={[styles.infoText, {
-            fontSize: theme.typography.fontSize.bodySmall,
-            color: theme.colors.text.secondary,
-            marginTop: theme.spacing.xxs,
-          }]}>완료일: {formatDate(item.completedAt)}</Text>
+  // Task 58: Load more consultations function
+  const loadMoreConsultations = useCallback(async () => {
+    if (!hasMore || loadingMore) {return;}
 
-          {item.adminNotes && (
+    setLoadingMore(true);
+    const result = await fetchCompletedConsultationsPaginated({
+      limit: 20,
+      startAfterDoc: lastVisibleDoc,
+      monthFilter: selectedMonth,
+      typeFilter: selectedType,
+    });
+
+    setConsultationsData(prev => [...prev, ...result.consultations]);
+    setLastVisibleDoc(result.lastVisibleDoc);
+    setHasMore(result.hasMore);
+    setLoadingMore(false);
+  }, [hasMore, loadingMore, lastVisibleDoc, selectedMonth, selectedType]);
+
+  const renderItem = ({ item }) => {
+    // Task 50: Determine status badge based on consultationStatus
+    const isArchived = item.consultationStatus === 'archived';
+    const statusBadgeLabel = isArchived ? '보관됨' : '거래완료';
+    const statusBadgeStatus = isArchived ? 'archived' : 'completed';
+    const completionDate = item.archivedAt || item.completedAt;
+
+    return (
+      <TouchableOpacity key={item.id} onPress={() => onNavigateToVehicle(item.vehicleId)}>
+        <Card style={{ marginBottom: theme.spacing.sm }}>
+          <View style={styles.header}>
+            <Badge
+              status={getTypeBadgeStatus(item.type)}
+              label={getTypeLabel(item.type)}
+            />
+            <Badge
+              status={statusBadgeStatus}
+              label={statusBadgeLabel}
+            />
+            {item.isOwnershipTransferred && (
+              <Badge
+                status="success"
+                label="소유권이전"
+              />
+            )}
+          </View>
+
+          <Text style={[styles.vehicleName, {
+            fontSize: theme.typography.fontSize.h4,
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.text.primary,
+            marginTop: theme.spacing.sm,
+          }]}>{item.vehicleName}</Text>
+
+          <View style={{ marginTop: theme.spacing.sm }}>
             <Text style={[styles.infoText, {
               fontSize: theme.typography.fontSize.bodySmall,
-              color: theme.colors.text.tertiary,
-              marginTop: theme.spacing.xs,
-              fontStyle: 'italic',
-            }]}>메모: {item.adminNotes}</Text>
-          )}
-        </View>
-      </Card>
-    </TouchableOpacity>
-  );
+              color: theme.colors.text.secondary,
+            }]}>고객명: {item.userName} ({formatPhone(item.userPhone)})</Text>
 
-  if (completedConsultations.length === 0) {
-    return (
-      <StateScreen
-        icon="check-circle"
-        title="거래완료 내역이 없습니다"
-        message="완료된 거래가 없습니다."
-      />
+            <Text style={[styles.infoText, {
+              fontSize: theme.typography.fontSize.bodySmall,
+              color: theme.colors.text.secondary,
+              marginTop: theme.spacing.xxs,
+            }]}>거래 금액: {formatPrice(item.dealAmount || 0)}</Text>
+
+            <Text style={[styles.infoText, {
+              fontSize: theme.typography.fontSize.bodySmall,
+              color: theme.colors.text.secondary,
+              marginTop: theme.spacing.xxs,
+            }]}>{isArchived ? '보관일' : '완료일'}: {formatDate(completionDate)}</Text>
+
+            {item.adminNotes && (
+              <Text style={[styles.infoText, {
+                fontSize: theme.typography.fontSize.bodySmall,
+                color: theme.colors.text.tertiary,
+                marginTop: theme.spacing.xs,
+                fontStyle: 'italic',
+              }]}>메모: {item.adminNotes}</Text>
+            )}
+          </View>
+        </Card>
+      </TouchableOpacity>
     );
-  }
+  };
 
-  return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-      }}
-    >
+  // Task 58: Render Load More button
+  const renderLoadMoreButton = () => {
+    if (!usePagination || !hasMore) {return null;}
+
+    if (loadingMore) {
+      return (
+        <View style={{ paddingVertical: theme.spacing.lg, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={theme.colors.primary.main} />
+          <Text style={{
+            marginTop: theme.spacing.sm,
+            fontSize: theme.typography.fontSize.bodySmall,
+            color: theme.colors.text.secondary,
+          }}>불러오는 중...</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={{ paddingVertical: theme.spacing.md }}>
+        <Button
+          title="더 보기"
+          onPress={loadMoreConsultations}
+          variant="outline"
+        />
+      </View>
+    );
+  };
+
+  // Task 58: Render header with filters
+  const renderListHeader = () => (
+    <>
       {/* Month Filter */}
       <Card style={{ marginBottom: theme.spacing.md }}>
         <Text style={[styles.filterTitle, {
@@ -167,36 +246,37 @@ const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
           marginBottom: theme.spacing.sm,
         }]}>기간 선택</Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.monthFilterRow}>
-            {months.map(month => (
-              <TouchableOpacity
-                key={month}
-                style={[
-                  styles.monthButton,
-                  {
-                    backgroundColor: selectedMonth === month
-                      ? theme.colors.primary.main
-                      : theme.colors.background.secondary,
-                    borderRadius: theme.borderRadius.md,
-                    paddingVertical: theme.spacing.xs,
-                    paddingHorizontal: theme.spacing.sm,
-                    marginRight: theme.spacing.xs,
-                  },
-                ]}
-                onPress={() => setSelectedMonth(month)}
-              >
-                <Text style={{
-                  fontSize: theme.typography.fontSize.bodySmall,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: selectedMonth === month
-                    ? theme.colors.text.white
-                    : theme.colors.text.secondary,
-                }}>{formatMonthLabel(month)}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={months}
+          keyExtractor={(item) => item}
+          renderItem={({ item: month }) => (
+            <TouchableOpacity
+              style={[
+                styles.monthButton,
+                {
+                  backgroundColor: selectedMonth === month
+                    ? theme.colors.primary.main
+                    : theme.colors.background.secondary,
+                  borderRadius: theme.borderRadius.md,
+                  paddingVertical: theme.spacing.xs,
+                  paddingHorizontal: theme.spacing.sm,
+                  marginRight: theme.spacing.xs,
+                },
+              ]}
+              onPress={() => setSelectedMonth(month)}
+            >
+              <Text style={{
+                fontSize: theme.typography.fontSize.bodySmall,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: selectedMonth === month
+                  ? theme.colors.text.white
+                  : theme.colors.text.secondary,
+              }}>{formatMonthLabel(month)}</Text>
+            </TouchableOpacity>
+          )}
+        />
       </Card>
 
       {/* Type Filter */}
@@ -354,18 +434,42 @@ const CompletedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
           </View>
         </View>
       </Card>
+    </>
+  );
 
-      {/* Completed Consultations List */}
-      {filteredConsultations.length === 0 ? (
-        <StateScreen
-          icon="search"
-          title="검색 결과가 없습니다"
-          message="선택한 기간에 완료된 거래가 없습니다."
-        />
-      ) : (
-        filteredConsultations.map(item => renderItem(item))
-      )}
-    </ScrollView>
+  if (initialLoading && usePagination) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
+      </View>
+    );
+  }
+
+  if (completedConsultations.length === 0) {
+    return (
+      <StateScreen
+        icon="check-circle"
+        title="거래완료 내역이 없습니다"
+        message="완료된 거래가 없습니다."
+      />
+    );
+  }
+
+  return (
+    <FlatList
+      style={{ flex: 1 }}
+      contentContainerStyle={{
+        paddingHorizontal: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
+      }}
+      data={filteredConsultations}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      ListHeaderComponent={renderListHeader}
+      ListFooterComponent={renderLoadMoreButton}
+      onEndReached={usePagination ? loadMoreConsultations : undefined}
+      onEndReachedThreshold={0.5}
+    />
   );
 };
 

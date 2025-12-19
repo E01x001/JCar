@@ -5,8 +5,16 @@ jest.mock('react-native/Libraries/Alert/Alert', () => ({
   alert: jest.fn(),
 }));
 
-// Mock Firebase modules
-jest.mock('@react-native-firebase/auth');
+// Mock Firebase Auth Modular API (Task 62.4)
+jest.mock('@react-native-firebase/auth', () => ({
+  getAuth: jest.fn(),
+  createUserWithEmailAndPassword: jest.fn(),
+  signInWithEmailAndPassword: jest.fn(),
+  sendPasswordResetEmail: jest.fn(),
+  onAuthStateChanged: jest.fn(),
+  signOut: jest.fn(),
+}));
+
 jest.mock('@react-native-firebase/messaging');
 jest.mock('@react-native-firebase/crashlytics');
 jest.mock('@react-native-firebase/functions');
@@ -32,7 +40,8 @@ jest.mock('@react-native-firebase/firestore', () => ({
   deleteField: jest.fn(() => ({ _methodName: 'FieldValue.delete' })),
 }));
 
-import auth from '@react-native-firebase/auth';
+// Task 62.4: Import modular auth functions
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@react-native-firebase/auth';
 import { getFirestore, collection, doc, setDoc, updateDoc, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 import crashlytics from '@react-native-firebase/crashlytics';
@@ -55,11 +64,9 @@ describe('firebaseService', () => {
       const mockUser = { uid: 'test-uid-123' };
       const mockUserCredential = { user: mockUser };
 
-      const mockCreateUser = jest.fn().mockResolvedValue(mockUserCredential);
-
-      auth.mockReturnValue({
-        createUserWithEmailAndPassword: mockCreateUser,
-      });
+      // Task 62.4: Mock modular auth functions
+      getAuth.mockReturnValue({});
+      createUserWithEmailAndPassword.mockResolvedValue(mockUserCredential);
 
       // Mock modular Firestore API
       getFirestore.mockReturnValue({});
@@ -77,15 +84,15 @@ describe('firebaseService', () => {
 
       expect(result.success).toBe(true);
       expect(result.userId).toBe('test-uid-123');
-      expect(mockCreateUser).toHaveBeenCalledWith('test@example.com', 'password123');
+      expect(createUserWithEmailAndPassword).toHaveBeenCalledWith({}, 'test@example.com', 'password123');
       expect(setDoc).toHaveBeenCalled();
     });
 
     it('should handle registration error', async () => {
       const mockError = new Error('Email already exists');
-      auth.mockReturnValue({
-        createUserWithEmailAndPassword: jest.fn().mockRejectedValue(mockError),
-      });
+      // Task 62.4: Mock modular auth error
+      getAuth.mockReturnValue({});
+      createUserWithEmailAndPassword.mockRejectedValue(mockError);
 
       const userData = {
         email: 'existing@example.com',
@@ -106,9 +113,9 @@ describe('firebaseService', () => {
       const mockUser = { uid: 'test-uid-123' };
       const mockUserCredential = { user: mockUser };
 
-      auth.mockReturnValue({
-        signInWithEmailAndPassword: jest.fn().mockResolvedValue(mockUserCredential),
-      });
+      // Task 62.4: Mock modular auth
+      getAuth.mockReturnValue({});
+      signInWithEmailAndPassword.mockResolvedValue(mockUserCredential);
 
       const result = await loginUser({
         email: 'test@example.com',
@@ -121,9 +128,9 @@ describe('firebaseService', () => {
 
     it('should handle login error', async () => {
       const mockError = new Error('Invalid credentials');
-      auth.mockReturnValue({
-        signInWithEmailAndPassword: jest.fn().mockRejectedValue(mockError),
-      });
+      // Task 62.4: Mock modular auth error
+      getAuth.mockReturnValue({});
+      signInWithEmailAndPassword.mockRejectedValue(mockError);
 
       const result = await loginUser({
         email: 'test@example.com',

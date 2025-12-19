@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import auth from '@react-native-firebase/auth';
+import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics';
 import Toast from 'react-native-toast-message';
 
@@ -40,8 +40,9 @@ const ForgotPasswordScreen = ({ navigation }) => {
     setIsSubmitting(true);
 
     try {
-      // Firebase 비밀번호 재설정 이메일 발송
-      await auth().sendPasswordResetEmail(email);
+      // Task 62.4: Use modular sendPasswordResetEmail
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
 
       // 성공 시 일반화된 메시지 표시 (보안: 이메일 존재 여부 노출 방지)
       Toast.show({

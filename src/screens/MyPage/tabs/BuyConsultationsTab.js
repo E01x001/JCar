@@ -8,7 +8,12 @@ import StateScreen from '../../../components/StateScreen';
 const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
   const theme = useTheme();
 
-  const buyConsultations = consultations.filter(c => c.type === 'buy' || !c.type);
+  // Filter buy consultations and exclude cancelled ones (user shouldn't see cancelled consultations)
+  const buyConsultations = consultations.filter(c => {
+    const isBuyType = c.type === 'buy' || !c.type;
+    const isNotCancelled = c.consultationStatus !== 'cancelled';
+    return isBuyType && isNotCancelled;
+  });
 
   const getStatusBadge = (status) => {
     if (status === 'approved') {
@@ -34,7 +39,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
             fontWeight: theme.typography.fontWeight.semiBold,
             color: theme.colors.text.primary,
           }]}>{item?.vehicleName ?? '차량명 없음'}</Text>
-          {getStatusBadge(item.status)}
+          {getStatusBadge(item.consultationStatus)}
         </View>
         <Text style={[styles.consultDetail, {
           fontSize: theme.typography.fontSize.bodySmall,
@@ -43,7 +48,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
         }]}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
 
         {/* Show rejection reason preview if rejected */}
-        {item.status === 'rejected' && item.rejectionReason && (
+        {item.consultationStatus === 'rejected' && item.rejectionReason && (
           <Text style={[styles.rejectionPreview, {
             fontSize: theme.typography.fontSize.bodySmall,
             color: theme.colors.status.rejected,
@@ -54,7 +59,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
         )}
 
         {/* Show alternative slots preview if available */}
-        {item.status === 'rejected' && item.alternativeSlots && item.alternativeSlots.length > 0 && (
+        {item.consultationStatus === 'rejected' && item.alternativeSlots && item.alternativeSlots.length > 0 && (
           <Text style={[styles.alternativePreview, {
             fontSize: theme.typography.fontSize.bodySmall,
             color: theme.colors.text.tertiary,

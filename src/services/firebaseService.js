@@ -1,5 +1,6 @@
 // src/services/firebaseService.js
-import auth from '@react-native-firebase/auth';
+// Task 62.4: Migrated to React Native Firebase Modular API (v22+)
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@react-native-firebase/auth';
 import { getFirestore, collection, doc, setDoc, updateDoc, addDoc, getDoc, getDocs, query, where, orderBy, limit, startAfter, onSnapshot, runTransaction, serverTimestamp, deleteField } from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import messaging from '@react-native-firebase/messaging';
@@ -11,8 +12,9 @@ import { Alert, Platform, PermissionsAndroid } from 'react-native';
 // --------------------
 export const registerUser = async ({ email, password, name, phoneNumber }) => {
   try {
-    // Firebase Authentication에 사용자 생성
-    const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+    // Task 62.4: Use modular createUserWithEmailAndPassword
+    const auth = getAuth();
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const userId = userCredential.user.uid;
 
     // Firestore에 추가 정보 저장
@@ -40,7 +42,9 @@ export const registerUser = async ({ email, password, name, phoneNumber }) => {
 // --------------------
 export const loginUser = async ({ email, password }) => {
   try {
-    const userCredential = await auth().signInWithEmailAndPassword(email, password);
+    // Task 62.4: Use modular signInWithEmailAndPassword
+    const auth = getAuth();
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { success: true, userId: userCredential.user.uid };
   } catch (error) {
     console.error('로그인 실패:', error);

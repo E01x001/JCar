@@ -79,6 +79,17 @@ export const colors = {
     gray800: '#343A40',
     gray900: '#212529',
   },
+
+  // Status Colors (for consultation status badges and indicators)
+  status: {
+    pending: '#FFA000',      // warning color
+    approved: '#28A745',     // success color
+    confirmed: '#28A745',    // success color
+    rejected: '#DC3545',     // danger color
+    completed: '#28A745',    // success color
+    cancelled: '#6C757D',    // gray color
+    'on-hold': '#FFA000',    // warning color
+  },
 };
 
 export default colors;

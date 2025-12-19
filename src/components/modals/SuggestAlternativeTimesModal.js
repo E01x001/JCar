@@ -13,6 +13,8 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import PropTypes from 'prop-types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -151,19 +153,23 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
       animationType="fade"
       onRequestClose={handleCancel}
     >
-      <TouchableOpacity
-        style={styles.overlay}
-        activeOpacity={1}
-        onPress={handleCancel}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity activeOpacity={1}>
+      <View style={styles.overlay}>
+        <TouchableOpacity
+          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
+          activeOpacity={1}
+          onPress={handleCancel}
+        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <View style={styles.modalContainer}>
             <Card
               style={[
                 styles.modalCard,
                 {
-                  maxWidth: 400,
                   backgroundColor: theme.colors.background.paper,
+                  borderRadius: theme.borderRadius.lg,
                 },
               ]}
             >
@@ -280,24 +286,25 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
                     title={isSubmitting ? '저장 중...' : '저장'}
                     onPress={handleSubmit}
                     disabled={isSubmitting}
+                    loading={isSubmitting}
                     style={{ flex: 1, marginLeft: theme.spacing.sm }}
                   />
                 </View>
               </ScrollView>
             </Card>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
 
-      {/* Date Time Picker */}
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="datetime"
-        onConfirm={handleAddTimeSlot}
-        onCancel={() => setIsDatePickerVisible(false)}
-        minimumDate={new Date()}
-        minuteInterval={10}
-      />
+            {/* Date Time Picker */}
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="datetime"
+              onConfirm={handleAddTimeSlot}
+              onCancel={() => setIsDatePickerVisible(false)}
+              minimumDate={new Date()}
+              minuteInterval={10}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -305,18 +312,20 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalContainer: {
+  keyboardAvoidingView: {
     width: '100%',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
   },
   modalCard: {
     width: '100%',
-    maxHeight: '80%',
   },
   title: {},
   infoText: {},

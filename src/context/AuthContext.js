@@ -1,6 +1,7 @@
 // src/context/AuthContext.js
+// Task 62.4: Migrated to React Native Firebase Modular API (v22+)
 import React, { createContext, useState, useEffect } from 'react';
-import auth from '@react-native-firebase/auth';
+import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import messaging from '@react-native-firebase/messaging';
@@ -19,7 +20,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
+    // Task 62.4: Use modular onAuthStateChanged
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         try {
           const db = getFirestore();
@@ -57,8 +60,9 @@ export const AuthProvider = ({ children }) => {
     const unsubscribeTokenRefresh = messaging().onTokenRefresh(async (newToken) => {
       console.log('🔄 FCM 토큰 갱신됨:', newToken);
 
-      // 현재 로그인된 사용자의 토큰 업데이트
-      const currentUser = auth().currentUser;
+      // Task 62.4: Use modular currentUser
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
       if (currentUser) {
         try {
           const db = getFirestore();

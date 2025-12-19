@@ -25,7 +25,7 @@ const AdminConsultationScreen = () => {
   const [routes] = useState([
     { key: 'buy', title: '구매상담' },
     { key: 'sell', title: '판매상담' },
-    { key: 'completed', title: '거래완료' },
+    { key: 'completed', title: '완료 및 보관' },
   ]);
 
   useEffect(() => {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import auth from '@react-native-firebase/auth';
+import { getAuth } from '@react-native-firebase/auth';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
@@ -32,7 +32,9 @@ const VehicleDetailScreen = ({ route, navigation }) => {
             setIsSold(true);
           }
 
-          const currentUser = auth().currentUser;
+          // Task 62.4: Use modular currentUser
+          const auth = getAuth();
+          const currentUser = auth.currentUser;
           // Check ownership: use currentOwnerId (new) or sellerId (legacy)
           const ownerId = vehicleData.currentOwnerId || vehicleData.sellerId;
           if (currentUser && currentUser.uid === ownerId) {

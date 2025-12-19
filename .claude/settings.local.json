@@ -55,7 +55,11 @@
       "mcp__task-master-ai__set_task_status",
       "mcp__task-master-ai__parse_prd",
       "Bash(git push:*)",
-      "mcp__task-master-ai__get_tasks"
+      "mcp__task-master-ai__get_tasks",
+      "Bash(npm run android:*)",
+      "Bash(adb logcat:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   },

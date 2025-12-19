@@ -25,6 +25,7 @@ import AdminConsultationScreen from '../screens/AdminConsultationScreen';
 import AdminScheduleScreen from '../screens/AdminScheduleScreen';
 import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
 import AdminOwnedVehicleDetailScreen from '../screens/AdminOwnedVehicleDetailScreen';
+import AdminOwnershipHistoryScreen from '../screens/AdminOwnershipHistoryScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -144,6 +145,11 @@ const AppNavigator = () => {
               name="AdminOwnedVehicleDetailScreen"
               component={AdminOwnedVehicleDetailScreen}
               options={{ headerShown: true, title: '소유 차량 상세' }}
+            />
+            <Stack.Screen
+              name="AdminOwnershipHistory"
+              component={AdminOwnershipHistoryScreen}
+              options={{ headerShown: true, title: '소유권 이전 기록' }}
             />
           </>
         )}

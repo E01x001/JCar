@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { getFirestore, collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
+import { getAuth } from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AuthContext } from '../context/AuthContext';
@@ -102,7 +102,9 @@ const VehicleRegistrationScreen = () => {
     }
 
     try {
-      const currentUser = auth().currentUser;
+      // Task 62.4: Use modular currentUser
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
       let uploadedImageUrl = `https://www.cartory.net/cars/${vehicleData.CARURL}`;
 
       if (imageUri) {

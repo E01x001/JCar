@@ -75,22 +75,23 @@ const AdminMemoModal = ({ isVisible, onClose, onSubmit, initialMemo = '', consul
       animationType="fade"
       onRequestClose={handleCancel}
     >
-      <TouchableOpacity
-        style={styles.overlay}
-        activeOpacity={1}
-        onPress={handleCancel}
-      >
+      <View style={styles.overlay}>
+        <TouchableOpacity
+          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
+          activeOpacity={1}
+          onPress={handleCancel}
+        />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidingView}
         >
-          <TouchableOpacity activeOpacity={1}>
+          <View style={styles.modalContainer}>
             <Card
               style={[
                 styles.modalCard,
                 {
-                  maxWidth: 400,
                   backgroundColor: theme.colors.background.paper,
+                  borderRadius: theme.borderRadius.lg,
                 },
               ]}
             >
@@ -153,14 +154,15 @@ const AdminMemoModal = ({ isVisible, onClose, onSubmit, initialMemo = '', consul
                     title={isSubmitting ? '저장 중...' : '저장'}
                     onPress={handleSubmit}
                     disabled={isSubmitting}
+                    loading={isSubmitting}
                     style={{ flex: 1, marginLeft: theme.spacing.sm }}
                   />
                 </View>
               </ScrollView>
             </Card>
-          </TouchableOpacity>
+          </View>
         </KeyboardAvoidingView>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 };
@@ -168,18 +170,20 @@ const AdminMemoModal = ({ isVisible, onClose, onSubmit, initialMemo = '', consul
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   keyboardAvoidingView: {
     width: '100%',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
   },
   modalCard: {
     width: '100%',
-    maxHeight: '80%',
   },
   title: {},
   infoText: {},

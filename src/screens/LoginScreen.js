@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image } from 'react-native';
-import auth from '@react-native-firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
@@ -42,7 +42,9 @@ const LoginScreen = ({ navigation }) => {
     setEmailError('');
 
     try {
-      await auth().signInWithEmailAndPassword(email, password);
+      // Task 62.4: Use modular signInWithEmailAndPassword
+      const auth = getAuth();
+      await signInWithEmailAndPassword(auth, email, password);
       toast.showSuccess('로그인 성공', '환영합니다!');
     } catch (error) {
       crashlytics().recordError(error);

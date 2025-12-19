@@ -53,6 +53,10 @@ const ConsultationCard = ({
   const [isMemoModalVisible, setIsMemoModalVisible] = useState(false);
   const [isSuggestTimesModalVisible, setIsSuggestTimesModalVisible] = useState(false);
 
+  // Task 61: Optimistic UI state
+  const [optimisticStatus, setOptimisticStatus] = useState(null);
+  const [originalConsultation, setOriginalConsultation] = useState(null);
+
   const {
     id,
     consultationStatus,
@@ -66,6 +70,9 @@ const ConsultationCard = ({
     adminMemo = '',
     alternativeSlots = [],
   } = consultation;
+
+  // Task 61: Use optimistic status if available, otherwise use actual status
+  const displayStatus = optimisticStatus || consultationStatus;
 
   /**
    * Handle status update with loading state and error handling
@@ -98,9 +105,20 @@ const ConsultationCard = ({
 
   /**
    * Handle complete deal submission from modal
-   * @param {Object} formData - { dealAmount, adminNotes, addToOwnedVehicles }
+   * Task 61: Implements optimistic UI with rollback on failure
+   * @param {Object} formData - { dealAmount, adminNotes, addToOwnedVehicles, transferOwnership }
    */
   const handleCompleteDeal = async (formData) => {
+    // Task 61: Save original state for potential rollback
+    setOriginalConsultation(consultation);
+
+    // Task 61: Optimistic UI update - immediately show 'completed' status
+    setOptimisticStatus('completed');
+    setIsModalVisible(false);
+
+    // Show optimistic success feedback
+    toast.showInfo('거래를 처리하는 중입니다...');
+
     setIsUpdating(true);
     try {
       await completeConsultation({
@@ -111,16 +129,28 @@ const ConsultationCard = ({
         isSell: formData.addToOwnedVehicles, // Use transaction for sell-type with checkbox checked
       });
 
+      // Task 61: Server confirmation successful - clear optimistic state
+      setOptimisticStatus(null);
+      setOriginalConsultation(null);
       toast.showSuccess('거래가 완료되었습니다.');
-      setIsModalVisible(false);
 
       // Notify parent to refresh data
       if (onUpdateSuccess) {
         onUpdateSuccess();
       }
     } catch (error) {
+      // Task 61: Rollback optimistic UI update on failure
       console.error('거래완료 처리 실패:', error);
-      toast.showError('거래완료 처리 중 오류가 발생했습니다.');
+      setOptimisticStatus(null);
+      setOriginalConsultation(null);
+
+      toast.showError('거래완료 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+
+      // Refresh data from server to ensure consistency
+      if (onUpdateSuccess) {
+        onUpdateSuccess();
+      }
+
       throw error; // Re-throw for modal to handle
     } finally {
       setIsUpdating(false);
@@ -221,8 +251,9 @@ const ConsultationCard = ({
   };
 
   // Render action buttons based on consultationStatus
+  // Task 61: Use displayStatus to show optimistic UI updates
   const renderActionButtons = () => {
-    // Show loading indicator if updating
+    // Show loading indicator if updating (during server transaction)
     if (isUpdating) {
       return (
         <View style={[styles.loadingContainer, { marginTop: theme.spacing.md }]}>
@@ -243,7 +274,7 @@ const ConsultationCard = ({
       );
     }
 
-    if (consultationStatus === 'pending') {
+    if (displayStatus === 'pending') {
       return (
         <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
           <Button
@@ -271,7 +302,7 @@ const ConsultationCard = ({
       );
     }
 
-    if (consultationStatus === 'on-hold') {
+    if (displayStatus === 'on-hold') {
       return (
         <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
           <Button
@@ -293,6 +324,7 @@ const ConsultationCard = ({
     }
 
     // No buttons for 'confirmed', 'rejected', 'completed'
+    // Task 61: When optimistic status is 'completed', hide action buttons immediately
     return null;
   };
 
@@ -312,7 +344,7 @@ const ConsultationCard = ({
         <Card style={[{ marginBottom: theme.spacing.sm }, style]}>
           {/* Header: Badge + User Name + Memo Icon */}
           <View style={styles.header}>
-            <Badge status={consultationStatus} />
+            <Badge status={displayStatus} />
             <Text
               style={[
                 styles.userName,

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, RefreshControl, Dimensions }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import auth from '@react-native-firebase/auth';
+import { getAuth, signOut } from '@react-native-firebase/auth';
 import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
@@ -60,7 +60,9 @@ const AdminPageScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
-      await auth().signOut();
+      // Task 62.4: Use modular signOut
+      const auth = getAuth();
+      await signOut(auth);
       toast.showSuccess('로그아웃', '정상적으로 로그아웃되었습니다.');
     } catch (error) {
       crashlytics().recordError(error);

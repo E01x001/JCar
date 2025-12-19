@@ -13,7 +13,7 @@ import { useTheme } from '../theme/ThemeProvider';
  * Badge Component
  *
  * @param {Object} props
- * @param {'pending' | 'approved' | 'confirmed' | 'on-hold' | 'rejected' | 'completed'} props.status - Badge status
+ * @param {'pending' | 'approved' | 'confirmed' | 'on-hold' | 'rejected' | 'completed' | 'cancelled' | 'archived'} props.status - Badge status
  * @param {string} [props.label] - Custom label (overrides default status text)
  * @param {Object} [props.style] - Additional styles
  */
@@ -47,6 +47,16 @@ const Badge = ({ status, label, style }) => {
         return {
           color: theme.colors.info.main,
           text: label || '채결완료',
+        };
+      case 'cancelled':
+        return {
+          color: theme.colors.status.cancelled,
+          text: label || '취소됨',
+        };
+      case 'archived':
+        return {
+          color: theme.colors.text.secondary,
+          text: label || '보관됨',
         };
       default:
         return {
@@ -97,7 +107,7 @@ const styles = StyleSheet.create({
 });
 
 Badge.propTypes = {
-  status: PropTypes.oneOf(['pending', 'approved', 'confirmed', 'on-hold', 'rejected', 'completed']).isRequired,
+  status: PropTypes.oneOf(['pending', 'approved', 'confirmed', 'on-hold', 'rejected', 'completed', 'cancelled', 'archived']).isRequired,
   label: PropTypes.string,
   style: PropTypes.object,
 };
