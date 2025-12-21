@@ -22,7 +22,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { getFirestore, collection, query, orderBy, getDocs } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import Card from '../components/Card';
 import InputField from '../components/InputField';
 import StateScreen from '../components/StateScreen';
@@ -90,7 +90,7 @@ const AdminOwnershipHistoryScreen = ({ navigation }) => {
       console.log(`✅ Fetched ${transfersData.length} ownership transfers`);
     } catch (err) {
       console.error('❌ Failed to fetch ownership transfers:', err);
-      crashlytics().recordError(err);
+      reportCrashlyticsError(err);
       setError('소유권 이전 기록을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);

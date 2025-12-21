@@ -1,32 +1,58 @@
 /**
- * Import function triggers from their respective submodules:
+ * JCar Firebase Cloud Functions
  *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+ * Entry point for all Cloud Functions including:
+ * - FCM push notifications for consultation events
+ * - FCM push notifications for vehicle approval/rejection
  *
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
 const {setGlobalOptions} = require("firebase-functions");
-// const {onRequest} = require("firebase-functions/https");
-// const logger = require("firebase-functions/logger");
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
+// For cost control, set maximum number of concurrent function instances
+// This helps mitigate the impact of unexpected traffic spikes
 setGlobalOptions({maxInstances: 10});
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+// ============================================================================
+// Consultation Notification Triggers
+// ============================================================================
+// Send push notifications when consultation status changes
+// or admin actions occur
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+const consultationNotifications =
+  require("./triggers/consultationNotifications");
+
+// Consultation approved notification (pending → approved)
+exports.onConsultationApproved =
+  consultationNotifications.onConsultationApproved;
+
+// Consultation rejected notification (→ rejected)
+exports.onConsultationRejected =
+  consultationNotifications.onConsultationRejected;
+
+// Alternative time slots suggested notification
+// (alternativeSlots field changed)
+exports.onAlternativeSlotsSuggested =
+  consultationNotifications.onAlternativeSlotsSuggested;
+
+// Consultation completed notification (→ completed)
+exports.onConsultationCompleted =
+  consultationNotifications.onConsultationCompleted;
+
+// Admin memo updated notification (adminMemo field changed)
+exports.onAdminMemoUpdated =
+  consultationNotifications.onAdminMemoUpdated;
+
+// ============================================================================
+// Vehicle Notification Triggers
+// ============================================================================
+// Send push notifications when vehicle registration status changes
+
+const vehicleNotifications =
+  require("./triggers/vehicleNotifications");
+
+// Vehicle approval/rejection notification
+// (pending → approved/rejected)
+exports.onVehicleStatusChanged =
+  vehicleNotifications.onVehicleStatusChanged;

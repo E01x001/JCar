@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
 import { getAuth, signOut } from '@react-native-firebase/auth';
 import { getFirestore, collection, query, where, onSnapshot, orderBy, getDocs, writeBatch } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
@@ -40,8 +40,8 @@ const MyPageScreen = ({ navigation }) => {
       }
     }, error => {
       console.error('vehicle snapshot error:', error);
-      crashlytics().recordError(error);
-      crashlytics().log('MyPageScreen: Vehicle snapshot error');
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage('MyPageScreen: Vehicle snapshot error');
     });
 
     const consultationsRef = collection(db, 'consultation_requests');
@@ -57,8 +57,8 @@ const MyPageScreen = ({ navigation }) => {
       }
     }, error => {
       console.error('consultation snapshot error:', error);
-      crashlytics().recordError(error);
-      crashlytics().log('MyPageScreen: Consultation snapshot error');
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage('MyPageScreen: Consultation snapshot error');
     });
 
     return () => {
@@ -119,8 +119,8 @@ const MyPageScreen = ({ navigation }) => {
       await signOut(auth);
       toast.showSuccess('로그아웃', '정상적으로 로그아웃되었습니다.');
     } catch (error) {
-      crashlytics().recordError(error);
-      crashlytics().log('MyPageScreen: Logout failed');
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage('MyPageScreen: Logout failed');
       toast.showError('로그아웃 실패', error.message);
     }
   };
@@ -144,8 +144,8 @@ const MyPageScreen = ({ navigation }) => {
             await user.delete();
             toast.showSuccess('탈퇴 완료', '계정이 삭제되었습니다.');
           } catch (error) {
-            crashlytics().recordError(error);
-            crashlytics().log('MyPageScreen: Delete account failed');
+            reportCrashlyticsError(error);
+            logCrashlyticsMessage('MyPageScreen: Delete account failed');
             toast.showError('탈퇴 실패', error.message);
           }
         },

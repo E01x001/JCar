@@ -7,7 +7,7 @@
  * Task 62.3: Migrated to React Native Firebase Modular API (v22+)
  */
 
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import { onSnapshot } from '@react-native-firebase/firestore';
 
 /**
@@ -151,8 +151,8 @@ export function createFirestoreListener({
     console.error(`❌ ${listenerName}: Error occurred`, error.code, error.message);
 
     // Log to Crashlytics
-    crashlytics().recordError(error);
-    crashlytics().log(`${listenerName} error: ${error.code}`);
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage(`${listenerName} error: ${error.code}`);
 
     // Update connection context with error
     connectionContext.setLastError(error);
@@ -256,7 +256,7 @@ export function createSimpleListener(query, onSnapshotCallback, onError) {
     },
     (error) => {
       console.error('Firestore listener error:', error);
-      crashlytics().recordError(error);
+      reportCrashlyticsError(error);
 
       if (onError) {
         onError(error);

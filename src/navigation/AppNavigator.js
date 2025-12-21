@@ -116,7 +116,7 @@ const AdminTabs = () => (
   </Tab.Navigator>
 );
 
-const AppNavigator = () => {
+const AppNavigator = ({ navigationRef }) => {
   const { user, role, loading } = useContext(AuthContext);
 
   if (loading) {
@@ -128,7 +128,7 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{
         headerShown: false,
         ...navigationStyles.header,

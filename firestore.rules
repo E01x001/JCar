@@ -102,6 +102,7 @@ service cloud.firestore {
                        (!('transferId' in request.resource.data)) &&
                        (!('dealAmount' in request.resource.data))) ||
                       // User resubmission of rejected consultation
+                      // Allow users to resubmit with new date/time and remove admin-only fields
                       (request.auth != null &&
                        isActiveUser() &&
                        request.auth.uid == resource.data.userId &&
@@ -109,14 +110,10 @@ service cloud.firestore {
                        request.resource.data.consultationStatus == 'pending' &&
                        request.resource.data.preferredDate is string &&
                        request.resource.data.preferredTime is string &&
-                       // Ensure user cannot set (but can delete) admin-only or ownership fields
-                       // Allow deletion by checking that if field exists in request, it must be null/deleted
-                       (!('rejectionReason' in request.resource.data) || request.resource.data.rejectionReason == null) &&
-                       (!('alternativeSlots' in request.resource.data) || request.resource.data.alternativeSlots == null) &&
-                       (!('rejectedAt' in request.resource.data) || request.resource.data.rejectedAt == null) &&
-                       !('isOwnershipTransferred' in request.resource.data) &&
-                       !('transferId' in request.resource.data) &&
-                       !('dealAmount' in request.resource.data));
+                       // Explicitly allow deletion of admin-only fields
+                       !('rejectionReason' in request.resource.data) &&
+                       !('alternativeSlots' in request.resource.data) &&
+                       !('rejectedAt' in request.resource.data));
 
       // Only active admins can delete requests
       allow delete: if isAdmin() && isActiveUser();

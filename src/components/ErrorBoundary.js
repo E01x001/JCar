@@ -1,6 +1,7 @@
+// Task 63.2: Migrated Crashlytics to v22 Modular API
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { getCrashlytics, recordError, log, setAttribute } from '@react-native-firebase/crashlytics';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -19,10 +20,10 @@ class ErrorBoundary extends Component {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
     try {
-      crashlytics().recordError(error);
-
-      crashlytics().log('Error boundary caught an error');
-      crashlytics().setAttribute('component_stack', errorInfo.componentStack || 'N/A');
+      const crashlyticsInstance = getCrashlytics();
+      recordError(crashlyticsInstance, error);
+      log(crashlyticsInstance, 'Error boundary caught an error');
+      setAttribute(crashlyticsInstance, 'component_stack', errorInfo.componentStack || 'N/A');
     } catch (crashlyticsError) {
       console.error('Failed to log error to Crashlytics:', crashlyticsError);
     }

@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import PropTypes from 'prop-types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DatePicker from 'react-native-date-picker';
 import { useTheme } from '../../theme/ThemeProvider';
 import Card from '../Card';
 import Button from '../Button';
@@ -38,6 +38,7 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
   const [suggestedSlots, setSuggestedSlots] = useState([]);
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Load initial slots when modal opens
   // Convert {date, time} format to Date objects
@@ -67,10 +68,10 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
     }
   }, [isVisible]);
 
-  const handleAddTimeSlot = (selectedDate) => {
+  const handleAddTimeSlot = (date) => {
     setIsDatePickerVisible(false);
-    if (selectedDate) {
-      setSuggestedSlots([...suggestedSlots, selectedDate]);
+    if (date) {
+      setSuggestedSlots([...suggestedSlots, date]);
     }
   };
 
@@ -112,6 +113,8 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
         {
           backgroundColor: theme.colors.background.secondary,
           borderRadius: theme.borderRadius.md,
+          borderWidth: 1,
+          borderColor: theme.colors.primary.opacity10,
           padding: theme.spacing.sm,
           marginBottom: theme.spacing.xs,
         },
@@ -123,6 +126,7 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
           {
             fontSize: theme.typography.fontSize.body,
             color: theme.colors.text.primary,
+            fontWeight: theme.typography.fontWeight.medium,
             flex: 1,
           },
         ]}
@@ -168,8 +172,13 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
               style={[
                 styles.modalCard,
                 {
-                  backgroundColor: theme.colors.background.paper,
+                  backgroundColor: '#FFFFFF',
                   borderRadius: theme.borderRadius.lg,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 12,
+                  elevation: 8,
                 },
               ]}
             >
@@ -184,7 +193,7 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
                     {
                       fontSize: theme.typography.fontSize.h3,
                       fontWeight: theme.typography.fontWeight.bold,
-                      color: theme.colors.text.primary,
+                      color: theme.colors.primary.main,
                       marginBottom: theme.spacing.xs,
                     },
                   ]}
@@ -198,7 +207,7 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
                     styles.infoText,
                     {
                       fontSize: theme.typography.fontSize.bodySmall,
-                      color: theme.colors.text.secondary,
+                      color: theme.colors.text.primary,
                       marginBottom: theme.spacing.md,
                     },
                   ]}
@@ -225,7 +234,7 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
                         {
                           fontSize: theme.typography.fontSize.bodySmall,
                           fontWeight: theme.typography.fontWeight.semiBold,
-                          color: theme.colors.text.secondary,
+                          color: theme.colors.primary.main,
                           marginBottom: theme.spacing.xs,
                         },
                       ]}
@@ -246,6 +255,9 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
                       {
                         backgroundColor: theme.colors.background.secondary,
                         borderRadius: theme.borderRadius.md,
+                        borderWidth: 1,
+                        borderStyle: 'dashed',
+                        borderColor: theme.colors.border.light,
                         padding: theme.spacing.lg,
                         marginBottom: theme.spacing.md,
                         alignItems: 'center',
@@ -255,14 +267,14 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
                     <MaterialIcons
                       name="schedule"
                       size={48}
-                      color={theme.colors.text.tertiary}
+                      color={theme.colors.primary.light}
                     />
                     <Text
                       style={[
                         styles.emptyText,
                         {
                           fontSize: theme.typography.fontSize.bodySmall,
-                          color: theme.colors.text.tertiary,
+                          color: theme.colors.text.secondary,
                           marginTop: theme.spacing.sm,
                         },
                       ]}
@@ -294,13 +306,19 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
             </Card>
 
             {/* Date Time Picker */}
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
+            <DatePicker
+              modal
+              open={isDatePickerVisible}
+              date={selectedDate}
               mode="datetime"
               onConfirm={handleAddTimeSlot}
               onCancel={() => setIsDatePickerVisible(false)}
               minimumDate={new Date()}
               minuteInterval={10}
+              locale="ko"
+              title="대체 시간 선택"
+              confirmText="확인"
+              cancelText="취소"
             />
           </View>
         </KeyboardAvoidingView>

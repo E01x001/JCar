@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import Toast from 'react-native-toast-message';
 
 const ForgotPasswordScreen = ({ navigation }) => {
@@ -59,8 +59,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
       }, 1000);
     } catch (error) {
       // 에러 로깅 (개발자용)
-      crashlytics().recordError(error);
-      crashlytics().log(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
 
       // 사용자에게는 동일한 일반화된 메시지 표시 (보안: 시스템 정보 노출 방지)
       Toast.show({

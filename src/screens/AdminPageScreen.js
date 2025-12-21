@@ -5,7 +5,8 @@ import { TabView, TabBar } from 'react-native-tab-view';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getAuth, signOut } from '@react-native-firebase/auth';
 import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
+import { getCrashlytics, setAttribute } from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
@@ -52,8 +53,8 @@ const AdminPageScreen = ({ navigation }) => {
       setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
       toast.showSuccess('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
-      crashlytics().recordError(error);
-      crashlytics().log('AdminPageScreen: Delete vehicle failed');
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage('AdminPageScreen: Delete vehicle failed');
       toast.showError('삭제 실패', error.message);
     }
   };
@@ -65,8 +66,8 @@ const AdminPageScreen = ({ navigation }) => {
       await signOut(auth);
       toast.showSuccess('로그아웃', '정상적으로 로그아웃되었습니다.');
     } catch (error) {
-      crashlytics().recordError(error);
-      crashlytics().log('AdminPageScreen: Logout failed');
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage('AdminPageScreen: Logout failed');
       toast.showError('로그아웃 실패', error.message);
     }
   };
@@ -92,8 +93,8 @@ const AdminPageScreen = ({ navigation }) => {
             await user.delete();
             toast.showSuccess('탈퇴 완료', '계정이 삭제되었습니다.');
           } catch (error) {
-            crashlytics().recordError(error);
-            crashlytics().log('AdminPageScreen: Delete account failed');
+            reportCrashlyticsError(error);
+            logCrashlyticsMessage('AdminPageScreen: Delete account failed');
             toast.showError('탈퇴 실패', error.message);
           }
         },
@@ -102,11 +103,12 @@ const AdminPageScreen = ({ navigation }) => {
   };
 
   const handleTestCrash = () => {
-    crashlytics().log('User triggered test crash');
-    crashlytics().setAttribute('test_type', 'manual_crash');
+    logCrashlyticsMessage('User triggered test crash');
+    const crashlyticsInstance = getCrashlytics();
+    setAttribute(crashlyticsInstance, 'test_type', 'manual_crash');
 
     const testError = new Error('Test crash from AdminPage for Crashlytics verification');
-    crashlytics().recordError(testError);
+    reportCrashlyticsError(testError);
 
     toast.showInfo('테스트 완료', 'Crashlytics에 에러가 기록되었습니다. Firebase Console에서 확인하세요.');
   };
@@ -135,8 +137,8 @@ const AdminPageScreen = ({ navigation }) => {
               }
             } catch (error) {
               console.error('Migration error:', error);
-              crashlytics().recordError(error);
-              crashlytics().log('AdminPageScreen: Migration failed');
+              reportCrashlyticsError(error);
+              logCrashlyticsMessage('AdminPageScreen: Migration failed');
               Alert.alert('오류', '마이그레이션 중 오류가 발생했습니다.\n\n' + error.message);
               toast.showError('마이그레이션 실패', error.message);
             }

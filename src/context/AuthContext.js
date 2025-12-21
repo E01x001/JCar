@@ -1,11 +1,11 @@
 // src/context/AuthContext.js
 // Task 62.4: Migrated to React Native Firebase Modular API (v22+)
+// Task 63.2: Migrated Crashlytics and Messaging to v22 Modular API
 import React, { createContext, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
-import messaging from '@react-native-firebase/messaging';
-import { saveFcmToken } from '../services/firebaseService';
+import { saveFcmToken, reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService';
+import { getMessaging, onTokenRefresh } from '@react-native-firebase/messaging';
 
 export const AuthContext = createContext(null);
 
@@ -42,8 +42,8 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('AuthContext: Error loading user data:', error);
-          crashlytics().recordError(error);
-          crashlytics().log('AuthContext: Failed to load user data');
+          reportCrashlyticsError(error);
+          logCrashlyticsMessage('AuthContext: Failed to load user data');
         }
       } else {
         setUser(null);
@@ -57,7 +57,8 @@ export const AuthProvider = ({ children }) => {
 
   // FCM 토큰 갱신 리스너
   useEffect(() => {
-    const unsubscribeTokenRefresh = messaging().onTokenRefresh(async (newToken) => {
+    const messagingInstance = getMessaging();
+    const unsubscribeTokenRefresh = onTokenRefresh(messagingInstance, async (newToken) => {
       console.log('🔄 FCM 토큰 갱신됨:', newToken);
 
       // Task 62.4: Use modular currentUser
@@ -71,8 +72,8 @@ export const AuthProvider = ({ children }) => {
           console.log('✅ 갱신된 FCM 토큰 저장 완료');
         } catch (error) {
           console.error('❌ 갱신된 FCM 토큰 저장 실패:', error);
-          crashlytics().recordError(error);
-          crashlytics().log('onTokenRefresh: Failed to save new token');
+          reportCrashlyticsError(error);
+          logCrashlyticsMessage('onTokenRefresh: Failed to save new token');
         }
       }
     });

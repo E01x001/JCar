@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
 import { formatPrice } from '../utils/format';
@@ -42,8 +42,8 @@ const AdminOwnedVehicleDetailScreen = ({ route, navigation }) => {
         },
         (error) => {
           console.error('AdminOwnedVehicleDetailScreen: Failed to fetch vehicle', error);
-          crashlytics().recordError(error);
-          crashlytics().log('AdminOwnedVehicleDetailScreen: Firestore query failed');
+          reportCrashlyticsError(error);
+          logCrashlyticsMessage('AdminOwnedVehicleDetailScreen: Firestore query failed');
           toast.showError('차량 정보를 불러오는데 실패했습니다.');
           setLoading(false);
         }
@@ -78,8 +78,8 @@ const AdminOwnedVehicleDetailScreen = ({ route, navigation }) => {
       }, 500);
     } catch (error) {
       console.error('AdminOwnedVehicleDetailScreen: Failed to mark as sold', error);
-      crashlytics().recordError(error);
-      crashlytics().log('AdminOwnedVehicleDetailScreen: Update failed');
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage('AdminOwnedVehicleDetailScreen: Update failed');
       toast.showError('판매완료 처리에 실패했습니다.');
       throw error; // Re-throw for modal to handle
     } finally {

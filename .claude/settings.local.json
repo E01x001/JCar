@@ -59,7 +59,10 @@
       "Bash(npm run android:*)",
       "Bash(adb logcat:*)",
       "Bash(git reset:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(firebase deploy:*)",
+      "mcp__task-master-ai__expand_all",
+      "mcp__task-master-ai__next_task"
     ],
     "deny": []
   },

@@ -13,6 +13,8 @@ import {
 import BuyConsultationsTab from './AdminConsultation/tabs/BuyConsultationsTab';
 import SellConsultationsTab from './AdminConsultation/tabs/SellConsultationsTab';
 import CompletedConsultationsTab from './AdminConsultation/tabs/CompletedConsultationsTab';
+import StatisticsCard from '../components/StatisticsCard';
+import useConsultationStats from '../hooks/useConsultationStats';
 
 const AdminConsultationScreen = () => {
   const { user } = useContext(AuthContext);
@@ -27,6 +29,9 @@ const AdminConsultationScreen = () => {
     { key: 'sell', title: '판매상담' },
     { key: 'completed', title: '완료 및 보관' },
   ]);
+
+  // Get consultation statistics
+  const consultationStats = useConsultationStats();
 
   useEffect(() => {
     if (!user) {return () => {};}
@@ -90,6 +95,127 @@ const AdminConsultationScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+      {/* Statistics Dashboard */}
+      {!consultationStats.loading && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: theme.spacing.md,
+            paddingTop: theme.spacing.xs,
+            paddingBottom: theme.spacing.xs,
+          }}
+          style={{ flexGrow: 0 }}
+        >
+          {index === 0 && (
+            // Buy Consultation Statistics
+            <>
+              <StatisticsCard
+                iconName="people"
+                label="전체"
+                count={consultationStats.buy.total}
+                variant="primary"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="schedule"
+                label="대기중"
+                count={consultationStats.buy.pending}
+                variant="warning"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="check-circle"
+                label="승인됨"
+                count={consultationStats.buy.approved}
+                variant="success"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="cancel"
+                label="거절됨"
+                count={consultationStats.buy.rejected}
+                variant="error"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="done-all"
+                label="완료됨"
+                count={consultationStats.buy.completed}
+                variant="info"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+            </>
+          )}
+          {index === 1 && (
+            // Sell Consultation Statistics
+            <>
+              <StatisticsCard
+                iconName="people"
+                label="전체"
+                count={consultationStats.sell.total}
+                variant="primary"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="schedule"
+                label="대기중"
+                count={consultationStats.sell.pending}
+                variant="warning"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="check-circle"
+                label="승인됨"
+                count={consultationStats.sell.approved}
+                variant="success"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="cancel"
+                label="거절됨"
+                count={consultationStats.sell.rejected}
+                variant="error"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="done-all"
+                label="완료됨"
+                count={consultationStats.sell.completed}
+                variant="info"
+                style={{ minWidth: 80, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+            </>
+          )}
+          {index === 2 && (
+            // Completed Consultations Statistics
+            <>
+              <StatisticsCard
+                iconName="done-all"
+                label="구매 완료"
+                count={consultationStats.buy.completed}
+                variant="success"
+                style={{ minWidth: 100, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="done-all"
+                label="판매 완료"
+                count={consultationStats.sell.completed}
+                variant="success"
+                style={{ minWidth: 100, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+              <StatisticsCard
+                iconName="people"
+                label="총 완료"
+                count={consultationStats.buy.completed + consultationStats.sell.completed}
+                variant="primary"
+                style={{ minWidth: 100, paddingVertical: 8, paddingHorizontal: 8 }}
+              />
+            </>
+          )}
+        </ScrollView>
+      )}
+
       <TabView
           navigationState={{ index, routes }}
           renderScene={renderScene}

@@ -182,7 +182,18 @@ Stores all consultation requests between users and admin.
 | `email` | string | Yes | Email address |
 | `phoneNumber` | string | Yes | Phone number |
 | `role` | string | Yes | 'user' or 'admin' |
+| `fcmToken` | string \| null | No | Firebase Cloud Messaging token for push notifications |
 | `createdAt` | Timestamp | Yes | Account creation timestamp |
+
+### FCM Token Management
+
+- **Purpose**: Store device FCM token for sending push notifications
+- **Updated**: Token is saved/updated when user logs in (see `AuthContext.js`)
+- **Lifecycle**:
+  - Created: On user login via `saveFcmToken()` in `firebaseService.js`
+  - Updated: When device token changes (app reinstall, token refresh)
+  - Removed: Set to `null` when user logs out or uninstalls app
+- **Security**: Token is device-specific and automatically invalidated by Firebase when device uninstalls app
 
 ---
 
@@ -238,6 +249,105 @@ ConsultationRequest (status: archived, isOwnershipTransferred: true)
 - **`ownership_transfers`**: Only admin can read/create; no updates/deletes
 - **`consultation_requests`**: Only requestor, seller, or admin can read/update
 - **`admin_owned_vehicles`**: Only admin can read/write
+- **`users`**: Users can only read/update their own document; admin can read all
+
+---
+
+## FCM Push Notifications (Tasks 64-70) ✅
+
+### Overview
+
+Firebase Cloud Functions automatically send push notifications when specific Firestore document changes occur. Notifications are sent to users via their FCM token stored in the `users` collection.
+
+### Notification Triggers
+
+#### **Consultation Notifications** (5 triggers)
+
+| Trigger | Firestore Change | Recipient | Screen | Implementation |
+|---------|-----------------|-----------|--------|----------------|
+| **Consultation Approved** | `consultationStatus`: `pending` → `approved` | User (`userId`) | `UserConsultationDetail` | `onConsultationApproved` |
+| **Consultation Rejected** | `consultationStatus` → `rejected` | User (`userId`) | `UserConsultationDetail` | `onConsultationRejected` |
+| **Alternative Slots Suggested** | `alternativeSlots` field added/changed | User (`userId`) | `UserConsultationDetail` | `onAlternativeSlotsSuggested` |
+| **Consultation Completed** | `consultationStatus` → `completed` | User (`userId`) | `UserConsultationDetail` | `onConsultationCompleted` |
+| **Admin Memo Added** | `adminMemo` field added/changed | User (`userId`) | `UserConsultationDetail` | `onAdminMemoUpdated` |
+
+#### **Vehicle Notifications** (1 trigger)
+
+| Trigger | Firestore Change | Recipient | Screen | Implementation |
+|---------|-----------------|-----------|--------|----------------|
+| **Vehicle Status Changed** | `status`: `pending` → `approved`/`rejected` | Owner (`currentOwnerId` or `sellerId`) | `VehicleDetail` (approved) or `MyPage` (rejected) | `onVehicleStatusChanged` |
+
+### Notification Data Payload
+
+All notifications include a `data` object for deep linking:
+
+```javascript
+{
+  type: string,              // Notification type (e.g., 'consultation_approved')
+  consultationId?: string,   // Consultation document ID (if applicable)
+  vehicleId?: string,        // Vehicle document ID (if applicable)
+  screen: string            // Target screen name for navigation
+}
+```
+
+### Deep Linking Flow
+
+1. **Server**: Cloud Function sends notification with `data.screen` and relevant IDs
+2. **Client**: App receives notification in foreground/background/quit state
+3. **Navigation**: `handleNotificationNavigation()` in `App.js` routes to `data.screen` with parameters
+
+```javascript
+// Example: Consultation approved notification
+{
+  notification: {
+    title: "상담 승인",
+    body: "2025-01-15 14:00 구매 상담이 승인되었습니다."
+  },
+  data: {
+    type: "consultation_approved",
+    consultationId: "abc123",
+    screen: "UserConsultationDetail"
+  }
+}
+```
+
+### Notification States
+
+| State | Handler | Behavior | Implementation |
+|-------|---------|----------|----------------|
+| **Foreground** | `onMessage()` | Show Toast, tap to navigate | `App.js` line 69-105 |
+| **Background** | `onNotificationOpenedApp()` | Auto-navigate on tap | `App.js` line 127-135 |
+| **Quit** | `getInitialNotification()` | Auto-navigate on app open | `App.js` line 111-125 |
+
+### Error Handling
+
+- **Invalid FCM Token**: Logged, no retry (expected when user uninstalls app)
+- **Missing User Document**: Logged, notification not sent
+- **Missing FCM Token**: Logged, notification not sent
+- **Navigation Failure**: Logged, no user-facing error
+
+### Files
+
+#### **Server-Side (Cloud Functions)**
+- `functions/utils/fcm.js` - FCM utilities and token management
+- `functions/triggers/consultationNotifications.js` - Consultation notification triggers
+- `functions/triggers/vehicleNotifications.js` - Vehicle notification triggers
+- `functions/index.js` - Function exports
+
+#### **Client-Side (React Native)**
+- `src/App.js` - Notification handlers and deep linking
+- `src/services/firebaseService.js` - FCM token management
+- `src/context/AuthContext.js` - Token save on login
+- `src/navigation/AppNavigator.js` - Navigation ref for deep linking
+
+### Testing
+
+1. **Manual Testing**: Change Firestore documents via Firebase Console
+2. **Expected Behavior**:
+   - Notification appears in notification center
+   - Foreground: Toast appears, tap to navigate
+   - Background/Quit: Tap notification to auto-navigate
+3. **Monitoring**: Check Cloud Functions logs for delivery status
 
 ---
 

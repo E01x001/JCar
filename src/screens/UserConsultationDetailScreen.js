@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { getFirestore, collection, doc, onSnapshot, getDoc } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
@@ -81,7 +81,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
                 }
               } catch (error) {
                 console.error('UserConsultationDetailScreen: Failed to fetch vehicle', error);
-                crashlytics().recordError(error);
+                reportCrashlyticsError(error);
               }
             }
           } else {
@@ -91,7 +91,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
         },
         (error) => {
           console.error('UserConsultationDetailScreen: Failed to fetch consultation', error);
-          crashlytics().recordError(error);
+          reportCrashlyticsError(error);
           setLoading(false);
         }
       );
@@ -344,7 +344,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
               // Navigation will happen automatically due to real-time listener
             } catch (error) {
               console.error('Failed to cancel consultation:', error);
-              crashlytics().recordError(error);
+              reportCrashlyticsError(error);
               toast.showError('취소 실패', '상담 취소 중 오류가 발생했습니다.');
             } finally {
               setCancelling(false);

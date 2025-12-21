@@ -58,9 +58,7 @@ const StatisticsCard = ({ iconName, label, count, variant = 'primary', style }) 
         style={[
           styles.iconContainer,
           {
-            backgroundColor: variantColor + '20', // 20% opacity
-            borderRadius: theme.borderRadius.md,
-            marginBottom: theme.spacing.xs,
+            marginBottom: 4,
           },
         ]}
       >

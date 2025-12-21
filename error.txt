@@ -1,150 +1,20 @@
-UserConsultationDetailScreen: Failed to fetch vehicle TypeError: doc is not a function (it is Object)
-    at ?anon_0_ (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:205481:40)
-    at next (native)
-    at asyncGeneratorStep (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1298:19)
-    at _next (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1312:29)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1317:14)
-    at tryCallTwo (address at InternalBytecode.js:1:1222)
-    at doResolve (address at InternalBytecode.js:1:2541)
-    at Promise (address at InternalBytecode.js:1:1318)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1309:25)
-    at apply (native)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:205499:29)
-    at handleSuccess (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:138213:17)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:138225:26)
-    at apply (native)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5575:40)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:137724:27)
-    at apply (native)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5575:40)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:123280:43)
-    at apply (native)
-    at listenerDebugger (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:123516:32)
-    at apply (native)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5575:40)
-    at apply (native)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5437:200)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5453:62)
-    at apply (native)
-    at __callFunction (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4800:38)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4556:31)
-    at __guard (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4746:15)
-    at callFunctionReturnFlushedQueue (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4555:21)
-anonymous @ console.js:614
-reactConsoleErrorHandler @ ExceptionsManager.js:182
-overrideMethod @ backend.js:17785
-registerError @ LogBox.js:211
-anonymous @ LogBox.js:79
-?anon_0_ @ UserConsultationDetailScreen.js:83
-asyncGeneratorStep @ asyncToGenerator.js:3
-_next @ asyncToGenerator.js:17
-anonymous @ asyncToGenerator.js:22
-anonymous @ asyncToGenerator.js:14
-anonymous @ UserConsultationDetailScreen.js:91
-handleSuccess @ FirestoreDocumentReference.js:147
-anonymous @ FirestoreDocumentReference.js:166
-emit @ EventEmitter.js:116
-anonymous @ index.js:88
-emit @ EventEmitter.js:116
-anonymous @ nativeModule.js:158
-listenerDebugger @ RNFBNativeEventEmitter.js:61
-emit @ EventEmitter.js:116
-anonymous @ RCTDeviceEventEmitter.js:14
-emit @ RCTDeviceEventEmitter.js:32
-__callFunction @ MessageQueue.js:434
-anonymous @ MessageQueue.js:113
-__guard @ MessageQueue.js:368
-callFunctionReturnFlushedQueue @ MessageQueue.js:112
-Show 23 more frames
-Show less
-UserConsultationDetailScreen.js:84 This method is deprecated (as well as all React Native Firebase namespaced API) and will be removed in the next major release as part of move to match Firebase Web modular SDK API. Please see migration guide for more details: https://rnfirebase.io/migrating-to-v22 Please use `getApp()` instead.
-anonymous @ console.js:614
-overrideMethod @ backend.js:17785
-registerWarning @ LogBox.js:162
-anonymous @ LogBox.js:83
-warnIfNotModularCall @ index.js:770
-getApp @ app.js:89
-firebaseModuleWithApp @ namespace.js:145
-?anon_0_ @ UserConsultationDetailScreen.js:84
-asyncGeneratorStep @ asyncToGenerator.js:3
-_next @ asyncToGenerator.js:17
-anonymous @ asyncToGenerator.js:22
-anonymous @ asyncToGenerator.js:14
-anonymous @ UserConsultationDetailScreen.js:91
-handleSuccess @ FirestoreDocumentReference.js:147
-anonymous @ FirestoreDocumentReference.js:166
-emit @ EventEmitter.js:116
-anonymous @ index.js:88
-emit @ EventEmitter.js:116
-anonymous @ nativeModule.js:158
-listenerDebugger @ RNFBNativeEventEmitter.js:61
-emit @ EventEmitter.js:116
-anonymous @ RCTDeviceEventEmitter.js:14
-emit @ RCTDeviceEventEmitter.js:32
-__callFunction @ MessageQueue.js:434
-anonymous @ MessageQueue.js:113
-__guard @ MessageQueue.js:368
-callFunctionReturnFlushedQueue @ MessageQueue.js:112
-Show 25 more frames
-Show less
-UserConsultationDetailScreen.js:84 This method is deprecated (as well as all React Native Firebase namespaced API) and will be removed in the next major release as part of move to match Firebase Web modular SDK API. Please see migration guide for more details: https://rnfirebase.io/migrating-to-v22. Method called was `recordError`. Please use `recordError()` instead.
-anonymous @ console.js:614
-overrideMethod @ backend.js:17785
-registerWarning @ LogBox.js:162
-anonymous @ LogBox.js:83
-deprecationConsoleWarning @ index.js:535
-anonymous @ index.js:727
-?anon_0_ @ UserConsultationDetailScreen.js:84
-asyncGeneratorStep @ asyncToGenerator.js:3
-_next @ asyncToGenerator.js:17
-anonymous @ asyncToGenerator.js:22
-anonymous @ asyncToGenerator.js:14
-anonymous @ UserConsultationDetailScreen.js:91
-handleSuccess @ FirestoreDocumentReference.js:147
-anonymous @ FirestoreDocumentReference.js:166
-emit @ EventEmitter.js:116
-anonymous @ index.js:88
-emit @ EventEmitter.js:116
-anonymous @ nativeModule.js:158
-listenerDebugger @ RNFBNativeEventEmitter.js:61
-emit @ EventEmitter.js:116
-anonymous @ RCTDeviceEventEmitter.js:14
-emit @ RCTDeviceEventEmitter.js:32
-__callFunction @ MessageQueue.js:434
-anonymous @ MessageQueue.js:113
-__guard @ MessageQueue.js:368
-callFunctionReturnFlushedQueue @ MessageQueue.js:112
-Show 24 more frames
-Show less
-UserConsultationDetailScreen.js:83 UserConsultationDetailScreen: Failed to fetch vehicle TypeError: doc is not a function (it is Object)
-    at ?anon_0_ (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:205481:40)
-    at next (native)
-    at asyncGeneratorStep (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1298:19)
-    at _next (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1312:29)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1317:14)
-    at tryCallTwo (address at InternalBytecode.js:1:1222)
-    at doResolve (address at InternalBytecode.js:1:2541)
-    at Promise (address at InternalBytecode.js:1:1318)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:1309:25)
-    at apply (native)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:205499:29)
-    at handleSuccess (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:138213:17)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:138225:26)
-    at apply (native)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5575:40)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:137724:27)
-    at apply (native)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5575:40)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:123280:43)
-    at apply (native)
-    at listenerDebugger (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:123516:32)
-    at apply (native)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5575:40)
-    at apply (native)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5437:200)
-    at emit (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:5453:62)
-    at apply (native)
-    at __callFunction (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4800:38)
-    at anonymous (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4556:31)
-    at __guard (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4746:15)
-    at callFunctionReturnFlushedQueue (http://10.0.2.2:8081/index.bundle//&platform=android&dev=true&lazy=true&minify=false&app=com.jcarnew&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server:4555:21)
+C:\JCar>cd functions
+
+C:\JCar\functions>npm install
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: undefined,
+npm warn EBADENGINE   required: { node: '24' },
+npm warn EBADENGINE   current: { node: 'v20.19.4', npm: '10.8.2' }
+npm warn EBADENGINE }
+
+up to date, audited 579 packages in 1s
+
+85 packages are looking for funding
+  run `npm fund` for details
+
+1 high severity vulnerability
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.

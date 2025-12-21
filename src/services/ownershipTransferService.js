@@ -12,7 +12,7 @@
  */
 
 import { getFirestore, collection, doc, runTransaction, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, arrayUnion } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from './firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import analytics from '@react-native-firebase/analytics';
 import perf from '@react-native-firebase/perf';
 
@@ -257,8 +257,8 @@ export const transferVehicleToAdmin = async (
     await trace.stop();
 
     // Log to Crashlytics
-    crashlytics().recordError(error);
-    crashlytics().log(
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage(
       `transferVehicleToAdmin failed for vehicle ${vehicleId}, consultation ${consultationRequestId}`
     );
 
@@ -530,8 +530,8 @@ export const transferVehicleToBuyer = async (
     await trace.stop();
 
     // Log to Crashlytics
-    crashlytics().recordError(error);
-    crashlytics().log(
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage(
       `transferVehicleToBuyer failed for vehicle ${vehicleId}, consultation ${consultationRequestId}, buyer ${buyerId}`
     );
 
@@ -571,7 +571,7 @@ export const getVehicleOwnershipHistory = async (vehicleId) => {
     }));
   } catch (error) {
     console.error('Failed to get ownership history:', error);
-    crashlytics().recordError(error);
+    reportCrashlyticsError(error);
     return [];
   }
 };
@@ -599,7 +599,7 @@ export const getAllOwnershipTransfers = async (limitCount = 50) => {
     }));
   } catch (error) {
     console.error('Failed to get ownership transfers:', error);
-    crashlytics().recordError(error);
+    reportCrashlyticsError(error);
     return [];
   }
 };

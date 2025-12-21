@@ -47,8 +47,8 @@ const LoginScreen = ({ navigation }) => {
       await signInWithEmailAndPassword(auth, email, password);
       toast.showSuccess('로그인 성공', '환영합니다!');
     } catch (error) {
-      crashlytics().recordError(error);
-      crashlytics().log('LoginScreen: Login failed');
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage('LoginScreen: Login failed');
       toast.showError('로그인 실패', error.message);
     }
   };

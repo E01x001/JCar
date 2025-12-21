@@ -8,7 +8,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
 import { getFirestore, collection, query, where, orderBy, onSnapshot } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPrice } from '../utils/format';
@@ -53,8 +53,8 @@ const OwnedVehiclesList = ({ onVehiclePress }) => {
       },
       (error) => {
         console.error('OwnedVehiclesList: Failed to fetch vehicles', error);
-        crashlytics().recordError(error);
-        crashlytics().log('OwnedVehiclesList: Firestore query failed');
+        reportCrashlyticsError(error);
+        logCrashlyticsMessage('OwnedVehiclesList: Firestore query failed');
         setLoading(false);
       }
     );

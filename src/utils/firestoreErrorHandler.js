@@ -6,7 +6,7 @@
  * especially permission-denied and authentication errors.
  */
 
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
 
 /**
  * Get user-friendly error message from Firebase error
@@ -80,8 +80,8 @@ export const handleFirestoreError = (error, context = {}, notifyUser = null) => 
   const userMessage = getFirestoreErrorMessage(error);
 
   // Log to Crashlytics
-  crashlytics().recordError(error);
-  crashlytics().log(
+  reportCrashlyticsError(error);
+  logCrashlyticsMessage(
     `Firestore error: ${error.code || 'unknown'} - ${JSON.stringify(context)}`
   );
 

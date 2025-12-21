@@ -3285,19 +3285,562 @@
           }
         ],
         "updatedAt": "2025-12-19T10:51:59.811Z"
+      },
+      {
+        "id": 63,
+        "title": "Migrate React Native Firebase to v22 Modular API",
+        "description": "Migrate all deprecated namespaced React Native Firebase API calls for Crashlytics and Messaging to the new modular API to ensure compatibility with v22, as the namespaced API will be removed.",
+        "details": "This task involves a systematic migration of deprecated React Native Firebase namespaced API calls to their v22 modular equivalents. The migration specifically targets Crashlytics and Messaging modules, as Firestore has already been migrated.\n\n**Affected Files - Crashlytics (17 files):**\n1. src/services/firebaseService.js\n2. src/screens/AdminOwnedVehicleDetailScreen.js\n3. src/screens/UserConsultationDetailScreen.js\n4. src/utils/firestoreErrorHandler.js\n5. src/screens/MyPageScreen.js\n6. src/screens/LoginScreen.js\n7. src/screens/ForgotPasswordScreen.js\n8. src/screens/AdminPageScreen.js\n9. src/context/AuthContext.js\n10. src/utils/firestoreListenerHelper.js\n11. src/components/OwnedVehiclesList.js\n12. src/services/ownershipTransferService.js\n13. src/hooks/useVehicleStats.js\n14. src/hooks/useConsultationStats.js\n15. src/screens/AdminOwnershipHistoryScreen.js\n16. src/hooks/useOwnershipStats.js\n17. src/components/ErrorBoundary.js\n\n**Affected Files - Messaging (3 files):**\n1. src/services/firebaseService.js\n2. src/context/AuthContext.js\n3. src/App.js\n\n**Migration Pattern - Crashlytics:**\nBefore (deprecated):\n```javascript\nimport crashlytics from '@react-native-firebase/crashlytics';\ncrashlytics().recordError(error);\ncrashlytics().log('message');\n```\nAfter (v22 compatible):\n```javascript\nimport { getCrashlytics, recordError, log } from '@react-native-firebase/crashlytics';\nconst crashlyticsInstance = getCrashlytics();\nrecordError(crashlyticsInstance, error);\nlog(crashlyticsInstance, 'message');\n```\n\n**Migration Pattern - Messaging:**\nBefore (deprecated):\n```javascript\nimport messaging from '@react-native-firebase/messaging';\nmessaging().getToken();\nmessaging().requestPermission();\n```\nAfter (v22 compatible):\n```javascript\nimport { getMessaging, getToken, requestPermission } from '@react-native-firebase/messaging';\nconst messagingInstance = getMessaging();\nawait getToken(messagingInstance);\nawait requestPermission(messagingInstance);\n```\n\n**Implementation Steps:**\n1.  **Create Utility Helper Functions (Optional but Recommended):** For common Crashlytics and Messaging operations, consider creating small wrapper functions (e.g., `reportCrashlyticsError`, `getFCMToken`) to encapsulate the new modular API calls and simplify usage across the codebase. Place these in a relevant service file like `src/services/firebaseService.js` or a new utility file.\n2.  **Update Imports:** In all listed affected files, update `import crashlytics from '@react-native-firebase/crashlytics';` to `import { getCrashlytics, recordError, log } from '@react-native-firebase/crashlytics';` (and similarly for Messaging).\n3.  **Replace Deprecated API Calls:** Systematically go through each affected file and replace all instances of `crashlytics().method()` with `method(crashlyticsInstance, ...)`, and `messaging().method()` with `method(messagingInstance, ...)`. Ensure to retrieve the module instance first (e.g., `const crashlyticsInstance = getCrashlytics();`).\n4.  **Review `src/services/firebaseService.js` and `src/context/AuthContext.js`:** These files are central and will require careful attention to ensure all Firebase-related initializations and calls are updated correctly.\n5.  **Test Each Module:** After migrating a set of files related to a specific module (e.g., Crashlytics), perform initial testing to ensure basic functionality.\n6.  **Enable Strict Mode:** For final verification, ensure `RNFB_MODULAR_DEPRECATION_STRICT_MODE` is enabled to catch any remaining deprecated calls during development or testing.\n\n**References:**\n- React Native Firebase v22 Migration Guide: https://rnfirebase.io/migrating-to-v22",
+        "testStrategy": "1.  **Successful Build:** Ensure the application builds without compilation errors after migration.\n2.  **Error Logging Verification:** Trigger various error scenarios (e.g., simulated runtime errors, API call failures) across different screens and components. Verify that errors are correctly logged to Crashlytics by checking the Firebase Crashlytics dashboard.\n3.  **FCM Token Retrieval & Messaging:** Log in to the application and ensure the FCM token is successfully retrieved. Verify that push notifications can be sent and received (if implemented and relevant for the app).\n4.  **Strict Mode Deprecation Check:** Run the application with `RNFB_MODULAR_DEPRECATION_STRICT_MODE` enabled. Monitor the console for any warnings or errors indicating the use of deprecated namespaced APIs. Address any found instances.\n5.  **Full Regression Testing:** Conduct a full regression test of the application's core functionalities to ensure no side effects or regressions were introduced by the API migration. Pay close attention to features involving user authentication, data fetching, and background services.",
+        "status": "pending",
+        "dependencies": [
+          62,
+          59,
+          51
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Modular API Wrapper Functions for Crashlytics and Messaging",
+            "description": "Create centralized utility functions to encapsulate the new v22 modular API calls for Crashlytics (e.g., `reportCrashlyticsError`, `logCrashlyticsMessage`) and Messaging (e.g., `getFCMToken`, `requestFCMNotificationPermission`). These wrappers will be placed in `src/services/firebaseService.js` to simplify usage across the codebase and abstract away direct modular calls.",
+            "dependencies": [],
+            "details": "In `src/services/firebaseService.js`, add new functions that leverage `getCrashlytics()` and `getMessaging()` instances. For Crashlytics, implement `reportCrashlyticsError(error)` (which internally calls `recordError(getCrashlytics(), error)`) and `logCrashlyticsMessage(message)` (calling `log(getCrashlytics(), message)`). For Messaging, implement `getFCMToken()` (calling `getToken(getMessaging())`) and `requestFCMNotificationPermission()` (calling `requestPermission(getMessaging())`).",
+            "status": "done",
+            "testStrategy": "Write isolated unit tests for the new wrapper functions in `src/services/firebaseService.js`. Verify that `reportCrashlyticsError` correctly attempts to record an error, `logCrashlyticsMessage` logs a message, `getFCMToken` attempts to retrieve a token, and `requestFCMNotificationPermission` attempts to request permissions. Mock Firebase modules to isolate wrapper logic."
+          },
+          {
+            "id": 2,
+            "title": "Migrate Crashlytics Imports and API Calls to Modular API",
+            "description": "Systematically update all 17 affected files that use Crashlytics. Replace the deprecated `import crashlytics from '@react-native-firebase/crashlytics';` with `import { getCrashlytics, recordError, log } from '@react-native-firebase/crashlytics';`. Subsequently, replace all instances of `crashlytics().method(...)` with calls to the newly created wrapper functions (e.g., `reportCrashlyticsError(error)`) or direct modular calls (e.g., `recordError(getCrashlytics(), error)`).",
+            "dependencies": [
+              1
+            ],
+            "details": "Iterate through each of the 17 Crashlytics-affected files, including `src/screens/AdminOwnedVehicleDetailScreen.js`, `src/utils/firestoreErrorHandler.js`, `src/components/ErrorBoundary.js`, and others. For each file, update the import statement and then replace all calls like `crashlytics().recordError(error)` with `reportCrashlyticsError(error)` (assuming the wrapper is used). Ensure `getCrashlytics()` is called if direct modular API is used.",
+            "status": "done",
+            "testStrategy": "Manually test key screens and components that are known to log errors or messages via Crashlytics (e.g., trigger an error in `ErrorBoundary` or a catch block in `firestoreErrorHandler`). Observe console output for any deprecation warnings and verify that error reports appear in a Firebase test project's Crashlytics dashboard."
+          },
+          {
+            "id": 3,
+            "title": "Migrate Messaging Imports and API Calls to Modular API",
+            "description": "Update all 3 affected files that use Messaging. Replace the deprecated `import messaging from '@react-native-firebase/messaging';` with `import { getMessaging, getToken, requestPermission } from '@react-native-firebase/messaging';`. Then, replace all instances of `messaging().method(...)` with calls to the newly created wrapper functions (e.g., `getFCMToken()`) or direct modular calls (e.g., `getToken(getMessaging())`).",
+            "dependencies": [
+              1
+            ],
+            "details": "Iterate through each of the 3 Messaging-affected files: `src/services/firebaseService.js`, `src/context/AuthContext.js`, and `src/App.js`. For each file, update the import statement and then replace calls like `messaging().getToken()` with `getFCMToken()` (assuming the wrapper is used). Ensure `getMessaging()` is called if direct modular API is used.",
+            "status": "done",
+            "testStrategy": "Run the application on a physical device or emulator. Observe console logs to confirm successful FCM token retrieval and permission requests. Send a test push notification from the Firebase console to the device to verify message reception and handling through the updated Messaging API."
+          },
+          {
+            "id": 4,
+            "title": "Review and Refactor Central Firebase Service and Context Files",
+            "description": "Perform a thorough review and refactor of `src/services/firebaseService.js` and `src/context/AuthContext.js`. These central files contain critical Firebase initializations and interactions. Ensure all Crashlytics and Messaging-related code segments are fully compliant with the v22 modular API and leverage the wrapper functions created in subtask 1 where appropriate.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "In `src/services/firebaseService.js`, verify global Firebase setup, ensuring `getCrashlytics()` and `getMessaging()` are used consistently for instance retrieval. In `src/context/AuthContext.js`, review any lifecycle methods or effect hooks that might interact with Messaging for token management or Crashlytics for error reporting, ensuring they use the new modular patterns or wrapper functions.",
+            "status": "pending",
+            "testStrategy": "Conduct full end-to-end manual testing of core application flows, including app startup, user login/logout, and features known to interact heavily with Firebase. Monitor for any console errors or unexpected behavior related to Firebase initialization or service calls. Verify that Crashlytics still catches errors during user sessions and Messaging still handles notifications."
+          },
+          {
+            "id": 5,
+            "title": "Enable Strict Mode and Perform Comprehensive Regression Testing",
+            "description": "After all migration steps are complete, enable `RNFB_MODULAR_DEPRECATION_STRICT_MODE` in the build configuration to aggressively detect any remaining deprecated API calls. Conduct a comprehensive regression test cycle to ensure the stability and functionality of all features reliant on Crashlytics for error logging and Messaging for notifications, as well as general application stability.",
+            "dependencies": [
+              4
+            ],
+            "details": "Add `RNFB_MODULAR_DEPRECATION_STRICT_MODE=true` to the relevant build configuration (e.g., in `metro.config.js` or via environment variables for the build process). Perform extensive manual testing across all application screens and features. Specifically test error paths for Crashlytics and notification reception/interaction for Messaging. Monitor both console and Crashlytics dashboard for verification.",
+            "status": "pending",
+            "testStrategy": "1. **Strict Mode Verification:** Build and run the app with `RNFB_MODULAR_DEPRECATION_STRICT_MODE` enabled. Confirm that no deprecation warnings or errors appear in the console. 2. **Crashlytics Functionality:** Simulate various types of errors (e.g., runtime exceptions, network failures) across the app to verify they are correctly captured and reported to Crashlytics. 3. **Messaging Functionality:** Send multiple test notifications from the Firebase console, including foreground and background, to ensure proper delivery and handling. 4. **Regression Testing:** Execute all existing automated tests (if any) and perform a full manual regression test suite to ensure no new bugs or broken functionalities have been introduced by the migration."
+          }
+        ]
+      },
+      {
+        "id": 64,
+        "title": "Set up Firebase Functions Environment and FCM Utilities Module",
+        "description": "Establish the Firebase Cloud Functions project structure, initialize the Firebase Admin SDK, and create a utility module for common FCM operations to be used by various notification triggers.",
+        "details": "1. Verify `firebase-admin` and `firebase-functions` package versions are at v23.5.0 in `functions/package.json`. If not, update them.\n2. Create the `functions/utils/fcm.js` file.\n3. In `fcm.js`, implement `initializeAdmin()` by calling `admin.initializeApp();` (ensure `firebase-admin` is imported).\n4. Implement `sendPushNotification(fcmToken, title, body, data)`: This function should use `admin.messaging().send({ token: fcmToken, notification: { title, body }, data })`. Wrap this call in a `try-catch` block to gracefully handle and log any `FirebaseMessagingError` instances, especially for invalid or expired tokens.\n5. Implement `getUserFcmToken(userId)`: This function should retrieve the FCM token from `Firestore.collection('users').doc(userId).get()`, specifically `snapshot.data()?.fcmToken`.\n6. Implement `sendNotificationToUser(userId, title, body, data)`: This high-level helper will first call `getUserFcmToken(userId)` and then, if a token is found, call `sendPushNotification(token, title, body, data)`.\n7. Implement proper logging using `functions.logger.info` for successful operations and `functions.logger.error` for errors, including details about invalid FCM tokens.",
+        "testStrategy": "1. Unit test `initializeAdmin()` to ensure it runs without errors and the Admin SDK is properly initialized.\n2. Unit test `sendPushNotification` with mock FCM tokens (valid and invalid) to verify payload structure, successful sends, and graceful error handling for invalid tokens (e.g., logging without throwing).\n3. Unit test `getUserFcmToken` by mocking Firestore responses for users with and without FCM tokens.\n4. Unit test `sendNotificationToUser` by mocking `getUserFcmToken` and `sendPushNotification` to ensure correct flow and error propagation/handling.\n5. Deploy a simple HTTP function that calls `fcm.initializeAdmin()` and logs success to verify environment setup in a live Firebase project.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Verify Firebase Functions Dependencies and Create FCM Utilities File",
+            "description": "Ensure that `firebase-admin` and `firebase-functions` packages in the Firebase Functions project are updated to version v23.5.0 in `functions/package.json`. Subsequently, create the `fcm.js` file within the `functions/utils` directory to house FCM-related utility functions.",
+            "dependencies": [],
+            "details": "Navigate to `C:\\JCar\\functions` and open `package.json`. In the `dependencies` section, verify and update `firebase-admin` and `firebase-functions` to `^23.5.0`. Run `npm install` in the `functions` directory to apply changes. Create an empty file named `fcm.js` at `C:\\JCar\\functions\\utils\\fcm.js`.",
+            "status": "done",
+            "testStrategy": "Manually verify `package.json` for correct version numbers. Run `npm install` and check the output for any errors. Confirm the `fcm.js` file exists at the specified path."
+          },
+          {
+            "id": 2,
+            "title": "Implement Firebase Admin SDK Initialization in FCM Utilities",
+            "description": "Within the newly created `functions/utils/fcm.js` file, import the `firebase-admin` SDK and implement an `initializeAdmin()` function that calls `admin.initializeApp()`. This function will ensure the Firebase Admin SDK is properly set up for subsequent operations.",
+            "dependencies": [
+              1
+            ],
+            "details": "Edit `C:\\JCar\\functions\\utils\\fcm.js`. Add `const admin = require('firebase-admin');` and `const functions = require('firebase-functions');` at the top. Implement and export `const initializeAdmin = () => { if (!admin.apps.length) { admin.initializeApp(); functions.logger.info('Firebase Admin SDK initialized.'); } };`",
+            "status": "done",
+            "testStrategy": "Unit test `initializeAdmin()` to confirm it runs without throwing errors. Verify that `admin.apps.length` becomes greater than 0 after its execution when run for the first time in a test environment."
+          },
+          {
+            "id": 3,
+            "title": "Implement `sendPushNotification` with Robust Error Handling",
+            "description": "Develop the `sendPushNotification(fcmToken, title, body, data)` function within `functions/utils/fcm.js`. This function will send a push notification using `admin.messaging().send()`. It must include a `try-catch` block to gracefully handle `FirebaseMessagingError` instances (especially for invalid/expired tokens) and log errors using `functions.logger.error`.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `C:\\JCar\\functions\\utils\\fcm.js`, export an `async` function `sendPushNotification(fcmToken, title, body, data)`. Inside, use `try { await admin.messaging().send({ token: fcmToken, notification: { title, body }, data }); functions.logger.info('Successfully sent FCM message', { fcmToken, title }); } catch (error) { if (error.code === 'messaging/invalid-argument' || error.code === 'messaging/registration-token-not-registered') { functions.logger.error('FCM: Invalid or unregistered token', { fcmToken, error: error.message }); } else { functions.logger.error('FCM: Error sending message', { fcmToken, error: error.message }); } throw error; }`",
+            "status": "done",
+            "testStrategy": "Unit test `sendPushNotification` by mocking `admin.messaging().send`. Test with valid mock tokens, invalid tokens (triggering specific error codes like `messaging/registration-token-not-registered`), and general errors. Verify correct logging (`info` for success, `error` for failure) and exception handling."
+          },
+          {
+            "id": 4,
+            "title": "Implement `getUserFcmToken` for Firestore Retrieval",
+            "description": "Create the `getUserFcmToken(userId)` function in `functions/utils/fcm.js`. This function will asynchronously query the 'users' collection in Firestore to retrieve the `fcmToken` field for a given `userId`, returning `undefined` if the user or token is not found.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `C:\\JCar\\functions\\utils\\fcm.js`, export an `async` function `getUserFcmToken(userId)`. Inside, obtain a Firestore instance: `const db = admin.firestore();`. Retrieve the user document: `const userDoc = await db.collection('users').doc(userId).get();`. Return `userDoc.data()?.fcmToken`. Add `functions.logger.warn` if user or token is not found.",
+            "status": "done",
+            "testStrategy": "Unit test `getUserFcmToken` by mocking Firestore interactions. Test scenarios: a user document exists with an `fcmToken`, a user document exists without an `fcmToken`, and no user document exists for the given `userId`. Verify the function returns the correct token or `undefined`."
+          },
+          {
+            "id": 5,
+            "title": "Implement `sendNotificationToUser` and Finalize Logging",
+            "description": "Implement the `sendNotificationToUser(userId, title, body, data)` helper function in `functions/utils/fcm.js`. This high-level function will orchestrate fetching the FCM token via `getUserFcmToken` and, if available, sending the notification using `sendPushNotification`. Ensure all functions in the module utilize `functions.logger.info` for successes and `functions.logger.error` for failures, providing clear context.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "In `C:\\JCar\\functions\\utils\\fcm.js`, export an `async` function `sendNotificationToUser(userId, title, body, data)`. Call `const fcmToken = await getUserFcmToken(userId);`. If `fcmToken` is found, call `await sendPushNotification(fcmToken, title, body, data); functions.logger.info('Notification process completed for user', { userId });`. Otherwise, log a warning: `functions.logger.warn('FCM: No token available for user, notification not sent', { userId });`.",
+            "status": "done",
+            "testStrategy": "Integration test `sendNotificationToUser` using mock Firestore data (for `getUserFcmToken`) and mock FCM sending (for `sendPushNotification`). Verify correct behavior for users with and without tokens. Assert that `functions.logger.info` and `functions.logger.error` are called with appropriate messages at each stage."
+          }
+        ]
+      },
+      {
+        "id": 65,
+        "title": "Implement Consultation Approval Notification",
+        "description": "Create a Firebase Cloud Function that triggers when a consultation request's status changes from 'pending' to 'approved' and sends a push notification to the associated user.",
+        "details": "1. Create the file `functions/triggers/consultationNotifications.js`.\n2. Import necessary Firebase Functions modules and the FCM utility functions from `functions/utils/fcm.js`.\n3. Implement an `onUpdate` Firestore trigger for `consultation_requests/{id}` named `onConsultationApproved`.\n4. Inside the trigger, check if `change.before.data().consultationStatus` was 'pending' and `change.after.data().consultationStatus` is 'approved'.\n5. Extract `preferredDate`, `preferredTime`, `id` (as `consultationId`), and `userId` from `change.after.data()`.\n6. Construct the notification payload:\n   - Title: \"상담 승인\"\n   - Body: `\"${preferredDate} ${preferredTime} 상담이 승인되었습니다.\"`\n   - Data: `{ type: \"consultation_approved\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`\n7. Call `sendNotificationToUser(userId, title, body, data)` from the FCM utility module. Ensure that missing or invalid FCM tokens are handled gracefully by the utility function.",
+        "testStrategy": "1. Unit test the payload generation logic to ensure dynamic data is correctly inserted into the title, body, and data fields.\n2. Integration test: Deploy the function to a Firebase project. Manually update a `consultation_requests` document in the Firestore Console, changing `consultationStatus` from 'pending' to 'approved'.\n3. Verify that a push notification is received on a test device running the JCar app in foreground, background, and quit states.\n4. Confirm that tapping the notification correctly deep links to the `UserConsultationDetail` screen.\n5. Check Cloud Functions logs for successful notification send records and any error logs for edge cases (e.g., missing FCM token).",
+        "priority": "high",
+        "dependencies": [
+          64
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create consultation notification file and import modules",
+            "description": "Create the file `functions/triggers/consultationNotifications.js` and import necessary Firebase Functions modules (`functions`, `admin`) and the FCM utility function `sendNotificationToUser` from `functions/utils/fcm.js` to prepare for defining the Cloud Function.",
+            "dependencies": [],
+            "details": "Create the new file `C:\\JCar\\functions\\triggers\\consultationNotifications.js`. Add the following imports: `const functions = require('firebase-functions');`, `const admin = require('firebase-admin');`, and `const { sendNotificationToUser } = require('../utils/fcm');`. Ensure `admin.initializeApp()` is called if not already done globally.",
+            "status": "done",
+            "testStrategy": "Verify the file is created and the imports resolve correctly by attempting to deploy a placeholder function or running local tests that import this file."
+          },
+          {
+            "id": 2,
+            "title": "Implement `onConsultationApproved` trigger skeleton",
+            "description": "Define the basic structure for an `onUpdate` Firestore trigger named `onConsultationApproved` that monitors changes in the `consultation_requests/{id}` collection.",
+            "dependencies": [
+              1
+            ],
+            "details": "Inside `functions/triggers/consultationNotifications.js`, implement `exports.onConsultationApproved = functions.firestore.document('consultation_requests/{id}').onUpdate(async (change, context) => { /* Placeholder for future logic */ });`.",
+            "status": "done",
+            "testStrategy": "Deploy the function to the Firebase Emulator Suite. Manually update a document in `consultation_requests` and verify that the trigger function is invoked (e.g., by adding a `console.log` inside)."
+          },
+          {
+            "id": 3,
+            "title": "Add consultation status change detection logic",
+            "description": "Implement the conditional logic within the `onConsultationApproved` trigger to check if the `consultationStatus` field has specifically changed from 'pending' to 'approved'.",
+            "dependencies": [
+              2
+            ],
+            "details": "Inside the `onUpdate` trigger, retrieve `beforeStatus = change.before.data().consultationStatus` and `afterStatus = change.after.data().consultationStatus`. Add an `if` condition: `if (beforeStatus === 'pending' && afterStatus === 'approved') { /* Notification logic will go here */ }`.",
+            "status": "done",
+            "testStrategy": "Unit test the conditional logic with mock `change` objects representing different status transitions (pending->approved, pending->rejected, approved->done, etc.) to ensure the condition is met only for pending->approved."
+          },
+          {
+            "id": 4,
+            "title": "Extract consultation details and build notification payload",
+            "description": "Within the approved status block, extract necessary consultation data (`preferredDate`, `preferredTime`, `id`, `userId`) from the updated document and construct the push notification title, body, and data payload.",
+            "dependencies": [
+              3
+            ],
+            "details": "Get `afterData = change.after.data()`. Extract `preferredDate = afterData.preferredDate`, `preferredTime = afterData.preferredTime`, `consultationId = afterData.id`, and `userId = afterData.userId`. Define `title = \"상담 승인\"`, `body = \"]`${preferredDate} ${preferredTime} 상담이 승인되었습니다.\"`, and `data = { type: \"consultation_approved\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`.",
+            "status": "done",
+            "testStrategy": "Unit test the payload generation logic by providing mock `afterData` objects. Verify that the `title`, `body`, and `data` fields are correctly populated with the dynamic values and required structure."
+          },
+          {
+            "id": 5,
+            "title": "Call FCM utility to send approval notification",
+            "description": "Utilize the imported `sendNotificationToUser` utility function with the constructed payload to send the approval push notification to the associated user, ensuring robust error handling.",
+            "dependencies": [
+              4
+            ],
+            "details": "Inside the conditional block from Subtask 3, after constructing the payload, call `await sendNotificationToUser(userId, title, body, data)`. Ensure any potential errors from `sendNotificationToUser` (e.g., missing FCM token) are handled gracefully, possibly with `try-catch` or by relying on `fcm.js`'s internal handling, and log relevant information.",
+            "status": "done",
+            "testStrategy": "Integration test: Deploy the function to a Firebase project. Manually update a `consultation_requests` document in Firestore, changing `consultationStatus` from 'pending' to 'approved'. Verify that the notification is received on the target user's device, contains the correct content, and deep links as expected. Also test a scenario where a user has no FCM token registered."
+          }
+        ]
+      },
+      {
+        "id": 66,
+        "title": "Implement Consultation Rejection and Alternative Slots Notifications",
+        "description": "Add Firebase Cloud Functions to `consultationNotifications.js` to send push notifications when a consultation request is rejected or when alternative time slots are suggested by an administrator.",
+        "details": "1. In `functions/triggers/consultationNotifications.js`, add `onConsultationRejected` as an `onUpdate` Firestore trigger for `consultation_requests/{id}`.\n2. Inside `onConsultationRejected`, check if `change.after.data().consultationStatus` is 'rejected'.\n3. Extract `rejectionReason`, `id` (as `consultationId`), and `userId` from `change.after.data()`.\n4. Construct the rejection notification payload:\n   - Title: \"상담 거절\"\n   - Body: `\"상담 요청이 거절되었습니다. ${rejectionReason}\"`\n   - Data: `{ type: \"consultation_rejected\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`\n5. Add `onAlternativeSlotsSuggested` as another `onUpdate` Firestore trigger for `consultation_requests/{id}`.\n6. Inside `onAlternativeSlotsSuggested`, check if the `alternativeSlots` field has been added or modified (i.e., `change.before.data().alternativeSlots !== change.after.data().alternativeSlots` and `change.after.data().alternativeSlots` exists).\n7. Extract `id` (as `consultationId`) and `userId` from `change.after.data()`.\n8. Construct the alternative slots notification payload:\n   - Title: \"대체 시간 제안\"\n   - Body: \"관리자가 대체 상담 시간을 제안했습니다. 확인해주세요.\"\n   - Data: `{ type: \"alternative_slots_suggested\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`\n9. Use `sendNotificationToUser` for both triggers to send notifications to the respective `userId`.",
+        "testStrategy": "1. Unit test the payload generation for both rejection and alternative slots notifications.\n2. Integration test for rejection: Manually update a `consultation_requests` document to `rejected` and provide a `rejectionReason`. Verify notification receipt and deep linking to `UserConsultationDetail`.\n3. Integration test for alternative slots: Manually add or modify the `alternativeSlots` field in a `consultation_requests` document. Verify notification receipt and deep linking to `UserConsultationDetail`.\n4. Ensure that notifications are only sent when the specific field changes as expected and not on other updates.",
+        "priority": "high",
+        "dependencies": [
+          64,
+          65
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize and Prepare consultationNotifications.js",
+            "description": "Ensure `functions/triggers/consultationNotifications.js` is properly initialized with all necessary Firebase imports (functions, admin) and the `sendNotificationToUser` utility. This step ensures the file is ready for new Cloud Function triggers.",
+            "dependencies": [],
+            "details": "Verify `functions/triggers/consultationNotifications.js` includes `const functions = require('firebase-functions');`, `const admin = require('firebase-admin');` (if needed for local admin operations; often global init is in `index.js`), and `const { sendNotificationToUser } = require('../utils/fcm');`. Ensure `functions.logger` is available for logging. Confirm consistent error handling patterns for robustness.",
+            "status": "done",
+            "testStrategy": "Verify imports and basic structure of `consultationNotifications.js` by running a linter and ensuring no immediate syntax errors. No specific runtime test is required for this setup step."
+          },
+          {
+            "id": 2,
+            "title": "Implement onConsultationRejected Trigger Structure",
+            "description": "Create the `exports.onConsultationRejected` Firebase Cloud Function as an `onUpdate` trigger for the `consultation_requests/{id}` collection. This function will contain the initial logic to detect rejected consultation requests and extract relevant data.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add `exports.onConsultationRejected = functions.firestore.document('consultation_requests/{id}').onUpdate(async (change, context) => { ... });` to `consultationNotifications.js`. Inside the trigger, implement the conditional check `if (change.after.data().consultationStatus === 'rejected')`. Extract `rejectionReason`, `id` (as `consultationId`), and `userId` from `change.after.data()` for later use.",
+            "status": "done",
+            "testStrategy": "Unit test the trigger's conditional logic using mocked `change` objects to ensure it only proceeds when `consultationStatus` is 'rejected'. Verify that `rejectionReason`, `consultationId`, and `userId` are correctly extracted."
+          },
+          {
+            "id": 3,
+            "title": "Construct and Dispatch Rejection Notification",
+            "description": "Within the `onConsultationRejected` trigger, construct the notification payload for a rejected consultation request, including a Korean title and body with the rejection reason. Subsequently, use the `sendNotificationToUser` utility to send this notification to the relevant user.",
+            "dependencies": [
+              2
+            ],
+            "details": "Inside the `onConsultationRejected` trigger, after data extraction, create a `notificationPayload` object. Set `title: \"상담 거절\"`, `body: `상담 요청이 거절되었습니다. ${rejectionReason}`, and `data: { type: \"consultation_rejected\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`. Call `await sendNotificationToUser(userId, notificationPayload)`. Add `functions.logger.info` for successful notification sending.",
+            "status": "done",
+            "testStrategy": "Unit test the payload generation for rejection notifications, ensuring all fields are correctly populated. Integration test by manually updating a `consultation_requests` document in the Firestore Emulator/Console to 'rejected' with a `rejectionReason`, and verify notification content and receipt via FCM logs."
+          },
+          {
+            "id": 4,
+            "title": "Implement onAlternativeSlotsSuggested Trigger Structure",
+            "description": "Create a new Firebase Cloud Function `exports.onAlternativeSlotsSuggested` as an `onUpdate` trigger for `consultation_requests/{id}`. This function will detect when alternative time slots are suggested by an administrator by checking for changes in the `alternativeSlots` field.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add `exports.onAlternativeSlotsSuggested = functions.firestore.document('consultation_requests/{id}').onUpdate(async (change, context) => { ... });` to `consultationNotifications.js`. Implement the condition `if (change.before.data().alternativeSlots !== change.after.data().alternativeSlots && change.after.data().alternativeSlots)` to check for `alternativeSlots` field modification or addition. Extract `id` (as `consultationId`) and `userId` from `change.after.data()`.",
+            "status": "done",
+            "testStrategy": "Unit test the trigger's conditional logic using mocked `change` objects to ensure it only activates when the `alternativeSlots` field is added or modified. Verify correct extraction of `consultationId` and `userId`."
+          },
+          {
+            "id": 5,
+            "title": "Construct and Dispatch Alternative Slots Notification",
+            "description": "Within the `onAlternativeSlotsSuggested` trigger, construct the notification payload for suggested alternative slots, including a Korean title and body. Then, use the `sendNotificationToUser` utility to dispatch this notification to the user whose consultation request was updated.",
+            "dependencies": [
+              4
+            ],
+            "details": "Inside the `onAlternativeSlotsSuggested` trigger, after data extraction, create a `notificationPayload` object. Set `title: \"대체 시간 제안\"`, `body: \"관리자가 대체 상담 시간을 제안했습니다. 확인해주세요.\"`, and `data: { type: \"alternative_slots_suggested\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`. Call `await sendNotificationToUser(userId, notificationPayload)`. Add `functions.logger.info` for successful notification sending.",
+            "status": "done",
+            "testStrategy": "Unit test the payload generation for alternative slots notifications, ensuring all fields are correctly populated. Integration test by manually updating a `consultation_requests` document in the Firestore Emulator/Console to include or modify the `alternativeSlots` field, and verify notification content and receipt via FCM logs."
+          }
+        ]
+      },
+      {
+        "id": 67,
+        "title": "Implement Consultation Completion Notification",
+        "description": "Add a Firebase Cloud Function to `consultationNotifications.js` that triggers upon a consultation request's status changing to 'completed', sending a push notification with deal details.",
+        "details": "1. In `functions/triggers/consultationNotifications.js`, add `onConsultationCompleted` as an `onUpdate` Firestore trigger for `consultation_requests/{id}`.\n2. Inside the trigger, check if `change.after.data().consultationStatus` is 'completed'.\n3. Extract `dealAmount`, `id` (as `consultationId`), and `userId` from `change.after.data()`.\n4. Construct the notification payload:\n   - Title: \"상담 완료\"\n   - Body: `\"상담이 완료되었습니다. 거래 금액: ${dealAmount || 'N/A'}원\"` (Handle `dealAmount` gracefully if it might be missing).\n   - Data: `{ type: \"consultation_completed\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`\n5. Use `sendNotificationToUser(userId, title, body, data)` to send the notification.",
+        "testStrategy": "1. Unit test the payload generation for the completion notification.\n2. Integration test: Manually update a `consultation_requests` document in Firestore, changing `consultationStatus` to 'completed' and including a `dealAmount`. Verify that the notification is received and deep links correctly to `UserConsultationDetail`.\n3. Test the case where `dealAmount` might be missing or null, ensuring the notification body is still coherent.",
+        "priority": "medium",
+        "dependencies": [
+          64,
+          65
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Verify `consultationNotifications.js` and FCM Utility Setup",
+            "description": "Ensure the `functions/triggers/consultationNotifications.js` file exists and that the `sendNotificationToUser` utility function from `functions/utils/fcm.js` is correctly imported and available for use.",
+            "dependencies": [
+              65
+            ],
+            "details": "Check if `functions/triggers/consultationNotifications.js` has been created as part of Task 65. Verify that `admin` and `functions` modules from 'firebase-functions' and 'firebase-admin' are imported, and crucially, `sendNotificationToUser` from `../utils/fcm` is imported at the top of the file.",
+            "status": "done",
+            "testStrategy": "N/A - This is an environment setup verification step, dependent on previous tasks."
+          },
+          {
+            "id": 2,
+            "title": "Define `onConsultationCompleted` Firestore Trigger Structure",
+            "description": "Add a new Firebase Cloud Function to `consultationNotifications.js` that acts as an `onUpdate` trigger for documents in the `consultation_requests` collection.",
+            "dependencies": [
+              1
+            ],
+            "details": "Within `functions/triggers/consultationNotifications.js`, export a new function named `onConsultationCompleted` using `functions.firestore.document('consultation_requests/{id}').onUpdate(async (change, context) => { ... });` This sets up the basic trigger structure.",
+            "status": "done",
+            "testStrategy": "Deploy the function to a development Firebase project. Trigger an update on a `consultation_requests` document and check Firebase Functions logs to ensure the function is invoked without errors at this stage."
+          },
+          {
+            "id": 3,
+            "title": "Implement Status Check and Data Extraction Logic",
+            "description": "Inside the `onConsultationCompleted` trigger, add logic to check if the `consultationStatus` has changed to 'completed' and extract necessary data from the updated document.",
+            "dependencies": [
+              2
+            ],
+            "details": "Within the `onConsultationCompleted` function body, first check if `change.before.data().consultationStatus !== 'completed'` and `change.after.data().consultationStatus === 'completed'`. If true, extract `dealAmount`, `id` (as `consultationId`), and `userId` from `change.after.data()`. Include `console.log` statements for debugging extracted data.",
+            "status": "done",
+            "testStrategy": "Unit test the conditional logic and data extraction using mock `change` objects that simulate various status transitions and data availability. Use `console.log` to verify correct data extraction during local emulation."
+          },
+          {
+            "id": 4,
+            "title": "Construct Consultation Completion Notification Payload",
+            "description": "Assemble the title, body, and data payload for the push notification based on the extracted deal details.",
+            "dependencies": [
+              3
+            ],
+            "details": "After extracting data, construct the notification `title`: '상담 완료', `body`: `상담이 완료되었습니다. 거래 금액: ${dealAmount || 'N/A'}원`. The `data` object should be `{ type: 'consultation_completed', consultationId: consultationId, screen: 'UserConsultationDetail' }`. Ensure graceful handling for `dealAmount` being potentially missing or null.",
+            "status": "done",
+            "testStrategy": "Unit test the payload construction logic with different `dealAmount` values (numeric, null, undefined) to ensure the title, body, and data are formed correctly according to specifications."
+          },
+          {
+            "id": 5,
+            "title": "Send Notification and Add Error Handling",
+            "description": "Call the `sendNotificationToUser` function with the constructed payload and include robust error handling and logging.",
+            "dependencies": [
+              4
+            ],
+            "details": "Integrate `await sendNotificationToUser(userId, title, body, data);` within a `try-catch` block inside the trigger. Log success messages including `consultationId` and `userId` upon successful notification send. In case of an error, catch the exception and log the error details using `console.error` to ensure failures are captured.",
+            "status": "done",
+            "testStrategy": "Integration test: Deploy the function. Manually update a `consultation_requests` document in Firestore, changing `consultationStatus` to 'completed' and including a `dealAmount`. Verify that the notification is received by the target user's device and deep links correctly to the 'UserConsultationDetail' screen with the `consultationId`. Also test failure scenarios by temporarily invalidating `userId` to verify error logging."
+          }
+        ]
+      },
+      {
+        "id": 68,
+        "title": "Implement Vehicle Approval/Rejection Notifications",
+        "description": "Create a Firebase Cloud Function to send push notifications to sellers when their vehicle listing's status changes from 'pending' to either 'approved' or 'rejected'.",
+        "details": "1. Create the file `functions/triggers/vehicleNotifications.js`.\n2. Import necessary Firebase Functions modules and FCM utility functions from `functions/utils/fcm.js`.\n3. Implement `onVehicleStatusChanged` as an `onUpdate` Firestore trigger for `vehicles/{id}`.\n4. Inside the trigger, check if `change.before.data().status` was 'pending' and `change.after.data().status` is either 'approved' or 'rejected'.\n5. Extract `vehicleName`, `id` (as `vehicleId`), and `sellerId` from `change.after.data()`.\n6. Implement conditional logic based on the new `status`:\n   - If `status` is 'approved':\n     - Title: \"차량 등록 승인\"\n     - Body: `\"${vehicleName} 차량이 승인되어 판매 가능합니다.\"`\n     - Data: `{ type: \"vehicle_approved\", vehicleId: vehicleId, screen: \"VehicleDetail\" }`\n   - If `status` is 'rejected':\n     - Title: \"차량 등록 거절\"\n     - Body: `\"${vehicleName} 차량 등록이 거절되었습니다.\"`\n     - Data: `{ type: \"vehicle_rejected\", vehicleId: vehicleId, screen: \"MyPage\" }`\n7. Use `sendNotificationToUser(sellerId, title, body, data)` to send the appropriate notification.",
+        "testStrategy": "1. Unit test the payload generation logic for both 'approved' and 'rejected' vehicle statuses.\n2. Integration test for approval: Manually update a `vehicles` document from `pending` to `approved`. Verify notification receipt and deep linking to `VehicleDetail`.\n3. Integration test for rejection: Manually update a `vehicles` document from `pending` to `rejected`. Verify notification receipt and deep linking to `MyPage`.\n4. Ensure the correct notification type and deep link are used for each status.",
+        "priority": "high",
+        "dependencies": [
+          64
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Vehicle Notification Trigger File & Imports",
+            "description": "Create the new Cloud Function file `functions/triggers/vehicleNotifications.js` to house the vehicle status change trigger. Import all necessary Firebase Functions modules (`functions`, `admin`) and the custom FCM utility function (`sendNotificationToUser`) from `functions/utils/fcm.js`.",
+            "dependencies": [],
+            "details": "Create `functions/triggers/vehicleNotifications.js`. Add `const functions = require('firebase-functions');`, `const admin = require('firebase-admin');`, and `const { sendNotificationToUser } = require('../utils/fcm');` to the top of the file. Initialize `admin.initializeApp();` if not already handled globally (verify `functions/index.js` or `functions/app.js`).",
+            "status": "done",
+            "testStrategy": "Verify file creation and correct import statements without syntax errors by attempting a local build or deploy (without the full trigger logic yet)."
+          },
+          {
+            "id": 2,
+            "title": "Implement `onVehicleStatusChanged` Firestore Trigger Structure",
+            "description": "Define the Firebase Firestore `onUpdate` trigger for the `vehicles/{id}` collection. This trigger will listen for any modifications to vehicle documents.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `functions/triggers/vehicleNotifications.js`, add the main trigger structure: `exports.onVehicleStatusChanged = functions.firestore.document('vehicles/{id}').onUpdate(async (change, context) => { // Trigger logic will go here });`. Ensure this function is exported via `functions/index.js`.",
+            "status": "done",
+            "testStrategy": "Deploy the function to a Firebase project with a minimal log statement inside the trigger (e.g., `console.log('Vehicle document updated');`). Manually update a 'vehicles' document in Firestore and verify the log appears in Firebase Cloud Function logs."
+          },
+          {
+            "id": 3,
+            "title": "Add Status Change Condition and Extract Vehicle Data",
+            "description": "Implement the core conditional logic within the `onUpdate` trigger to check if the vehicle's status has changed from 'pending' to either 'approved' or 'rejected'. Subsequently, extract the vehicle's name, ID, and seller ID from the updated document data.",
+            "dependencies": [
+              2
+            ],
+            "details": "Inside `onVehicleStatusChanged`, retrieve `const beforeStatus = change.before.data().status;` and `const afterStatus = change.after.data().status;`. Add an `if` condition: `if (beforeStatus === 'pending' && (afterStatus === 'approved' || afterStatus === 'rejected')) { ... }`. Within this block, extract `const { vehicleName, id: vehicleId, sellerId } = change.after.data();`.",
+            "status": "done",
+            "testStrategy": "Unit test the conditional logic: Mock `change.before.data()` and `change.after.data()` for various status transitions (e.g., pending->approved, pending->rejected, approved->rejected, approved->pending, etc.) and verify that the notification logic block is only entered for pending->approved/rejected transitions. Verify data extraction is correct."
+          },
+          {
+            "id": 4,
+            "title": "Implement Approved Vehicle Notification Logic",
+            "description": "Develop the specific notification payload (title, body, data) and call the `sendNotificationToUser` function for cases where a vehicle's status changes to 'approved'.",
+            "dependencies": [
+              3
+            ],
+            "details": "Inside the conditional block from Subtask 3, add an `if (afterStatus === 'approved') { ... }` sub-condition. Define `const title = \"차량 등록 승인\";`, `const body = `${vehicleName} 차량이 승인되어 판매 가능합니다.\";`, `const data = { type: \"vehicle_approved\", vehicleId: vehicleId, screen: \"VehicleDetail\" };`. Then call `await sendNotificationToUser(sellerId, title, body, data);`.",
+            "status": "done",
+            "testStrategy": "Unit test the payload generation for 'approved' status. Verify the generated `title`, `body`, and `data` objects are correct, especially the dynamic `vehicleName` and `vehicleId` and the `screen` property for deep linking."
+          },
+          {
+            "id": 5,
+            "title": "Implement Rejected Vehicle Notification Logic and Final Export",
+            "description": "Develop the specific notification payload and logic for sending a push notification when a vehicle's status changes to 'rejected'. Ensure the `onVehicleStatusChanged` function is correctly exported and accessible by `functions/index.js` for deployment.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Inside the conditional block from Subtask 3, add an `else if (afterStatus === 'rejected') { ... }` sub-condition. Define `const title = \"차량 등록 거절\";`, `const body = `${vehicleName} 차량 등록이 거절되었습니다.\";`, `const data = { type: \"vehicle_rejected\", vehicleId: vehicleId, screen: \"MyPage\" };`. Call `await sendNotificationToUser(sellerId, title, body, data);`. Finally, ensure `exports.onVehicleStatusChanged` is properly set up in `functions/triggers/vehicleNotifications.js` and that `functions/index.js` imports and re-exports it.",
+            "status": "done",
+            "testStrategy": "Unit test the payload generation for 'rejected' status, verifying `title`, `body`, `data` including dynamic content. Integration test by manually updating a vehicle document from 'pending' to 'rejected' in Firestore. Verify notification receipt on a test device and correct deep linking to 'MyPage'. End-to-end integration test with 'approved' status as well, ensuring both notification types work and deep link as expected."
+          }
+        ]
+      },
+      {
+        "id": 69,
+        "title": "Implement Admin Memo Update Notification",
+        "description": "(Optional) Add a Firebase Cloud Function to `consultationNotifications.js` that triggers when an `adminMemo` is updated for a consultation request, sending a notification to the user.",
+        "details": "1. In `functions/triggers/consultationNotifications.js`, add `onAdminMemoUpdated` as an `onUpdate` Firestore trigger for `consultation_requests/{id}`.\n2. Inside the trigger, check if `change.before.data().adminMemo` is different from `change.after.data().adminMemo` AND `change.after.data().adminMemo` is not empty or null (i.e., a meaningful memo was added or updated).\n3. Extract `id` (as `consultationId`) and `userId` from `change.after.data()`.\n4. Construct the notification payload:\n   - Title: \"관리자 메모\"\n   - Body: \"상담에 새로운 메모가 추가되었습니다.\"\n   - Data: `{ type: \"admin_memo_added\", consultationId: consultationId, screen: \"UserConsultationDetail\" }`\n5. Use `sendNotificationToUser(userId, title, body, data)` to send the notification.",
+        "testStrategy": "1. Unit test the payload generation logic.\n2. Integration test: Manually update the `adminMemo` field in a `consultation_requests` document with new, non-empty text. Verify that a push notification is received and deep links to `UserConsultationDetail`.\n3. Test edge cases: update with empty string, update with null, update with the same string. Ensure no notification is sent in these cases.",
+        "priority": "low",
+        "dependencies": [
+          64,
+          65
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define onAdminMemoUpdated Cloud Function Trigger",
+            "description": "Add a new Firebase Cloud Function named `onAdminMemoUpdated` to `functions/triggers/consultationNotifications.js`. This function will be an `onUpdate` Firestore trigger for documents in the `consultation_requests` collection, following the existing pattern for other consultation-related triggers.",
+            "dependencies": [],
+            "details": "In `functions/triggers/consultationNotifications.js`, add `exports.onAdminMemoUpdated = functions.firestore.document('consultation_requests/{id}').onUpdate(async (change, context) => { /* function body */ });`. Ensure all necessary Firebase and utility imports (e.g., `sendNotificationToUser`) are correctly included at the top of the file.",
+            "status": "done",
+            "testStrategy": "Verify the function `onAdminMemoUpdated` is listed in the Firebase console under Cloud Functions after deployment, indicating successful definition."
+          },
+          {
+            "id": 2,
+            "title": "Implement Admin Memo Change Detection Logic",
+            "description": "Inside the `onAdminMemoUpdated` trigger, add conditional logic to check if the `adminMemo` field has truly changed between the `beforeData` and `afterData` states and if the `afterData.adminMemo` is not empty or null, to prevent unnecessary notifications.",
+            "dependencies": [
+              1
+            ],
+            "details": "Retrieve `beforeData = change.before.data()` and `afterData = change.after.data()`. Implement an `if` condition: `if (afterData.adminMemo && beforeData.adminMemo !== afterData.adminMemo && afterData.adminMemo.trim() !== '') { /* proceed with notification logic */ }`. This ensures a meaningful change occurred.",
+            "status": "done",
+            "testStrategy": "Unit test with mock `change` objects: 1) `adminMemo` unchanged, 2) `adminMemo` changed to empty string, 3) `adminMemo` changed to null, 4) `adminMemo` meaningfully changed. Verify the condition passes only for case 4."
+          },
+          {
+            "id": 3,
+            "title": "Extract Data and Construct Notification Payload",
+            "description": "Within the memo change detection block, extract the `userId` and the `id` of the consultation request (renamed to `consultationId`) from the `afterData`. Then, construct the notification `title`, `body`, and `data` object exactly as specified in the task.",
+            "dependencies": [
+              2
+            ],
+            "details": "Use destructuring to get `const { userId, id: consultationId } = afterData;`. Define `const title = \"관리자 메모\";`, `const body = \"상담에 새로운 메모가 추가되었습니다.\";`, and `const data = { type: \"admin_memo_added\", consultationId: consultationId, screen: \"UserConsultationDetail\" };`.",
+            "status": "done",
+            "testStrategy": "Unit test by providing mock `afterData` (with `id` and `userId`) and assert that the generated `title`, `body`, and `data` objects match the expected values and structure, including `consultationId` and `screen`."
+          },
+          {
+            "id": 4,
+            "title": "Call sendNotificationToUser Function",
+            "description": "Invoke the `sendNotificationToUser(userId, title, body, data)` utility function, passing the extracted user ID and the constructed notification payload to send the push notification to the user. Include appropriate console logging.",
+            "dependencies": [
+              3
+            ],
+            "details": "Call `await sendNotificationToUser(userId, title, body, data);` after payload construction. Add `console.log` statements for successful notification dispatch or any errors, consistent with existing function patterns in `consultationNotifications.js`.",
+            "status": "done",
+            "testStrategy": "Mock `sendNotificationToUser` in unit tests and verify that it is called exactly once with the correct `userId`, `title`, `body`, and `data` arguments when the memo change condition is met."
+          },
+          {
+            "id": 5,
+            "title": "Deploy Cloud Function and Conduct Integration Tests",
+            "description": "Deploy the newly implemented `onAdminMemoUpdated` Cloud Function to the development environment. Perform comprehensive end-to-end integration testing by manually updating an `adminMemo` field in a `consultation_requests` document in Firestore.",
+            "dependencies": [
+              4
+            ],
+            "details": "Deploy the function using `firebase deploy --only functions:onAdminMemoUpdated`. Manually update the `adminMemo` field of a `consultation_requests` document for a test user in the Firebase console. Verify that the user receives the push notification on their device, that the notification content (title, body) is correct, and that tapping the notification correctly deep-links to the `UserConsultationDetail` screen with the specific `consultationId`.",
+            "status": "done",
+            "testStrategy": "Integration test: Manually update the `adminMemo` field for an existing `consultation_requests` document via the Firebase Console (e.g., add new text, modify existing text). Observe client device for notification receipt. Click notification and verify deep-link navigation and data context. Test negative cases (no change, change to empty string) to ensure no notification is sent."
+          }
+        ]
+      },
+      {
+        "id": 70,
+        "title": "Integrate All Cloud Functions and Final Deployment",
+        "description": "Consolidate all implemented Cloud Functions by exporting them from `functions/index.js`, configure deployment settings, and perform a comprehensive deployment and final integration testing.",
+        "details": "1. In `functions/index.js`, import all created trigger modules (e.g., `consultationNotifications.js`, `vehicleNotifications.js`).\n2. Export all individual functions from `index.js`. Example: `exports.onConsultationApproved = require('./triggers/consultationNotifications').onConsultationApproved;`\n3. Review `firebase.json` and `functions/package.json` for correct configuration and dependencies.\n4. Ensure that `maxInstances: 10` is applied to all relevant functions as configured in the `index.js` or via function options, to control costs and performance.\n5. Perform a full deployment of all functions using `firebase deploy --only functions`.\n6. Implement comprehensive error logging for all deployed functions using `functions.logger.error` within `try-catch` blocks where applicable, especially around `sendNotificationToUser` calls.",
+        "testStrategy": "1. Perform a full end-to-end integration test by manually triggering all implemented notification types (consultation approval/rejection/completion/alternative slots, vehicle approval/rejection, admin memo update) in Firestore.\n2. Verify that notifications are correctly received across all app states: foreground, background, and quit.\n3. Confirm that deep linking works perfectly for all notification types, leading to the specified screens.\n4. Thoroughly monitor Cloud Functions logs for any errors, warnings, or unexpected behavior during these tests.\n5. Test edge cases such as users with no FCM token, invalid/expired FCM tokens, and rapid sequential updates to ensure graceful error handling and prevent duplicate notifications.\n6. Confirm that the notification delivery rate meets the >95% success criteria for valid tokens.",
+        "priority": "high",
+        "dependencies": [
+          65,
+          66,
+          67,
+          68,
+          69
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Consolidate Cloud Function Imports and Exports in functions/index.js",
+            "description": "Import all newly created trigger modules (e.g., consultationNotifications.js, vehicleNotifications.js) into functions/index.js and export each individual function to make them deployable.",
+            "dependencies": [],
+            "details": "Modify `functions/index.js` to include `require` statements for all relevant notification trigger modules such as `./triggers/consultationNotifications`, `./triggers/vehicleNotifications`, and `./triggers/adminMemoNotifications`. For each imported module, export its functions using the pattern `exports.functionName = require('./path/to/module').functionName;`. Ensure all functions developed in previous tasks (65, 66, 67, 68, 69) are properly imported and exported, allowing them to be discovered and deployed by Firebase.",
+            "status": "done",
+            "testStrategy": null
+          },
+          {
+            "id": 2,
+            "title": "Implement Comprehensive Error Logging for all Cloud Functions",
+            "description": "Integrate robust error logging using `functions.logger.error` within `try-catch` blocks for all deployed Cloud Functions, especially around critical operations like `sendNotificationToUser`.",
+            "dependencies": [
+              1
+            ],
+            "details": "For each function exported in `functions/index.js` (and potentially within the trigger modules themselves), wrap the core business logic, particularly `sendNotificationToUser` calls and database write operations, in `try-catch` blocks. Within each `catch` block, use `functions.logger.error('Error sending notification for [functionName]', error, { userId: userId, notificationType: type });` to log detailed error information, including context where applicable. This ensures critical failures are captured and easily debuggable in Firebase Logs.",
+            "status": "done",
+            "testStrategy": null
+          },
+          {
+            "id": 3,
+            "title": "Configure Cloud Function Settings and Dependencies",
+            "description": "Review and update `firebase.json` and `functions/package.json` for correct configuration and dependencies. Ensure that `maxInstances: 10` is applied to all relevant functions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Examine `functions/package.json` to ensure all necessary Node.js dependencies (e.g., `firebase-admin`, `firebase-functions`) are listed and their versions are compatible. Update `firebase.json` to correctly define function regions or memory allocations if specific settings are required beyond defaults. Modify the function options either directly in `functions/index.js` or within the trigger modules to explicitly apply `maxInstances: 10` to all functions that handle notifications, optimizing for cost control and performance under load.",
+            "status": "done",
+            "testStrategy": null
+          },
+          {
+            "id": 4,
+            "title": "Perform Initial Full Deployment of Cloud Functions",
+            "description": "Execute a full deployment of all integrated Cloud Functions to the Firebase project using the `firebase deploy --only functions` command.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Navigate to the project root directory (C:\\JCar) in the terminal. Ensure Firebase CLI is installed and authenticated to the correct Firebase project. Execute the command `firebase deploy --only functions`. Monitor the console output for any deployment errors, warnings, or failures. After deployment, verify that all expected functions are listed and in a healthy state within the Firebase Console's Functions section.",
+            "status": "done",
+            "testStrategy": "Check Firebase console for successful deployment status of all expected functions. Review deployment logs for any critical errors or warnings reported by the Firebase CLI during the process."
+          },
+          {
+            "id": 5,
+            "title": "Conduct Comprehensive Integration Testing and Final Verification",
+            "description": "Perform end-to-end integration tests by manually triggering various app events in Firestore to verify that all deployed Cloud Functions correctly send notifications to target users across all app states.",
+            "dependencies": [
+              4
+            ],
+            "details": "Manually trigger all notification types by creating or updating relevant documents in Firestore (e.g., changing `status` for a `consultation_request`, adding a new `vehicle` with specific `approvalStatus`, creating an `admin_memo`). On a test device with the JCar app installed, verify that push notifications are correctly received for each triggered event when the app is in the foreground, background, and closed. Ensure notification content is accurate. Check Firebase Function logs for any errors captured by the newly implemented error logging (Subtask 2) during these tests.",
+            "status": "done",
+            "testStrategy": "1. Manually update a 'consultation_request' document to 'approved', 'rejected', 'completed', and 'alternative_slot' statuses, verifying notification receipt for each. 2. Create/update a 'vehicle' document to trigger approval/rejection notifications. 3. Create an 'admin_memo' document to trigger general memo notifications. 4. Verify notifications are received on test devices (Android/iOS) in foreground, background, and killed app states. 5. Examine Firebase Cloud Function logs for any `functions.logger.error` entries during these test scenarios."
+          }
+        ]
       }
     ],
     "metadata": {
-      "version": "1.0.0",
-      "lastModified": "2025-12-19T10:51:59.813Z",
-      "taskCount": 62,
-      "completedCount": 61,
-      "tags": [
-        "master"
-      ],
       "created": "2025-12-19T10:58:23.795Z",
-      "description": "Tasks for master context",
-      "updated": "2025-12-19T10:58:49.624Z"
+      "updated": "2025-12-20T16:28:30.455Z",
+      "description": "Tasks for master context"
     }
   }
 }

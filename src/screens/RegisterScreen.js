@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { firebaseFunctions } from '../firebase/firebaseConfig';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
@@ -64,13 +64,18 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background.secondary }]}>
-      <Text style={[styles.title, {
-        fontSize: theme.typography.fontSize.h2,
-        fontWeight: theme.typography.fontWeight.bold,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.lg,
-      }]}>회원가입</Text>
+    <View style={[styles.wrapper, { backgroundColor: theme.colors.background.secondary }]}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Text style={[styles.backButtonText, { color: theme.colors.primary.main }]}>‹ 뒤로</Text>
+      </TouchableOpacity>
+
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={[styles.title, {
+          fontSize: theme.typography.fontSize.h2,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing.lg,
+        }]}>회원가입</Text>
 
       <InputField
         label="이름"
@@ -128,28 +133,36 @@ const RegisterScreen = ({ navigation }) => {
         error={errors.confirmPassword}
       />
 
-      <Button
-        variant="primary"
-        title="회원가입"
-        onPress={handleRegister}
-        style={{ marginTop: theme.spacing.md }}
-      />
-
-      <Button
-        variant="secondary"
-        title="로그인으로 돌아가기"
-        onPress={() => navigation.navigate('Login')}
-        style={{ marginTop: theme.spacing.md }}
-      />
-    </ScrollView>
+        <Button
+          variant="primary"
+          title="회원가입"
+          onPress={handleRegister}
+          style={{ marginTop: theme.spacing.md }}
+        />
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   container: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
+    paddingTop: 100,
   },
   title: {
     textAlign: 'center',

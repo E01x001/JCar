@@ -3,13 +3,11 @@
  *
  * Fetches vehicle data from Firestore in real-time and calculates aggregate statistics
  * for total count and status breakdowns.
- *
- * Migrated to React Native Firebase Modular API (v22+)
  */
 
 import { useState, useEffect, useContext } from 'react';
-import { getFirestore, collection, onSnapshot } from '@react-native-firebase/firestore';
-import crashlytics from '@react-native-firebase/crashlytics';
+import firestore from '@react-native-firebase/firestore';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService';
 import { AuthContext } from '../context/AuthContext';
 
 /**
@@ -44,18 +42,18 @@ const useVehicleStats = () => {
       });
       return () => {};
     }
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
-    const unsubscribe = onSnapshot(
-      vehiclesRef,
-      (snapshot) => {
+
+    const unsubscribe = firestore()
+      .collection('vehicles')
+      .onSnapshot(
+        (snapshot) => {
           // Calculate statistics from snapshot
           let total = 0;
           let pending = 0;
           let approved = 0;
           let rejected = 0;
 
-          snapshot.docs.forEach((doc) => {
+          snapshot.forEach((doc) => {
             total++;
             const data = doc.data();
             const status = data.status;
@@ -79,8 +77,8 @@ const useVehicleStats = () => {
         },
         (error) => {
           console.error('useVehicleStats: Failed to fetch vehicle statistics', error);
-          crashlytics().recordError(error);
-          crashlytics().log('useVehicleStats: Firestore query failed');
+          reportCrashlyticsError(error);
+          logCrashlyticsMessage('useVehicleStats: Firestore query failed');
 
           // Set loading to false even on error
           setStats((prev) => ({

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
-import { getFirestore, collection, getDocs } from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
@@ -13,7 +13,6 @@ import StateScreen from '../components/StateScreen';
 import SkeletonLoader from '../components/SkeletonLoader';
 import InputField from '../components/InputField';
 import FilterChip from '../components/FilterChip';
-import StatisticsCard from '../components/StatisticsCard';
 import useVehicleStats from '../hooks/useVehicleStats';
 
 const AdminVehiclesListScreen = ({ navigation }) => {
@@ -34,9 +33,9 @@ const AdminVehiclesListScreen = ({ navigation }) => {
   const fetchVehicles = async () => {
     try {
       setLoading(true);
-      const db = getFirestore();
-      const vehiclesRef = collection(db, 'vehicles');
-      const snapshot = await getDocs(vehiclesRef);
+      const snapshot = await firestore()
+        .collection('vehicles')
+        .get();
       const vehiclesData = snapshot.docs.map(d => ({
         id: d.id,
         ...d.data(),
@@ -186,109 +185,90 @@ const AdminVehiclesListScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Statistics Dashboard */}
+      {/* Total Vehicles Count */}
       {!vehicleStats.loading && (
+        <View style={{
+          paddingHorizontal: theme.spacing.md,
+          paddingTop: theme.spacing.xs,
+          paddingBottom: theme.spacing.xs,
+        }}>
+          <Text style={{
+            fontSize: theme.typography.fontSize.body,
+            color: theme.colors.text.secondary,
+            fontWeight: theme.typography.fontWeight.medium,
+          }}>
+            등록된 차량: {vehicleStats.total}대
+          </Text>
+        </View>
+      )}
+
+      {/* Status Filter Chips */}
+      <View style={{ marginBottom: theme.spacing.xs }}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: theme.spacing.md,
-            paddingBottom: theme.spacing.xs,
-            paddingTop: theme.spacing.xs,
+            alignItems: 'center',
           }}
+          style={{ flexGrow: 0 }}
         >
-          <StatisticsCard
-            iconName="directions-car"
+          <FilterChip
             label="전체"
-            count={vehicleStats.total}
-            variant="primary"
-            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
+            active={selectedStatus === 'all'}
+            onPress={() => setSelectedStatus('all')}
           />
-          <StatisticsCard
-            iconName="schedule"
+          <FilterChip
             label="대기중"
-            count={vehicleStats.pending}
-            variant="warning"
-            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
+            active={selectedStatus === 'pending'}
+            onPress={() => setSelectedStatus('pending')}
           />
-          <StatisticsCard
-            iconName="check-circle"
+          <FilterChip
             label="승인됨"
-            count={vehicleStats.approved}
-            variant="success"
-            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
+            active={selectedStatus === 'approved'}
+            onPress={() => setSelectedStatus('approved')}
           />
-          <StatisticsCard
-            iconName="cancel"
+          <FilterChip
             label="거절됨"
-            count={vehicleStats.rejected}
-            variant="error"
-            style={{ minWidth: 80, paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xxs }}
+            active={selectedStatus === 'rejected'}
+            onPress={() => setSelectedStatus('rejected')}
           />
         </ScrollView>
-      )}
-
-      {/* Status Filter Chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: theme.spacing.md,
-          paddingBottom: theme.spacing.xxs,
-        }}
-      >
-        <FilterChip
-          label="전체"
-          active={selectedStatus === 'all'}
-          onPress={() => setSelectedStatus('all')}
-        />
-        <FilterChip
-          label="대기중"
-          active={selectedStatus === 'pending'}
-          onPress={() => setSelectedStatus('pending')}
-        />
-        <FilterChip
-          label="승인됨"
-          active={selectedStatus === 'approved'}
-          onPress={() => setSelectedStatus('approved')}
-        />
-        <FilterChip
-          label="거절됨"
-          active={selectedStatus === 'rejected'}
-          onPress={() => setSelectedStatus('rejected')}
-        />
-      </ScrollView>
+      </View>
 
       {/* Vehicle Type Filter Chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: theme.spacing.md,
-          paddingBottom: theme.spacing.xxs,
-        }}
-      >
-        <FilterChip
-          label="전체 타입"
-          active={selectedVehicleType === 'all'}
-          onPress={() => setSelectedVehicleType('all')}
-        />
-        <FilterChip
-          label="승용차"
-          active={selectedVehicleType === '승용차'}
-          onPress={() => setSelectedVehicleType('승용차')}
-        />
-        <FilterChip
-          label="SUV"
-          active={selectedVehicleType === 'SUV'}
-          onPress={() => setSelectedVehicleType('SUV')}
-        />
-        <FilterChip
-          label="트럭"
-          active={selectedVehicleType === '트럭'}
-          onPress={() => setSelectedVehicleType('트럭')}
-        />
-      </ScrollView>
+      <View style={{ marginBottom: theme.spacing.sm }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: theme.spacing.md,
+            alignItems: 'center',
+          }}
+          style={{ flexGrow: 0 }}
+        >
+          <FilterChip
+            label="전체 타입"
+            active={selectedVehicleType === 'all'}
+            onPress={() => setSelectedVehicleType('all')}
+          />
+          <FilterChip
+            label="승용차"
+            active={selectedVehicleType === '승용차'}
+            onPress={() => setSelectedVehicleType('승용차')}
+          />
+          <FilterChip
+            label="SUV"
+            active={selectedVehicleType === 'SUV'}
+            onPress={() => setSelectedVehicleType('SUV')}
+          />
+          <FilterChip
+            label="트럭"
+            active={selectedVehicleType === '트럭'}
+            onPress={() => setSelectedVehicleType('트럭')}
+          />
+        </ScrollView>
+      </View>
 
       {/* Loading State */}
       {loading ? (

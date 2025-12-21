@@ -1,11 +1,82 @@
 // src/services/firebaseService.js
 // Task 62.4: Migrated to React Native Firebase Modular API (v22+)
+// Task 63.1: Migrated Crashlytics and Messaging to v22 Modular API
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@react-native-firebase/auth';
 import { getFirestore, collection, doc, setDoc, updateDoc, addDoc, getDoc, getDocs, query, where, orderBy, limit, startAfter, onSnapshot, runTransaction, serverTimestamp, deleteField } from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
-import messaging from '@react-native-firebase/messaging';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { getMessaging, getToken, requestPermission, onMessage, setBackgroundMessageHandler, getInitialNotification, onNotificationOpenedApp, onTokenRefresh } from '@react-native-firebase/messaging';
+import { getCrashlytics, recordError, log } from '@react-native-firebase/crashlytics';
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
+
+// --------------------
+// Firebase Service Instance Helpers (Task 63.1)
+// --------------------
+const getCrashlyticsInstance = () => getCrashlytics();
+const getMessagingInstance = () => getMessaging();
+
+// --------------------
+// Crashlytics Wrapper Functions (Task 63.1)
+// --------------------
+
+/**
+ * Report an error to Crashlytics
+ * @param {Error} error - The error object to report
+ */
+export const reportCrashlyticsError = (error) => {
+  try {
+    const crashlyticsInstance = getCrashlyticsInstance();
+    recordError(crashlyticsInstance, error);
+  } catch (err) {
+    console.error('Failed to report error to Crashlytics:', err);
+  }
+};
+
+/**
+ * Log a message to Crashlytics
+ * @param {string} message - The message to log
+ */
+export const logCrashlyticsMessage = (message) => {
+  try {
+    const crashlyticsInstance = getCrashlyticsInstance();
+    log(crashlyticsInstance, message);
+  } catch (err) {
+    console.error('Failed to log message to Crashlytics:', err);
+  }
+};
+
+// --------------------
+// Messaging Wrapper Functions (Task 63.1)
+// --------------------
+
+/**
+ * Get FCM token for the device
+ * @returns {Promise<string>} - FCM token
+ */
+export const getFCMToken = async () => {
+  try {
+    const messagingInstance = getMessagingInstance();
+    const token = await getToken(messagingInstance);
+    return token;
+  } catch (err) {
+    console.error('Failed to get FCM token:', err);
+    throw err;
+  }
+};
+
+/**
+ * Request notification permission
+ * @returns {Promise<number>} - Authorization status
+ */
+export const requestFCMNotificationPermission = async () => {
+  try {
+    const messagingInstance = getMessagingInstance();
+    const authStatus = await requestPermission(messagingInstance);
+    return authStatus;
+  } catch (err) {
+    console.error('Failed to request notification permission:', err);
+    throw err;
+  }
+};
 
 // --------------------
 // 회원가입
@@ -30,8 +101,8 @@ export const registerUser = async ({ email, password, name, phoneNumber }) => {
     return { success: true, userId };
   } catch (error) {
     console.error('회원가입 실패:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('registerUser failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('registerUser failed');
     Alert.alert('회원가입 오류', error.message || '알 수 없는 오류가 발생했습니다.');
     return { success: false, error };
   }
@@ -48,8 +119,8 @@ export const loginUser = async ({ email, password }) => {
     return { success: true, userId: userCredential.user.uid };
   } catch (error) {
     console.error('로그인 실패:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('loginUser failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('loginUser failed');
     Alert.alert('로그인 오류', error.message || '알 수 없는 오류가 발생했습니다.');
     return { success: false, error };
   }
@@ -83,8 +154,8 @@ export const saveConsultationRequest = async (data) => {
     return { success: true };
   } catch (error) {
     console.error('상담 요청 저장 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('saveConsultationRequest failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('saveConsultationRequest failed');
     Alert.alert('오류', '상담 요청 저장에 실패했습니다.');
     return { success: false, error };
   }
@@ -123,10 +194,9 @@ export const requestNotificationPermission = async () => {
       }
     } else if (Platform.OS === 'ios') {
       // iOS에서는 Firebase Messaging의 requestPermission 사용
-      const authStatus = await messaging().requestPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      const authStatus = await requestFCMNotificationPermission();
+      // AuthorizationStatus: 1 = AUTHORIZED, 2 = PROVISIONAL
+      const enabled = authStatus === 1 || authStatus === 2;
 
       if (enabled) {
         console.log('✅ iOS 알림 권한 허용됨:', authStatus);
@@ -140,8 +210,8 @@ export const requestNotificationPermission = async () => {
     return false;
   } catch (error) {
     console.error('알림 권한 요청 실패:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('requestNotificationPermission failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('requestNotificationPermission failed');
     return false;
   }
 };
@@ -151,7 +221,7 @@ export const requestNotificationPermission = async () => {
 // --------------------
 export const saveFcmToken = async (userId) => {
   try {
-    const token = await messaging().getToken();
+    const token = await getFCMToken();
     if (token) {
       const db = getFirestore();
       const userDocRef = doc(db, 'users', userId);
@@ -160,8 +230,8 @@ export const saveFcmToken = async (userId) => {
     }
   } catch (error) {
     console.error('FCM 토큰 저장 실패:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('saveFcmToken failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('saveFcmToken failed');
   }
 };
 
@@ -175,8 +245,8 @@ export const deleteVehicleAdmin = async (vehicleId) => {
     Alert.alert('알림', '차량이 삭제되었습니다.');
   } catch (error) {
     console.error('차량 삭제 실패:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('deleteVehicleAdmin failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('deleteVehicleAdmin failed');
     Alert.alert('오류', error.message || '차량 삭제 중 오류가 발생했습니다.');
   }
 };
@@ -188,8 +258,8 @@ export const deleteConsultationAdmin = async (consultationId) => {
     Alert.alert('알림', '상담이 삭제되었습니다.');
   } catch (error) {
     console.error('상담 삭제 실패:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('deleteConsultationAdmin failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('deleteConsultationAdmin failed');
     Alert.alert('오류', error.message || '상담 삭제 중 오류가 발생했습니다.');
   }
 };
@@ -231,8 +301,8 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
     return { success: true };
   } catch (error) {
     console.error('상담 상태 업데이트 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('updateConsultationStatus failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('updateConsultationStatus failed');
     // Don't show Alert here - let the caller handle user feedback
     throw error; // Re-throw error for caller to handle
   }
@@ -253,8 +323,8 @@ export const updateAdminMemo = async (consultationId, adminMemo) => {
     return { success: true };
   } catch (error) {
     console.error('관리자 메모 업데이트 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('updateAdminMemo failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('updateAdminMemo failed');
     throw error; // Re-throw error for caller to handle
   }
 };
@@ -286,8 +356,8 @@ export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
     return { success: true };
   } catch (error) {
     console.error('대체 시간 제안 업데이트 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('updateSuggestedSlots failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('updateSuggestedSlots failed');
     throw error; // Re-throw for caller to handle
   }
 };
@@ -394,8 +464,8 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
     return result;
   } catch (error) {
     console.error('거래완료 처리 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('completeConsultation failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('completeConsultation failed');
     throw error; // Re-throw for caller to handle
   }
 };
@@ -462,8 +532,8 @@ export const completeConsultationDeal = async ({
     return result;
   } catch (error) {
     console.error('거래완료 처리 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('completeConsultationDeal failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('completeConsultationDeal failed');
     Alert.alert('오류', error.message || '거래완료 처리에 실패했습니다.');
     return { success: false, error };
   }
@@ -494,8 +564,8 @@ export const createAdminOwnedVehicle = async (vehicleData) => {
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error('관리자 소유 차량 생성 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('createAdminOwnedVehicle failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('createAdminOwnedVehicle failed');
     Alert.alert('오류', '차량 등록에 실패했습니다.');
     return { success: false, error };
   }
@@ -524,8 +594,8 @@ export const getAdminOwnedVehicles = async (statusFilter = null) => {
     return { success: true, vehicles };
   } catch (error) {
     console.error('관리자 소유 차량 조회 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('getAdminOwnedVehicles failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('getAdminOwnedVehicles failed');
     return { success: false, error, vehicles: [] };
   }
 };
@@ -542,8 +612,8 @@ export const updateAdminOwnedVehicle = async (vehicleId, updateData) => {
     return { success: true };
   } catch (error) {
     console.error('관리자 소유 차량 업데이트 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('updateAdminOwnedVehicle failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('updateAdminOwnedVehicle failed');
     Alert.alert('오류', '차량 정보 업데이트에 실패했습니다.');
     return { success: false, error };
   }
@@ -572,8 +642,8 @@ export const subscribeToBuyConsultations = (callback) => {
       },
       (error) => {
         console.error('구매상담 구독 오류:', error);
-        crashlytics().recordError(error);
-        crashlytics().log('subscribeToBuyConsultations failed');
+        reportCrashlyticsError(error);
+        logCrashlyticsMessage('subscribeToBuyConsultations failed');
         callback([]);
       }
     );
@@ -581,8 +651,8 @@ export const subscribeToBuyConsultations = (callback) => {
     return unsubscribe;
   } catch (error) {
     console.error('구매상담 구독 설정 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('subscribeToBuyConsultations setup failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('subscribeToBuyConsultations setup failed');
     return () => {};
   }
 };
@@ -612,8 +682,8 @@ export const subscribeToSellConsultations = (callback) => {
       },
       (error) => {
         console.error('판매상담 구독 오류:', error);
-        crashlytics().recordError(error);
-        crashlytics().log('subscribeToSellConsultations failed');
+        reportCrashlyticsError(error);
+        logCrashlyticsMessage('subscribeToSellConsultations failed');
         callback([]);
       }
     );
@@ -621,8 +691,8 @@ export const subscribeToSellConsultations = (callback) => {
     return unsubscribe;
   } catch (error) {
     console.error('판매상담 구독 설정 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('subscribeToSellConsultations setup failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('subscribeToSellConsultations setup failed');
     return () => {};
   }
 };
@@ -678,8 +748,8 @@ export const subscribeToCompletedConsultations = (callback) => {
       },
       (error) => {
         console.error('거래완료 상담 구독 오류:', error);
-        crashlytics().recordError(error);
-        crashlytics().log('subscribeToCompletedConsultations failed');
+        reportCrashlyticsError(error);
+        logCrashlyticsMessage('subscribeToCompletedConsultations failed');
         callback([]);
       }
     );
@@ -687,8 +757,8 @@ export const subscribeToCompletedConsultations = (callback) => {
     return unsubscribe;
   } catch (error) {
     console.error('거래완료 상담 구독 설정 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('subscribeToCompletedConsultations setup failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('subscribeToCompletedConsultations setup failed');
     return () => {};
   }
 };
@@ -785,8 +855,8 @@ export const fetchCompletedConsultationsPaginated = async ({
     };
   } catch (error) {
     console.error('거래완료 상담 페이지네이션 조회 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('fetchCompletedConsultationsPaginated failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('fetchCompletedConsultationsPaginated failed');
     return {
       consultations: [],
       lastVisibleDoc: null,
@@ -815,8 +885,8 @@ export const cancelConsultation = async (consultationId) => {
     return { success: true };
   } catch (error) {
     console.error('상담 취소 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('cancelConsultation failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('cancelConsultation failed');
     throw error; // Re-throw error for caller to handle
   }
 };
@@ -848,8 +918,8 @@ export const resubmitConsultation = async (consultationId, preferredDate, prefer
     return { success: true };
   } catch (error) {
     console.error('상담 재신청 오류:', error);
-    crashlytics().recordError(error);
-    crashlytics().log('resubmitConsultation failed');
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('resubmitConsultation failed');
     throw error; // Re-throw error for caller to handle
   }
 };

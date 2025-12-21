@@ -90,8 +90,13 @@ const AdminMemoModal = ({ isVisible, onClose, onSubmit, initialMemo = '', consul
               style={[
                 styles.modalCard,
                 {
-                  backgroundColor: theme.colors.background.paper,
+                  backgroundColor: '#FFFFFF',
                   borderRadius: theme.borderRadius.lg,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 12,
+                  elevation: 8,
                 },
               ]}
             >
@@ -106,7 +111,7 @@ const AdminMemoModal = ({ isVisible, onClose, onSubmit, initialMemo = '', consul
                     {
                       fontSize: theme.typography.fontSize.h3,
                       fontWeight: theme.typography.fontWeight.bold,
-                      color: theme.colors.text.primary,
+                      color: theme.colors.primary.main,
                       marginBottom: theme.spacing.xs,
                     },
                   ]}
@@ -120,7 +125,7 @@ const AdminMemoModal = ({ isVisible, onClose, onSubmit, initialMemo = '', consul
                     styles.infoText,
                     {
                       fontSize: theme.typography.fontSize.bodySmall,
-                      color: theme.colors.text.secondary,
+                      color: theme.colors.text.primary,
                       marginBottom: theme.spacing.md,
                     },
                   ]}
