@@ -182,6 +182,8 @@ Stores all consultation requests between users and admin.
 | `email` | string | Yes | Email address |
 | `phoneNumber` | string | Yes | Phone number |
 | `role` | string | Yes | 'user' or 'admin' |
+| `status` | string | No | Account status: 'active' (default) or 'suspended' |
+| `statusUpdatedAt` | Timestamp \| null | No | Last status change timestamp |
 | `fcmToken` | string \| null | No | Firebase Cloud Messaging token for push notifications |
 | `createdAt` | Timestamp | Yes | Account creation timestamp |
 
@@ -420,6 +422,49 @@ All notifications include a `data` object for deep linking:
 
 ---
 
+---
+
+## `admin_activity_log` Collection
+
+**Purpose**: Track all administrative actions for auditing and security monitoring.
+
+### Document Structure
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `adminUid` | string | Yes | UID of admin who performed the action |
+| `action` | string | Yes | Type of action performed |
+| `targetUserId` | string | No | UID of user affected by the action |
+| `targetUserName` | string | No | Name of user affected (denormalized) |
+| `previousStatus` | string | No | Previous account status (for status changes) |
+| `newStatus` | string | No | New account status (for status changes) |
+| `timestamp` | Timestamp | Yes | When the action was performed |
+
+### Action Types
+
+- `suspend_user` - User account suspended
+- `activate_user` - User account reactivated
+- `approve_vehicle` - Vehicle registration approved
+- `reject_vehicle` - Vehicle registration rejected
+- `approve_consultation` - Consultation request approved
+- `reject_consultation` - Consultation request rejected
+
+### Example Document
+
+```javascript
+{
+  adminUid: "admin-uid-123",
+  action: "suspend_user",
+  targetUserId: "user-uid-456",
+  targetUserName: "홍길동",
+  previousStatus: "active",
+  newStatus: "suspended",
+  timestamp: Timestamp.now()
+}
+```
+
+---
+
 ## Notes
 
 - All timestamps use `firebase.firestore.Timestamp` type
@@ -427,3 +472,5 @@ All notifications include a `data` object for deep linking:
 - `transferType` is an enum with only two values: `'sell_to_admin'` | `'admin_to_buyer'`
 - `consultationStatus: 'archived'` replaces need for 'confirmed' status
 - Ownership history is append-only; never modify existing entries
+- User `status` defaults to 'active' if not specified
+- Admin accounts cannot be suspended (enforced in AdminUserManagementScreen)

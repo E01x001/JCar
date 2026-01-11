@@ -1,0 +1,413 @@
+{
+	"meta": {
+		"generatedAt": "2026-01-11T15:46:24.396Z",
+		"tasksAnalyzed": 50,
+		"totalTasks": 120,
+		"analysisCount": 50,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 71,
+			"taskTitle": "Secure API Credentials with react-native-config",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Install and configure react-native-config; Identify and move sensitive credentials from code to .env; Update code to use Config variables and document setup.",
+			"reasoning": "This task involves installing a new dependency, creating and updating environment files, and modifying existing code to use the new configuration. While react-native-config is generally straightforward to integrate, careful identification of all hardcoded secrets (beyond the specified line 66) is crucial. Native module linking can sometimes introduce minor complexities, but the overall pattern is well-established. Documentation updates are also required."
+		},
+		{
+			"taskId": 72,
+			"taskTitle": "Generate and Revoke Exposed API Keys",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "No expansion needed. This is primarily a coordination and administrative task.",
+			"reasoning": "This task is primarily an administrative and coordination effort with the backend or API provider, not a significant coding task within the JCar application. It relies on Task 71 for the `.env` file structure but involves minimal direct code changes beyond updating the `.env` file itself. The main 'complexity' lies in external communication and security procedures."
+		},
+		{
+			"taskId": 73,
+			"taskTitle": "Design and Implement cascadeDeleteUser Cloud Function",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Define Cloud Function trigger and basic structure; Implement initial user deletion logic; Set up local Firebase emulator for testing.",
+			"reasoning": "This task involves setting up a new Firebase Cloud Function, which is a critical piece of backend logic. It requires defining the function structure, understanding Firebase Function triggers (especially considering potential v1/v2 API differences as per Task 77), and ensuring it's deployable. While the initial implementation might be minimal, it lays the foundation for subsequent, more complex cascade logic. Local testing setup is essential from the start."
+		},
+		{
+			"taskId": 74,
+			"taskTitle": "Implement Data Cascade for User's Vehicles and Consultations",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Implement logic to query and delete user's vehicles; Implement logic to query and delete user's consultations; Integrate batching and error handling for deletions.",
+			"reasoning": "This task significantly extends the `cascadeDeleteUser` function from Task 73. It involves complex Firestore queries to identify all related documents (vehicles by `sellerId` or `currentOwnerId`, consultations by `requesterId` or `sellerId`) and perform batch deletions. This is critical for data integrity and carries a high risk of data loss if not implemented correctly. Proper error handling and efficiency for potentially large numbers of documents are key challenges."
+		},
+		{
+			"taskId": 75,
+			"taskTitle": "Implement Firebase Storage Image Cleanup in cascadeDeleteUser",
+			"complexityScore": 6,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: Extract image URLs from deleted vehicle documents; Implement Firebase Storage Admin SDK deletion logic; Integrate with existing cascadeDeleteUser function.",
+			"reasoning": "Building upon Task 74, this task adds another layer of complexity to the cascade deletion by involving Firebase Storage. It requires extracting image URLs from vehicle documents, using the Firebase Admin SDK to interact with Storage, and handling potential errors during file deletion. This integrates a new Firebase service into an already complex cascade logic."
+		},
+		{
+			"taskId": 76,
+			"taskTitle": "Implement Soft Delete and Confirmation Email for Account Deletion",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Modify user deletion process for soft delete (Firestore status/timestamp); Implement logic for sending a confirmation email with recovery option; Design and implement a scheduled Cloud Function for permanent deletion after recovery period; Integrate soft delete with existing cascadeDeleteUser Cloud Function (delaying execution).",
+			"reasoning": "This task is highly complex as it fundamentally changes a critical user flow. It involves modifying the user document schema, implementing a new client-side deletion process, integrating email sending, and designing a new scheduled Cloud Function to manage the permanent deletion after a recovery period. Coordinating this new soft-delete mechanism with the existing `cascadeDeleteUser` function (Tasks 74, 75) by delaying its execution adds significant architectural intricacy and potential for race conditions or data inconsistencies if not meticulously planned and implemented."
+		},
+		{
+			"taskId": 77,
+			"taskTitle": "Resolve Firebase Functions SDK Version Mismatch and Deployment Errors",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Update firebase-functions dependency to latest in package.json; Audit and refactor all existing Cloud Function trigger definitions to v2 API; Verify successful deployment to a staging environment.",
+			"reasoning": "This is a technical debt task that can be deceptively complex. Updating the Firebase Functions SDK and migrating from v1 to v2 API syntax can introduce breaking changes, requiring a thorough audit and rewrite of all existing function triggers and potentially their internal logic. This task is a prerequisite for reliable deployment of any new Cloud Functions (like those in tasks 73-76, 82, 115) and carries a risk of introducing regressions if not handled carefully."
+		},
+		{
+			"taskId": 78,
+			"taskTitle": "Test All Updated Firebase Functions Locally with Emulator",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: Start Firebase emulator suite; Manually trigger and verify all Cloud Functions (create, update, delete, scheduled); Review emulator logs for errors and expected side effects.",
+			"reasoning": "Thoroughly testing Cloud Functions locally with the emulator is crucial but can be time-consuming. It requires setting up the emulator correctly, systematically triggering each function's pathways (including edge cases), and carefully reviewing logs and database changes. While not requiring new code, it demands significant effort in execution and validation."
+		},
+		{
+			"taskId": 79,
+			"taskTitle": "Deploy All Updated and Verified Firebase Functions to Production",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "No expansion needed. This is primarily an operational task.",
+			"reasoning": "This is primarily an operational task. Assuming thorough testing in development and staging environments (Tasks 77, 78) has been completed, the production deployment itself should be straightforward. The complexity lies in the preceding verification steps rather than the deployment command itself. Monitoring post-deployment is important but reactive."
+		},
+		{
+			"taskId": 80,
+			"taskTitle": "Implement Field-Level Security Rules for Public and Sensitive Vehicle Data",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Define public-readable fields for vehicles; Define owner/admin-only readable fields; Test rules thoroughly using Firebase Security Rules Playground and test accounts.",
+			"reasoning": "Implementing precise field-level security rules for Firestore is highly critical and complex. It requires deep understanding of Firestore rules syntax, meticulous definition of access conditions based on user authentication, roles, and ownership, and careful testing to ensure no unintended data exposure. Incorrect rules can lead to severe security vulnerabilities or broken application functionality. Task 2 being 'done' for general security rules provides a foundation but fine-grained, field-level rules are a significant step up."
+		},
+		{
+			"taskId": 81,
+			"taskTitle": "Strengthen Security Rules for Consultation Requests",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Restrict read access for consultation documents based on requester/owner/admin roles; Implement validation rules for consultation status transitions; Thoroughly test all access and transition rules.",
+			"reasoning": "This task builds on the complexity of Task 80 by not only defining field-level read restrictions but also adding state transition validation for write operations. Ensuring that `status` changes only occur from valid states (e.g., `pending` to `approved` but not `approved` to `pending`) requires intricate rule logic. Protecting admin-only fields adds another layer. This is a common area for subtle bugs and security flaws if not perfectly crafted and exhaustively tested."
+		},
+		{
+			"taskId": 82,
+			"taskTitle": "Implement Cloud Function for Consultation Creation Rate Limiting",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Design rate limiting strategy and data storage (e.g., Firestore counter); Implement Cloud Function (e.g., onCall) with rate limiting logic; Integrate with client-side consultation request flow and error handling.",
+			"reasoning": "Implementing robust rate-limiting requires careful design to prevent abuse while ensuring legitimate users are not unduly blocked. This involves choosing a storage mechanism for tracking requests (e.g., a dedicated Firestore collection), implementing the limiting logic within a Cloud Function, and integrating it seamlessly with the client-side request flow and error handling. Handling concurrency and potential race conditions in the rate-limiting logic adds to the complexity."
+		},
+		{
+			"taskId": 83,
+			"taskTitle": "Apply React Performance Optimizations to Critical Screens",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Profile target screens to identify performance bottlenecks; Implement useMemo and useCallback for expensive computations and callbacks; Apply React.memo to relevant reusable components; Optimize FlatList props (keyExtractor, getItemLayout, initialNumToRender).",
+			"reasoning": "This task requires a solid understanding of React's rendering lifecycle and performance optimization techniques. While the tools (`useMemo`, `useCallback`, `React.memo`, `FlatList` props) are standard, correctly identifying where to apply them without over-optimizing or introducing bugs requires careful profiling and experimentation. The impact is across multiple critical screens, requiring attention to detail."
+		},
+		{
+			"taskId": 84,
+			"taskTitle": "Implement Centralized State Management (Zustand) for Shared Firestore Data and Caching",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Install and configure Zustand; Create initial Zustand stores for vehicles and consultations; Refactor existing onSnapshot listeners into Zustand stores with a singleton pattern; Implement a basic in-memory caching mechanism within the vehicleStore.",
+			"reasoning": "This task represents a significant architectural shift by introducing a new state management library (Zustand) and centralizing Firestore data subscriptions. It involves refactoring existing data fetching logic, designing a robust caching mechanism with invalidation, and ensuring proper management of `onSnapshot` listeners to prevent duplicates or leaks. This foundational change will impact how data is accessed and managed throughout the application, making it highly complex."
+		},
+		{
+			"taskId": 85,
+			"taskTitle": "Audit and Implement Proper Cleanup for All Firestore onSnapshot Listeners",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: Conduct a codebase audit to identify all onSnapshot listener instances; Implement cleanup functions (unsubscribe) in useEffect or componentWillUnmount for identified listeners; Verify cleanup with React DevTools and network monitoring.",
+			"reasoning": "While conceptually simple (call the unsubscribe function), this task requires a comprehensive and meticulous audit of the entire codebase to ensure every `onSnapshot` listener is properly unsubscribed. Missing even a few can lead to memory leaks, unnecessary resource consumption, and unexpected behavior, especially with complex component lifecycles. It's tedious work that needs 100% completion."
+		},
+		{
+			"taskId": 86,
+			"taskTitle": "Migrate All Client-Side Filtering to Server-Side Firestore Compound Queries with Optimized Indexes",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Identify all client-side filtering logic (e.g., in firebaseService.js); Redesign queries to use Firestore where() clauses for all filter criteria; Define and deploy necessary composite indexes in firestore.indexes.json; Verify query performance and index usage in Firebase Console.",
+			"reasoning": "This task is highly complex due to its fundamental shift from client-side to server-side data filtering. It requires a deep understanding of Firestore's querying capabilities and limitations, careful redesign of existing data retrieval logic, and the crucial step of defining and deploying custom composite indexes. Incorrect indexing can lead to expensive full collection scans or queries failing entirely. This is a critical performance and cost optimization with high impact."
+		},
+		{
+			"taskId": 87,
+			"taskTitle": "Implement Cursor-Based Pagination for Large Firestore Datasets (Vehicles, Consultations)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Extend server-side queries (from Task 86) with limit() and startAfter()/startAt() clauses; Update UI components (e.g., FlatList) to manage pagination state; Implement 'Load More' or infinite scrolling functionality.",
+			"reasoning": "Implementing cursor-based pagination adds significant complexity to both data fetching and UI state management. It requires extending the server-side queries from Task 86, managing the last visible document for subsequent fetches, and updating UI components to handle loading data in chunks. Integrating this smoothly with existing filters and ensuring no duplicates or missed items across pages is challenging, especially for a smooth user experience like infinite scrolling."
+		},
+		{
+			"taskId": 88,
+			"taskTitle": "Split firebaseService.js into Modular Service Files Based on Responsibility",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: Define new directory structure and service files (auth, vehicle, consultation, storage, notification); Systematically move functions from firebaseService.js to their respective modules; Update all import paths throughout the application; Conduct comprehensive regression testing; Implement ESLint rules for service modularity.",
+			"reasoning": "This is a monumental architectural refactoring task. `firebaseService.js` is a monolithic file, and splitting it into numerous single-responsibility modules will involve creating many new files, moving hundreds of lines of code, and updating potentially thousands of import statements across the entire codebase. This task has a very high risk of introducing widespread compilation errors or runtime bugs if not meticulously executed. It's a foundational change that will simplify future development but requires massive upfront effort and rigorous testing."
+		},
+		{
+			"taskId": 89,
+			"taskTitle": "Implement Repository Pattern: Create VehicleRepository and ConsultationRepository",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Define abstract repository interfaces (e.g., IVehicleRepository); Implement VehicleRepository, encapsulating Firestore vehicle logic; Implement ConsultationRepository, encapsulating Firestore consultation logic.",
+			"reasoning": "Introducing the Repository Pattern is a significant architectural decision that abstracts direct database interactions. It requires designing clean APIs for the repositories, moving all direct Firestore calls from existing services into these new classes, and ensuring that services now interact with repositories via dependency injection. This fundamentally changes the data access layer and requires careful design to achieve testability and maintainability benefits. It depends on Task 88 for a cleaner service layer."
+		},
+		{
+			"taskId": 90,
+			"taskTitle": "Implement Repository Pattern: Create UserRepository and Integrate Caching",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Implement UserRepository encapsulating Firestore user logic; Integrate an in-memory caching layer within UserRepository; Implement cache invalidation and expiry logic.",
+			"reasoning": "This task builds on the Repository Pattern (Task 89) but adds the significant challenge of integrating an in-memory caching mechanism. Designing cache invalidation strategies, handling cache expiry, and ensuring data consistency between the cache and Firestore (especially on writes) adds a layer of complexity beyond a standard repository. It's crucial for performance but can introduce subtle bugs if not managed carefully."
+		},
+		{
+			"taskId": 91,
+			"taskTitle": "Update All New Service Modules to Consume Data via the Repository Pattern",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: Refactor vehicleService and related modules to use VehicleRepository; Refactor consultationService and related modules to use ConsultationRepository; Refactor accountService and related modules to use UserRepository.",
+			"reasoning": "This task is the culmination of the Repository Pattern implementation. It involves refactoring all service modules (which were modularized in Task 88) to *use* the new repositories (Tasks 89, 90) instead of directly interacting with Firestore. While the repositories themselves are built, adapting all existing service logic to this new abstraction requires extensive code modification and thorough regression testing to ensure no functionality is broken. It's a widespread change across the service layer."
+		},
+		{
+			"taskId": 92,
+			"taskTitle": "Implement Global Error Handler for Mapping Firebase Errors to Korean Messages and Crashlytics Reporting",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Extend utils/errorHandler.js with a comprehensive Firebase error code to Korean message map; Refactor service layer and API calls to route errors through the new handler; Ensure all errors are automatically reported to Firebase Crashlytics with context.",
+			"reasoning": "This task builds on the existing global error handling (Task 3) by adding a crucial layer of user-friendliness and localization. Mapping numerous Firebase error codes to specific, user-facing Korean messages requires careful consideration of all possible error scenarios. Ensuring all relevant service functions and API calls consistently use this new handler, and that Crashlytics reporting is robust, involves significant refactoring across the error-prone parts of the application."
+		},
+		{
+			"taskId": 93,
+			"taskTitle": "Implement Global React Error Boundary and Exponential Backoff Retry for Transient Network Errors",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Develop/refine a top-level React Error Boundary component; Implement an Axios interceptor with exponential backoff retry logic for transient network errors; Integrate error reporting from the interceptor with Crashlytics.",
+			"reasoning": "While Task 3 mentions a global error handler, this task specifically refines the React Error Boundary and introduces a robust `axios` interceptor with exponential backoff for transient network errors. Implementing correct exponential backoff, identifying appropriate HTTP status codes for retries, and ensuring the retry mechanism integrates seamlessly without causing unintended side effects or infinite loops, is complex. It significantly improves resilience but requires careful implementation and testing of network failure scenarios."
+		},
+		{
+			"taskId": 94,
+			"taskTitle": "Add Request Timeout and Implement Offline Network Status Detection",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Configure a global request timeout for Axios; Integrate @react-native-community/netinfo for network status detection; Implement and display a global 'offline' banner/indicator in the UI.",
+			"reasoning": "This task involves implementing standard network resilience features. Setting a global timeout for HTTP requests is straightforward, but integrating `@react-native-community/netinfo` and designing a prominent, yet non-intrusive, offline UI indicator that responds dynamically to network changes requires careful consideration of user experience and component lifecycle. Thorough testing of various network states (online, offline, intermittent) is crucial."
+		},
+		{
+			"taskId": 95,
+			"taskTitle": "Implement Retry Logic, Optimistic Locking, and Conflict Resolution for Firestore Transactions",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Wrap all Firestore runTransaction calls with retry logic (max attempts); Implement optimistic locking within transactions to detect concurrent modifications; Develop specific conflict resolution logic (re-fetch, re-apply, notify user); Integrate transaction failure logging with analytics.",
+			"reasoning": "This is an extremely complex and critical task. Firestore transactions are already intricate, and adding retry logic, optimistic locking (which requires reading document versions before and after updates), and custom conflict resolution mechanisms significantly increases the difficulty. Ensuring data consistency in a distributed system, especially under high concurrency, is notoriously hard. This requires deep understanding of transaction semantics and robust error handling to prevent data corruption or unexpected behavior. Simulating and testing these scenarios effectively is also very challenging."
+		},
+		{
+			"taskId": 96,
+			"taskTitle": "Implement Environment-Aware Logger Utility and Eliminate Production Console Logs",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Create a utils/logger.js utility with environment-aware logging; Replace all console.log, console.warn, console.error calls with Logger equivalents; Configure ESLint to prevent accidental console statements in production.",
+			"reasoning": "The concept of an environment-aware logger is straightforward, but its implementation requires a systematic replacement of *all* existing `console.log` statements throughout the codebase, which can be a tedious and error-prone refactoring effort. Integrating `Logger.error()` with Crashlytics and setting up robust ESLint rules to prevent future regressions adds to the complexity. The main challenge is the widespread impact and the need for meticulous execution."
+		},
+		{
+			"taskId": 97,
+			"taskTitle": "Centralize All \"Magic Strings\" into Structured Constants Modules",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Create src/constants/ directory and initial modules (e.g., consultation.js, vehicle.js); Systematically identify and extract all 'magic strings' into constants; Replace all instances of magic strings with their respective constants; Update all import paths for constants.",
+			"reasoning": "This is a large-scale refactoring task that impacts almost every file in the codebase. Identifying and extracting *all* hardcoded string literals ('magic strings'), categorizing them into logical modules, and then replacing every instance with the new constants is a tedious and highly error-prone process. A single mistyped constant or incorrect replacement can lead to subtle bugs that are hard to diagnose. It's a foundational quality improvement with significant upfront effort."
+		},
+		{
+			"taskId": 98,
+			"taskTitle": "Refactor Complex Functions into Smaller, Single-Responsibility Units",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Analyze and refactor firebaseService.js:368-471 (completeConsultation); Analyze and refactor firebaseService.js:779-866 (fetchCompletedConsultationsPaginated); Analyze and refactor ConsultationRequestScreen.js:43-75 (checkDuplicateConsultation).",
+			"reasoning": "This task focuses on improving code quality by breaking down specific, identified complex functions. While the scope is targeted, correctly decomposing intricate business logic into smaller, testable, single-responsibility units without altering behavior requires strong software design skills. It often involves extracting helper functions, managing state, and ensuring proper data flow, which can be more challenging than it appears."
+		},
+		{
+			"taskId": 99,
+			"taskTitle": "Implement PropTypes for All React Native Components to Enforce Type Safety",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Install prop-types library; Add PropTypes definitions to core UI components; Add PropTypes definitions to screen components; Conduct a codebase review to ensure consistency and completeness.",
+			"reasoning": "Implementing PropTypes across the entire application is a systematic and time-consuming task. While conceptually straightforward, it requires meticulous attention to detail for every component, ensuring correct type definitions for all props (including complex shapes, arrays, functions, and required status). Missing or incorrect PropTypes can lead to runtime warnings, but the sheer volume of components makes this a substantial effort."
+		},
+		{
+			"taskId": 100,
+			"taskTitle": "Set Up Jest, React Native Testing Library, and Firebase Mock Infrastructure",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Configure Jest for React Native; Install and integrate React Native Testing Library; Create mocks for @react-native-firebase/auth, firestore, storage, and messaging; Implement generic mock factories for common Firebase data structures.",
+			"reasoning": "This is a foundational and highly complex task. Setting up a robust testing environment from scratch, especially for a React Native application that heavily relies on Firebase, involves configuring Jest, integrating React Native Testing Library, and, most critically, creating comprehensive mocks for all Firebase SDKs. Firebase mocks are notoriously challenging to get right to ensure isolated, fast, and reliable unit/integration tests without actual service connections. This task is a crucial prerequisite for all subsequent testing efforts."
+		},
+		{
+			"taskId": 101,
+			"taskTitle": "Write Unit Tests for All Refactored Service Layer Modules and Utility Functions",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Write unit tests for auth and user-related service modules; Write unit tests for vehicle and consultation service modules; Write unit tests for image and notification service modules; Write unit tests for core utility functions (error handler, logger, validation).",
+			"reasoning": "This task is highly complex due to its extensive scope and dependency on multiple prior refactoring tasks (88, 91, 92, 96, 100). Writing comprehensive unit tests for numerous refactored service modules and utility functions to achieve high code coverage requires deep understanding of each module's logic, effective mocking of dependencies (repositories, network calls), and covering all possible input combinations and error paths. This is a significant investment in test quality and robustness."
+		},
+		{
+			"taskId": 102,
+			"taskTitle": "Implement Test Utilities (e.g., renderWithProviders) for Easier Component Testing",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: Design and implement a renderWithProviders utility function; Integrate common context providers (e.g., navigation, Zustand stores, AuthContext) into the utility; Verify the utility with a simple component test.",
+			"reasoning": "Creating reusable test utilities like `renderWithProviders` is crucial for efficient and reliable component testing. While not overly complex conceptually, it requires a good understanding of React's Context API and how to correctly wrap components with all necessary providers (e.g., React Navigation, Zustand stores, custom AuthContext) to ensure they can be tested in an isolated yet realistic environment. This simplifies future component testing efforts (Task 103)."
+		},
+		{
+			"taskId": 103,
+			"taskTitle": "Write Unit and Integration Tests for Critical Screens (LoginScreen, VehicleRegistrationScreen, MyPageScreen)",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Write unit and integration tests for LoginScreen (authentication, validation); Write unit and integration tests for VehicleRegistrationScreen (form submission, image handling); Write unit and integration tests for MyPageScreen (account management, deletion workflow).",
+			"reasoning": "Testing critical user-facing screens involves simulating complex user interactions, handling form submissions, input validation, and asserting UI changes. While `react-native-testing-library` simplifies this, mocking API calls at the appropriate level for integration tests and ensuring full coverage of various user flows (success, error, edge cases) for screens with forms and complex logic makes this task moderately complex."
+		},
+		{
+			"taskId": 104,
+			"taskTitle": "Configure Firebase Emulator for Integration Testing and Implement End-to-End User Flow Tests",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Configure Firebase Emulator Suite for integration testing (auth, firestore, storage, functions); Design and implement E2E tests for core user flows (e.g., registration to consultation request); Implement test data setup and teardown for emulator; Integrate E2E tests into CI/CD pipeline.",
+			"reasoning": "This is a highly complex and foundational testing task. Setting up the Firebase Emulator Suite for automated integration testing and then writing comprehensive end-to-end tests that simulate full user journeys across the client and emulated Firebase services is a significant undertaking. It requires careful test data management, reliable execution against the emulator, and robust assertion of system-wide behavior. E2E tests are powerful but notoriously difficult to set up and maintain."
+		},
+		{
+			"taskId": 105,
+			"taskTitle": "Integrate Loading Skeletons on All Data-Loading Screens",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Install react-native-skeleton-placeholder and create reusable skeleton components; Integrate skeletons into VehiclesListScreen and consultation screens; Integrate skeletons into Admin screens and other data-loading contexts.",
+			"reasoning": "Implementing loading skeletons effectively across multiple screens to improve perceived performance involves integrating a third-party library, creating reusable skeleton components, and carefully integrating them into various UI layouts. Ensuring smooth transitions between skeletons and actual content, preventing layout shifts, and handling different loading states requires attention to detail and consistent application throughout the UI."
+		},
+		{
+			"taskId": 106,
+			"taskTitle": "Enable Firestore Offline Persistence and Implement Optimistic UI Updates",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Enable Firestore offline persistence at app startup; Implement optimistic UI updates for key user write operations (e.g., create vehicle); Design and implement UI rollback/error handling for optimistic updates on actual write failure; Thoroughly test offline behavior and optimistic updates under various network conditions.",
+			"reasoning": "While enabling Firestore offline persistence is relatively straightforward, implementing robust optimistic UI updates for write operations adds significant complexity. This involves immediately updating the UI based on an assumed successful write and then handling potential rollbacks or error messages if the actual write fails (e.g., when the app comes back online). Managing this client-side state, ensuring data consistency, and testing under intermittent network conditions is highly challenging."
+		},
+		{
+			"taskId": 107,
+			"taskTitle": "Optimize Image Upload Experience with Compression, Progress Bar, and Validation",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Integrate react-native-image-crop-picker for selection and react-native-compressor for compression; Implement image compression logic before upload; Integrate a visual progress bar in VehicleRegistrationScreen; Implement client-side file size validation.",
+			"reasoning": "This task significantly enhances a critical user interaction (image upload). It involves integrating multiple third-party libraries for image selection and compression, implementing asynchronous image processing, displaying a real-time progress bar, and adding client-side validation. Each of these components introduces its own set of technical challenges, such as handling native module interactions, managing asynchronous state updates, and ensuring a smooth user experience across varying image sizes and network conditions."
+		},
+		{
+			"taskId": 108,
+			"taskTitle": "Implement Image Cropping and Preview Functionality Before Submission",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Integrate image cropping functionality using react-native-image-crop-picker; Design and implement an interactive image preview area in VehicleRegistrationScreen; Add functionality to reorder and remove images from the preview list.",
+			"reasoning": "Building upon Task 107, this task adds more interactive UI elements and complex state management to the image upload process. Implementing image cropping with a third-party library requires careful integration. Designing an intuitive preview UI with features like reordering and removal for multiple images, while ensuring the underlying data reflects these changes before submission, adds significant complexity to the `VehicleRegistrationScreen`."
+		},
+		{
+			"taskId": 109,
+			"taskTitle": "Add Search Functionality to VehiclesListScreen with Debounce and Multiple Criteria",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Implement a search input component with debounce logic; Modify Firestore queries (leveraging Task 86) to include multiple search criteria; Integrate search with existing pagination (from Task 87) and filtering mechanisms.",
+			"reasoning": "While implementing a debounced search input is relatively straightforward, the complexity lies in effectively integrating multi-criteria search with server-side Firestore queries (as established in Task 86) and existing pagination (Task 87). Firestore's query limitations mean that a robust multi-criteria search may require careful indexing and potentially external search services if full-text or fuzzy search is needed. Ensuring compatibility with existing data fetching logic adds significant challenge."
+		},
+		{
+			"taskId": 110,
+			"taskTitle": "Implement Firebase Analytics for Key User Events and Properties",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Integrate Firebase Analytics SDK and create a wrapper utility (utils/analytics.js); Instrument core authentication events (login/logout, registration); Instrument vehicle-related events (view, registration, search); Instrument consultation-related events (request, status change).",
+			"reasoning": "Integrating Firebase Analytics is not complex, but systematically instrumenting *all* key user events and properties across an entire application is a significant, tedious, and detail-oriented task. It requires careful planning of event names, parameters, and user properties to ensure valuable data is collected without exposing PII. The widespread nature of the changes contributes to its moderate complexity."
+		},
+		{
+			"taskId": 111,
+			"taskTitle": "Enable and Configure Firebase Performance Monitoring with Custom Traces",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Enable Firebase Performance Monitoring and integrate SDK; Implement custom traces for key user flows (e.g., vehicle registration, login); Define performance budgets and alerts for critical traces.",
+			"reasoning": "Enabling Firebase Performance Monitoring and integrating its SDK is straightforward. The complexity arises in identifying and implementing *meaningful* custom traces for critical application workflows. This requires an understanding of potential performance bottlenecks and where to place traces to gain actionable insights. While not a massive coding effort, it requires careful thought and strategic placement."
+		},
+		{
+			"taskId": 112,
+			"taskTitle": "Migrate Complex Global State from Context API to Zustand Stores",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Identify existing complex Context API implementations and state; Design and create dedicated Zustand stores (authStore, vehicleStore, etc.); Refactor components to consume state from new Zustand stores; Address any remaining AuthContext dependencies, especially for React Navigation.",
+			"reasoning": "This is a major architectural refactoring that fundamentally changes how global state is managed. Migrating from React's Context API to Zustand involves creating new store structures, refactoring numerous components to use Zustand hooks, and carefully ensuring all state and logic are correctly transitioned without introducing regressions. Managing authentication state, especially if React Navigation heavily relies on Context, adds another layer of complexity. This will have widespread impact and requires thorough testing."
+		},
+		{
+			"taskId": 113,
+			"taskTitle": "Refactor Navigation to Use Nested Navigators and Preserve State Across Auth/Role Changes",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: Analyze AppNavigator.js for existing navigation structure; Refactor to use nested navigators (e.g., AuthStack, AppStack, AdminStack); Implement proper authentication flow management within navigation; Add support for deep linking to specific screens.",
+			"reasoning": "Refactoring navigation, especially in a complex application with authentication and potentially different user roles, can be intricate. Moving from conditional rendering to nested navigators is a best practice, but requires careful handling of navigation state preservation during login/logout/role changes. Implementing deep linking adds further complexity, involving both native configuration and application-level routing. This often leads to subtle bugs that are hard to diagnose."
+		},
+		{
+			"taskId": 114,
+			"taskTitle": "Implement Temporary Account Suspension: Add User Fields and Admin UI",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Update Firestore 'users' collection schema with accountStatus, suspendedUntil, suspensionReason; Develop a basic Admin UI component for managing user suspensions; Integrate admin suspension actions with UserRepository (from Task 90) to update user documents.",
+			"reasoning": "This task involves both database schema changes and UI development. Adding new fields to the `users` collection is straightforward, but developing a functional administrative UI to manage suspensions requires careful design for user interaction and proper validation. Ensuring that only authorized administrators can perform these actions (which will involve coordination with security rules or backend checks) adds to the complexity. The functionality will need to integrate with existing user data services."
+		},
+		{
+			"taskId": 115,
+			"taskTitle": "Implement Temporary Account Suspension: Cloud Function for Auto-Reactivation and Notifications",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Create a scheduled Firebase Cloud Function to query for expired suspended accounts; Implement logic within the function to reactivate accounts (update Firestore); Integrate notification sending (email/push) upon suspension and auto-reactivation.",
+			"reasoning": "Building on Task 114, this task involves creating a scheduled Cloud Function to automate account reactivation, which requires correctly querying Firestore for expired suspensions and updating user documents. Integrating with existing notification services to send informative messages upon both suspension and reactivation adds another layer. Careful scheduling, database updates, and robust error handling within the function are essential."
+		},
+		{
+			"taskId": 116,
+			"taskTitle": "Add Comprehensive JSDoc Comments to All New and Refactored Functions and Modules",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "No expansion needed. This is a systematic documentation task.",
+			"reasoning": "This is a documentation task focused on improving code readability and maintainability. While extensive (covering all new and refactored functions/modules), it is not technically complex. The primary 'effort' is the sheer volume of work and ensuring consistency and completeness of the documentation."
+		},
+		{
+			"taskId": 117,
+			"taskTitle": "Document Component Props and APIs",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "No expansion needed. This is a systematic documentation task.",
+			"reasoning": "Similar to Task 116, this is a documentation task focused on improving developer experience for component usage. It involves adding inline documentation for component props and APIs. While it requires thoroughness across all components, it's not technically complex beyond understanding component interfaces."
+		},
+		{
+			"taskId": 118,
+			"taskTitle": "Create/Update Architecture Decision Records (ADRs) for Major Refactoring Decisions",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "No expansion needed. This is a documentation and process task.",
+			"reasoning": "This is a procedural documentation task. Creating ADRs involves writing clear, concise records of significant architectural decisions. While important for long-term project health, it is not technically complex in terms of coding or system integration. The effort is in critical thinking and clear communication."
+		},
+		{
+			"taskId": 119,
+			"taskTitle": "Update README.md with an Improved Developer Onboarding Guide",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "No expansion needed. This is a documentation task.",
+			"reasoning": "This is a documentation task aimed at improving developer onboarding. It involves updating the `README.md` with comprehensive setup instructions and guidelines. While it requires attention to detail and clarity, it is not technically complex in terms of coding or system integration."
+		},
+		{
+			"taskId": 120,
+			"taskTitle": "Implement Storybook for React Native for All Reusable Components",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: Install and configure Storybook for React Native; Create stories for core UI components (buttons, inputs, cards); Create stories for more complex reusable components (modals, specific list items).",
+			"reasoning": "Setting up Storybook for React Native can sometimes have initial configuration complexities, especially with existing project setups. Once configured, creating stories for reusable components is a systematic but time-consuming process. It primarily involves writing descriptive stories for various component states and prop combinations. The overall value for documentation and component development is high, but the initial setup and comprehensive story creation contribute to its moderate complexity."
+		}
+	]
+}

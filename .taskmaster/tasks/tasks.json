@@ -3835,11 +3835,793 @@
             "testStrategy": "1. Manually update a 'consultation_request' document to 'approved', 'rejected', 'completed', and 'alternative_slot' statuses, verifying notification receipt for each. 2. Create/update a 'vehicle' document to trigger approval/rejection notifications. 3. Create an 'admin_memo' document to trigger general memo notifications. 4. Verify notifications are received on test devices (Android/iOS) in foreground, background, and killed app states. 5. Examine Firebase Cloud Function logs for any `functions.logger.error` entries during these test scenarios."
           }
         ]
+      },
+      {
+        "id": 71,
+        "title": "Secure API Credentials with react-native-config",
+        "description": "Remove hardcoded API authorization token and sensitive credentials by implementing `react-native-config` for environment variable management.",
+        "details": "Create `.env.example` and `.env` files in the project root. Add `.env` to `.gitignore`. Install `react-native-config` (`yarn add react-native-config` and link native modules if necessary). Move the API authorization token from `VehicleRegistrationScreen.js:66` and any other sensitive keys to `.env`. Update code to use `Config.VARIABLE_NAME`. Document the environment setup instructions in the project's README.",
+        "testStrategy": "Perform a `grep -r 'your_hardcoded_token'` to ensure no hardcoded credentials remain in the codebase. Build and run the app to verify that all necessary secrets are loaded correctly from environment variables. Check the production build artifact to ensure `.env` file content is not exposed.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install react-native-config and Configure Environment Files",
+            "description": "Install the react-native-config package, link native modules if necessary, and set up the initial .env and .env.example files, ensuring .env is ignored by Git.",
+            "dependencies": [],
+            "details": "Execute `yarn add react-native-config`. Manually link native modules if `react-native link` is not sufficient or if using a newer React Native version where auto-linking might fail. Create `.env.example` and an empty `.env` file in the project root. Add `.env` to the project's `.gitignore` to prevent sensitive data from being committed.",
+            "status": "pending",
+            "testStrategy": "Verify react-native-config is listed in package.json and node_modules. Confirm `.env` is present in `.gitignore`. Attempt to stage `.env` to ensure it's ignored."
+          },
+          {
+            "id": 2,
+            "title": "Identify and Migrate Sensitive Credentials to .env",
+            "description": "Locate all hardcoded API keys and sensitive credentials within the codebase and move them into the newly created `.env` file.",
+            "dependencies": [
+              1
+            ],
+            "details": "Specifically identify the API authorization token from `VehicleRegistrationScreen.js:66`. Perform a thorough search across the project for any other hardcoded sensitive keys (e.g., API keys, secret tokens, database credentials). Define corresponding environment variables (e.g., `API_AUTH_TOKEN`, `SOME_OTHER_KEY`) in the `.env` file for each identified credential.",
+            "status": "pending",
+            "testStrategy": "Perform `grep -r 'your_hardcoded_token'` and similar searches to ensure no hardcoded credentials remain in the codebase after migration."
+          },
+          {
+            "id": 3,
+            "title": "Update Code to Use Config Variables",
+            "description": "Modify the application's source code to replace direct references to hardcoded sensitive credentials with dynamically loaded variables from `react-native-config`.",
+            "dependencies": [
+              2
+            ],
+            "details": "Import `Config` from `react-native-config` in relevant files. Update all instances where sensitive credentials were used (e.g., `VehicleRegistrationScreen.js:66`) to use `Config.VARIABLE_NAME`. For example, `Config.API_AUTH_TOKEN`. Ensure all variables defined in `.env` are correctly referenced in the code.",
+            "status": "pending",
+            "testStrategy": "Build and run the app on both Android and iOS simulators/devices. Verify that all functionalities requiring the migrated API credentials work correctly. Check console logs for any errors related to undefined config variables."
+          },
+          {
+            "id": 4,
+            "title": "Document Environment Setup and Verify Security",
+            "description": "Add clear instructions to the project's README for setting up environment variables and perform final verification of credential security.",
+            "dependencies": [
+              3
+            ],
+            "details": "Update the project's `README.md` with a new section detailing how to set up the `.env` file based on `.env.example`, including instructions on how to obtain necessary API keys. Conduct final security checks: build the app for production and inspect the artifact to ensure `.env` content is not exposed. Run `grep -r 'your_hardcoded_token'` one last time.",
+            "status": "pending",
+            "testStrategy": "Review the `README.md` for clarity and completeness regarding environment setup. Build a production APK/IPA and decompile/inspect it to confirm that sensitive `.env` variables are not directly embedded. Run `grep -r 'API_AUTH_TOKEN'` (and similar for other sensitive strings) across the entire codebase and build artifacts to confirm no hardcoded values are present."
+          }
+        ]
+      },
+      {
+        "id": 72,
+        "title": "Generate and Revoke Exposed API Keys",
+        "description": "Generate new API keys and revoke any previously exposed or hardcoded ones to mitigate security risks.",
+        "details": "Coordinate with the backend or API provider to generate a new set of API keys. Once generated, update the `.env` file created in Task 71 with these new keys. Ensure all old, potentially compromised keys are formally revoked through the appropriate service management console.",
+        "testStrategy": "Verify with the API provider that the old keys are no longer functional and that the new keys are correctly recognized by the API. Test app functionality end-to-end to ensure API calls are successful with the new keys.",
+        "priority": "high",
+        "dependencies": [
+          71
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 73,
+        "title": "Design and Implement cascadeDeleteUser Cloud Function",
+        "description": "Create a Firebase Cloud Function to cascade delete a user's related data from Firestore and Storage upon account deletion.",
+        "details": "Define the structure and trigger for the `cascadeDeleteUser` Cloud Function. This function will be triggered by a user deletion event or an explicit call from the client for soft delete. It will be responsible for orchestrating the deletion of all associated data in subsequent steps.",
+        "testStrategy": "Deploy the Cloud Function to a development environment. Use the Firebase emulator (`firebase emulators:start`) to verify that the function initializes without errors and that its intended trigger mechanism is active.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 74,
+        "title": "Implement Data Cascade for User's Vehicles and Consultations",
+        "description": "Extend the `cascadeDeleteUser` Cloud Function to delete all vehicles and consultation requests associated with the user.",
+        "details": "Within the `cascadeDeleteUser` Cloud Function, implement logic to query Firestore for all `vehicles` documents where `sellerId` or `currentOwnerId` matches the deleting user's ID. Delete these vehicle documents. Subsequently, query and delete all `consultations` documents where the user is either the `requesterId` or the `sellerId` (owner of the vehicle).",
+        "testStrategy": "Create a test user with multiple vehicles and consultation requests (both as a buyer and seller). Trigger the account deletion process for this user. Verify in Firestore that all associated vehicle and consultation records are completely removed.",
+        "priority": "high",
+        "dependencies": [
+          73
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 75,
+        "title": "Implement Firebase Storage Image Cleanup in cascadeDeleteUser",
+        "description": "Extend the `cascadeDeleteUser` Cloud Function to delete all images uploaded by the user from Firebase Storage.",
+        "details": "Integrate Firebase Storage deletion logic into the `cascadeDeleteUser` function. This involves iterating through the `imageUrls` of the deleted vehicles (from Task 74) or any other user-specific storage paths. Use the Firebase Admin SDK to delete the corresponding image files from Firebase Storage buckets.",
+        "testStrategy": "Upload several images linked to a test user's vehicles. Trigger the user account deletion. Verify in the Firebase Storage console that all images associated with the deleted user's vehicles are successfully removed from their respective buckets.",
+        "priority": "high",
+        "dependencies": [
+          74
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 76,
+        "title": "Implement Soft Delete and Confirmation Email for Account Deletion",
+        "description": "Implement a soft delete mechanism for user accounts with a 30-day recovery period, and integrate a confirmation email workflow.",
+        "details": "Modify the user deletion process to initially mark a user account for 'soft delete' with a `deletedAt` timestamp and a `status` field in their Firestore document. Send a confirmation email to the user, explaining the soft delete and providing an option to reverse the deletion within the 30-day window. The `cascadeDeleteUser` Cloud Function (Tasks 74, 75) should only proceed to permanent deletion after this recovery period, possibly triggered by a scheduled Cloud Function.",
+        "testStrategy": "Initiate a soft delete for a test user. Verify that the user's `status` field in Firestore is updated (e.g., to 'pending_deletion') and a `deletedAt` timestamp is recorded. Check that a confirmation email is sent with a valid recovery link. Attempt to log in with the soft-deleted account and verify the expected behavior (e.g., access denied with a message about pending deletion).",
+        "priority": "high",
+        "dependencies": [
+          75
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 77,
+        "title": "Resolve Firebase Functions SDK Version Mismatch and Deployment Errors",
+        "description": "Update the Firebase Functions SDK to the latest version and correct trigger syntax to resolve deployment issues.",
+        "details": "Update the `firebase-functions` dependency in `functions/package.json` to `@latest`. Audit all existing Cloud Function trigger definitions (e.g., `functions.firestore.document`) to ensure they are using the v2 API syntax (e.g., `onDocumentUpdated`, `onDocumentCreated`, `onDocumentDeleted`) and that correct module imports are used. Consult Firebase Functions v2 documentation for updated patterns.",
+        "testStrategy": "Deploy the updated functions to a staging environment (`firebase deploy --only functions`). Monitor the Firebase console 'Functions' section and 'Logs' for successful deployment and absence of `TypeError: functions.firestore.document is not a function` or similar errors. Verify basic function triggers by performing actions in the staging app.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update Firebase Functions SDK Dependency",
+            "description": "Update the 'firebase-functions' dependency in 'functions/package.json' to its latest version to resolve version mismatch issues.",
+            "dependencies": [],
+            "details": "Navigate to the 'functions' directory. Open 'package.json' and change the 'firebase-functions' dependency to 'latest'. Run 'npm install' to update the package lock file and install the new version.",
+            "status": "pending",
+            "testStrategy": "After updating, run 'npm ls firebase-functions' in the 'functions' directory to confirm the latest version is listed. Ensure 'npm install' completes without errors."
+          },
+          {
+            "id": 2,
+            "title": "Refactor Cloud Function Triggers to v2 API",
+            "description": "Audit and refactor all existing Cloud Function trigger definitions, migrating from the v1 API syntax (e.g., functions.firestore.document) to the v2 API syntax (e.g., onDocumentUpdated, onDocumentCreated).",
+            "dependencies": [
+              1
+            ],
+            "details": "Iterate through all Cloud Function files. For each function, identify v1 API triggers and rewrite them using v2 imports (e.g., 'firebase-functions/v2/firestore' or 'firebase-functions/v2/https') and the corresponding v2 trigger functions (e.g., 'onDocumentUpdated', 'onRequest'). Ensure correct module imports and parameter passing.",
+            "status": "pending",
+            "testStrategy": "Perform a local build ('npm run build' if applicable) to catch any syntax errors. Manually review each refactored function against Firebase Functions v2 documentation examples for correctness. Ensure all existing functions are accounted for."
+          },
+          {
+            "id": 3,
+            "title": "Deploy and Verify Functions in Staging Environment",
+            "description": "Deploy the updated Firebase Functions with v2 API syntax to a staging environment and verify successful deployment and absence of critical runtime errors.",
+            "dependencies": [
+              2
+            ],
+            "details": "Use the Firebase CLI command 'firebase deploy --only functions --project <staging-project-id>' to deploy the changes. After deployment, navigate to the Firebase console for the staging project. Check the 'Functions' section to confirm all functions are deployed successfully. Monitor 'Logs' for new errors, specifically for 'TypeError: functions.firestore.document is not a function' or similar v1 API related errors. Perform basic smoke tests for core functionalities that rely on the updated functions.",
+            "status": "pending",
+            "testStrategy": "After deployment, run specific end-to-end tests or manual checks that trigger each type of refactored function (e.g., add a document, update a document, call an HTTPS function). Verify expected behavior and check function logs for errors."
+          }
+        ]
+      },
+      {
+        "id": 78,
+        "title": "Test All Updated Firebase Functions Locally with Emulator",
+        "description": "Thoroughly test all Firebase Cloud Functions, including newly updated and existing ones, using the Firebase emulator suite.",
+        "details": "Before deploying to production, run `firebase emulators:start` locally. Execute manual and automated tests that trigger all Cloud Functions (e.g., creating a vehicle, making a consultation request, deleting a user account) and observe the emulator logs. Verify that all functions execute correctly, without errors, and produce the expected side effects.",
+        "testStrategy": "Run a comprehensive suite of local tests covering all Cloud Function triggers. For each function, verify its logs, database changes, and any external service calls (e.g., sending emails). Ensure consistency with expected outcomes for all critical path functions.",
+        "priority": "high",
+        "dependencies": [
+          77
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 79,
+        "title": "Deploy All Updated and Verified Firebase Functions to Production",
+        "description": "Deploy the Firebase Cloud Functions, after successful local testing, to the production environment.",
+        "details": "After ensuring all Cloud Functions are working correctly in the emulator (Task 78), execute `firebase deploy --only functions` targeting the production project. Monitor the deployment process and post-deployment logs.",
+        "testStrategy": "After deployment, perform critical actions in the production application (e.g., register a new vehicle, request consultation, delete a test account) to trigger the functions. Monitor production Firebase Function logs for any errors or unexpected behavior. Confirm all notification triggers work as expected.",
+        "priority": "high",
+        "dependencies": [
+          78
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 80,
+        "title": "Implement Field-Level Security Rules for Public and Sensitive Vehicle Data",
+        "description": "Create Firestore security rules to differentiate access between public and sensitive fields within vehicle documents.",
+        "details": "Modify `firestore.rules` to define separate read permissions. Public users should only be able to read fields like `vehicleName`, `manufacturer`, `year`, `price`, `imageUrls`, and `status`. Sensitive fields such as `sellerId`, `currentOwnerId`, and `sellerPhone` must be restricted, readable only by the vehicle owner and authenticated administrators. Ensure rules handle nested data correctly.",
+        "testStrategy": "Create test accounts for different roles: public (unauthenticated), authenticated non-owner, vehicle owner, and admin. Attempt to read vehicle documents using each account and verify that only authorized fields are accessible to each role. Use Firebase Security Rules Playground for rapid iteration and testing.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 81,
+        "title": "Strengthen Security Rules for Consultation Requests",
+        "description": "Enhance Firestore security rules for consultation requests to restrict read access and validate status transitions.",
+        "details": "Update `firestore.rules` for the `consultations` collection. Restrict read access to only the `requesterId`, the `vehicleOwnerId` (derived from the vehicle referenced), and administrators. Implement validation rules for write operations to ensure valid `status` transitions (e.g., `pending` to `approved` or `rejected`, but not `approved` to `pending`). Also, protect admin-only fields like `adminMemo` from being modified by regular users.",
+        "testStrategy": "Test with different user roles (requester, vehicle owner, non-involved user, admin). Attempt unauthorized reads/writes on consultation documents. Try to transition consultation status incorrectly (e.g., 'approved' to 'pending'). Verify that the rules successfully deny invalid operations.",
+        "priority": "high",
+        "dependencies": [
+          80
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 82,
+        "title": "Implement Cloud Function for Consultation Creation Rate Limiting",
+        "description": "Develop a Firebase Cloud Function to prevent excessive consultation request creation by individual users.",
+        "details": "Create a new Firebase Cloud Function (e.g., an `onCall` function) that is invoked before a user can submit a new consultation request. Implement logic within this function to track the number of consultation requests made by a specific `userId` within a defined time window (e.g., 5 requests per hour). If the limit is exceeded, reject the request with an appropriate error message.",
+        "testStrategy": "Test locally with the Firebase emulator. Make multiple consultation requests within the defined time limit. Verify that once the limit is reached, subsequent requests are blocked by the Cloud Function, and an appropriate error is returned to the client.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 83,
+        "title": "Apply React Performance Optimizations to Critical Screens",
+        "description": "Improve React component performance by implementing `useMemo`, `useCallback`, `React.memo`, and `FlatList` specific optimizations.",
+        "details": "Audit `AdminVehiclesListScreen.js`, `VehiclesListScreen.js`, `MyPageScreen.js`, and all consultation tab components. Wrap expensive computations in `useMemo`. Wrap event handlers and other stable functions in `useCallback`. Implement `React.memo` for reusable list item components within `FlatList`s to prevent unnecessary re-renders. Configure `FlatList` props such as `keyExtractor`, `getItemLayout`, and `initialNumToRender` for better scrolling performance.",
+        "testStrategy": "Use the React DevTools Profiler to record interactions and component renders on the target screens. Analyze the flame graph and rendered components to identify and eliminate unnecessary re-renders. Verify that filter operations and list scrolling are significantly smoother.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 84,
+        "title": "Implement Centralized State Management (Zustand) for Shared Firestore Data and Caching",
+        "description": "Establish a centralized data store using Zustand to manage shared Firestore subscriptions and implement a caching mechanism for frequently accessed data.",
+        "details": "Integrate Zustand into the project. Create dedicated Zustand stores, such as `vehicleStore` and `consultationStore`, to manage the state of shared vehicle and consultation data. Refactor existing `onSnapshot` calls to be managed by these stores, ensuring a singleton pattern for subscriptions (one listener per query, shared across components). Implement a simple 5-minute in-memory caching mechanism within `vehicleStore` for vehicle listings to reduce duplicate Firestore reads for frequently viewed data.",
+        "testStrategy": "Verify that multiple components requesting the same data trigger only a single `onSnapshot` listener using the Firebase Console's 'Usage' tab. Test data caching by navigating to a vehicle list, then navigating away and back quickly; observe that data loads instantly from cache rather than a new Firestore read. Monitor Firestore read operations in the console to confirm a reduction.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 85,
+        "title": "Audit and Implement Proper Cleanup for All Firestore onSnapshot Listeners",
+        "description": "Ensure all Firestore `onSnapshot` listeners are properly unsubscribed when their respective components unmount to prevent memory leaks and unnecessary resource consumption.",
+        "details": "Conduct a comprehensive audit of the codebase to identify every instance of `firestore().collection().onSnapshot()`. For each instance, ensure that the returned unsubscribe function is called within the `useEffect` cleanup function or equivalent lifecycle method (`componentWillUnmount`). This prevents active listeners from persisting after a component is no longer active.",
+        "testStrategy": "Use React DevTools to monitor component lifecycles. Navigate through various screens, triggering different listeners, then navigate away (e.g., unmount the component). Observe network activity or use a custom hook to track active listeners to ensure they are all properly closed upon unmount. Look for memory leak warnings.",
+        "priority": "high",
+        "dependencies": [
+          84
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 86,
+        "title": "Migrate All Client-Side Filtering to Server-Side Firestore Compound Queries with Optimized Indexes",
+        "description": "Refactor all data filtering operations from client-side processing to server-side Firestore compound queries for improved performance and reduced data transfer.",
+        "details": "Identify all instances where data is fetched entirely from Firestore and then filtered locally in JavaScript (e.g., `firebaseService.js:818-844` for month, status, and type filters). Redesign these operations to use Firestore `where()` clauses for status, type, and date range filters directly in the query. For compound queries involving multiple `where` clauses, design and create the necessary composite indexes in `firestore.indexes.json` and deploy them to Firebase.",
+        "testStrategy": "Verify that all filters function correctly. Use the Firebase Console's 'Usage' tab and 'Firestore' section to monitor query performance and confirm that client-side data transfer is significantly reduced. Validate that the correct indexes are being used for queries, avoiding full collection scans.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 87,
+        "title": "Implement Cursor-Based Pagination for Large Firestore Datasets (Vehicles, Consultations)",
+        "description": "Integrate cursor-based pagination for displaying large lists of vehicles and consultations to improve load times and user experience.",
+        "details": "Extend the server-side queries (from Task 86) to include `limit()` and `startAfter()` or `startAt()` clauses for cursor-based pagination. Update the UI components responsible for displaying lists (e.g., `FlatList` in `VehiclesListScreen`, consultation screens) to support loading data in chunks. Implement 'Load More' functionality or infinite scrolling when the end of the current page is reached.",
+        "testStrategy": "Test pagination by verifying that only a limited number of items load initially. Scroll to the end of the list and confirm that the next page of data loads correctly. Verify that pagination works for both vehicle and consultation listings and that no duplicates or missing items occur across pages. Monitor Firestore reads to ensure only necessary documents are fetched per page.",
+        "priority": "high",
+        "dependencies": [
+          86
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 88,
+        "title": "Split firebaseService.js into Modular Service Files Based on Responsibility",
+        "description": "Break down the monolithic `firebaseService.js` into smaller, single-responsibility service modules for improved maintainability and testability.",
+        "details": "Create the following directory structure and files under `src/services/`: `auth/authService.js`, `auth/sessionService.js`, `auth/accountService.js`, `vehicle/vehicleService.js`, `vehicle/vehicleApprovalService.js`, `vehicle/vehicleQueryService.js`, `consultation/consultationService.js`, `consultation/consultationQueryService.js`, `consultation/consultationValidation.js`, `notification/fcmService.js`, `notification/notificationService.js`, `storage/imageService.js`. Migrate all relevant functions from `firebaseService.js` into their respective new modules. Update all import paths throughout the application.",
+        "testStrategy": "Perform a comprehensive manual test of all major features (authentication, vehicle CRUD, consultation flows, image upload) to ensure they still function correctly after refactoring. Verify that each new service file is under 300 lines of code and has a clear single responsibility. Conduct code reviews to ensure logical separation.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define and Create Modular Service File Structure",
+            "description": "Create the specified directory structure and empty service files under src/services/ as per the architectural refactoring plan to improve maintainability and testability.",
+            "dependencies": [],
+            "details": "Create the following directory structure and files under `src/services/`: `auth/authService.js`, `auth/sessionService.js`, `auth/accountService.js`, `vehicle/vehicleService.js`, `vehicle/vehicleApprovalService.js`, `vehicle/vehicleQueryService.js`, `consultation/consultationService.js`, `consultation/consultationQueryService.js`, `consultation/consultationValidation.js`, `notification/fcmService.js`, `notification/notificationService.js`, `storage/imageService.js`.",
+            "status": "pending",
+            "testStrategy": "Verify that all specified directories and empty files have been correctly created under `src/services/` by checking the file system structure."
+          },
+          {
+            "id": 2,
+            "title": "Migrate Functions from Monolithic firebaseService.js to New Modules",
+            "description": "Systematically move all relevant functions and logic from the monolithic `firebaseService.js` into their newly created, single-responsibility service modules.",
+            "dependencies": [
+              1
+            ],
+            "details": "Go through `firebaseService.js` function by function. Identify the correct destination module for each function based on its responsibility (e.g., auth-related functions to `authService.js`, vehicle-related to `vehicleService.js`). Cut and paste code, ensuring all internal dependencies within the services are handled during migration.",
+            "status": "pending",
+            "testStrategy": "Conduct a code review to ensure `firebaseService.js` is significantly reduced or empty, and functions are logically grouped in their new modules. Verify initial compilation after migration."
+          },
+          {
+            "id": 3,
+            "title": "Update Application-Wide Import Paths for New Services",
+            "description": "Adjust all import statements across the entire application codebase that previously referenced `firebaseService.js` to point to the new, specific service modules.",
+            "dependencies": [
+              2
+            ],
+            "details": "Use a project-wide search and replace (e.g., VS Code's global search) to find all occurrences of `import { ... } from 'src/services/firebaseService';`. Update these imports to reference the correct new service modules (e.g., `import { login } from 'src/services/auth/authService';`).",
+            "status": "pending",
+            "testStrategy": "Perform a clean build of the application. Resolve all compilation errors related to missing imports or incorrect paths. Use `git grep` to confirm that `firebaseService.js` is no longer directly imported by other application files."
+          },
+          {
+            "id": 4,
+            "title": "Conduct Comprehensive Regression Testing of Refactored Services",
+            "description": "Execute a comprehensive suite of manual and automated tests to ensure all core functionalities remain intact and bug-free after the service refactoring.",
+            "dependencies": [
+              3
+            ],
+            "details": "Perform a comprehensive manual test of all major features, including but not limited to authentication flows (login, logout, registration), vehicle CRUD operations, consultation flows, and image upload functionality. Verify that all features function correctly after refactoring.",
+            "status": "pending",
+            "testStrategy": "Document successful execution of all major feature flows. Log any bugs found during testing and create separate tasks for their resolution. Verify through code review that each new service file is under 300 lines of code and has a clear single responsibility."
+          },
+          {
+            "id": 5,
+            "title": "Implement ESLint Rules for Service Modularity Enforcement",
+            "description": "Introduce or update ESLint rules to enforce the new service modularity, ensuring future code adheres to the single-responsibility principle and prevents the re-creation of monolithic service files.",
+            "dependencies": [
+              4
+            ],
+            "details": "Review current ESLint configurations and add new rules or configure existing ones (e.g., file size limits, cyclomatic complexity, number of exports) to discourage the growth of large, multi-responsibility service files and ensure adherence to modular design principles.",
+            "status": "pending",
+            "testStrategy": "Run ESLint across the codebase. Verify that the new rules identify potential issues in service files if any exist (e.g., if a new file begins to grow too large). Ensure no false positives are triggered on correctly refactored and modular files."
+          }
+        ]
+      },
+      {
+        "id": 89,
+        "title": "Implement Repository Pattern: Create VehicleRepository and ConsultationRepository",
+        "description": "Abstract direct Firestore operations for vehicles and consultations behind dedicated repository classes.",
+        "details": "Define abstract interfaces for data repositories (e.g., `IVehicleRepository`). Implement `VehicleRepository` and `ConsultationRepository` classes. These classes will encapsulate all direct interactions with Firestore for their respective collections, providing methods like `getById`, `getAll`, `add`, `update`, `delete`, and query methods. All services (e.g., `vehicleService`, `consultationService`) will interact with these repositories, not directly with Firestore.",
+        "testStrategy": "Write unit tests for `VehicleRepository` and `ConsultationRepository`. Mock the underlying Firestore SDK calls to ensure that the repository methods correctly transform input/output and handle basic data operations. Verify that the repository's API is consistent and predictable.",
+        "priority": "high",
+        "dependencies": [
+          88
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 90,
+        "title": "Implement Repository Pattern: Create UserRepository and Integrate Caching",
+        "description": "Create a `UserRepository` to abstract user data access and integrate an in-memory caching mechanism for user profiles.",
+        "details": "Implement a `UserRepository` class similar to other repositories, encapsulating all Firestore interactions for the `users` collection. Integrate an in-memory caching layer (e.g., using a simple Map or LRU cache) within `UserRepository` for frequently accessed read operations, such as fetching a user's profile by ID. This cache should have a short expiry (e.g., 5 minutes) and be updated on writes.",
+        "testStrategy": "Write unit tests for `UserRepository`, mocking Firestore. Verify that `getById` attempts to read from cache first, then Firestore. Test cache invalidation on user profile updates. Monitor performance difference on repeated user profile fetches during development.",
+        "priority": "high",
+        "dependencies": [
+          89
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 91,
+        "title": "Update All New Service Modules to Consume Data via the Repository Pattern",
+        "description": "Refactor all new service modules to use the recently implemented repository layer for all data access operations.",
+        "details": "Modify `vehicleService.js`, `consultationService.js`, `accountService.js`, and other services to inject and use instances of `VehicleRepository`, `ConsultationRepository`, and `UserRepository` (or their interfaces). Remove all direct `firestore().collection().doc()...` calls from the service layer, ensuring all data access is routed through the repositories. This will enhance testability and separation of concerns.",
+        "testStrategy": "Perform a full system regression test. Ensure all features dependent on data access (e.g., displaying vehicle lists, creating consultations, updating user profiles) function correctly. Verify through code review that no direct Firestore calls remain within the service layer.",
+        "priority": "high",
+        "dependencies": [
+          90
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 92,
+        "title": "Implement Global Error Handler for Mapping Firebase Errors to Korean Messages and Crashlytics Reporting",
+        "description": "Standardize error handling by mapping Firebase error codes to user-friendly Korean messages and automatically reporting errors to Crashlytics.",
+        "details": "Extend `utils/errorHandler.js` with a comprehensive error mapping mechanism. Create a `ERROR_MESSAGES` object that maps common Firebase error codes (e.g., `auth/user-not-found`, `auth/wrong-password`, `permission-denied`, `unavailable`) to localized Korean user-friendly messages. Modify all service functions and API calls to process errors through this handler, ensuring raw Firebase errors are never exposed to the user. Integrate Firebase Crashlytics to automatically log all caught errors for monitoring and debugging.",
+        "testStrategy": "Simulate various Firebase errors (e.g., incorrect login credentials, unauthorized Firestore access, network unavailability). Verify that the application displays the correct, user-friendly Korean error message to the user. Check the Firebase Crashlytics dashboard to confirm that all errors are being reported automatically with relevant context.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 93,
+        "title": "Implement Global React Error Boundary and Exponential Backoff Retry for Transient Network Errors",
+        "description": "Create a global React Error Boundary to catch uncaught UI errors and implement an `axios` interceptor for automatic retry with exponential backoff for transient network issues.",
+        "details": "Develop a top-level React Error Boundary component (e.g., `<AppErrorBoundary>`) that wraps the root of the application. This boundary should catch uncaught errors in its child component tree and display a user-friendly fallback UI or message. Implement an `axios` interceptor for outgoing requests that includes retry logic for specific HTTP status codes (e.g., 429, 5xx) or network errors. The retry mechanism should use an exponential backoff strategy (e.g., 1s, 2s, 4s delays, max 3 attempts) to prevent overwhelming the server.",
+        "testStrategy": "Trigger component rendering errors (e.g., by throwing an error in a `render` method) and verify that the Error Boundary catches them and displays the fallback UI. Simulate transient network failures (e.g., briefly disconnect and reconnect network) while making API calls; observe in network logs that `axios` attempts retries with increasing delays.",
+        "priority": "high",
+        "dependencies": [
+          92
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 94,
+        "title": "Add Request Timeout and Implement Offline Network Status Detection",
+        "description": "Configure a global request timeout for all external API calls and implement network status detection to inform users about offline connectivity.",
+        "details": "Set a global request timeout of 10 seconds for all HTTP requests made using `axios` to prevent hanging requests. Integrate `@react-native-community/netinfo` to monitor the device's network connectivity status. Based on the network status, display a prominent 'offline' banner or indicator in the application UI when the device is disconnected from the internet. This indicator should disappear when connectivity is restored.",
+        "testStrategy": "Disable Wi-Fi/cellular data on the testing device. Verify that the offline banner appears promptly. Attempt to make an API request while offline and observe that it times out after 10 seconds, rather than hanging indefinitely. Reconnect network and ensure the offline banner disappears and requests can be made again.",
+        "priority": "high",
+        "dependencies": [
+          93
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 95,
+        "title": "Implement Retry Logic, Optimistic Locking, and Conflict Resolution for Firestore Transactions",
+        "description": "Enhance Firestore transactions with retry logic, optimistic locking, and conflict resolution to ensure data consistency and robustness.",
+        "details": "Modify `firebaseService.js:393-462` and all other Firestore transaction implementations. Wrap all `firestore().runTransaction()` calls in a loop with a maximum of 3 attempts to handle transient failures. Implement optimistic locking by reading documents, performing updates, and then checking if the document was modified by another client during the transaction. Add specific logic to detect and resolve transaction conflicts, perhaps by re-fetching the latest state and reapplying logic or notifying the user. Log transaction failures to analytics.",
+        "testStrategy": "Simulate concurrent writes to the same Firestore document using multiple clients or Firebase emulator instances. For example, two users trying to update the same vehicle status simultaneously. Verify that transactions either succeed after retries or fail gracefully with conflict resolution, maintaining data consistency. Monitor analytics for transaction failure rates.",
+        "priority": "high",
+        "dependencies": [
+          94
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 96,
+        "title": "Implement Environment-Aware Logger Utility and Eliminate Production Console Logs",
+        "description": "Create a custom logger utility that provides environment-aware logging and replace all direct `console.log` statements in the codebase.",
+        "details": "Create `utils/logger.js`. This utility should conditionally log messages to `console` only in development and staging environments. In production builds, `Logger.debug()` and `Logger.warn()` should be suppressed, while `Logger.error()` should forward to Firebase Crashlytics. Replace all existing `console.log`, `console.warn`, `console.error` calls throughout the codebase with their `Logger` equivalents. Implement an ESLint rule to prevent the accidental introduction of `console` statements in production builds.",
+        "testStrategy": "Build the application in both development and production modes. In development, verify that logger messages appear in the console. In production, confirm that no `console.log` or `console.warn` output is present in device logs, and that `Logger.error()` calls correctly send errors to Crashlytics. Run ESLint to ensure the `no-console` rule is enforced.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 97,
+        "title": "Centralize All \"Magic Strings\" into Structured Constants Modules",
+        "description": "Replace hardcoded string literals with centralized constants for improved maintainability, readability, and type safety.",
+        "details": "Create a `src/constants/` directory. Within this directory, create separate modules for different domains: `consultation.js` (for status values, types), `vehicle.js` (for status values, types, categories), `user.js` (for roles, account statuses), and `navigation.js` (for screen names). Create an `index.js` barrel file to export all constants. Systematically find and replace all hardcoded string literals throughout the application with their respective constants. Update all import paths to use the new constants.",
+        "testStrategy": "Perform a global search for common magic strings (e.g., 'pending', 'approved', 'admin', screen names) to verify their replacement with constants. Conduct code reviews to ensure consistency. Verify all application features continue to work as expected, ensuring no constant names were mistyped or misapplied.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 98,
+        "title": "Refactor Complex Functions into Smaller, Single-Responsibility Units",
+        "description": "Break down overly large and complex functions into smaller, more focused, and reusable units to improve code readability, testability, and maintainability.",
+        "details": "Target identified functions: `firebaseService.js:368-471` ( `completeConsultation`), `firebaseService.js:779-866` (`fetchCompletedConsultationsPaginated`), and `ConsultationRequestScreen.js:43-75` (`checkDuplicateConsultation`). Apply the Single Responsibility Principle: extract helper functions for specific sub-tasks, separate business logic from UI logic, and create dedicated validation utilities. Aim to keep individual function lengths to a maximum of 50 lines and cyclomatic complexity below 10.",
+        "testStrategy": "Write comprehensive unit tests for each newly extracted smaller function to ensure its correctness and cover all logical paths. Verify that the original functionality of the refactored larger functions remains intact through integration tests. Use a code quality tool (e.g., ESLint plugin for complexity) to monitor function size and complexity metrics.",
+        "priority": "medium",
+        "dependencies": [
+          88
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 99,
+        "title": "Implement PropTypes for All React Native Components to Enforce Type Safety",
+        "description": "Add `PropTypes` definitions to all React Native components to ensure proper type checking and improve component API documentation.",
+        "details": "Install the `prop-types` library (`yarn add prop-types`). Go through all functional and class components in the application. For each component, add `static propTypes = { ... }` or `Component.propTypes = { ... }` definitions. Specify the expected type (`PropTypes.string`, `PropTypes.number`, `PropTypes.bool`, `PropTypes.object`, `PropTypes.array`, `PropTypes.func`, `PropTypes.oneOf`, `PropTypes.shape`), required status (`.isRequired`), and potential default values (`defaultProps`).",
+        "testStrategy": "Run the application in development mode. Monitor the console for any `PropTypes` warnings. Intentionally pass incorrect prop types or omit required props to components to verify that `PropTypes` correctly issues warnings. Conduct code reviews to ensure `PropTypes` are consistently applied across the codebase.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 100,
+        "title": "Set Up Jest, React Native Testing Library, and Firebase Mock Infrastructure",
+        "description": "Establish the foundational testing environment, including Jest configuration, React Native Testing Library, and robust Firebase mocking.",
+        "details": "Configure `jest.config.js` for a React Native project, including necessary presets and transforms. Install `react-native-testing-library` for component testing. Create a `__mocks__/@react-native-firebase/` directory structure. Within this, create mock implementations for `auth`, `firestore`, `storage`, and `messaging` modules to allow tests to run without actual Firebase connections. Implement generic mock factories for common Firebase data structures (e.g., `DocumentSnapshot`, `QuerySnapshot`).",
+        "testStrategy": "Write a minimal Jest test (`.test.js`) that imports a Firebase-dependent component and attempts to render it using `render()`. Verify that the test runs successfully without connecting to actual Firebase services, indicating that the mocks are correctly intercepting calls. Confirm that `jest.mock()` configurations are working as expected.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure Jest for React Native Project",
+            "description": "Set up the Jest testing framework for a React Native project, including all necessary presets and transforms to correctly parse and run tests in a React Native environment.",
+            "dependencies": [],
+            "details": "Modify the `jest.config.js` file at the project root. Add `preset: 'react-native'`, configure `transformIgnorePatterns` to exclude `node_modules` with specific exceptions for React Native components, and set up `moduleNameMapper` if specific asset or module resolution is needed. Ensure `setupFiles` and `setupFilesAfterEnv` are correctly configured for any global test setup.",
+            "status": "pending",
+            "testStrategy": "Run a simple Jest test against a basic `.js` or `.ts` file without any React Native dependencies to confirm Jest execution. Then, create a minimal React Native component and a corresponding test file to ensure Jest can parse and execute tests involving JSX and ES6+ syntax without configuration errors. Check Jest's verbose output for any transformation issues."
+          },
+          {
+            "id": 2,
+            "title": "Install and Integrate React Native Testing Library",
+            "description": "Install `react-native-testing-library` and ensure it's properly integrated with the Jest setup to allow for robust component testing of React Native UI.",
+            "dependencies": [
+              1
+            ],
+            "details": "Install `react-native-testing-library` along with any necessary peer dependencies (e.g., `react-test-renderer`, `jest-environment-jsdom`). Update `jest.config.js` or create a `setupTests.js` file to include `@testing-library/jest-native/extend-expect` for custom matchers, enhancing the testing experience with React Native specific assertions.",
+            "status": "pending",
+            "testStrategy": "Create a new React Native component (e.g., a simple `Text` component). Write a test file using `react-native-testing-library`'s `render` function to mount the component. Use `getByText` and `expect(...).toBeOnTheScreen()` to verify the component renders correctly and the custom matchers are active. The test should run successfully without errors."
+          },
+          {
+            "id": 3,
+            "title": "Create Firebase Module Mocks for auth, firestore, storage, and messaging",
+            "description": "Develop comprehensive mock implementations for `@react-native-firebase/auth`, `firestore`, `storage`, and `messaging` modules to isolate tests from actual Firebase service calls, ensuring fast and reliable unit/integration tests.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create a directory structure `__mocks__/@react-native-firebase/` in the project root. Within this, create mock files (e.g., `auth.js`, `firestore.js`, `storage.js`, `messaging.js`) that export mock objects mimicking the public API of each Firebase module. For example, `auth` mock should include `signInAnonymously`, `signOut`, `onAuthStateChanged`; `firestore` should include `collection`, `doc`, `add`, `get`, `set`, `update`, `delete`, etc. These mocks should return resolved promises or dummy data to simulate successful operations without actual network requests.",
+            "status": "pending",
+            "testStrategy": "Create a small test component that imports and uses one of the mocked Firebase modules (e.g., calling `firebase.auth().signInAnonymously()`). Write a test that renders this component and asserts that the mocked function was called or that a specific side effect of the mock occurred. Verify that the test runs without attempting any actual network connections to Firebase, indicating the mocks are successfully intercepting calls."
+          },
+          {
+            "id": 4,
+            "title": "Implement Generic Mock Factories for Common Firebase Data Structures",
+            "description": "Develop reusable factory functions to generate consistent mock objects for common Firebase data structures like `DocumentSnapshot` and `QuerySnapshot`, streamlining the creation of test data.",
+            "dependencies": [
+              3
+            ],
+            "details": "Within the `__mocks__/@react-native-firebase/firestore.js` or a dedicated test utility file (e.g., `src/__tests__/utils/firebaseMocks.js`), create helper functions like `createMockDocumentSnapshot(id, data, exists = true)` and `createMockQuerySnapshot(docsArray)` that return objects with methods and properties matching the actual Firebase SDK. For `DocumentSnapshot`, this includes `id`, `exists`, and a `data()` method. For `QuerySnapshot`, this includes `docs` (an array of mock document snapshots) and potentially a `forEach` method. These factories will simplify generating test scenarios for Firestore data.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the mock factory functions themselves. For `createMockDocumentSnapshot`, assert that the returned object has the correct `id`, `exists` status, and that `data()` returns the expected object. For `createMockQuerySnapshot`, verify that `docs` contains the expected mock document snapshots and that `forEach` iterates correctly over them. Integrate these factories into existing Firebase-dependent component tests to ensure they provide the necessary data for assertions."
+          }
+        ]
+      },
+      {
+        "id": 101,
+        "title": "Write Unit Tests for All Refactored Service Layer Modules and Utility Functions",
+        "description": "Develop comprehensive unit tests for the newly refactored service layer and essential utility functions to ensure their correctness and robustness.",
+        "details": "Focus on achieving 80% code coverage for all services (`authService`, `vehicleService`, `consultationService`, `imageService`, etc.) and 90% coverage for utility functions (`errorHandler.js`, `logger.js`, `format.js`, `validation.js`). For service tests, mock all external dependencies (e.g., Firestore repositories, `axios` for API calls) to ensure tests are isolated and fast. For utility tests, cover all possible input combinations and edge cases.",
+        "testStrategy": "Run Jest tests with code coverage reporting enabled (`jest --coverage`). Analyze the coverage report to identify uncovered lines and increase test coverage for target modules. Ensure all mocked dependencies behave as expected during tests. Test error handling paths within services and utilities.",
+        "priority": "high",
+        "dependencies": [
+          91,
+          92,
+          96,
+          100
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 102,
+        "title": "Implement Test Utilities (e.g., renderWithProviders) for Easier Component Testing",
+        "description": "Create reusable test utility functions to simplify the setup of components with necessary context providers for testing.",
+        "details": "Develop a `renderWithProviders` helper function (or similar) that takes a React component and wraps it with all common context providers required by the application (e.g., React Navigation context, Zustand stores, custom AuthContext). This utility will ensure that components can be tested in an isolated yet realistic environment without duplicating provider setup for every test file.",
+        "testStrategy": "Write a simple test for a basic component that relies on a global context. Use `renderWithProviders` to render this component and assert some aspect of its behavior. Verify that the test runs without errors related to missing context and that the utility function correctly injects the providers.",
+        "priority": "medium",
+        "dependencies": [
+          100
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 103,
+        "title": "Write Unit and Integration Tests for Critical Screens (LoginScreen, VehicleRegistrationScreen, MyPageScreen)",
+        "description": "Develop unit and integration tests for key user-facing screens to ensure their functionality, UI interactions, and data flows are correct.",
+        "details": "Focus on critical screens such as `LoginScreen` (testing authentication flows, input validation), `VehicleRegistrationScreen` (form submission, image handling, API integration), and `MyPageScreen` (account management, deletion workflow). Use `react-native-testing-library` to simulate user interactions (`fireEvent`, `user-event`) and assert UI changes. For integration tests, mock API calls at a higher level to test the screen's interaction with the service layer. Aim for 50% test coverage on these screens.",
+        "testStrategy": "Run Jest tests for these screens. Verify successful login/registration flows, form submission, and error displays. Ensure UI elements are correctly rendered and respond to user input. Monitor test coverage to meet the target for critical screens.",
+        "priority": "medium",
+        "dependencies": [
+          102
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 104,
+        "title": "Configure Firebase Emulator for Integration Testing and Implement End-to-End User Flow Tests",
+        "description": "Set up the Firebase Emulator Suite for dedicated integration testing and implement comprehensive end-to-end tests for critical user journeys.",
+        "details": "Configure your testing environment to launch the Firebase Emulator Suite (`auth`, `firestore`, `storage`, `functions`) for running integration tests. Write end-to-end tests that simulate complete user flows, such as 'User Registration -> Login -> Vehicle Listing -> Consultation Request' or 'Admin Vehicle Approval Flow'. These tests should interact with the emulated Firebase services, verifying that the entire system (client, Firestore, Functions) works cohesively. Test error scenarios and edge cases within these flows.",
+        "testStrategy": "Run these integration tests against the Firebase emulator. Verify that each step of the user journey executes correctly, data is persisted in emulated Firestore/Storage, and Cloud Functions are triggered as expected. Ensure that error paths are handled gracefully. These tests should be runnable as part of CI/CD.",
+        "priority": "high",
+        "dependencies": [
+          100
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 105,
+        "title": "Integrate Loading Skeletons on All Data-Loading Screens",
+        "description": "Improve perceived performance and user experience by displaying loading skeletons on screens while data is being fetched.",
+        "details": "Install `react-native-skeleton-placeholder`. Create reusable skeleton components, such as `<SkeletonCard />` for vehicle listings, `<SkeletonList />` for general list items, and `<SkeletonText />` for text placeholders. Integrate these components into `ConsultationRequestScreen` (during duplicate check), `VehicleRegistrationScreen` (during image upload), all admin screens (during data loading), and `VehiclesListScreen` (during initial load and refresh). Ensure skeletons closely match the layout of the actual content to prevent layout shifts.",
+        "testStrategy": "Manually test each affected screen, ideally under slow network conditions (using a network throttler). Verify that the skeleton loaders appear smoothly before content loads, include shimmer animations, and disappear gracefully when data is available. Ensure that the skeleton layout is consistent with the final content layout.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 106,
+        "title": "Enable Firestore Offline Persistence and Implement Optimistic UI Updates",
+        "description": "Improve app usability during intermittent network connectivity by enabling Firestore offline persistence and implementing optimistic UI updates for write operations.",
+        "details": "At application startup, configure Firestore to enable offline persistence: `firestore().settings({ persistence: true, cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED })`. For user-initiated write operations (e.g., creating a vehicle listing, submitting a consultation request), implement optimistic UI updates where the UI immediately reflects the expected outcome of the operation, assuming it will succeed. If the actual write fails (after going online), gracefully revert the UI or display an error.",
+        "testStrategy": "Run the app, go offline, perform various write operations (e.g., create a vehicle). Verify that the UI updates immediately and the changes are visible offline. Reconnect the network and confirm that the pending write operations sync with Firestore. Simulate a write failure while offline and verify that the UI correctly reverts or shows an error message upon reconnection.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 107,
+        "title": "Optimize Image Upload Experience with Compression, Progress Bar, and Validation",
+        "description": "Enhance the image upload process for vehicle registration by adding image compression, a progress bar, and file size validation.",
+        "details": "Install `react-native-image-crop-picker` for image selection and `react-native-compressor` for compression. Implement image compression logic before uploading, targeting a maximum resolution of 1920x1080 and 80% quality. In `VehicleRegistrationScreen.js`, integrate a visual progress bar (0-100%) that updates in real-time during the image upload process. Add client-side validation to ensure that each image file does not exceed a maximum size of 5MB.",
+        "testStrategy": "Test image upload with large, high-resolution images. Verify that images are compressed to the specified resolution and quality. Observe the progress bar to ensure it accurately reflects the upload status. Attempt to upload images larger than 5MB and verify that the validation prevents the upload and displays an appropriate error message.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 108,
+        "title": "Implement Image Cropping and Preview Functionality Before Submission",
+        "description": "Provide users with the ability to crop and preview images before they are submitted as part of the vehicle registration process.",
+        "details": "Utilize `react-native-image-crop-picker` (from Task 107) to allow users to crop selected images to a desired aspect ratio or size after selection. Before the final submission in `VehicleRegistrationScreen.js`, display a clear preview of all selected and potentially cropped images, allowing users to review their selections. Provide options to reorder or remove images from the preview.",
+        "testStrategy": "Select multiple images. Verify that the cropping tool functions correctly for each image. Check that all selected and cropped images are displayed in a clear preview area. Test reordering and removing images from the preview list. Confirm that the final submitted images reflect the user's cropping and selection choices.",
+        "priority": "high",
+        "dependencies": [
+          107
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 109,
+        "title": "Add Search Functionality to VehiclesListScreen with Debounce and Multiple Criteria",
+        "description": "Implement a search bar on `VehiclesListScreen` allowing users to filter vehicles by various criteria with debounced input.",
+        "details": "Add a search input component to the `VehiclesListScreen` UI. Implement client-side search logic that filters the currently displayed list of vehicles. The search should support multiple criteria, including `vehicleName`, `manufacturer`, `year range`, and `price range`. Apply a debounce mechanism (e.g., 300ms) to the search input to prevent excessive filtering operations during typing, optimizing performance.",
+        "testStrategy": "Enter search queries in the search bar. Verify that results filter instantly but with a slight delay due to debouncing. Test searching by various combinations of criteria (e.g., 'Tesla 2020', 'SUV under 50000'). Ensure that search results are accurate and comprehensive based on the specified criteria.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 110,
+        "title": "Implement Firebase Analytics for Key User Events and Properties",
+        "description": "Integrate Firebase Analytics to track critical user interactions and properties, enabling data-driven insights and feature improvements.",
+        "details": "Create a wrapper utility `utils/analytics.js` for Firebase Analytics functions. Instrument the application to log key user events: `login_success` / `login_failure`, `vehicle_view` (include `vehicleId`, `vehicleName`), `vehicle_registration` (include `manufacturer`, `year`), `consultation_request` (include `vehicleId`, `type`), `consultation_status_change` (include `from`, `to`), `search_performed` (include `query`, `results_count`), `image_upload` (include `count`, `total_size`). Set user properties such as `role` and `signup_date` on user login/registration. Ensure screen views are tracked automatically or manually if needed.",
+        "testStrategy": "Perform various user actions (login, view vehicle, register vehicle, request consultation, search, upload image) in a development build. Monitor the Firebase Analytics DebugView and the Firebase Analytics dashboard to confirm that all specified events and user properties are being logged correctly. Verify that screen views are being tracked as expected.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 111,
+        "title": "Enable and Configure Firebase Performance Monitoring with Custom Traces",
+        "description": "Activate Firebase Performance Monitoring and define custom traces for critical application workflows to identify and resolve performance bottlenecks.",
+        "details": "Enable Firebase Performance Monitoring in the Firebase console and integrate the SDK into the React Native project. Implement custom traces using the Performance Monitoring SDK for key user flows: 'vehicle registration flow', 'image upload duration', 'consultation creation time', and 'login flow duration'. Monitor HTTP/network requests automatically. Define performance budgets for these traces to receive alerts when thresholds are exceeded.",
+        "testStrategy": "Perform the actions corresponding to the custom traces (e.g., register a vehicle, log in, upload images). Monitor the Firebase Performance Monitoring dashboard to verify that custom traces are appearing, reporting accurate durations, and HTTP requests are being monitored. Set up a test performance budget and verify that alerts are triggered if the app's performance drops below the defined threshold.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 112,
+        "title": "Migrate Complex Global State from Context API to Zustand Stores",
+        "description": "Transition complex, global application state management from React's Context API to Zustand for improved efficiency, developer experience, and scalability.",
+        "details": "Identify areas in the application where prop drilling is prevalent or where Context API is being stretched beyond simple state sharing. Evaluate existing Context implementations. Create dedicated Zustand stores: `authStore` (for user authentication state, role, profile), `vehicleStore` (for cached vehicles, filters, pagination state), `consultationStore` (for consultations, status updates), and `uiStore` (for global loading states, toasts, modals). Gradually migrate relevant state and logic to these Zustand stores. Keep a minimal AuthContext if required specifically by React Navigation for authentication flow management.",
+        "testStrategy": "Verify that components consuming state from the new Zustand stores update efficiently without unnecessary re-renders. Check that prop drilling is significantly reduced in affected component trees. Test all features relying on the migrated state to ensure functionality is preserved. Use React DevTools to monitor state changes and component updates.",
+        "priority": "high",
+        "dependencies": [
+          84
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 113,
+        "title": "Refactor Navigation to Use Nested Navigators and Preserve State Across Auth/Role Changes",
+        "description": "Improve navigation stability and user experience by refactoring `AppNavigator.js` to use nested navigators, ensuring state preservation across authentication and role changes.",
+        "details": "Analyze `AppNavigator.js:136-180` and replace conditional rendering of navigators with the official React Navigation pattern of nested navigators (e.g., `AuthStack`, `AppStack`, possibly an `AdminStack`). Implement proper authentication flow management within navigation, ensuring that navigation state is preserved when a user logs in, logs out, or switches roles. Add support for deep linking to specific screens within the application. Configure navigation state persistence if required.",
+        "testStrategy": "Test login/logout flows thoroughly, verifying that navigation state is correctly preserved and there is no UI flicker or unexpected navigation behavior. Test role switching if applicable. Verify that deep links (e.g., from an email or a web link) correctly navigate to the intended screen within the app. Ensure consistent navigation behavior across various app states.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 114,
+        "title": "Implement Temporary Account Suspension: Add User Fields and Admin UI",
+        "description": "Introduce temporary account suspension functionality by adding relevant fields to user documents and developing an administrative interface for managing suspensions.",
+        "details": "Add new fields to the `users` Firestore collection: `accountStatus` (e.g., 'active', 'suspended'), `suspendedUntil` (timestamp), and `suspensionReason` (string). Develop a basic administrative UI (e.g., within an Admin panel or `AdminUsersListScreen`) that allows authorized administrators to select a user and apply a temporary suspension, specifying the duration (1-30 days) or making it permanent, along with a reason. Ensure the admin UI updates the user document with these fields.",
+        "testStrategy": "As an admin user, access the new suspension UI. Suspend a test user for various durations (e.g., 1 day, 7 days, permanent) and with different reasons. Verify in Firestore that the user document's `accountStatus`, `suspendedUntil`, and `suspensionReason` fields are correctly updated. Attempt to log in as the suspended user and verify that they are blocked from accessing the application with an appropriate message.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 115,
+        "title": "Implement Temporary Account Suspension: Cloud Function for Auto-Reactivation and Notifications",
+        "description": "Create a scheduled Firebase Cloud Function to automatically reactivate suspended user accounts and send notifications upon suspension and reactivation.",
+        "details": "Develop a scheduled Firebase Cloud Function (e.g., running daily or hourly) that queries the `users` collection for accounts with `accountStatus: 'suspended'` and where `suspendedUntil` is in the past. For such accounts, update `accountStatus` back to 'active' and clear `suspendedUntil`/`suspensionReason`. Implement logic to send email or push notifications to users when their account is suspended, informing them of the reason and duration, and another notification upon auto-reactivation. This task requires prior implementation of notification services.",
+        "testStrategy": "Suspend a test user for a short duration (e.g., 5 minutes). Verify that the suspension notification is sent. Monitor the Cloud Function logs to confirm it runs and automatically reactivates the user's account after the `suspendedUntil` period. Verify that the reactivation notification is sent. Attempt to log in as the user after auto-reactivation.",
+        "priority": "medium",
+        "dependencies": [
+          114
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 116,
+        "title": "Add Comprehensive JSDoc Comments to All New and Refactored Functions and Modules",
+        "description": "Document all functions, classes, and modules using JSDoc to improve code clarity, maintainability, and developer understanding.",
+        "details": "Go through all new service modules, utility functions, Cloud Functions, and refactored code blocks. For each function, provide JSDoc comments explaining its purpose, parameters (name, type, description), return value, and any side effects. Document classes/modules with a high-level overview. Ensure consistency in documentation style.",
+        "testStrategy": "Use a JSDoc parser or IDE integration to check for syntax errors in JSDoc comments. Perform code reviews specifically for documentation quality and completeness. Verify that developers can understand function usage and purpose solely from the JSDoc.",
+        "priority": "low",
+        "dependencies": [
+          98
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 117,
+        "title": "Document Component Props and APIs",
+        "description": "Provide clear documentation for component props and their public APIs, complementing `PropTypes` for better developer experience.",
+        "details": "For every React Native component, add JSDoc comments (or similar inline documentation) directly above the component definition. Describe the component's purpose, its expected props (name, type, description, whether it's required), and any events it emits or methods it exposes. This documentation will work in conjunction with `PropTypes` to give developers a complete understanding of how to use each component.",
+        "testStrategy": "Review component files to ensure all props are documented. Verify that IDEs (like VS Code) show proper documentation hints when hovering over component usages. Conduct a developer experience survey to confirm documentation usefulness.",
+        "priority": "low",
+        "dependencies": [
+          99,
+          116
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 118,
+        "title": "Create/Update Architecture Decision Records (ADRs) for Major Refactoring Decisions",
+        "description": "Document significant architectural decisions made during the refactoring process using Architecture Decision Records (ADRs).",
+        "details": "For major architectural changes or decisions (e.g., adoption of Zustand, Repository Pattern, global error handling strategy, Firebase Functions v2 migration), create an ADR in a dedicated `docs/adr/` directory. Each ADR should describe the context, the decision made, the alternatives considered, and the consequences (pros and cons). This ensures institutional knowledge capture and provides rationale for future developers.",
+        "testStrategy": "Review ADRs for clarity, completeness, and adherence to the ADR template. Ensure all major architectural changes implemented during this refactoring phase have corresponding ADRs. Verify that ADRs are easily discoverable within the project's documentation.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 119,
+        "title": "Update README.md with an Improved Developer Onboarding Guide",
+        "description": "Revise and expand the `README.md` to include a comprehensive developer onboarding guide, making it easier for new team members to set up and contribute.",
+        "details": "Update the `README.md` file. Add detailed, step-by-step instructions for project setup (cloning, installing dependencies). Include specific guidance for Firebase setup (project configuration, emulator usage), environment variable configuration (`.env` setup), and common troubleshooting steps. Provide guidelines for contributing (e.g., running tests, linting, code style).",
+        "testStrategy": "Ask a new developer (or someone unfamiliar with the project) to follow the onboarding guide from scratch. Collect feedback on clarity, completeness, and any roadblocks encountered. Verify that the guide covers all essential setup steps.",
+        "priority": "low",
+        "dependencies": [
+          71,
+          100
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 120,
+        "title": "Implement Storybook for React Native for All Reusable Components",
+        "description": "Set up Storybook for React Native to document and showcase all reusable UI components in an interactive environment.",
+        "details": "Install and configure Storybook for React Native. Go through all existing and new reusable UI components (e.g., buttons, cards, input fields, modals, skeleton loaders). Create stories for each component, demonstrating its various states, prop combinations, and edge cases. Document how to use each component within Storybook. Consider integrating visual regression testing with Storybook (Phase 2).",
+        "testStrategy": "Run Storybook locally. Verify that all reusable components are documented and interactive. Check that different stories accurately represent the component's various states and props. Ensure Storybook is easy to navigate and provides a good developer experience for exploring components.",
+        "priority": "low",
+        "dependencies": [
+          117
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-12-19T10:58:23.795Z",
-      "updated": "2025-12-20T16:28:30.455Z",
+      "updated": "2026-01-11T15:44:00.743Z",
       "description": "Tasks for master context"
     }
   }

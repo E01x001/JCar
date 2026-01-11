@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
-import Toast from 'react-native-toast-message';
+import crashlytics from '@react-native-firebase/crashlytics';
+import { useToast } from '../hooks/useToast';
 
 const ForgotPasswordScreen = ({ navigation }) => {
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,36 +46,47 @@ const ForgotPasswordScreen = ({ navigation }) => {
       await sendPasswordResetEmail(auth, email);
 
       // 성공 시 일반화된 메시지 표시 (보안: 이메일 존재 여부 노출 방지)
-      Toast.show({
-        type: 'info',
-        text1: '비밀번호 재설정',
-        text2: '등록된 이메일인 경우 비밀번호 재설정 링크가 발송되었습니다.',
-        position: 'top',
-        visibilityTime: 4000,
-      });
+      toast.showSuccess('비밀번호 재설정', '등록된 이메일인 경우 비밀번호 재설정 링크가 발송되었습니다.');
 
       // 로그인 화면으로 이동
       setTimeout(() => {
         navigation.navigate('Login');
-      }, 1000);
+      }, 1500);
     } catch (error) {
-      // 에러 로깅 (개발자용)
-      reportCrashlyticsError(error);
-      logCrashlyticsMessage(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
+      // Crashlytics 에러 리포팅
+      crashlytics().recordError(error);
+      crashlytics().log(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
 
-      // 사용자에게는 동일한 일반화된 메시지 표시 (보안: 시스템 정보 노출 방지)
-      Toast.show({
-        type: 'info',
-        text1: '비밀번호 재설정',
-        text2: '등록된 이메일인 경우 비밀번호 재설정 링크가 발송되었습니다.',
-        position: 'top',
-        visibilityTime: 4000,
-      });
+      // Firebase Auth 에러 코드를 한글 메시지로 변환
+      let errorMessage = '이메일 발송 중 오류가 발생했습니다.';
 
-      // 로그인 화면으로 이동
-      setTimeout(() => {
-        navigation.navigate('Login');
-      }, 1000);
+      switch (error.code) {
+        case 'auth/invalid-email':
+          errorMessage = '올바른 이메일 형식이 아닙니다.';
+          break;
+        case 'auth/user-not-found':
+          // 보안: 사용자 존재 여부를 노출하지 않음
+          errorMessage = '등록된 이메일인 경우 비밀번호 재설정 링크가 발송되었습니다.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = '네트워크 연결을 확인해주세요.';
+          break;
+        default:
+          errorMessage = '이메일 발송 중 오류가 발생했습니다. 다시 시도해주세요.';
+      }
+
+      // user-not-found는 보안상 성공 메시지로 표시
+      if (error.code === 'auth/user-not-found') {
+        toast.showSuccess('비밀번호 재설정', errorMessage);
+        setTimeout(() => {
+          navigation.navigate('Login');
+        }, 1500);
+      } else {
+        toast.showError('오류 발생', errorMessage);
+      }
     } finally {
       // 30초 후 버튼 재활성화 (무차별 대입 공격 방지)
       setTimeout(() => {

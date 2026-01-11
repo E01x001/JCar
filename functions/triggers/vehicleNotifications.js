@@ -7,7 +7,8 @@
  * @module triggers/vehicleNotifications
  */
 
-const functions = require("firebase-functions");
+const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
+const {logger} = require("firebase-functions");
 const {sendNotificationToUser} = require("../utils/fcm");
 
 /**
@@ -19,12 +20,12 @@ const {sendNotificationToUser} = require("../utils/fcm");
  *
  * @fires when vehicle status: pending → approved/rejected
  */
-exports.onVehicleStatusChanged = functions.firestore
-    .document("vehicles/{vehicleId}")
-    .onUpdate(async (change, context) => {
+exports.onVehicleStatusChanged = onDocumentUpdated(
+    "vehicles/{vehicleId}",
+    async (event) => {
       try {
-        const beforeData = change.before.data();
-        const afterData = change.after.data();
+        const beforeData = event.data.before.data();
+        const afterData = event.data.after.data();
 
         // Check if status changed from pending to approved or rejected
         const beforeStatus = beforeData.status;
@@ -42,7 +43,7 @@ exports.onVehicleStatusChanged = functions.firestore
 
         // Extract vehicle details
         const {vehicleName} = afterData;
-        const vehicleId = context.params.vehicleId;
+        const vehicleId = event.params.vehicleId;
 
         // Get seller/owner ID
         // Support both sellerId (legacy) and currentOwnerId (new schema)
@@ -50,7 +51,7 @@ exports.onVehicleStatusChanged = functions.firestore
 
         // Validate required fields
         if (!ownerId) {
-          functions.logger.error("onVehicleStatusChanged: Missing ownerId (sellerId/currentOwnerId)", {
+          logger.error("onVehicleStatusChanged: Missing ownerId (sellerId/currentOwnerId)", {
             vehicleId,
             status: afterStatus,
           });
@@ -58,7 +59,7 @@ exports.onVehicleStatusChanged = functions.firestore
         }
 
         if (!vehicleName) {
-          functions.logger.warn("onVehicleStatusChanged: Missing vehicleName", {
+          logger.warn("onVehicleStatusChanged: Missing vehicleName", {
             vehicleId,
             status: afterStatus,
           });
@@ -81,7 +82,7 @@ exports.onVehicleStatusChanged = functions.firestore
           screen = "MyPage";
         } else {
         // Shouldn't reach here due to earlier check, but safety fallback
-          functions.logger.error("onVehicleStatusChanged: Unexpected status", {
+          logger.error("onVehicleStatusChanged: Unexpected status", {
             vehicleId,
             status: afterStatus,
           });
@@ -97,7 +98,7 @@ exports.onVehicleStatusChanged = functions.firestore
         // Send notification
         await sendNotificationToUser(ownerId, title, body, data);
 
-        functions.logger.info("Vehicle status change notification sent successfully", {
+        logger.info("Vehicle status change notification sent successfully", {
           vehicleId,
           ownerId,
           status: afterStatus,
@@ -106,7 +107,7 @@ exports.onVehicleStatusChanged = functions.firestore
 
         return null;
       } catch (error) {
-        functions.logger.error("onVehicleStatusChanged: Unexpected error", {
+        logger.error("onVehicleStatusChanged: Unexpected error", {
           error: error.message,
           stack: error.stack,
         });

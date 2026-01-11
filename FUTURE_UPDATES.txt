@@ -1,0 +1,340 @@
+# JCar 향후 업데이트 계획
+
+이 문서는 현재 간단한 버전으로 구현된 기능들에 대한 향후 개선 및 추가 계획을 담고 있습니다.
+
+---
+
+## 📋 사용자 계정 관리 고도화
+
+### 현재 구현 상태 (간단한 버전)
+✅ 관리자가 앱에서 직접 사용자 계정 정지/활성화 가능
+✅ admin_activity_log에 관리자 행동 기록
+✅ 로그인 시 정지된 계정 자동 차단
+✅ 관리자 계정은 정지 불가 (보호)
+
+### 향후 추가 기능
+
+#### 1. 임시 정지 시스템 (Soft Delete)
+**목적**: 영구 정지와 일시 정지를 구분하여 유연한 계정 관리
+
+**구현 내용**:
+- `users` 컬렉션에 추가 필드:
+  ```javascript
+  {
+    accountStatus: 'active' | 'suspended' | 'banned',
+    suspendedAt: Timestamp,
+    suspendedBy: 'admin@jcar.com',
+    suspendReason: '부적절한 차량 등록',
+    autoReactivateAt: Timestamp,  // 자동 해제 시간
+    suspensionHistory: [          // 정지 기록
+      {
+        suspendedAt: Timestamp,
+        suspendedBy: 'admin@jcar.com',
+        reason: '...',
+        duration: 7,  // 일 단위
+        reactivatedAt: Timestamp,
+        autoReactivated: true
+      }
+    ]
+  }
+  ```
+
+- 관리자 기능:
+  - 최대 30일까지 임시 정지 가능
+  - 정지 사유 필수 입력
+  - 정지 기간 선택 (1일, 3일, 7일, 14일, 30일, 영구)
+
+- 자동 해제:
+  - Cloud Functions Scheduled Task (매일 실행)
+  - autoReactivateAt 도달 시 자동으로 active 상태로 변경
+
+#### 2. 역할 기반 권한 분리 (RBAC)
+**목적**: 관리자 권한을 세분화하여 보안 강화
+
+**구현 내용**:
+- `users` 컬렉션에 permissions 필드 추가:
+  ```javascript
+  {
+    role: 'admin',
+    permissions: {
+      canViewUsers: true,
+      canSuspendUsers: true,      // 임시 정지 가능
+      canBanUsers: false,          // 영구 정지 불가 (슈퍼 관리자만)
+      maxSuspensionDays: 30,
+      canApproveVehicles: true,
+      canRejectVehicles: true,
+      canApproveConsultations: true,
+      canRejectConsultations: true,
+    }
+  }
+  ```
+
+- 관리자 등급:
+  1. **일반 관리자**: 최대 7일 임시 정지만 가능
+  2. **시니어 관리자**: 최대 30일 임시 정지 가능
+  3. **슈퍼 관리자**: 영구 정지 가능, 다른 관리자 권한 수정 가능
+
+#### 3. 2단계 인증 (2FA) - 중요 작업 시 재인증
+**목적**: 관리자 계정 해킹 시에도 중요 작업 방지
+
+**구현 내용**:
+- 사용자 정지/영구 정지 시 비밀번호 재확인 요구:
+  ```javascript
+  const requireReauth = async () => {
+    const password = await promptForPassword(); // 비밀번호 입력 모달
+    const credential = auth.EmailAuthProvider.credential(
+      currentUser.email,
+      password
+    );
+    await currentUser.reauthenticateWithCredential(credential);
+  };
+
+  const suspendUser = async () => {
+    await requireReauth(); // 비밀번호 재확인 후 진행
+    // 정지 로직
+  };
+  ```
+
+- 재인증 필요한 작업:
+  - 사용자 계정 정지/영구 정지
+  - 다른 관리자 권한 수정
+  - 대량 데이터 삭제
+
+#### 4. 감사 로그 고도화
+**목적**: 모든 관리자 행동을 상세히 기록하여 추적 가능
+
+**구현 내용**:
+- `admin_activity_log`에 추가 필드:
+  ```javascript
+  {
+    adminUid: 'admin-uid',
+    adminName: '관리자 이름',
+    adminEmail: 'admin@jcar.com',
+    action: 'suspend_user',
+    actionDetails: {
+      reason: '부적절한 차량 등록 반복',
+      duration: 7,
+      autoReactivateAt: Timestamp,
+    },
+    targetUserId: 'user-uid',
+    targetUserName: '사용자 이름',
+    previousStatus: 'active',
+    newStatus: 'suspended',
+    ipAddress: '123.456.789.0',  // 관리자 IP 주소
+    deviceInfo: 'Android 14, Pixel 5',
+    timestamp: Timestamp,
+
+    // 추가 메타데이터
+    metadata: {
+      appVersion: '1.0.0',
+      platform: 'android',
+    }
+  }
+  ```
+
+- 관리자 활동 대시보드:
+  - 최근 관리자 활동 내역 표시
+  - 날짜/관리자/액션 타입별 필터링
+  - CSV 내보내기 기능
+
+#### 5. 정지된 사용자 알림 개선
+**목적**: 정지된 사용자에게 더 자세한 정보 제공
+
+**구현 내용**:
+- 로그인 시 정지 사유 및 해제 시간 표시:
+  ```javascript
+  if (userData.accountStatus === 'suspended') {
+    const reactivateAt = userData.autoReactivateAt?.toDate();
+    const daysLeft = Math.ceil((reactivateAt - new Date()) / (1000 * 60 * 60 * 24));
+
+    Alert.alert(
+      '계정 일시 정지',
+      `사유: ${userData.suspendReason}\n` +
+      `해제일: ${daysLeft}일 후 (${reactivateAt.toLocaleDateString()})\n\n` +
+      `문의: support@jcar.com`,
+      [{ text: '확인' }]
+    );
+  }
+  ```
+
+- 이메일 알림:
+  - 계정 정지 시 이메일 발송 (Cloud Functions)
+  - 정지 사유, 기간, 해제 예정일 포함
+  - 문의처 안내
+
+#### 6. 사용자 복구 요청 시스템
+**목적**: 정지된 사용자가 이의 제기 가능
+
+**구현 내용**:
+- `user_appeals` 컬렉션 생성:
+  ```javascript
+  {
+    userId: 'user-uid',
+    userName: '사용자 이름',
+    suspensionId: 'suspension-id',
+    appealReason: '정지 사유가 부당합니다. ...',
+    appealedAt: Timestamp,
+    status: 'pending' | 'approved' | 'rejected',
+    reviewedBy: 'admin-uid',
+    reviewedAt: Timestamp,
+    reviewNotes: '관리자 검토 의견',
+  }
+  ```
+
+- 관리자 기능:
+  - 복구 요청 목록 확인
+  - 승인/거절 처리
+  - 거절 시 사유 입력
+
+---
+
+## 🔐 보안 강화
+
+### 1. IP 기반 접근 제한
+- 관리자 로그인 시 허용된 IP에서만 접근 가능
+- Cloud Functions에서 IP 체크
+
+### 2. 로그인 시도 제한
+- 5회 실패 시 계정 일시 잠금 (30분)
+- CAPTCHA 추가
+
+### 3. 비밀번호 정책 강화
+- 최소 8자, 대소문자+숫자+특수문자 조합 필수
+- 3개월마다 비밀번호 변경 권장
+
+### 4. 세션 타임아웃
+- 30분 비활성 시 자동 로그아웃
+- 중요 작업 전 세션 갱신
+
+---
+
+## 📊 관리자 대시보드
+
+### 1. 사용자 통계
+- 일별/주별/월별 신규 가입자
+- 활성/정지/탈퇴 사용자 수
+- 차트로 시각화
+
+### 2. 활동 로그 분석
+- 관리자별 활동 통계
+- 이상 행동 감지 (짧은 시간에 과도한 정지)
+
+### 3. 알림 센터
+- 신규 상담 요청 알림
+- 차량 등록 승인 대기 알림
+- 사용자 복구 요청 알림
+
+---
+
+## 🗄️ 데이터베이스 최적화
+
+### 1. Firestore 인덱스 최적화
+- 자주 사용되는 쿼리 패턴 분석
+- 복합 인덱스 생성
+
+### 2. 데이터 아카이빙
+- 90일 이상 된 활동 로그 별도 저장
+- Cloud Storage로 이관
+
+### 3. 캐싱 전략
+- 사용자 목록 캐싱 (5분)
+- 활동 로그 페이지네이션
+
+---
+
+## 🧪 테스트 자동화
+
+### 1. 단위 테스트
+- 사용자 정지/활성화 로직 테스트
+- 권한 검증 로직 테스트
+
+### 2. 통합 테스트
+- Cloud Functions 트리거 테스트
+- 정지된 사용자 로그인 차단 테스트
+
+### 3. E2E 테스트
+- Detox 또는 Appium 사용
+- 관리자 워크플로우 자동 테스트
+
+---
+
+## 📱 사용자 경험 개선
+
+### 1. 관리자 앱 UX 개선
+- 사용자 프로필 상세 정보 표시
+- 사용자별 활동 히스토리 조회
+- 필터링 고도화 (역할, 상태, 가입일)
+
+### 2. 정지 사유 템플릿
+- 자주 사용하는 정지 사유 템플릿 제공
+- "부적절한 차량 등록", "스팸 행위" 등
+
+### 3. 벌크 작업
+- 여러 사용자 일괄 정지
+- CSV 업로드로 대량 작업
+
+---
+
+## 🔔 알림 시스템 확장
+
+### 1. 사용자 알림
+- 계정 정지 시 푸시 알림 + 이메일
+- 자동 해제 1일 전 알림
+
+### 2. 관리자 알림
+- 의심스러운 활동 감지 시 알림
+- 일일 요약 리포트
+
+---
+
+## 📝 규정 준수
+
+### 1. GDPR / 개인정보보호법 준수
+- 사용자 데이터 다운로드 기능
+- 계정 완전 삭제 기능
+- 개인정보 처리방침 동의 추적
+
+### 2. 감사 대응
+- 관리자 활동 로그 보존 (최소 1년)
+- 외부 감사 시 데이터 제공 기능
+
+---
+
+## 구현 우선순위
+
+### Phase 1 (즉시 필요)
+1. ✅ 기본 계정 정지/활성화 기능 (완료)
+2. ✅ admin_activity_log 기록 (완료)
+3. ✅ 로그인 시 정지 계정 차단 (완료)
+
+### Phase 2 (1-2개월 내)
+1. 임시 정지 시스템 (자동 해제)
+2. 정지 사유 템플릿
+3. Cloud Functions 자동 해제 스케줄러
+
+### Phase 3 (3-6개월 내)
+1. 역할 기반 권한 분리 (RBAC)
+2. 2단계 인증 (재인증)
+3. 감사 로그 고도화
+
+### Phase 4 (6개월 이후)
+1. 사용자 복구 요청 시스템
+2. 관리자 대시보드
+3. 데이터 아카이빙
+
+---
+
+## 참고 자료
+
+### 보안 Best Practices
+- Firebase Auth Security: https://firebase.google.com/docs/auth/admin/manage-users
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
+
+### 관련 이슈
+- Account Enumeration 방지: FIRESTORE_SCHEMA.md 참고
+- Rate Limiting: Firebase Functions v2 문서 참고
+
+---
+
+마지막 업데이트: 2025-12-25
+작성자: Claude AI Assistant

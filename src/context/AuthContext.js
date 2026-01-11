@@ -2,10 +2,12 @@
 // Task 62.4: Migrated to React Native Firebase Modular API (v22+)
 // Task 63.2: Migrated Crashlytics and Messaging to v22 Modular API
 import React, { createContext, useState, useEffect } from 'react';
+import { Alert } from 'react-native';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
 import { saveFcmToken, reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService';
 import { getMessaging, onTokenRefresh } from '@react-native-firebase/messaging';
+import Toast from 'react-native-toast-message';
 
 export const AuthContext = createContext(null);
 
@@ -31,6 +33,27 @@ export const AuthProvider = ({ children }) => {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
+
+            // 계정 정지 체크
+            if (userData.status === 'suspended') {
+              // 강제 로그아웃
+              await auth.signOut();
+
+              // 사용자에게 알림
+              Toast.show({
+                type: 'error',
+                text1: '계정 정지',
+                text2: '귀하의 계정이 정지되었습니다. 관리자에게 문의하세요.',
+                position: 'top',
+                visibilityTime: 5000,
+              });
+
+              setUser(null);
+              setRole(null);
+              setLoading(false);
+              return;
+            }
+
             setUser(currentUser);
             setRole(userData.role || 'user');
             setSellerName(userData.name || 'Unknown');

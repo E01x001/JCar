@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     fontSize: 16,
+    color: '#333',
   },
   statsContainer: {
     backgroundColor: '#fff',

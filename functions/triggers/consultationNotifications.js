@@ -7,7 +7,8 @@
  * @module triggers/consultationNotifications
  */
 
-const functions = require("firebase-functions");
+const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
+const {logger} = require("firebase-functions");
 const {sendNotificationToUser} = require("../utils/fcm");
 
 /**
@@ -18,12 +19,12 @@ const {sendNotificationToUser} = require("../utils/fcm");
  *
  * @fires when consultationStatus: pending → approved
  */
-exports.onConsultationApproved = functions.firestore
-    .document("consultation_requests/{consultationId}")
-    .onUpdate(async (change, context) => {
+exports.onConsultationApproved = onDocumentUpdated(
+    "consultation_requests/{consultationId}",
+    async (event) => {
       try {
-        const beforeData = change.before.data();
-        const afterData = change.after.data();
+        const beforeData = event.data.before.data();
+        const afterData = event.data.after.data();
 
         // Check if status changed from pending to approved
         const beforeStatus = beforeData.consultationStatus;
@@ -36,11 +37,11 @@ exports.onConsultationApproved = functions.firestore
 
         // Extract consultation details
         const {userId, preferredDate, preferredTime, vehicleName, type} = afterData;
-        const consultationId = context.params.consultationId;
+        const consultationId = event.params.consultationId;
 
         // Validate required fields
         if (!userId) {
-          functions.logger.error("onConsultationApproved: Missing userId", {consultationId});
+          logger.error("onConsultationApproved: Missing userId", {consultationId});
           return null;
         }
 
@@ -59,14 +60,14 @@ exports.onConsultationApproved = functions.firestore
         // Send notification
         await sendNotificationToUser(userId, title, body, data);
 
-        functions.logger.info("Consultation approval notification sent successfully", {
+        logger.info("Consultation approval notification sent successfully", {
           consultationId,
           userId,
         });
 
         return null;
       } catch (error) {
-        functions.logger.error("onConsultationApproved: Unexpected error", {
+        logger.error("onConsultationApproved: Unexpected error", {
           error: error.message,
           stack: error.stack,
         });
@@ -83,12 +84,12 @@ exports.onConsultationApproved = functions.firestore
  *
  * @fires when consultationStatus → rejected
  */
-exports.onConsultationRejected = functions.firestore
-    .document("consultation_requests/{consultationId}")
-    .onUpdate(async (change, context) => {
+exports.onConsultationRejected = onDocumentUpdated(
+    "consultation_requests/{consultationId}",
+    async (event) => {
       try {
-        const beforeData = change.before.data();
-        const afterData = change.after.data();
+        const beforeData = event.data.before.data();
+        const afterData = event.data.after.data();
 
         // Check if status changed to rejected
         const beforeStatus = beforeData.consultationStatus;
@@ -101,11 +102,11 @@ exports.onConsultationRejected = functions.firestore
 
         // Extract consultation details
         const {userId, rejectionReason, vehicleName, type} = afterData;
-        const consultationId = context.params.consultationId;
+        const consultationId = event.params.consultationId;
 
         // Validate required fields
         if (!userId) {
-          functions.logger.error("onConsultationRejected: Missing userId", {consultationId});
+          logger.error("onConsultationRejected: Missing userId", {consultationId});
           return null;
         }
 
@@ -123,14 +124,14 @@ exports.onConsultationRejected = functions.firestore
         // Send notification
         await sendNotificationToUser(userId, title, body, data);
 
-        functions.logger.info("Consultation rejection notification sent successfully", {
+        logger.info("Consultation rejection notification sent successfully", {
           consultationId,
           userId,
         });
 
         return null;
       } catch (error) {
-        functions.logger.error("onConsultationRejected: Unexpected error", {
+        logger.error("onConsultationRejected: Unexpected error", {
           error: error.message,
           stack: error.stack,
         });
@@ -146,12 +147,12 @@ exports.onConsultationRejected = functions.firestore
  *
  * @fires when alternativeSlots field is added or modified
  */
-exports.onAlternativeSlotsSuggested = functions.firestore
-    .document("consultation_requests/{consultationId}")
-    .onUpdate(async (change, context) => {
+exports.onAlternativeSlotsSuggested = onDocumentUpdated(
+    "consultation_requests/{consultationId}",
+    async (event) => {
       try {
-        const beforeData = change.before.data();
-        const afterData = change.after.data();
+        const beforeData = event.data.before.data();
+        const afterData = event.data.after.data();
 
         // Check if alternativeSlots field was added or modified
         const beforeSlots = beforeData.alternativeSlots;
@@ -164,11 +165,11 @@ exports.onAlternativeSlotsSuggested = functions.firestore
 
         // Extract consultation details
         const {userId, vehicleName, type} = afterData;
-        const consultationId = context.params.consultationId;
+        const consultationId = event.params.consultationId;
 
         // Validate required fields
         if (!userId) {
-          functions.logger.error("onAlternativeSlotsSuggested: Missing userId", {consultationId});
+          logger.error("onAlternativeSlotsSuggested: Missing userId", {consultationId});
           return null;
         }
 
@@ -185,14 +186,14 @@ exports.onAlternativeSlotsSuggested = functions.firestore
         // Send notification
         await sendNotificationToUser(userId, title, body, data);
 
-        functions.logger.info("Alternative slots notification sent successfully", {
+        logger.info("Alternative slots notification sent successfully", {
           consultationId,
           userId,
         });
 
         return null;
       } catch (error) {
-        functions.logger.error("onAlternativeSlotsSuggested: Unexpected error", {
+        logger.error("onAlternativeSlotsSuggested: Unexpected error", {
           error: error.message,
           stack: error.stack,
         });
@@ -208,12 +209,12 @@ exports.onAlternativeSlotsSuggested = functions.firestore
  *
  * @fires when consultationStatus → completed
  */
-exports.onConsultationCompleted = functions.firestore
-    .document("consultation_requests/{consultationId}")
-    .onUpdate(async (change, context) => {
+exports.onConsultationCompleted = onDocumentUpdated(
+    "consultation_requests/{consultationId}",
+    async (event) => {
       try {
-        const beforeData = change.before.data();
-        const afterData = change.after.data();
+        const beforeData = event.data.before.data();
+        const afterData = event.data.after.data();
 
         // Check if status changed to completed
         const beforeStatus = beforeData.consultationStatus;
@@ -226,11 +227,11 @@ exports.onConsultationCompleted = functions.firestore
 
         // Extract consultation details
         const {userId, dealAmount, vehicleName, type} = afterData;
-        const consultationId = context.params.consultationId;
+        const consultationId = event.params.consultationId;
 
         // Validate required fields
         if (!userId) {
-          functions.logger.error("onConsultationCompleted: Missing userId", {consultationId});
+          logger.error("onConsultationCompleted: Missing userId", {consultationId});
           return null;
         }
 
@@ -250,14 +251,14 @@ exports.onConsultationCompleted = functions.firestore
         // Send notification
         await sendNotificationToUser(userId, title, body, data);
 
-        functions.logger.info("Consultation completion notification sent successfully", {
+        logger.info("Consultation completion notification sent successfully", {
           consultationId,
           userId,
         });
 
         return null;
       } catch (error) {
-        functions.logger.error("onConsultationCompleted: Unexpected error", {
+        logger.error("onConsultationCompleted: Unexpected error", {
           error: error.message,
           stack: error.stack,
         });
@@ -273,12 +274,12 @@ exports.onConsultationCompleted = functions.firestore
  *
  * @fires when adminMemo field is added or modified with non-empty content
  */
-exports.onAdminMemoUpdated = functions.firestore
-    .document("consultation_requests/{consultationId}")
-    .onUpdate(async (change, context) => {
+exports.onAdminMemoUpdated = onDocumentUpdated(
+    "consultation_requests/{consultationId}",
+    async (event) => {
       try {
-        const beforeData = change.before.data();
-        const afterData = change.after.data();
+        const beforeData = event.data.before.data();
+        const afterData = event.data.after.data();
 
         // Check if adminMemo was added or modified
         const beforeMemo = beforeData.adminMemo;
@@ -291,11 +292,11 @@ exports.onAdminMemoUpdated = functions.firestore
 
         // Extract consultation details
         const {userId, vehicleName, type} = afterData;
-        const consultationId = context.params.consultationId;
+        const consultationId = event.params.consultationId;
 
         // Validate required fields
         if (!userId) {
-          functions.logger.error("onAdminMemoUpdated: Missing userId", {consultationId});
+          logger.error("onAdminMemoUpdated: Missing userId", {consultationId});
           return null;
         }
 
@@ -312,14 +313,14 @@ exports.onAdminMemoUpdated = functions.firestore
         // Send notification
         await sendNotificationToUser(userId, title, body, data);
 
-        functions.logger.info("Admin memo notification sent successfully", {
+        logger.info("Admin memo notification sent successfully", {
           consultationId,
           userId,
         });
 
         return null;
       } catch (error) {
-        functions.logger.error("onAdminMemoUpdated: Unexpected error", {
+        logger.error("onAdminMemoUpdated: Unexpected error", {
           error: error.message,
           stack: error.stack,
         });
