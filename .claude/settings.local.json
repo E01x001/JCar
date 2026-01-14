@@ -62,7 +62,12 @@
       "Bash(git checkout:*)",
       "Bash(firebase deploy:*)",
       "mcp__task-master-ai__expand_all",
-      "mcp__task-master-ai__next_task"
+      "mcp__task-master-ai__next_task",
+      "Bash(npm run deploy)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:firebase.google.com)",
+      "mcp__task-master-ai__update_subtask",
+      "Bash(npm run lint:fix:*)"
     ],
     "deny": []
   },

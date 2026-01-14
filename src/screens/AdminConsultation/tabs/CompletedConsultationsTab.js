@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { formatPhone, formatPrice } from '../../../utils/format';
-import { fetchCompletedConsultationsPaginated } from '../../../services/firebaseService';
+import { fetchCompletedConsultationsPaginated } from '../../../services/consultation/consultationQueryService';
 import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
 import Button from '../../../components/Button';

@@ -5,7 +5,8 @@ import React, { createContext, useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
-import { saveFcmToken, reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService';
+import { saveFcmToken } from '../services/notification/fcmService';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { getMessaging, onTokenRefresh } from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
 

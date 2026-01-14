@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { getFirestore, collection, doc, onSnapshot, getDoc } from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
@@ -24,7 +24,7 @@ import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
 import Button from '../components/Button';
 import { formatDate, formatTime } from '../utils/format';
-import { cancelConsultation } from '../services/firebaseService';
+import { cancelConsultation } from '../services/consultation/consultationService';
 
 /**
  * UserConsultationDetailScreen Component
@@ -339,9 +339,15 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
           onPress: async () => {
             setCancelling(true);
             try {
-              await cancelConsultation(consultationId);
-              toast.showSuccess('상담 취소', '상담이 성공적으로 취소되었습니다.');
-              // Navigation will happen automatically due to real-time listener
+              const result = await cancelConsultation(consultationId);
+
+              if (result.success) {
+                toast.showSuccess('상담 취소', '상담이 성공적으로 취소되었습니다.');
+                // Navigation will happen automatically due to real-time listener
+              } else {
+                // Show specific error message from service
+                toast.showError('취소 불가', result.error || '상담을 취소할 수 없습니다.');
+              }
             } catch (error) {
               console.error('Failed to cancel consultation:', error);
               reportCrashlyticsError(error);

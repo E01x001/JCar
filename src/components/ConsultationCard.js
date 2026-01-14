@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPhone } from '../utils/format';
-import { updateConsultationStatus, completeConsultation, updateAdminMemo, updateSuggestedSlots } from '../services/firebaseService';
+import { updateConsultationStatus, completeConsultation, updateAdminMemo, updateSuggestedSlots } from '../services/consultation/consultationService';
 import { useToast } from '../hooks/useToast';
 import { AuthContext } from '../context/AuthContext';
 import Card from './Card';

@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
 import { formatPrice } from '../utils/format';

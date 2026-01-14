@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useContext } from 'react';
 import firestore from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 
 /**

@@ -12,7 +12,7 @@
  */
 
 import { getFirestore, collection, doc, runTransaction, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, arrayUnion } from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from './firebaseService'; // Task 63.2: Migrated to v22 Modular API
+import { reportCrashlyticsError, logCrashlyticsMessage } from './notification/notificationService';
 import analytics from '@react-native-firebase/analytics';
 import perf from '@react-native-firebase/perf';
 

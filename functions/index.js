@@ -56,3 +56,29 @@ const vehicleNotifications =
 // (pending → approved/rejected)
 exports.onVehicleStatusChanged =
   vehicleNotifications.onVehicleStatusChanged;
+
+// ============================================================================
+// Account Management Functions
+// ============================================================================
+// Cascade delete user account and all related data
+
+const accountManagement = require("./accountManagement/cascadeDelete");
+
+// Cascade delete user account (callable function)
+// Task #73-76: Soft delete with 30-day recovery period
+exports.cascadeDeleteUser = accountManagement.cascadeDeleteUser;
+
+// Recover soft deleted user account (callable function)
+// Task #76: Account recovery within 30-day period
+exports.recoverDeletedUser = accountManagement.recoverDeletedUser;
+
+// ============================================================================
+// Consultation Request Management Functions
+// ============================================================================
+// Rate limiting and validation for consultation requests
+
+const consultationRateLimit = require("./consultations/rateLimit");
+
+// Check consultation request rate limit (callable function)
+exports.checkConsultationRateLimit =
+  consultationRateLimit.checkConsultationRateLimit;

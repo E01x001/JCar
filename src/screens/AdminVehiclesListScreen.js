@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
-import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
@@ -14,11 +13,20 @@ import SkeletonLoader from '../components/SkeletonLoader';
 import InputField from '../components/InputField';
 import FilterChip from '../components/FilterChip';
 import useVehicleStats from '../hooks/useVehicleStats';
+import useVehicleStore from '../stores/vehicleStore';
 
 const AdminVehiclesListScreen = ({ navigation }) => {
   const theme = useTheme();
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Task 84: Use Zustand store for centralized state management
+  const {
+    vehicles,
+    loading,
+    subscribeToAllVehicles,
+    unsubscribeFromVehicles,
+    clearCache,
+  } = useVehicleStore();
+
   const [deletingVehicleId, setDeletingVehicleId] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -30,31 +38,22 @@ const AdminVehiclesListScreen = ({ navigation }) => {
   // Get vehicle statistics
   const vehicleStats = useVehicleStats();
 
-  const fetchVehicles = async () => {
-    try {
-      setLoading(true);
-      const snapshot = await firestore()
-        .collection('vehicles')
-        .get();
-      const vehiclesData = snapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-      }));
-      setVehicles(vehiclesData);
-    } catch (error) {
-      console.error('차량 목록 불러오기 오류:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Task 84: Subscribe to real-time vehicle updates with caching
   useEffect(() => {
-    fetchVehicles();
+    subscribeToAllVehicles();
+
+    // Cleanup: unsubscribe when component unmounts
+    return () => {
+      unsubscribeFromVehicles();
+    };
   }, []);
 
+  // Task 84: Refresh vehicles by clearing cache and resubscribing
   const onRefresh = async () => {
     setIsRefreshing(true);
-    await fetchVehicles();
+    clearCache();
+    unsubscribeFromVehicles();
+    subscribeToAllVehicles();
     setIsRefreshing(false);
   };
 
@@ -95,8 +94,7 @@ const AdminVehiclesListScreen = ({ navigation }) => {
               const emergencyDeleteVehicleFunction = functions().httpsCallable('emergencyDeleteVehicle');
               const result = await emergencyDeleteVehicleFunction({ vehicleId });
 
-              // UI에서 차량 제거
-              setVehicles(prevVehicles => prevVehicles.filter(vehicle => vehicle.id !== vehicleId));
+              // Note: UI will auto-update via Firestore listener
 
               Alert.alert(
                 '삭제 완료',

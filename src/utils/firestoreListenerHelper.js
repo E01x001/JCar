@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Firestore Listener Helper
  *
@@ -7,7 +8,7 @@
  * Task 62.3: Migrated to React Native Firebase Modular API (v22+)
  */
 
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { onSnapshot } from '@react-native-firebase/firestore';
 
 /**

@@ -1,16 +1,19 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { getFirestore, collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import { getAuth } from '@react-native-firebase/auth';
-import storage from '@react-native-firebase/storage';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
+import { VEHICLE_STATUS, VEHICLE_TYPES, isValidVehicleType } from '../constants';
+import useVehicleStore from '../stores/vehicleStore';
+import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
+import { prepareImageForUpload, uploadImageWithProgress, formatFileSize } from '../utils/imageHelpers';
 
 const VehicleRegistrationScreen = () => {
   const { user, sellerName, sellerPhone, sellerEmail } = useContext(AuthContext);
   const toast = useToast();
+  const { addOptimisticVehicle, removeOptimisticVehicle, invalidateUserVehiclesCache } = useVehicleStore();
 
   const [regiNumber, setRegiNumber] = useState('');
   const [ownerName, setOwnerName] = useState('');
@@ -18,6 +21,9 @@ const VehicleRegistrationScreen = () => {
   const [loading, setLoading] = useState(false);
   const [vehicleData, setVehicleData] = useState(null);
   const [imageUri, setImageUri] = useState(null);
+  const [imageInfo, setImageInfo] = useState(null); // Store compressed image info
+  const [uploadProgress, setUploadProgress] = useState(0); // Track upload progress (0-100)
+  const [isUploading, setIsUploading] = useState(false); // Upload state flag
 
   const isValidRegiNumber = (number) => {
     const regex = /^([가-힣]{0,2})?(\d{2,3})([가-힣A-Z외임])\s?(\d{3,4})$/;
@@ -39,11 +45,60 @@ const VehicleRegistrationScreen = () => {
     return input;
   };
 
+  /**
+   * Task 107: Optimized image selection with compression
+   * Shows alert to choose between gallery or camera, then prepares image
+   */
   const handleImageSelect = async () => {
-    const result = await launchImageLibrary({ mediaType: 'photo' });
-    if (!result.didCancel && result.assets && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-    }
+    Alert.alert(
+      '사진 선택',
+      '사진을 어디서 가져오시겠습니까?',
+      [
+        {
+          text: '갤러리',
+          onPress: async () => {
+            try {
+              const result = await prepareImageForUpload('gallery');
+              if (result) {
+                setImageUri(result.uri);
+                setImageInfo(result);
+                toast.showSuccess(
+                  '사진 준비 완료',
+                  `크기: ${formatFileSize(result.size)}`
+                );
+              }
+            } catch (error) {
+              console.error('Gallery selection error:', error);
+              toast.showError('오류', error.message || '사진 선택 중 오류가 발생했습니다.');
+            }
+          },
+        },
+        {
+          text: '카메라',
+          onPress: async () => {
+            try {
+              const result = await prepareImageForUpload('camera');
+              if (result) {
+                setImageUri(result.uri);
+                setImageInfo(result);
+                toast.showSuccess(
+                  '사진 촬영 완료',
+                  `크기: ${formatFileSize(result.size)}`
+                );
+              }
+            } catch (error) {
+              console.error('Camera capture error:', error);
+              toast.showError('오류', error.message || '사진 촬영 중 오류가 발생했습니다.');
+            }
+          },
+        },
+        {
+          text: '취소',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const fetchVehicleInfo = async () => {
@@ -60,6 +115,9 @@ const VehicleRegistrationScreen = () => {
     setLoading(true);
 
     try {
+      // Task #71: Reverted to hardcoded API key
+      // Note: This API key is exposed and should be rotated (Task #72)
+      // TODO: Move to Firebase Functions for proper security
       const response = await fetch('https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry', {
         method: 'POST',
         headers: {
@@ -88,18 +146,29 @@ const VehicleRegistrationScreen = () => {
     }
   };
 
+  /**
+   * Task 106.2: Optimistic UI - Save vehicle data
+   *
+   * Flow:
+   * 1. Upload image (must complete first)
+   * 2. Add vehicle to store optimistically
+   * 3. Fire Firestore write (non-blocking)
+   * 4. Clear form immediately
+   * 5. Handle write success/failure in background
+   */
   const saveVehicleData = async () => {
     if (!vehicleData) {
       toast.showWarning('오류', '조회된 차량 정보가 없습니다.');
       return;
     }
 
-    const validVehicleTypes = ['승용차', '택시', '렌터카', '화물차', '군용차', '외교차'];
-
-    if (!validVehicleTypes.includes(vehicleType)) {
+    if (!isValidVehicleType(vehicleType)) {
       toast.showWarning('입력 오류', '차량 종류를 정확히 선택해주세요.');
       return;
     }
+
+    // Generate temporary ID for optimistic update
+    const tempId = generateTempId('temp_vehicle');
 
     try {
       // Task 62.4: Use modular currentUser
@@ -107,19 +176,36 @@ const VehicleRegistrationScreen = () => {
       const currentUser = auth.currentUser;
       let uploadedImageUrl = `https://www.cartory.net/cars/${vehicleData.CARURL}`;
 
+      // Task 107: Image upload with progress tracking
       if (imageUri) {
-        const filename = imageUri.substring(imageUri.lastIndexOf('/') + 1);
-        const reference = storage().ref(`/vehicles/${filename}`);
-        await reference.putFile(imageUri);
-        uploadedImageUrl = await reference.getDownloadURL();
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        const filename = `vehicle_${Date.now()}_${tempId}.jpg`;
+        const storagePath = `vehicles/${filename}`;
+
+        try {
+          uploadedImageUrl = await uploadImageWithProgress(
+            imageUri,
+            storagePath,
+            (progress) => {
+              setUploadProgress(progress);
+            }
+          );
+          console.log('✅ Image uploaded:', uploadedImageUrl);
+        } catch (uploadError) {
+          console.error('❌ Image upload failed:', uploadError);
+          toast.showError('오류', '이미지 업로드 중 오류가 발생했습니다.');
+          setIsUploading(false);
+          return; // Stop if upload fails
+        } finally {
+          setIsUploading(false);
+          setUploadProgress(0);
+        }
       }
 
-      const db = getFirestore();
-      const vehiclesRef = collection(db, 'vehicles');
-      const newVehicleRef = doc(vehiclesRef);
-
-      await setDoc(newVehicleRef, {
-        vehicleId: newVehicleRef.id,
+      // Prepare vehicle data
+      const vehicleDataToSave = {
         vehicleName: vehicleData.CARNAME,
         subModel: vehicleData.SUBMODEL,
         manufacturer: vehicleData.CARVENDER,
@@ -142,22 +228,69 @@ const VehicleRegistrationScreen = () => {
         regiNumber,
         ownerName,
         vehicleType,
-        createdAt: serverTimestamp(),
+        createdAt: new Date(), // Use local time for optimistic data
         sellerId: user.uid,
         sellerName: sellerName || 'Unknown',
         sellerPhone: sellerPhone || 'Unknown',
         sellerEmail: sellerEmail || 'Unknown',
-      });
+        status: 'pending', // Vehicles start as pending approval
+      };
 
-      toast.showSuccess('성공', '차량 정보가 저장되었습니다.');
+      // Optimistic update: Add immediately to store
+      addOptimisticVehicle(vehicleDataToSave, tempId);
+
+      // Clear cache to show new vehicle immediately
+      invalidateUserVehiclesCache(user.uid);
+
+      // Show success immediately (optimistic)
+      toast.showSuccess('성공', '차량 정보가 저장되었습니다. 관리자 승인을 기다리세요.');
+
+      // Clear form immediately
       setRegiNumber('');
       setOwnerName('');
       setVehicleData(null);
       setImageUri(null);
-      setVehicleType(''); // 저장 완료 후 차량 종류도 리셋
+      setImageInfo(null);
+      setVehicleType('');
+
+      // Firestore write (non-blocking)
+      const db = getFirestore();
+      const vehiclesRef = collection(db, 'vehicles');
+      const newVehicleRef = doc(vehiclesRef);
+
+      // Execute write without awaiting (using executeOptimisticUpdate helper)
+      executeOptimisticUpdate({
+        optimisticFn: null, // Already done above
+        serverFn: async () => {
+          await setDoc(newVehicleRef, {
+            ...vehicleDataToSave,
+            vehicleId: newVehicleRef.id,
+            createdAt: serverTimestamp(), // Use server timestamp for real data
+          });
+          return newVehicleRef.id;
+        },
+        onSuccess: (realId) => {
+          console.log(`✅ Vehicle saved successfully with ID: ${realId}`);
+          // Firestore listener will automatically update the store
+        },
+        onError: (error) => {
+          console.error('❌ Firestore write failed:', error);
+          // Remove optimistic vehicle
+          removeOptimisticVehicle(tempId);
+          // Show error to user
+          toast.showError('오류', '차량 정보 저장 중 문제가 발생했습니다. 다시 시도해주세요.');
+        },
+        revertFn: () => {
+          removeOptimisticVehicle(tempId);
+        },
+      });
+
     } catch (error) {
-      console.error('Firestore 저장 오류:', error);
+      // This catches errors from image upload or data preparation
+      console.error('저장 준비 중 오류:', error);
       toast.showError('오류', '차량 정보를 저장하는 중 문제가 발생했습니다.');
+      // Remove optimistic vehicle if we added it
+      removeOptimisticVehicle(tempId);
     }
   };
 
@@ -206,6 +339,24 @@ const VehicleRegistrationScreen = () => {
 
         {imageUri && <Image source={{ uri: imageUri }} style={styles.imagePreview} />}
 
+        {/* Task 107: Display image info and upload progress */}
+        {imageInfo && (
+          <View style={styles.imageInfoContainer}>
+            <Text style={styles.imageInfoText}>
+              📎 압축된 크기: {formatFileSize(imageInfo.size)}
+            </Text>
+          </View>
+        )}
+
+        {isUploading && (
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressText}>업로드 중... {uploadProgress.toFixed(0)}%</Text>
+            <View style={styles.progressBarBackground}>
+              <View style={[styles.progressBarFill, { width: `${uploadProgress}%` }]} />
+            </View>
+          </View>
+        )}
+
         <View style={styles.buttonContainer}>
           <Button title="차량 정보 조회" onPress={fetchVehicleInfo} disabled={loading} color="#2B4593" />
           {loading && <ActivityIndicator size="large" color="#2B4593" />}
@@ -253,7 +404,14 @@ const styles = StyleSheet.create({
   vehicleImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 10 },
   imageButton: { padding: 10, backgroundColor: '#e0e0e0', alignItems: 'center', marginBottom: 10, borderRadius: 6 },
   imageButtonText: { color: '#333' },
-  imagePreview: { width: '100%', height: 200, resizeMode: 'cover', borderRadius: 6, marginBottom: 15 },
+  imagePreview: { width: '100%', height: 200, resizeMode: 'cover', borderRadius: 6, marginBottom: 10 },
+  // Task 107: Image info and progress bar styles
+  imageInfoContainer: { backgroundColor: '#f0f8ff', padding: 8, borderRadius: 6, marginBottom: 10 },
+  imageInfoText: { fontSize: 14, color: '#2B4593', textAlign: 'center' },
+  progressContainer: { marginTop: 10, marginBottom: 15 },
+  progressText: { fontSize: 14, color: '#2B4593', marginBottom: 5, textAlign: 'center', fontWeight: '600' },
+  progressBarBackground: { height: 20, backgroundColor: '#e0e0e0', borderRadius: 10, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: '#28a745', borderRadius: 10 },
 });
 
 export default VehicleRegistrationScreen;

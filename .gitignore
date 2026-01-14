@@ -131,3 +131,13 @@ android/gradle.properties
 error.txt
 rule.txt
 FUTURE_UPDATE.txt
+notion.txt
+GEMINI.md
+PLAN.md
+
+# Claude Code temporary files
+tmpclaude-*-cwd
+
+# Windows reserved names
+nul
+NUL

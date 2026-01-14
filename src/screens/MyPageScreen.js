@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { View, Text, StyleSheet, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
 import { getAuth, signOut } from '@react-native-firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot, orderBy, getDocs, writeBatch } from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
+import functions from '@react-native-firebase/functions';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
@@ -13,13 +13,31 @@ import Button from '../components/Button';
 import BuyConsultationsTab from './MyPage/tabs/BuyConsultationsTab';
 import SellConsultationsTab from './MyPage/tabs/SellConsultationsTab';
 import MyVehiclesTab from './MyPage/tabs/MyVehiclesTab';
+import useVehicleStore from '../stores/vehicleStore';
+import useConsultationStore from '../stores/consultationStore';
 
 const MyPageScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
   const theme = useTheme();
   const toast = useToast();
-  const [vehicles, setVehicles] = useState([]);
-  const [consultations, setConsultations] = useState([]);
+
+  // Task 84: Use Zustand stores for centralized state management with caching
+  const {
+    vehicles: userVehicles,
+    subscribeToUserVehicles,
+    unsubscribeFromVehicles,
+  } = useVehicleStore();
+
+  const {
+    userConsultations: consultations,
+    subscribeToUserConsultations,
+    unsubscribeFromConsultations,
+  } = useConsultationStore();
+
+  // User's vehicles (all statuses: pending, approved, rejected)
+  // No additional filtering needed - already filtered by sellerId in the query
+  const vehicles = userVehicles;
+
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'buy', title: '구매 상담' },
@@ -27,43 +45,17 @@ const MyPageScreen = ({ navigation }) => {
     { key: 'vehicles', title: '내 차량' },
   ]);
 
+  // Task 84: Subscribe to real-time updates with caching
   useEffect(() => {
     if (!user) {return () => {};}
 
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
-    const vehiclesQuery = query(vehiclesRef, where('sellerId', '==', user.uid));
-    const unsubscribeVehicles = onSnapshot(vehiclesQuery, snapshot => {
-      if (snapshot) {
-        const vehicleList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setVehicles(vehicleList);
-      }
-    }, error => {
-      console.error('vehicle snapshot error:', error);
-      reportCrashlyticsError(error);
-      logCrashlyticsMessage('MyPageScreen: Vehicle snapshot error');
-    });
-
-    const consultationsRef = collection(db, 'consultation_requests');
-    const consultationsQuery = query(
-      consultationsRef,
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubscribeConsultations = onSnapshot(consultationsQuery, snapshot => {
-      if (snapshot) {
-        const consultationList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setConsultations(consultationList);
-      }
-    }, error => {
-      console.error('consultation snapshot error:', error);
-      reportCrashlyticsError(error);
-      logCrashlyticsMessage('MyPageScreen: Consultation snapshot error');
-    });
+    // Subscribe to user's own vehicles (all statuses)
+    subscribeToUserVehicles(user.uid);
+    subscribeToUserConsultations(user.uid);
 
     return () => {
-      unsubscribeVehicles();
-      unsubscribeConsultations();
+      unsubscribeFromVehicles();
+      unsubscribeFromConsultations();
     };
   }, [user]);
 
@@ -126,31 +118,43 @@ const MyPageScreen = ({ navigation }) => {
   };
 
   const handleDeleteAccount = async () => {
-    Alert.alert('회원탈퇴', '정말로 회원탈퇴 하시겠습니까? 계정이 삭제됩니다.', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '탈퇴', style: 'destructive', onPress: async () => {
-          if (!user) {return;}
-          try {
-            const db = getFirestore();
-            const vehiclesRef = collection(db, 'vehicles');
-            const q = query(vehiclesRef, where('sellerId', '==', user.uid));
-            const querySnapshot = await getDocs(q);
+    Alert.alert(
+      '회원탈퇴',
+      '정말로 회원탈퇴 하시겠습니까?\n\n✓ 30일 이내 복구 가능\n✓ 차량, 상담 등 모든 데이터 삭제\n✓ 30일 후 영구 삭제',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '탈퇴',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user) {return;}
+            try {
+              // Task #73-76: Call Cloud Function for cascade delete with soft delete
+              const cascadeDelete = functions().httpsCallable('cascadeDeleteUser');
+              const result = await cascadeDelete({ userId: user.uid });
 
-            const batch = writeBatch(db);
-            querySnapshot.forEach(documentSnapshot => batch.delete(documentSnapshot.ref));
-            await batch.commit();
+              if (result.data.success) {
+                const permanentDate = new Date(result.data.permanentDeleteDate);
+                const dateStr = permanentDate.toLocaleDateString('ko-KR');
 
-            await user.delete();
-            toast.showSuccess('탈퇴 완료', '계정이 삭제되었습니다.');
-          } catch (error) {
-            reportCrashlyticsError(error);
-            logCrashlyticsMessage('MyPageScreen: Delete account failed');
-            toast.showError('탈퇴 실패', error.message);
-          }
+                toast.showSuccess(
+                  '탈퇴 완료',
+                  `계정이 ${dateStr}에 영구 삭제됩니다.\n복구를 원하시면 고객센터로 문의해주세요.`,
+                );
+
+                // User will be automatically logged out since account is disabled
+              } else {
+                toast.showError('탈퇴 실패', result.data.message || '알 수 없는 오류가 발생했습니다.');
+              }
+            } catch (error) {
+              reportCrashlyticsError(error);
+              logCrashlyticsMessage('MyPageScreen: Delete account failed');
+              toast.showError('탈퇴 실패', error.message || '계정 삭제 중 오류가 발생했습니다.');
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   return (

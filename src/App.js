@@ -9,7 +9,7 @@ import { LoadingProvider } from './context/LoadingContext';
 import { ThemeProvider } from './theme/ThemeProvider';
 import AppNavigator from './navigation/AppNavigator';
 import ErrorBoundary from './components/ErrorBoundary';
-import { requestNotificationPermission } from './services/firebaseService';
+import { requestNotificationPermission } from './services/notification/fcmService';
 import { toastConfig } from './config/toastConfig';
 
 const App = () => {

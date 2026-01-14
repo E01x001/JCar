@@ -9,7 +9,7 @@ import {
   subscribeToBuyConsultations,
   subscribeToSellConsultations,
   subscribeToCompletedConsultations,
-} from '../services/firebaseService';
+} from '../services/consultation/consultationQueryService';
 import BuyConsultationsTab from './AdminConsultation/tabs/BuyConsultationsTab';
 import SellConsultationsTab from './AdminConsultation/tabs/SellConsultationsTab';
 import CompletedConsultationsTab from './AdminConsultation/tabs/CompletedConsultationsTab';

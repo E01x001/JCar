@@ -28,5 +28,55 @@ module.exports = {
     'eqeqeq': ['warn', 'always'],
     'curly': ['warn', 'all'],
     'no-duplicate-imports': 'error',
+
+    // Service Modularity Enforcement (Task 88.5)
+    // Prevent service files from becoming too large
+    'max-lines': ['warn', {
+      max: 300,
+      skipBlankLines: true,
+      skipComments: true,
+    }],
+
+    // Limit function complexity to encourage single responsibility
+    'complexity': ['warn', { max: 15 }],
+
+    // Keep functions focused and manageable
+    'max-lines-per-function': ['warn', {
+      max: 100,
+      skipBlankLines: true,
+      skipComments: true,
+    }],
+
+    // Limit function parameters to encourage better design
+    'max-params': ['warn', { max: 5 }],
   },
+  overrides: [
+    {
+      // Relax rules for test files
+      files: ['**/__tests__/**/*.js', '**/*.test.js', '**/*.spec.js'],
+      rules: {
+        'max-lines': 'off',
+        'max-lines-per-function': 'off',
+        'complexity': 'off',
+      },
+    },
+    {
+      // Relax rules for configuration and script files
+      files: ['*.config.js', 'scripts/**/*.js'],
+      rules: {
+        'no-console': 'off',
+        'max-lines': 'off',
+      },
+    },
+    {
+      // Existing service files that need gradual refactoring
+      files: [
+        'src/services/consultation/consultationService.js',
+        'src/services/ownershipTransferService.js',
+      ],
+      rules: {
+        'max-lines': ['warn', { max: 600 }], // Temporary higher limit
+      },
+    },
+  ],
 };

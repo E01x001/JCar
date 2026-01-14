@@ -5,11 +5,14 @@ import DatePicker from 'react-native-date-picker';
 import { AuthContext } from '../context/AuthContext';
 import { getFirestore, collection, query, where, getDocs } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
-import { saveConsultationRequest, resubmitConsultation } from '../services/firebaseService';
+import { saveConsultationRequest, resubmitConsultation } from '../services/consultation/consultationService';
+import useConsultationStore from '../stores/consultationStore';
+import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 
 const ConsultationRequestScreen = ({ route }) => {
   const { user, sellerName, sellerPhone } = useContext(AuthContext);
   const navigation = useNavigation();
+  const { addOptimisticConsultation, removeOptimisticConsultation, invalidateUserConsultationsCache } = useConsultationStore();
   const [selectedDate, setSelectedDate] = useState('');
   const [time, setTime] = useState(new Date());
   const [open, setOpen] = useState(false);
@@ -131,6 +134,9 @@ const ConsultationRequestScreen = ({ route }) => {
       return;
     }
 
+    // Task 106.2: Optimistic UI - Generate temp ID for optimistic update
+    const tempId = generateTempId('temp_consultation');
+
     // Time conflict checking removed - server-side validation will handle duplicates
 
     const consultationData = {
@@ -143,23 +149,50 @@ const ConsultationRequestScreen = ({ route }) => {
       preferredTime: formattedTime,
       consultationStatus: 'pending',
       type: isSell ? 'sell' : 'buy',
+      createdAt: new Date(), // Use local time for optimistic data
     };
 
     console.log('🚀 저장할 상담 요청 데이터:', consultationData);
 
-    const success = await saveConsultationRequest(consultationData);
-    console.log('✅ 저장 성공 여부:', success);
+    // Task 106.2: Optimistic UI - Add consultation immediately
+    addOptimisticConsultation(consultationData, tempId);
 
-    if (success) {
-      Alert.alert('상담 요청 완료', '정상적으로 접수되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
-    } else {
-      Alert.alert('상담 요청 저장에 실패했습니다. 다시 시도해주세요.');
-    }
+    // Invalidate cache to show new consultation
+    invalidateUserConsultationsCache(user.uid);
+
+    // Show success and navigate immediately (optimistic)
+    Alert.alert('상담 요청 완료', '정상적으로 접수되었습니다.', [
+      {
+        text: '확인',
+        onPress: () => navigation.goBack(),
+      },
+    ]);
+
+    // Fire Firestore write in background (non-blocking)
+    executeOptimisticUpdate({
+      optimisticFn: null, // Already done above
+      serverFn: async () => {
+        const success = await saveConsultationRequest(consultationData);
+        if (!success) {
+          throw new Error('Failed to save consultation');
+        }
+        return success;
+      },
+      onSuccess: () => {
+        console.log('✅ Consultation saved successfully');
+        // Firestore listener will automatically update the store
+      },
+      onError: (error) => {
+        console.error('❌ Consultation write failed:', error);
+        // Remove optimistic consultation
+        removeOptimisticConsultation(tempId);
+        // Show error alert (user may have already navigated away)
+        Alert.alert('오류', '상담 요청 저장 중 문제가 발생했습니다. 다시 시도해주세요.');
+      },
+      revertFn: () => {
+        removeOptimisticConsultation(tempId);
+      },
+    });
   };
 
 

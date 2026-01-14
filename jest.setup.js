@@ -1,4 +1,13 @@
-// Jest setup file for React Native
+/**
+ * Jest Setup File for React Native
+ *
+ * Task #100: Enhanced testing infrastructure
+ */
+
+// React Native Testing Library matchers
+// Note: @testing-library/jest-native is deprecated
+// Built-in matchers are automatically available in @testing-library/react-native v12.4+
+// No explicit import needed
 
 // Mock Firebase modules
 jest.mock('@react-native-firebase/app', () => ({

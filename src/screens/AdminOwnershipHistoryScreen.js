@@ -22,7 +22,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { getFirestore, collection, query, orderBy, getDocs } from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService'; // Task 63.2: Migrated to v22 Modular API
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import Card from '../components/Card';
 import InputField from '../components/InputField';
 import StateScreen from '../components/StateScreen';

@@ -4,6 +4,43 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
+## Step 0: Environment Configuration
+
+### Setting up Environment Variables
+
+This project uses `react-native-config` to manage sensitive configuration and API keys securely.
+
+1. **Copy the example environment file:**
+   ```sh
+   cp .env.example .env
+   ```
+
+2. **Fill in your actual API keys in `.env`:**
+   ```sh
+   # Open .env in your text editor and replace placeholder values
+   CARZEN_API_KEY=your_actual_api_key_here
+   ```
+
+3. **Important Security Notes:**
+   - **Never commit `.env` to version control** - it's already in `.gitignore`
+   - Keep your API keys private and secure
+   - If you accidentally expose an API key, revoke it immediately and generate a new one
+   - Use `.env.example` as a template for team members
+
+4. **Required API Keys:**
+   - **CARZEN_API_KEY**: Required for vehicle information lookup
+     - Get your API key from [CarZen API Portal](https://datahub-dev.scraping.co.kr)
+     - Used in `VehicleRegistrationScreen` for vehicle data retrieval
+
+### Verifying Environment Setup
+
+After configuration, verify that your environment variables are loaded:
+```sh
+# The app will fail to fetch vehicle information if CARZEN_API_KEY is missing
+npm start
+npm run android
+```
+
 ## Step 1: Start Metro
 
 First, you will need to run **Metro**, the JavaScript build tool for React Native.

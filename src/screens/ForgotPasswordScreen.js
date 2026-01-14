@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
-import crashlytics from '@react-native-firebase/crashlytics';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { useToast } from '../hooks/useToast';
 
 const ForgotPasswordScreen = ({ navigation }) => {
@@ -53,9 +53,9 @@ const ForgotPasswordScreen = ({ navigation }) => {
         navigation.navigate('Login');
       }, 1500);
     } catch (error) {
-      // Crashlytics 에러 리포팅
-      crashlytics().recordError(error);
-      crashlytics().log(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
+      // Task 63.4: Crashlytics v22 modular API
+      reportCrashlyticsError(error);
+      logCrashlyticsMessage(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
 
       // Firebase Auth 에러 코드를 한글 메시지로 변환
       let errorMessage = '이메일 발송 중 오류가 발생했습니다.';

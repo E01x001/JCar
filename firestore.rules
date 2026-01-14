@@ -8,12 +8,17 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Helper function to check if user is active (not suspended)
+    // Helper function to check if user is active (not suspended or pending deletion)
+    // Task #76: Block access for soft-deleted users
     function isActiveUser() {
       return request.auth != null &&
              (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
-              !('status' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
-              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != 'suspended');
+              (
+                (!('status' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+                 get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != 'suspended') &&
+                (!('accountStatus' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+                 get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accountStatus != 'pending_deletion')
+              ));
     }
 
     // Users collection: Users can only read/write their own document
@@ -25,8 +30,21 @@ service cloud.firestore {
 
     // Vehicles collection: Authenticated users can read, owners/admins can manage
     match /vehicles/{vehicleId} {
-      // Authenticated users can read all vehicles
-      allow read: if request.auth != null;
+      // Public Read Access (Field-Level Security):
+      // - All authenticated users can read APPROVED vehicles
+      // - Vehicle owners can read their own vehicles (any status)
+      // - Admins can read all vehicles (any status)
+      // NOTE: Firestore doesn't support field-level filtering in rules.
+      //       Sensitive fields (sellerId, currentOwnerId, sellerPhone) should be
+      //       filtered client-side for non-owners/non-admins.
+      allow read: if request.auth != null && (
+        // Public users can only see approved vehicles
+        resource.data.status == 'approved' ||
+        // Vehicle owner can see their own vehicle (any status)
+        request.auth.uid == resource.data.get('currentOwnerId', resource.data.sellerId) ||
+        // Admins can see all vehicles
+        isAdmin()
+      );
 
       // Authenticated active users can create their own vehicles
       allow create: if request.auth != null &&
@@ -89,18 +107,24 @@ service cloud.firestore {
       // 3. Users can resubmit rejected consultations
       // 4. Ownership transfer fields (isOwnershipTransferred, transferId, dealAmount) are admin-only
       allow update: if (isAdmin() && isActiveUser()) ||
-                      // User cancellation
+                      // User cancellation (only before approval)
                       (request.auth != null &&
                        isActiveUser() &&
                        request.auth.uid == resource.data.userId &&
                        request.resource.data.consultationStatus == 'cancelled' &&
                        (resource.data.consultationStatus == 'pending' ||
-                        resource.data.consultationStatus == 'approved' ||
-                        resource.data.consultationStatus == 'meeting') &&
+                        resource.data.consultationStatus == 'confirmed' ||
+                        resource.data.consultationStatus == 'on-hold') &&
+                       // Validate serverTimestamp is used for cancelledAt
+                       request.resource.data.cancelledAt == request.time &&
+                       // Ensure core fields are not modified (only if they exist in original)
+                       request.resource.data.userId == resource.data.userId &&
+                       request.resource.data.vehicleId == resource.data.vehicleId &&
+                       request.resource.data.type == resource.data.type &&
                        // Ensure user cannot set ownership transfer fields
-                       (!('isOwnershipTransferred' in request.resource.data) || request.resource.data.isOwnershipTransferred == false) &&
-                       (!('transferId' in request.resource.data)) &&
-                       (!('dealAmount' in request.resource.data))) ||
+                       (!('isOwnershipTransferred' in request.resource.data) || request.resource.data.isOwnershipTransferred == resource.data.get('isOwnershipTransferred', false)) &&
+                       !('transferId' in request.resource.data) &&
+                       !('dealAmount' in request.resource.data)) ||
                       // User resubmission of rejected consultation
                       // Allow users to resubmit with new date/time and remove admin-only fields
                       (request.auth != null &&
@@ -184,6 +208,16 @@ service cloud.firestore {
 
       // NO ONE can update or delete audit logs (immutable for compliance)
       allow update, delete: if false;
+    }
+
+    // Consultation rate limits collection (Task 82): Tracks request rates per user
+    match /consultation_rate_limits/{userId} {
+      // Only the user themselves can read their rate limit data
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Only Cloud Functions (with admin privileges) can write rate limit data
+      // Users should not be able to modify their own rate limits
+      allow write: if false;
     }
 
     // Default deny-all policy for all other documents

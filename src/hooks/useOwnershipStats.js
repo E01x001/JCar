@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import firestore from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/firebaseService';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 
 /**
  * Hook to fetch ownership transfer statistics
