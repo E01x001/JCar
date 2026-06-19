@@ -12,6 +12,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { formatPhone } from '../utils/format';
 import { updateConsultationStatus, completeConsultation, updateAdminMemo, updateSuggestedSlots } from '../services/consultation/consultationService';
 import { useToast } from '../hooks/useToast';
+import { CONSULTATION_STATUS } from '../constants';
 import { AuthContext } from '../context/AuthContext';
 import Card from './Card';
 import Badge from './Badge';
@@ -113,7 +114,7 @@ const ConsultationCard = ({
     setOriginalConsultation(consultation);
 
     // Task 61: Optimistic UI update - immediately show 'completed' status
-    setOptimisticStatus('completed');
+    setOptimisticStatus(CONSULTATION_STATUS.COMPLETED);
     setIsModalVisible(false);
 
     // Show optimistic success feedback
@@ -171,7 +172,7 @@ const ConsultationCard = ({
   const handleRejectConsultation = async (rejectionReason) => {
     setIsUpdating(true);
     try {
-      await updateConsultationStatus(id, 'rejected', null, '', rejectionReason);
+      await updateConsultationStatus(id, CONSULTATION_STATUS.REJECTED, null, '', rejectionReason);
       toast.showSuccess('상담이 거절되었습니다.');
       setIsRejectModalVisible(false);
 
@@ -274,7 +275,7 @@ const ConsultationCard = ({
       );
     }
 
-    if (displayStatus === 'pending') {
+    if (displayStatus === CONSULTATION_STATUS.PENDING) {
       return (
         <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
           <Button
@@ -287,7 +288,7 @@ const ConsultationCard = ({
           <Button
             variant="secondary"
             title="보류"
-            onPress={() => handleStatusUpdate('on-hold')}
+            onPress={() => handleStatusUpdate(CONSULTATION_STATUS.ON_HOLD)}
             disabled={isUpdating}
             style={{ flex: 1, marginHorizontal: theme.spacing.xs }}
           />
@@ -302,7 +303,7 @@ const ConsultationCard = ({
       );
     }
 
-    if (displayStatus === 'on-hold') {
+    if (displayStatus === CONSULTATION_STATUS.ON_HOLD) {
       return (
         <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
           <Button

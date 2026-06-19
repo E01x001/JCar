@@ -13,16 +13,26 @@
  * Represents the lifecycle of a consultation request:
  * - PENDING: Initial state after user submits consultation request
  * - APPROVED: Admin has approved the consultation and confirmed the time
+ * - CONFIRMED: Consultation time is confirmed (admin workflow)
+ * - ON_HOLD: Temporarily paused by admin, awaiting follow-up
  * - REJECTED: Admin has rejected the consultation request
  * - COMPLETED: Consultation has been completed and deal was finalized
  * - CANCELLED: User or admin cancelled the consultation
+ * - ARCHIVED: Completed consultation with ownership transfer (Task 50)
+ *
+ * NOTE: This is the single source of truth for status values. Badge.js renders
+ * its own color/label mapping (it is a generic component reused outside
+ * consultations), so it intentionally does not consume the maps below.
  */
 export const CONSULTATION_STATUS = {
   PENDING: 'pending',
   APPROVED: 'approved',
+  CONFIRMED: 'confirmed',
+  ON_HOLD: 'on-hold',
   REJECTED: 'rejected',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  ARCHIVED: 'archived',
 };
 
 /**
@@ -43,9 +53,12 @@ export const CONSULTATION_TYPE = {
 export const CONSULTATION_STATUS_LABELS = {
   [CONSULTATION_STATUS.PENDING]: '대기중',
   [CONSULTATION_STATUS.APPROVED]: '승인됨',
+  [CONSULTATION_STATUS.CONFIRMED]: '확정됨',
+  [CONSULTATION_STATUS.ON_HOLD]: '보류',
   [CONSULTATION_STATUS.REJECTED]: '거절됨',
   [CONSULTATION_STATUS.COMPLETED]: '완료됨',
   [CONSULTATION_STATUS.CANCELLED]: '취소됨',
+  [CONSULTATION_STATUS.ARCHIVED]: '보관됨',
 };
 
 /**
@@ -62,24 +75,33 @@ export const CONSULTATION_TYPE_LABELS = {
 export const CONSULTATION_STATUS_COLORS = {
   [CONSULTATION_STATUS.PENDING]: '#FFA500', // warning.main
   [CONSULTATION_STATUS.APPROVED]: '#4CAF50', // success.main
+  [CONSULTATION_STATUS.CONFIRMED]: '#4CAF50', // success.main (same family as approved)
+  [CONSULTATION_STATUS.ON_HOLD]: '#FFA000', // amber (matches theme status on-hold)
   [CONSULTATION_STATUS.REJECTED]: '#F44336', // error.main
   [CONSULTATION_STATUS.COMPLETED]: '#2196F3', // info.main
   [CONSULTATION_STATUS.CANCELLED]: '#9E9E9E', // grey
+  [CONSULTATION_STATUS.ARCHIVED]: '#78909C', // blue-grey
 };
 
 /**
  * Valid Status Transitions
  *
- * Defines allowed status changes to prevent invalid state transitions:
- * - From PENDING: can go to APPROVED, REJECTED, or CANCELLED
- * - From APPROVED: can go to COMPLETED or CANCELLED
- * - From REJECTED: no further transitions (terminal state)
- * - From COMPLETED: no further transitions (terminal state)
- * - From CANCELLED: no further transitions (terminal state)
+ * Descriptive map of the consultation lifecycle (currently documentation only —
+ * isValidStatusTransition is exported but not yet enforced at runtime). Reflects
+ * the transitions observed in the codebase:
+ * - PENDING → APPROVED / CONFIRMED / ON_HOLD / REJECTED / CANCELLED
+ * - APPROVED → COMPLETED / CANCELLED
+ * - CONFIRMED → COMPLETED / ON_HOLD / REJECTED / CANCELLED
+ * - ON_HOLD → APPROVED / CONFIRMED / REJECTED / CANCELLED
+ * - REJECTED → PENDING (user resubmits a rejected request)
+ * - COMPLETED → ARCHIVED (completed deal with ownership transfer, Task 50)
+ * - CANCELLED / ARCHIVED: terminal
  */
 export const VALID_STATUS_TRANSITIONS = {
   [CONSULTATION_STATUS.PENDING]: [
     CONSULTATION_STATUS.APPROVED,
+    CONSULTATION_STATUS.CONFIRMED,
+    CONSULTATION_STATUS.ON_HOLD,
     CONSULTATION_STATUS.REJECTED,
     CONSULTATION_STATUS.CANCELLED,
   ],
@@ -87,9 +109,26 @@ export const VALID_STATUS_TRANSITIONS = {
     CONSULTATION_STATUS.COMPLETED,
     CONSULTATION_STATUS.CANCELLED,
   ],
-  [CONSULTATION_STATUS.REJECTED]: [],
-  [CONSULTATION_STATUS.COMPLETED]: [],
+  [CONSULTATION_STATUS.CONFIRMED]: [
+    CONSULTATION_STATUS.COMPLETED,
+    CONSULTATION_STATUS.ON_HOLD,
+    CONSULTATION_STATUS.REJECTED,
+    CONSULTATION_STATUS.CANCELLED,
+  ],
+  [CONSULTATION_STATUS.ON_HOLD]: [
+    CONSULTATION_STATUS.APPROVED,
+    CONSULTATION_STATUS.CONFIRMED,
+    CONSULTATION_STATUS.REJECTED,
+    CONSULTATION_STATUS.CANCELLED,
+  ],
+  [CONSULTATION_STATUS.REJECTED]: [
+    CONSULTATION_STATUS.PENDING,
+  ],
+  [CONSULTATION_STATUS.COMPLETED]: [
+    CONSULTATION_STATUS.ARCHIVED,
+  ],
   [CONSULTATION_STATUS.CANCELLED]: [],
+  [CONSULTATION_STATUS.ARCHIVED]: [],
 };
 
 /**

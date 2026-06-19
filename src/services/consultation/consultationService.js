@@ -435,10 +435,11 @@ export const cancelConsultation = async (consultationId) => {
     const currentStatus = currentData.consultationStatus;
 
     // Users may cancel while the request is still in an early, non-finalized state.
-    // NOTE: the live status model has more states (confirmed, on-hold, archived) than
-    // CONSULTATION_STATUS currently enumerates — see Badge.js / FIRESTORE_SCHEMA.md.
-    // These literals are intentional until the enum is consolidated (tracked separately).
-    const cancellableStatuses = [CONSULTATION_STATUS.PENDING, 'confirmed', 'on-hold'];
+    const cancellableStatuses = [
+      CONSULTATION_STATUS.PENDING,
+      CONSULTATION_STATUS.CONFIRMED,
+      CONSULTATION_STATUS.ON_HOLD,
+    ];
 
     if (!cancellableStatuses.includes(currentStatus)) {
       // Return appropriate message based on current status

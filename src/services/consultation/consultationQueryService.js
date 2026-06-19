@@ -21,6 +21,7 @@ import {
   limit,
 } from '@react-native-firebase/firestore';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/notificationService';
+import { CONSULTATION_STATUS } from '../../constants';
 
 /**
  * Subscribe to buy consultations in real-time
@@ -35,7 +36,12 @@ export const subscribeToBuyConsultations = (callback) => {
     const q = query(
       consultationsRef,
       where('type', '==', 'buy'),
-      where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected']),
+      where('consultationStatus', 'in', [
+        CONSULTATION_STATUS.PENDING,
+        CONSULTATION_STATUS.CONFIRMED,
+        CONSULTATION_STATUS.ON_HOLD,
+        CONSULTATION_STATUS.REJECTED,
+      ]),
       orderBy('createdAt', 'desc')
     );
 
@@ -76,7 +82,12 @@ export const subscribeToSellConsultations = (callback) => {
     const q = query(
       consultationsRef,
       where('type', '==', 'sell'),
-      where('consultationStatus', 'in', ['pending', 'confirmed', 'on-hold', 'rejected']),
+      where('consultationStatus', 'in', [
+        CONSULTATION_STATUS.PENDING,
+        CONSULTATION_STATUS.CONFIRMED,
+        CONSULTATION_STATUS.ON_HOLD,
+        CONSULTATION_STATUS.REJECTED,
+      ]),
       orderBy('createdAt', 'desc')
     );
 
@@ -130,7 +141,7 @@ export const subscribeToCompletedConsultations = (callback) => {
     const consultationsRef = collection(db, 'consultation_requests');
     const q = query(
       consultationsRef,
-      where('consultationStatus', 'in', ['completed', 'archived'])
+      where('consultationStatus', 'in', [CONSULTATION_STATUS.COMPLETED, CONSULTATION_STATUS.ARCHIVED])
       // No orderBy here - client-side sorting handles chronological order
     );
 
@@ -194,7 +205,7 @@ export const fetchCompletedConsultationsPaginated = async ({
     const consultationsRef = collection(db, 'consultation_requests');
 
     const constraints = [
-      where('consultationStatus', 'in', ['completed', 'archived']),
+      where('consultationStatus', 'in', [CONSULTATION_STATUS.COMPLETED, CONSULTATION_STATUS.ARCHIVED]),
     ];
 
     // Task 86: Server-side type filtering
