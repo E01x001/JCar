@@ -13,6 +13,7 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // 이메일 형식 검증 함수
   const validateEmail = (emailInput) => {
@@ -21,6 +22,11 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleLogin = async () => {
+    // 중복 제출 방지
+    if (loading) {
+      return;
+    }
+
     // 빈 값 체크
     if (!email) {
       setEmailError('이메일 주소를 입력해주세요.');
@@ -40,12 +46,15 @@ const LoginScreen = ({ navigation }) => {
 
     // 에러 초기화
     setEmailError('');
+    setLoading(true);
 
     try {
       // Task 62.4: Use modular signInWithEmailAndPassword
       const auth = getAuth();
       await signInWithEmailAndPassword(auth, email, password);
       toast.showSuccess('로그인 성공', '환영합니다!');
+      // On success the auth-state listener swaps the navigator and unmounts this
+      // screen, so we intentionally leave `loading` true (no setState-after-unmount).
     } catch (error) {
       // Task 63.4: Crashlytics v22 modular API
       reportCrashlyticsError(error);
@@ -78,6 +87,7 @@ const LoginScreen = ({ navigation }) => {
       }
 
       toast.showError('로그인 실패', errorMessage);
+      setLoading(false);
     }
   };
 
@@ -110,6 +120,8 @@ const LoginScreen = ({ navigation }) => {
           variant="primary"
           title="로그인"
           onPress={handleLogin}
+          loading={loading}
+          disabled={loading}
           style={{ marginTop: theme.spacing.sm }}
         />
 

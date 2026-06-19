@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleShee
 import { Picker } from '@react-native-picker/picker';
 import { getFirestore, collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import { getAuth } from '@react-native-firebase/auth';
+import functions from '@react-native-firebase/functions';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { VEHICLE_STATUS, VEHICLE_TYPES, isValidVehicleType } from '../constants';
@@ -24,6 +25,7 @@ const VehicleRegistrationScreen = () => {
   const [imageInfo, setImageInfo] = useState(null); // Store compressed image info
   const [uploadProgress, setUploadProgress] = useState(0); // Track upload progress (0-100)
   const [isUploading, setIsUploading] = useState(false); // Upload state flag
+  const [saving, setSaving] = useState(false); // Save in-progress flag (double-submit guard)
 
   const isValidRegiNumber = (number) => {
     const regex = /^([가-힣]{0,2})?(\d{2,3})([가-힣A-Z외임])\s?(\d{3,4})$/;
@@ -115,32 +117,26 @@ const VehicleRegistrationScreen = () => {
     setLoading(true);
 
     try {
-      // Task #71: Reverted to hardcoded API key
-      // Note: This API key is exposed and should be rotated (Task #72)
-      // TODO: Move to Firebase Functions for proper security
-      const response = await fetch('https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry', {
-        method: 'POST',
-        headers: {
-          'Authorization': '7c112786a95c41dd9d3f24895f47e6cbc62c6b48',
-          'Content-Type': 'application/json;charset=UTF-8',
-        },
-        body: JSON.stringify({ REGINUMBER: regiNumber, OWNERNAME: ownerName }),
-      });
+      // Task #72: Use Firebase Function proxy for secure API key storage
+      // Function deployed in asia-northeast3 (Seoul) for lower latency
+      const getVehicleInfo = functions('asia-northeast3').httpsCallable('getVehicleInfo');
+      const result = await getVehicleInfo({ regiNumber, ownerName });
 
-      const jsonResponse = await response.json();
-      console.log('API 응답:', jsonResponse);
+      console.log('API 응답:', result.data);
 
-      if (jsonResponse.errCode !== '0000' || jsonResponse.result !== 'SUCCESS' || jsonResponse.data.STATUS !== '200') {
-        toast.showError('조회 실패', jsonResponse.errMsg || '차량 정보를 찾을 수 없습니다.');
+      if (!result.data.success) {
+        toast.showError('조회 실패', '차량 정보를 찾을 수 없습니다.');
         return;
       }
 
-      setVehicleData(jsonResponse.data);
+      setVehicleData(result.data.data);
       toast.showInfo('조회 성공', '차량 정보를 성공적으로 가져왔습니다.');
 
     } catch (error) {
-      console.error('API 요청 실패:', error);
-      toast.showError('오류', '차량 정보를 조회하는 중 오류가 발생했습니다.');
+      console.error('차량 정보 조회 실패:', error);
+      // Firebase Function error handling
+      const errorMessage = error.message || '차량 정보를 조회하는 중 오류가 발생했습니다.';
+      toast.showError('오류', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -157,6 +153,11 @@ const VehicleRegistrationScreen = () => {
    * 5. Handle write success/failure in background
    */
   const saveVehicleData = async () => {
+    // 중복 제출 방지
+    if (saving) {
+      return;
+    }
+
     if (!vehicleData) {
       toast.showWarning('오류', '조회된 차량 정보가 없습니다.');
       return;
@@ -170,6 +171,7 @@ const VehicleRegistrationScreen = () => {
     // Generate temporary ID for optimistic update
     const tempId = generateTempId('temp_vehicle');
 
+    setSaving(true);
     try {
       // Task 62.4: Use modular currentUser
       const auth = getAuth();
@@ -197,6 +199,7 @@ const VehicleRegistrationScreen = () => {
           console.error('❌ Image upload failed:', uploadError);
           toast.showError('오류', '이미지 업로드 중 오류가 발생했습니다.');
           setIsUploading(false);
+          setSaving(false);
           return; // Stop if upload fails
         } finally {
           setIsUploading(false);
@@ -285,12 +288,16 @@ const VehicleRegistrationScreen = () => {
         },
       });
 
+      // Synchronous setup + background write scheduled; safe to re-enable.
+      setSaving(false);
+
     } catch (error) {
       // This catches errors from image upload or data preparation
       console.error('저장 준비 중 오류:', error);
       toast.showError('오류', '차량 정보를 저장하는 중 문제가 발생했습니다.');
       // Remove optimistic vehicle if we added it
       removeOptimisticVehicle(tempId);
+      setSaving(false);
     }
   };
 
@@ -382,7 +389,12 @@ const VehicleRegistrationScreen = () => {
             <Text>🔹 연비: {vehicleData.FUELECO} km/L</Text>
 
             <View style={styles.buttonContainer}>
-              <Button title="차량 정보 저장" onPress={saveVehicleData} color="#2B4593" />
+              <Button
+                title={saving ? '저장 중...' : '차량 정보 저장'}
+                onPress={saveVehicleData}
+                disabled={saving || isUploading}
+                color="#2B4593"
+              />
             </View>
           </View>
         )}

@@ -15,10 +15,16 @@ const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const isValidPassword = (password) => /^(?=.*[a-z])(?=.*\d).{8,}$/.test(password);
 
   const handleRegister = async () => {
+    // 중복 제출 방지
+    if (loading) {
+      return;
+    }
+
     const newErrors = {};
 
     if (!name) {newErrors.name = '이름을 입력해주세요.';}
@@ -41,6 +47,7 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     setErrors({});
+    setLoading(true);
 
     try {
       // RNFirebase Functions 호출 방식 (핵심 수정)
@@ -60,6 +67,8 @@ const RegisterScreen = ({ navigation }) => {
         ? `${error.code}: ${error.message}`
         : error?.message || '알 수 없는 오류가 발생했습니다.';
       toast.showError('회원가입 실패', errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -137,6 +146,8 @@ const RegisterScreen = ({ navigation }) => {
           variant="primary"
           title="회원가입"
           onPress={handleRegister}
+          loading={loading}
+          disabled={loading}
           style={{ marginTop: theme.spacing.md }}
         />
       </ScrollView>

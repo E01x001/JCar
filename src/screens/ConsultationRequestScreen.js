@@ -16,6 +16,7 @@ const ConsultationRequestScreen = ({ route }) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [time, setTime] = useState(new Date());
   const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { vehicle, isSell, consultationId, existingDate, existingTime } = route.params;
 
   // Detect resubmission mode
@@ -81,6 +82,11 @@ const ConsultationRequestScreen = ({ route }) => {
   // Server will reject requests with duplicate vehicleId/date/time combinations
 
   const handleSubmit = async () => {
+    // 중복 제출 방지
+    if (submitting) {
+      return;
+    }
+
     console.log(isResubmitMode ? '🟡 상담 재신청 버튼 클릭됨' : '🟡 상담 요청 버튼 클릭됨');
 
     if (!user) {
@@ -106,6 +112,8 @@ const ConsultationRequestScreen = ({ route }) => {
     console.log('📅 선택된 날짜:', formattedDate);
     console.log('⏰ 선택된 시간:', formattedTime);
 
+    setSubmitting(true);
+
     // Handle resubmission mode
     if (isResubmitMode) {
       try {
@@ -121,6 +129,8 @@ const ConsultationRequestScreen = ({ route }) => {
       } catch (error) {
         console.error('❌ 재신청 실패:', error);
         Alert.alert('재신청 실패', '상담 재신청 중 오류가 발생했습니다. 다시 시도해주세요.');
+      } finally {
+        setSubmitting(false);
       }
       return;
     }
@@ -131,6 +141,7 @@ const ConsultationRequestScreen = ({ route }) => {
 
     if (isDuplicate) {
       Alert.alert('중복 요청', '이미 이 차량에 대한 상담을 신청하셨습니다.');
+      setSubmitting(false);
       return;
     }
 
@@ -139,6 +150,7 @@ const ConsultationRequestScreen = ({ route }) => {
     const rateLimit = await checkConsultationRateLimit();
     if (!rateLimit.allowed) {
       Alert.alert('요청 제한', rateLimit.message || '잠시 후 다시 시도해주세요.');
+      setSubmitting(false);
       return;
     }
 
@@ -201,6 +213,9 @@ const ConsultationRequestScreen = ({ route }) => {
         removeOptimisticConsultation(tempId);
       },
     });
+
+    // Optimistic entry added and background write scheduled; safe to re-enable.
+    setSubmitting(false);
   };
 
 
@@ -245,9 +260,14 @@ const ConsultationRequestScreen = ({ route }) => {
         onCancel={() => setOpen(false)}
       />
 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+      <TouchableOpacity
+        style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+        onPress={handleSubmit}
+        disabled={submitting}
+        activeOpacity={0.7}
+      >
         <Text style={styles.submitButtonText}>
-          {isResubmitMode ? '상담 재신청' : '상담 요청'}
+          {submitting ? '처리 중...' : isResubmitMode ? '상담 재신청' : '상담 요청'}
         </Text>
       </TouchableOpacity>
     </View>
@@ -260,6 +280,7 @@ const styles = StyleSheet.create({
   selectedText: { fontSize: 16, marginVertical: 10 },
   dateButton: { padding: 10, backgroundColor: '#eee', marginTop: 10, alignItems: 'center' },
   submitButton: { backgroundColor: '#28a745', padding: 12, marginTop: 20 },
+  submitButtonDisabled: { backgroundColor: '#94d3a2' },
   submitButtonText: { color: '#fff', fontSize: 16, textAlign: 'center' },
 });
 
