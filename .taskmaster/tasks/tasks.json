@@ -5051,18 +5051,19 @@
         "testStrategy": "Simulate a Firestore write failure (e.g., temporary rules denial or forced error) and confirm no Auth user remains afterward. Happy path still creates both Auth user and users/{uid}. Verify RegisterScreen error toast on failure.",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [],
         "complexity": null,
         "recommendedSubtasks": 0,
-        "expansionPrompt": ""
+        "expansionPrompt": "",
+        "updatedAt": "2026-06-19T16:30:30.942Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-14T05:42:54.141Z",
-      "taskCount": 120,
-      "completedCount": 84,
+      "lastModified": "2026-06-19T16:30:30.944Z",
+      "taskCount": 124,
+      "completedCount": 85,
       "tags": [
         "master"
       ]
