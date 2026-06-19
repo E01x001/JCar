@@ -106,6 +106,12 @@ const MyPageScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
+      // Task 72: Cleanup Firestore listeners before logout to prevent permission errors
+      unsubscribeFromVehicles();
+      unsubscribeFromConsultations();
+      useVehicleStore.getState().reset();
+      useConsultationStore.getState().reset();
+
       // Task 62.4: Use modular signOut
       const auth = getAuth();
       await signOut(auth);

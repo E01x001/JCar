@@ -16,6 +16,8 @@ import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
 import OwnedVehiclesList from '../components/OwnedVehiclesList';
 import { migrateConsultationStatusField } from '../scripts/migrateConsultationStatus';
+import useVehicleStore from '../stores/vehicleStore';
+import useConsultationStore from '../stores/consultationStore';
 
 const AdminPageScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -61,6 +63,12 @@ const AdminPageScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
+      // Task 72: Cleanup Firestore listeners before logout to prevent permission errors
+      useVehicleStore.getState().unsubscribeFromVehicles();
+      useVehicleStore.getState().reset();
+      useConsultationStore.getState().unsubscribeFromConsultations();
+      useConsultationStore.getState().reset();
+
       // Task 62.4: Use modular signOut
       const auth = getAuth();
       await signOut(auth);
