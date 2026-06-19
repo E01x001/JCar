@@ -5009,11 +5009,12 @@
         "testStrategy": "Verify Badge, ConsultationCard, and query services render/filter all 8 statuses correctly. Manually exercise admin status transitions (pending->confirmed/on-hold/approved/rejected->completed) and user cancel (allowed only for early states). Run npm run lint and the consultation-related Jest tests.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [],
         "complexity": null,
         "recommendedSubtasks": 0,
-        "expansionPrompt": ""
+        "expansionPrompt": "",
+        "updatedAt": "2026-06-19T16:45:12.897Z"
       },
       {
         "id": "122",
@@ -5061,9 +5062,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-19T16:30:30.944Z",
+      "lastModified": "2026-06-19T16:45:12.901Z",
       "taskCount": 124,
-      "completedCount": 85,
+      "completedCount": 86,
       "tags": [
         "master"
       ]
