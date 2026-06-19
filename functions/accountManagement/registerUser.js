@@ -65,14 +65,31 @@ exports.registerUser = onCall(async (request) => {
 
   const uid = newUser.uid;
 
-  // 3) Create the Firestore users/{uid} document (email included)
-  await db.collection("users").doc(uid).set({
-    email,
-    name,
-    phoneNumber,
-    role: "user",
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  // 3) Create the Firestore users/{uid} document (email included).
+  // Auth and Firestore are separate systems with no shared transaction, so if
+  // the write fails we compensate by deleting the just-created Auth account to
+  // avoid an orphan that can sign in but never gets a profile document.
+  try {
+    await db.collection("users").doc(uid).set({
+      email,
+      name,
+      phoneNumber,
+      role: "user",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (e) {
+    try {
+      await auth.deleteUser(uid);
+    } catch (rollbackError) {
+      // Surface the rollback failure for diagnosis; the original error is
+      // still thrown below so the client sees a registration failure.
+      console.error("registerUser rollback (deleteUser) failed:", rollbackError);
+    }
+    throw new HttpsError(
+        "internal",
+        "회원 정보 저장에 실패했습니다. 다시 시도해주세요.",
+    );
+  }
 
   return {uid};
 });
