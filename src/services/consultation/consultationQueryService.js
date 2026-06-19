@@ -22,6 +22,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/notificationService';
 import { CONSULTATION_STATUS } from '../../constants';
+import { logger } from '../../utils/logger';
 
 /**
  * Subscribe to buy consultations in real-time
@@ -53,7 +54,7 @@ export const subscribeToBuyConsultations = (callback) => {
         callback(consultations);
       },
       (error) => {
-        console.error('구매상담 구독 오류:', error);
+        logger.error('구매상담 구독 오류:', error);
         reportCrashlyticsError(error);
         logCrashlyticsMessage('subscribeToBuyConsultations failed');
         callback([]);
@@ -62,7 +63,7 @@ export const subscribeToBuyConsultations = (callback) => {
 
     return unsubscribe;
   } catch (error) {
-    console.error('구매상담 구독 설정 오류:', error);
+    logger.error('구매상담 구독 설정 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('subscribeToBuyConsultations setup failed');
     return () => {};
@@ -101,7 +102,7 @@ export const subscribeToSellConsultations = (callback) => {
         callback(consultations);
       },
       (error) => {
-        console.error('판매상담 구독 오류:', error);
+        logger.error('판매상담 구독 오류:', error);
         reportCrashlyticsError(error);
         logCrashlyticsMessage('subscribeToSellConsultations failed');
         callback([]);
@@ -110,7 +111,7 @@ export const subscribeToSellConsultations = (callback) => {
 
     return unsubscribe;
   } catch (error) {
-    console.error('판매상담 구독 설정 오류:', error);
+    logger.error('판매상담 구독 설정 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('subscribeToSellConsultations setup failed');
     return () => {};
@@ -166,7 +167,7 @@ export const subscribeToCompletedConsultations = (callback) => {
         callback(consultations);
       },
       (error) => {
-        console.error('거래완료 상담 구독 오류:', error);
+        logger.error('거래완료 상담 구독 오류:', error);
         reportCrashlyticsError(error);
         logCrashlyticsMessage('subscribeToCompletedConsultations failed');
         callback([]);
@@ -175,7 +176,7 @@ export const subscribeToCompletedConsultations = (callback) => {
 
     return unsubscribe;
   } catch (error) {
-    console.error('거래완료 상담 구독 설정 오류:', error);
+    logger.error('거래완료 상담 구독 설정 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('subscribeToCompletedConsultations setup failed');
     return () => {};
@@ -264,7 +265,7 @@ export const fetchCompletedConsultationsPaginated = async ({
       hasMore,
     };
   } catch (error) {
-    console.error('거래완료 상담 페이지네이션 조회 오류:', error);
+    logger.error('거래완료 상담 페이지네이션 조회 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('fetchCompletedConsultationsPaginated failed');
     return {
@@ -299,7 +300,7 @@ export const getAdminOwnedVehicles = async (statusFilter = null) => {
 
     return { success: true, vehicles };
   } catch (error) {
-    console.error('관리자 소유 차량 조회 오류:', error);
+    logger.error('관리자 소유 차량 조회 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('getAdminOwnedVehicles failed');
     return { success: false, error, vehicles: [] };

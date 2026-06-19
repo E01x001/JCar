@@ -26,6 +26,7 @@ import {
 import functions from '@react-native-firebase/functions';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/notificationService';
 import { CONSULTATION_STATUS } from '../../constants';
+import { logger } from '../../utils/logger';
 
 /**
  * Check the consultation request rate limit for the current user.
@@ -44,7 +45,7 @@ export const checkConsultationRateLimit = async () => {
     const result = await checkRateLimit();
     return result.data;
   } catch (error) {
-    console.error('상담 요청 rate limit 확인 오류:', error);
+    logger.error('상담 요청 rate limit 확인 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('checkConsultationRateLimit failed');
     return {
@@ -87,7 +88,7 @@ export const saveConsultationRequest = async (data) => {
     await addDoc(consultationsRef, validData);
     return { success: true };
   } catch (error) {
-    console.error('상담 요청 저장 오류:', error);
+    logger.error('상담 요청 저장 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('saveConsultationRequest failed');
     // UI feedback is handled by the caller (optimistic onError) to avoid double alerts.
@@ -106,7 +107,7 @@ export const deleteConsultationAdmin = async (consultationId) => {
     await callable({ consultationId });
     Alert.alert('알림', '상담이 삭제되었습니다.');
   } catch (error) {
-    console.error('상담 삭제 실패:', error);
+    logger.error('상담 삭제 실패:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('deleteConsultationAdmin failed');
     Alert.alert('오류', error.message || '상담 삭제 중 오류가 발생했습니다.');
@@ -155,7 +156,7 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
 
     return { success: true };
   } catch (error) {
-    console.error('상담 상태 업데이트 오류:', error);
+    logger.error('상담 상태 업데이트 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('updateConsultationStatus failed');
     throw error; // Re-throw error for caller to handle
@@ -179,7 +180,7 @@ export const updateAdminMemo = async (consultationId, adminMemo) => {
 
     return { success: true };
   } catch (error) {
-    console.error('관리자 메모 업데이트 오류:', error);
+    logger.error('관리자 메모 업데이트 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('updateAdminMemo failed');
     throw error; // Re-throw error for caller to handle
@@ -209,7 +210,7 @@ export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
 
     return { success: true };
   } catch (error) {
-    console.error('대체 시간 제안 업데이트 오류:', error);
+    logger.error('대체 시간 제안 업데이트 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('updateSuggestedSlots failed');
     throw error; // Re-throw for caller to handle
@@ -324,7 +325,7 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
 
     return result;
   } catch (error) {
-    console.error('거래완료 처리 오류:', error);
+    logger.error('거래완료 처리 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('completeConsultation failed');
     throw error; // Re-throw for caller to handle
@@ -400,7 +401,7 @@ export const completeConsultationDeal = async ({
     Alert.alert('알림', '거래가 완료되었습니다.');
     return result;
   } catch (error) {
-    console.error('거래완료 처리 오류:', error);
+    logger.error('거래완료 처리 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('completeConsultationDeal failed');
     Alert.alert('오류', error.message || '거래완료 처리에 실패했습니다.');
@@ -457,7 +458,7 @@ export const cancelConsultation = async (consultationId) => {
         errorMessage = `현재 상태(${currentStatus})에서는 취소할 수 없습니다.`;
       }
 
-      console.log(`⚠️ 취소 불가 - 상태: ${currentStatus}`);
+      logger.debug(`⚠️ 취소 불가 - 상태: ${currentStatus}`);
       return {
         success: false,
         error: errorMessage,
@@ -470,10 +471,10 @@ export const cancelConsultation = async (consultationId) => {
       cancelledAt: serverTimestamp(),
     });
 
-    console.log('✅ 상담 취소 성공');
+    logger.debug('✅ 상담 취소 성공');
     return { success: true };
   } catch (error) {
-    console.error('❌ 상담 취소 오류:', error);
+    logger.error('❌ 상담 취소 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('cancelConsultation failed');
 
@@ -507,7 +508,7 @@ export const resubmitConsultation = async (consultationId, preferredDate, prefer
 
     return { success: true };
   } catch (error) {
-    console.error('상담 재신청 오류:', error);
+    logger.error('상담 재신청 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('resubmitConsultation failed');
     throw error; // Re-throw error for caller to handle
@@ -540,7 +541,7 @@ export const createAdminOwnedVehicle = async (vehicleData) => {
     const docRef = await addDoc(ownedVehiclesRef, validData);
     return { success: true, id: docRef.id };
   } catch (error) {
-    console.error('관리자 소유 차량 생성 오류:', error);
+    logger.error('관리자 소유 차량 생성 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('createAdminOwnedVehicle failed');
     Alert.alert('오류', '차량 등록에 실패했습니다.');
@@ -562,7 +563,7 @@ export const updateAdminOwnedVehicle = async (vehicleId, updateData) => {
 
     return { success: true };
   } catch (error) {
-    console.error('관리자 소유 차량 업데이트 오류:', error);
+    logger.error('관리자 소유 차량 업데이트 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('updateAdminOwnedVehicle failed');
     Alert.alert('오류', '차량 정보 업데이트에 실패했습니다.');
