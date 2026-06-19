@@ -53,8 +53,6 @@ const LoginScreen = ({ navigation }) => {
       const auth = getAuth();
       await signInWithEmailAndPassword(auth, email, password);
       toast.showSuccess('로그인 성공', '환영합니다!');
-      // On success the auth-state listener swaps the navigator and unmounts this
-      // screen, so we intentionally leave `loading` true (no setState-after-unmount).
     } catch (error) {
       // Task 63.4: Crashlytics v22 modular API
       reportCrashlyticsError(error);
@@ -87,6 +85,10 @@ const LoginScreen = ({ navigation }) => {
       }
 
       toast.showError('로그인 실패', errorMessage);
+    } finally {
+      // Always re-enable: a successful sign-in may still keep this screen
+      // mounted (e.g. suspended account is signed back out, or no users/{uid}
+      // doc exists), which would otherwise leave the button permanently disabled.
       setLoading(false);
     }
   };
