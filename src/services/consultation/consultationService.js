@@ -16,6 +16,7 @@ import {
   getFirestore,
   collection,
   doc,
+  getDoc,
   addDoc,
   updateDoc,
   serverTimestamp,
@@ -24,26 +25,46 @@ import {
 } from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/notificationService';
+import { CONSULTATION_STATUS } from '../../constants';
 
 /**
- * Save a consultation request
+ * Check the consultation request rate limit for the current user.
+ *
+ * Calls the server-side sliding-window limiter (Task 82). A successful
+ * (allowed) check CONSUMES one slot, so call this exactly once per submission
+ * attempt — and call it BEFORE showing optimistic success, so the user is not
+ * told "접수 완료" only to be rejected afterwards.
+ *
+ * Fails closed: if the limit cannot be verified, the request is blocked.
+ * @returns {Promise<{allowed: boolean, message?: string, remainingRequests?: number}>}
+ */
+export const checkConsultationRateLimit = async () => {
+  try {
+    const checkRateLimit = functions().httpsCallable('checkConsultationRateLimit');
+    const result = await checkRateLimit();
+    return result.data;
+  } catch (error) {
+    console.error('상담 요청 rate limit 확인 오류:', error);
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('checkConsultationRateLimit failed');
+    return {
+      allowed: false,
+      message: '요청 한도를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.',
+    };
+  }
+};
+
+/**
+ * Save a consultation request.
+ *
+ * Pure write: the rate limit must be checked separately via
+ * {@link checkConsultationRateLimit} before calling this. Returns a result
+ * object; the caller is responsible for surfacing success/error to the user.
  * @param {Object} data - Consultation request data
  * @returns {Promise<{success: boolean, error?: Error}>}
  */
 export const saveConsultationRequest = async (data) => {
   try {
-    // Task 82: Check rate limit before saving consultation request
-    const checkRateLimit = functions().httpsCallable('checkConsultationRateLimit');
-    const rateLimitResult = await checkRateLimit();
-
-    if (!rateLimitResult.data.allowed) {
-      Alert.alert('요청 제한', rateLimitResult.data.message);
-      return { success: false, error: new Error('Rate limit exceeded') };
-    }
-
-    // Log remaining requests for debugging
-    console.log(`📊 남은 상담 신청 가능 횟수: ${rateLimitResult.data.remainingRequests}`);
-
     const validData = {
       userId: data.userId || null,
       userName: data.userName || '익명',
@@ -69,7 +90,7 @@ export const saveConsultationRequest = async (data) => {
     console.error('상담 요청 저장 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('saveConsultationRequest failed');
-    Alert.alert('오류', '상담 요청 저장에 실패했습니다.');
+    // UI feedback is handled by the caller (optimistic onError) to avoid double alerts.
     return { success: false, error };
   }
 };
@@ -401,7 +422,6 @@ export const cancelConsultation = async (consultationId) => {
     const consultationRef = doc(db, 'consultation_requests', consultationId);
 
     // Read current document state to validate cancellability
-    const { getDoc } = await import('@react-native-firebase/firestore');
     const docSnapshot = await getDoc(consultationRef);
 
     if (!docSnapshot.exists()) {
@@ -414,20 +434,23 @@ export const cancelConsultation = async (consultationId) => {
     const currentData = docSnapshot.data();
     const currentStatus = currentData.consultationStatus;
 
-    // Validate consultation status
-    const cancellableStatuses = ['pending', 'confirmed', 'on-hold'];
+    // Users may cancel while the request is still in an early, non-finalized state.
+    // NOTE: the live status model has more states (confirmed, on-hold, archived) than
+    // CONSULTATION_STATUS currently enumerates — see Badge.js / FIRESTORE_SCHEMA.md.
+    // These literals are intentional until the enum is consolidated (tracked separately).
+    const cancellableStatuses = [CONSULTATION_STATUS.PENDING, 'confirmed', 'on-hold'];
 
     if (!cancellableStatuses.includes(currentStatus)) {
       // Return appropriate message based on current status
       let errorMessage = '';
 
-      if (currentStatus === 'approved') {
+      if (currentStatus === CONSULTATION_STATUS.APPROVED) {
         errorMessage = '승인된 상담은 취소할 수 없습니다.\n관리자에게 문의해주세요.';
-      } else if (currentStatus === 'completed') {
+      } else if (currentStatus === CONSULTATION_STATUS.COMPLETED) {
         errorMessage = '이미 완료된 상담입니다.';
-      } else if (currentStatus === 'cancelled') {
+      } else if (currentStatus === CONSULTATION_STATUS.CANCELLED) {
         errorMessage = '이미 취소된 상담입니다.';
-      } else if (currentStatus === 'rejected') {
+      } else if (currentStatus === CONSULTATION_STATUS.REJECTED) {
         errorMessage = '거절된 상담은 취소할 수 없습니다.';
       } else {
         errorMessage = `현재 상태(${currentStatus})에서는 취소할 수 없습니다.`;
@@ -442,7 +465,7 @@ export const cancelConsultation = async (consultationId) => {
 
     // Proceed with cancellation
     await updateDoc(consultationRef, {
-      consultationStatus: 'cancelled',
+      consultationStatus: CONSULTATION_STATUS.CANCELLED,
       cancelledAt: serverTimestamp(),
     });
 

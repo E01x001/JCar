@@ -5,7 +5,7 @@ import DatePicker from 'react-native-date-picker';
 import { AuthContext } from '../context/AuthContext';
 import { getFirestore, collection, query, where, getDocs } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
-import { saveConsultationRequest, resubmitConsultation } from '../services/consultation/consultationService';
+import { saveConsultationRequest, resubmitConsultation, checkConsultationRateLimit } from '../services/consultation/consultationService';
 import useConsultationStore from '../stores/consultationStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 
@@ -134,6 +134,14 @@ const ConsultationRequestScreen = ({ route }) => {
       return;
     }
 
+    // Rate limit must be checked BEFORE the optimistic success below, otherwise
+    // the user is told "접수 완료" and only afterwards rejected. (Task 82)
+    const rateLimit = await checkConsultationRateLimit();
+    if (!rateLimit.allowed) {
+      Alert.alert('요청 제한', rateLimit.message || '잠시 후 다시 시도해주세요.');
+      return;
+    }
+
     // Task 106.2: Optimistic UI - Generate temp ID for optimistic update
     const tempId = generateTempId('temp_consultation');
 
@@ -172,11 +180,11 @@ const ConsultationRequestScreen = ({ route }) => {
     executeOptimisticUpdate({
       optimisticFn: null, // Already done above
       serverFn: async () => {
-        const success = await saveConsultationRequest(consultationData);
-        if (!success) {
-          throw new Error('Failed to save consultation');
+        const result = await saveConsultationRequest(consultationData);
+        if (!result.success) {
+          throw result.error || new Error('Failed to save consultation');
         }
-        return success;
+        return result;
       },
       onSuccess: () => {
         console.log('✅ Consultation saved successfully');
