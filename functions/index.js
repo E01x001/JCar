@@ -72,6 +72,12 @@ exports.cascadeDeleteUser = accountManagement.cascadeDeleteUser;
 // Task #76: Account recovery within 30-day period
 exports.recoverDeletedUser = accountManagement.recoverDeletedUser;
 
+// User registration (callable function)
+// Restored: server-side phone duplicate check + Auth/Firestore creation.
+// Lost during the TypeScript cleanup (commit 5756d15); ported back from src/index.ts.
+const registration = require("./accountManagement/registerUser");
+exports.registerUser = registration.registerUser;
+
 // ============================================================================
 // Consultation Request Management Functions
 // ============================================================================
@@ -82,3 +88,14 @@ const consultationRateLimit = require("./consultations/rateLimit");
 // Check consultation request rate limit (callable function)
 exports.checkConsultationRateLimit =
   consultationRateLimit.checkConsultationRateLimit;
+
+// ============================================================================
+// External API Proxy Functions
+// ============================================================================
+// Proxy requests to external APIs with server-side API key storage
+
+const carzenProxy = require("./externalApis/carzenProxy");
+
+// CarZen vehicle info lookup (callable function)
+// Task #72: Secure API key by moving to server-side
+exports.getVehicleInfo = carzenProxy.getVehicleInfo;
