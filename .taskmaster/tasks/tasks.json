@@ -5024,11 +5024,12 @@
         "testStrategy": "npm run lint stays clean (no-console warnings drop where migrated). Confirm release build emits no debug logs in migrated paths; error reporting still reaches Crashlytics.",
         "priority": "low",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [],
         "complexity": null,
         "recommendedSubtasks": 0,
-        "expansionPrompt": ""
+        "expansionPrompt": "",
+        "updatedAt": "2026-06-20T03:37:37.986Z"
       },
       {
         "id": "123",
@@ -5062,9 +5063,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-19T16:45:12.901Z",
+      "lastModified": "2026-06-20T03:37:37.989Z",
       "taskCount": 124,
-      "completedCount": 86,
+      "completedCount": 87,
       "tags": [
         "master"
       ]
