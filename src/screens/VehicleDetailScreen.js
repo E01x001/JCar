@@ -81,7 +81,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
       <Text style={{
         fontSize: theme.typography.fontSize.body,
         color: theme.colors.text.primary,
-      }}>{value}</Text>
+      }}>{value || '-'}</Text>
     </View>
   );
 
@@ -126,13 +126,13 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         }]}>기본 정보</Text>
 
         <InfoRow label="제조사" value={vehicle.manufacturer} />
-        <InfoRow label="연식" value={`${vehicle.year}년`} />
+        <InfoRow label="연식" value={vehicle.year ? `${vehicle.year}년` : '-'} />
         <InfoRow label="연료 종류" value={vehicle.fuelType} />
         <InfoRow label="변속기" value={vehicle.transmission} />
         <InfoRow label="구동 방식" value={vehicle.driveType} />
-        <InfoRow label="배기량" value={`${vehicle.cc} cc`} />
-        <InfoRow label="연비" value={`${vehicle.fuelEco} km/L`} />
-        <InfoRow label="연료탱크 용량" value={`${vehicle.fuelTank} L`} />
+        <InfoRow label="배기량" value={vehicle.cc ? `${vehicle.cc} cc` : '-'} />
+        <InfoRow label="연비" value={vehicle.fuelEco ? `${vehicle.fuelEco} km/L` : '-'} />
+        <InfoRow label="연료탱크 용량" value={vehicle.fuelTank ? `${vehicle.fuelTank} L` : '-'} />
         <InfoRow label="가격" value={formatPrice(vehicle.price)} />
 
         <Text style={[styles.sectionTitle, {
@@ -145,7 +145,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
 
         <InfoRow label="앞 타이어" value={vehicle.frontTire} />
         <InfoRow label="뒤 타이어" value={vehicle.rearTire} />
-        <InfoRow label="엔진 오일 용량" value={`${vehicle.engineOilLiter} L`} />
+        <InfoRow label="엔진 오일 용량" value={vehicle.engineOilLiter ? `${vehicle.engineOilLiter} L` : '-'} />
         <InfoRow label="와이퍼 정보" value={vehicle.wiperInfo} />
         <InfoRow label="배터리 모델" value={vehicle.battery} />
       </ScrollView>

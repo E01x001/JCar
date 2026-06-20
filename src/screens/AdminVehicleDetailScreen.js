@@ -104,14 +104,14 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
           }]}>차량 정보</Text>
 
           {[
-            { label: '제조사', value: vehicle.manufacturer },
-            { label: '연식', value: vehicle.year },
-            { label: '연료 종류', value: vehicle.fuelType },
-            { label: '변속기', value: vehicle.transmission },
-            { label: '구동 방식', value: vehicle.driveType },
-            { label: '배기량', value: `${vehicle.cc} cc` },
-            { label: '연비', value: `${vehicle.fuelEco} km/L` },
-            { label: '연료탱크 용량', value: `${vehicle.fuelTank} L` },
+            { label: '제조사', value: vehicle.manufacturer || '-' },
+            { label: '연식', value: vehicle.year || '-' },
+            { label: '연료 종류', value: vehicle.fuelType || '-' },
+            { label: '변속기', value: vehicle.transmission || '-' },
+            { label: '구동 방식', value: vehicle.driveType || '-' },
+            { label: '배기량', value: vehicle.cc ? `${vehicle.cc} cc` : '-' },
+            { label: '연비', value: vehicle.fuelEco ? `${vehicle.fuelEco} km/L` : '-' },
+            { label: '연료탱크 용량', value: vehicle.fuelTank ? `${vehicle.fuelTank} L` : '-' },
             { label: '가격', value: formatPrice(vehicle.price) },
           ].map((item, index) => (
             <View
@@ -147,11 +147,11 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
           }]}>부품 정보</Text>
 
           {[
-            { label: '앞 타이어', value: vehicle.frontTire },
-            { label: '뒤 타이어', value: vehicle.rearTire },
-            { label: '엔진 오일 용량', value: `${vehicle.engineOilLiter} L` },
-            { label: '와이퍼 정보', value: vehicle.wiperInfo },
-            { label: '배터리 모델', value: vehicle.battery },
+            { label: '앞 타이어', value: vehicle.frontTire || '-' },
+            { label: '뒤 타이어', value: vehicle.rearTire || '-' },
+            { label: '엔진 오일 용량', value: vehicle.engineOilLiter ? `${vehicle.engineOilLiter} L` : '-' },
+            { label: '와이퍼 정보', value: vehicle.wiperInfo || '-' },
+            { label: '배터리 모델', value: vehicle.battery || '-' },
           ].map((item, index) => (
             <View
               key={index}

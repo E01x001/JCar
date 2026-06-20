@@ -15,6 +15,25 @@ import { useTheme } from '../theme/ThemeProvider';
 const { width } = Dimensions.get('window');
 const DEFAULT_HEIGHT = ((width - 32) * 9) / 16;
 
+const CarouselImage = ({ uri }) => {
+  const theme = useTheme();
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <View style={[styles.image, styles.imageFallback, { backgroundColor: theme.colors.background.secondary }]}>
+        <MaterialIcons name="broken-image" size={40} color={theme.colors.text.tertiary} />
+      </View>
+    );
+  }
+
+  return (
+    <Image source={{ uri }} style={styles.image} resizeMode="cover" onError={() => setFailed(true)} />
+  );
+};
+
+CarouselImage.propTypes = { uri: PropTypes.string };
+
 const ImageCarousel = ({ images = [], height = DEFAULT_HEIGHT, style }) => {
   const theme = useTheme();
   const [page, setPage] = useState(0);
@@ -39,7 +58,7 @@ const ImageCarousel = ({ images = [], height = DEFAULT_HEIGHT, style }) => {
       >
         {list.map((uri, i) => (
           <View key={`${i}-${uri}`} style={styles.page}>
-            <Image source={{ uri }} style={styles.image} resizeMode="cover" />
+            <CarouselImage uri={uri} />
           </View>
         ))}
       </PagerView>
@@ -65,6 +84,7 @@ const styles = StyleSheet.create({
   pager: { flex: 1 },
   page: { flex: 1 },
   image: { width: '100%', height: '100%', borderRadius: 12 },
+  imageFallback: { justifyContent: 'center', alignItems: 'center' },
   placeholder: {
     width: '100%',
     borderRadius: 12,

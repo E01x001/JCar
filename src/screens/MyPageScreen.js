@@ -8,6 +8,7 @@ import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notif
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
+import { formatPhone } from '../utils/format';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import BuyConsultationsTab from './MyPage/tabs/BuyConsultationsTab';
@@ -17,7 +18,7 @@ import useVehicleStore from '../stores/vehicleStore';
 import useConsultationStore from '../stores/consultationStore';
 
 const MyPageScreen = ({ navigation }) => {
-  const { user } = useContext(AuthContext);
+  const { user, sellerName, sellerPhone } = useContext(AuthContext);
   const theme = useTheme();
   const toast = useToast();
 
@@ -168,10 +169,25 @@ const MyPageScreen = ({ navigation }) => {
       <View style={styles.container}>
         {/* User Info Card */}
         <Card style={{ margin: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+          {sellerName && sellerName !== 'Unknown' && (
+            <Text style={[styles.userInfo, {
+              fontSize: theme.typography.fontSize.body,
+              color: theme.colors.text.primary,
+              fontWeight: theme.typography.fontWeight.semiBold,
+              marginBottom: theme.spacing.xs,
+            }]}>{sellerName}</Text>
+          )}
           <Text style={[styles.userInfo, {
             fontSize: theme.typography.fontSize.body,
             color: theme.colors.text.secondary,
           }]}>이메일: {user?.email ?? '이메일 없음'}</Text>
+          {sellerPhone && sellerPhone !== 'Unknown' && (
+            <Text style={[styles.userInfo, {
+              fontSize: theme.typography.fontSize.body,
+              color: theme.colors.text.secondary,
+              marginTop: theme.spacing.xs,
+            }]}>전화: {formatPhone(sellerPhone)}</Text>
+          )}
         </Card>
 
         {/* TabView */}
