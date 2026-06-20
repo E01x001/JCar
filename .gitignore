@@ -141,3 +141,5 @@ tmpclaude-*-cwd
 # Windows reserved names
 nul
 NUL
+# Personal local Claude Code settings (permissions/env) — not shared
+.claude/settings.local.json
