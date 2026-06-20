@@ -21,11 +21,29 @@ service cloud.firestore {
               ));
     }
 
-    // Users collection: Users can only read/write their own document
+    // Users collection
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
       // Admins can read and write all user documents
       allow read, write: if isAdmin();
+
+      // Owner can read their own document
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Owner can create their own doc, but cannot self-assign a privileged role.
+      // (Normal registration goes through the registerUser Cloud Function / admin SDK.)
+      allow create: if request.auth != null && request.auth.uid == userId &&
+                    request.resource.data.get('role', 'user') == 'user';
+
+      // Owner can update their own doc (e.g. fcmToken) but CANNOT change privileged
+      // fields. role / status / accountStatus are admin-controlled only. Because
+      // update rules see the post-merge document, unchanged fields are preserved.
+      allow update: if request.auth != null && request.auth.uid == userId &&
+                    request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
+                    request.resource.data.get('status', '') == resource.data.get('status', '') &&
+                    request.resource.data.get('accountStatus', '') == resource.data.get('accountStatus', '');
+
+      // Account deletion is handled by Cloud Functions (admin SDK bypasses rules).
+      allow delete: if isAdmin();
     }
 
     // Vehicles collection: Authenticated users can read, owners/admins can manage
@@ -46,10 +64,13 @@ service cloud.firestore {
         isAdmin()
       );
 
-      // Authenticated active users can create their own vehicles
+      // Authenticated active users can create their own vehicles.
+      // status MUST start as 'pending' — only admins may approve (see update rule),
+      // otherwise a user could self-publish by writing status:'approved'.
       allow create: if request.auth != null &&
                     isActiveUser() &&
                     request.auth.uid == request.resource.data.sellerId &&
+                    request.resource.data.status == 'pending' &&
                     request.resource.data.vehicleId is string &&
                     request.resource.data.vehicleName is string &&
                     request.resource.data.manufacturer is string &&
@@ -69,7 +90,9 @@ service cloud.firestore {
                         // Prevent owner from changing ownership fields
                         (!('currentOwnerId' in request.resource.data) || request.resource.data.currentOwnerId == resource.data.get('currentOwnerId', null)) &&
                         (!('isAdminOwned' in request.resource.data) || request.resource.data.isAdminOwned == resource.data.get('isAdminOwned', false)) &&
-                        (!('ownershipHistory' in request.resource.data) || request.resource.data.ownershipHistory == resource.data.get('ownershipHistory', []))
+                        (!('ownershipHistory' in request.resource.data) || request.resource.data.ownershipHistory == resource.data.get('ownershipHistory', [])) &&
+                        // Prevent owner from changing approval/sold status (admin-only)
+                        (request.resource.data.get('status', 'pending') == resource.data.get('status', 'pending'))
                       )
                     );
 

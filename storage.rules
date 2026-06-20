@@ -2,17 +2,22 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Vehicle images: Authenticated users can upload, anyone can read
+    // Vehicle images: Authenticated users can upload new images, anyone can read.
     match /vehicles/{filename} {
-      // Anyone can read vehicle images (public access)
+      // Anyone can read vehicle images (public listings)
       allow read: if true;
 
-      // Only authenticated users can upload images
-      allow write: if request.auth != null &&
+      // Authenticated users can upload NEW images only (filenames are unique:
+      // vehicle_<timestamp>_<tempId>.jpg). create-only prevents overwriting or
+      // deleting another user's image. Cleanup is done server-side (admin SDK).
+      allow create: if request.auth != null &&
         // Validate file size (max 5MB)
         request.resource.size < 5 * 1024 * 1024 &&
         // Validate content type (images only)
         request.resource.contentType.matches('image/.*');
+
+      // No client overwrite/delete (prevents tampering/vandalism)
+      allow update, delete: if false;
     }
 
     // Default deny-all policy for all other paths
