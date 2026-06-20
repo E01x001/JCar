@@ -15,6 +15,7 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
   const { vehicleId } = route.params;
   const theme = useTheme();
   const [vehicle, setVehicle] = useState(null);
+  const [contact, setContact] = useState(null);
 
   useEffect(() => {
     const fetchVehicleDetails = async () => {
@@ -24,6 +25,12 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
         const vehicleDoc = await getDoc(vehicleDocRef);
         if (vehicleDoc.exists()) {
           setVehicle(vehicleDoc.data());
+        }
+
+        // Task 125: seller PII now lives in a private subdoc (owner/admin only).
+        const contactDoc = await getDoc(doc(db, 'vehicles', vehicleId, 'private', 'contact'));
+        if (contactDoc.exists()) {
+          setContact(contactDoc.data());
         }
       } catch (error) {
         logger.error('차량 상세정보 불러오기 오류:', error);
@@ -181,9 +188,11 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
           }]}>등록자 정보</Text>
 
           {[
-            { label: '이름', value: vehicle.sellerName },
-            { label: '전화번호', value: formatPhone(vehicle.sellerPhone) },
-            { label: '이메일', value: vehicle.sellerEmail },
+            // Prefer the private contact subdoc; fall back to legacy inline fields
+            // for vehicles not yet migrated (Task 125).
+            { label: '이름', value: (contact?.sellerName) ?? vehicle.sellerName },
+            { label: '전화번호', value: formatPhone((contact?.sellerPhone) ?? vehicle.sellerPhone) },
+            { label: '이메일', value: (contact?.sellerEmail) ?? vehicle.sellerEmail },
           ].map((item, index) => (
             <View
               key={index}

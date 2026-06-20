@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { getFirestore, collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, writeBatch, serverTimestamp } from '@react-native-firebase/firestore';
 import { getAuth } from '@react-native-firebase/auth';
 import functions from '@react-native-firebase/functions';
 import { AuthContext } from '../context/AuthContext';
@@ -262,15 +262,46 @@ const VehicleRegistrationScreen = () => {
       const vehiclesRef = collection(db, 'vehicles');
       const newVehicleRef = doc(vehiclesRef);
 
+      // Task 125: keep seller PII OUT of the public vehicle doc. Split into a
+      // public doc (listing data) and a private contact subdoc readable only by
+      // the owner/admin. The private doc carries sellerId so its security rule
+      // needs no parent get() (avoids a race during the batched create).
+      const {
+        sellerName: _piiName,
+        sellerPhone: _piiPhone,
+        sellerEmail: _piiEmail,
+        ownerName: _piiOwner,
+        regiNumber: _piiRegi,
+        vin: _piiVin,
+        ...publicVehicleData
+      } = vehicleDataToSave;
+
+      const privateContactData = {
+        sellerId: user.uid,
+        sellerName: vehicleDataToSave.sellerName,
+        sellerPhone: vehicleDataToSave.sellerPhone,
+        sellerEmail: vehicleDataToSave.sellerEmail,
+        ownerName: vehicleDataToSave.ownerName,
+        regiNumber: vehicleDataToSave.regiNumber,
+        vin: vehicleDataToSave.vin,
+      };
+
       // Execute write without awaiting (using executeOptimisticUpdate helper)
       executeOptimisticUpdate({
         optimisticFn: null, // Already done above
         serverFn: async () => {
-          await setDoc(newVehicleRef, {
-            ...vehicleDataToSave,
+          const batch = writeBatch(db);
+          batch.set(newVehicleRef, {
+            ...publicVehicleData,
             vehicleId: newVehicleRef.id,
             createdAt: serverTimestamp(), // Use server timestamp for real data
           });
+          const contactRef = doc(db, 'vehicles', newVehicleRef.id, 'private', 'contact');
+          batch.set(contactRef, {
+            ...privateContactData,
+            createdAt: serverTimestamp(),
+          });
+          await batch.commit();
           return newVehicleRef.id;
         },
         onSuccess: (realId) => {

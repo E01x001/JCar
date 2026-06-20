@@ -11,11 +11,14 @@ import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { migrateConsultationStatusField } from '../scripts/migrateConsultationStatus';
+import { migrateVehiclePII } from '../scripts/migrateVehiclePII';
 
 const MigrationScreen = ({ navigation }) => {
   const theme = useTheme();
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState(null);
+  const [isRunningPII, setIsRunningPII] = useState(false);
+  const [piiResult, setPiiResult] = useState(null);
 
   const runMigration = async () => {
     Alert.alert(
@@ -45,6 +48,39 @@ const MigrationScreen = ({ navigation }) => {
               setResult({ success: false, error: error.message });
             } finally {
               setIsRunning(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const runVehiclePIIMigration = async () => {
+    Alert.alert(
+      '차량 PII 마이그레이션',
+      '기존 차량 문서의 판매자 연락처(이름/전화/이메일/소유자명/차량번호/VIN)를 비공개 서브문서로 옮기고 공개 문서에서 제거합니다. 보안 규칙 배포 후 실행하세요. 계속하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '실행',
+          style: 'destructive',
+          onPress: async () => {
+            setIsRunningPII(true);
+            setPiiResult(null);
+
+            try {
+              const r = await migrateVehiclePII();
+              setPiiResult(r);
+              Alert.alert(
+                '마이그레이션 완료',
+                `이전: ${r.migrated}건\n스킵: ${r.skipped}건`,
+                [{ text: '확인' }]
+              );
+            } catch (error) {
+              Alert.alert('오류', '차량 PII 마이그레이션 중 오류가 발생했습니다.');
+              setPiiResult({ success: false, error: error.message });
+            } finally {
+              setIsRunningPII(false);
             }
           },
         },
@@ -124,6 +160,46 @@ const MigrationScreen = ({ navigation }) => {
             )}
           </View>
         )}
+
+        <View style={{
+          marginTop: theme.spacing.lg,
+          paddingTop: theme.spacing.lg,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.border.light,
+        }}>
+          <Text style={[styles.title, {
+            fontSize: theme.typography.fontSize.h4,
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.text.primary,
+            marginBottom: theme.spacing.sm,
+          }]}>
+            차량 PII 마이그레이션 (Task 125)
+          </Text>
+          <Text style={[styles.description, {
+            fontSize: theme.typography.fontSize.body,
+            color: theme.colors.text.secondary,
+            marginBottom: theme.spacing.md,
+            lineHeight: 22,
+          }]}>
+            기존 차량 문서의 판매자 연락처를 비공개 서브문서로 이전하고 공개 문서에서 제거합니다. (보안 규칙 배포 후 실행)
+          </Text>
+          <Button
+            variant="primary"
+            title={isRunningPII ? '실행 중...' : '차량 PII 마이그레이션 실행'}
+            onPress={runVehiclePIIMigration}
+            disabled={isRunningPII}
+            loading={isRunningPII}
+          />
+          {piiResult && (
+            <Text style={[styles.resultText, {
+              marginTop: theme.spacing.sm,
+              fontSize: theme.typography.fontSize.body,
+              color: piiResult.success ? theme.colors.success.dark : theme.colors.danger.main,
+            }]}>
+              {piiResult.success ? `✅ 이전 ${piiResult.migrated}건 / 스킵 ${piiResult.skipped}건` : `❌ ${piiResult.error}`}
+            </Text>
+          )}
+        </View>
 
         <Button
           variant="secondary"

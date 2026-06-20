@@ -100,6 +100,23 @@ service cloud.firestore {
       allow delete: if request.auth != null &&
                     isActiveUser() &&
                     ((request.auth.uid == resource.data.get('currentOwnerId', resource.data.sellerId)) || isAdmin());
+
+      // Private contact subdocument (Task 125): seller PII kept OUT of the public
+      // vehicle doc so it cannot be scraped by other authenticated users.
+      // The doc stores its own sellerId so authorization needs no parent get()
+      // (which would race during a batched create of vehicle + private doc).
+      match /private/{docId} {
+        allow read: if isAdmin() ||
+                    (request.auth != null &&
+                     request.auth.uid == resource.data.get('sellerId', ''));
+        // Owner creates their own contact doc at registration time
+        allow create: if isAdmin() ||
+                      (request.auth != null &&
+                       isActiveUser() &&
+                       request.auth.uid == request.resource.data.get('sellerId', ''));
+        // Edits/cleanup are admin-only (migration, account deletion via admin SDK)
+        allow update, delete: if isAdmin();
+      }
     }
 
     // Consultation requests collection: Only active users can create, admins have full access
