@@ -127,7 +127,7 @@ const MyPageScreen = ({ navigation }) => {
   const handleDeleteAccount = async () => {
     Alert.alert(
       '회원탈퇴',
-      '정말로 회원탈퇴 하시겠습니까?\n\n✓ 30일 이내 복구 가능\n✓ 차량, 상담 등 모든 데이터 삭제\n✓ 30일 후 영구 삭제',
+      '정말로 회원탈퇴 하시겠습니까?\n\n✓ 탈퇴 즉시 다른 사용자에게 숨김 처리\n✓ 30일 이내 복구 시 차량·상담 등 데이터 그대로 복원\n✓ 30일 후 모든 데이터 영구 삭제 (복구 불가)',
       [
         { text: '취소', style: 'cancel' },
         {
