@@ -32,8 +32,8 @@
 ## 3. 차량 목록 / 상세
 
 - [x] 🟡 **상세 화면 `getDoc` 1회성(비실시간)** → ✅ VehicleDetailScreen을 `onSnapshot` 실시간 구독으로 전환(보는 중 sold 반영, 상담 버튼 비활성)(`5eb731d`). *(AdminVehicleDetail은 관리자가 상태 변경 주체라 보류)*
-- [~] 🟡 **이미지 로딩/실패 대체 UI 없음** → ⚠️ **부분**: 다중 이미지 작업(#127)에서 `ImageCarousel`에 *빈 이미지 placeholder* 추가. *개별 이미지 로드 실패 폴백*은 미완.
-- [ ] 🟢 **`${vehicle.cc} cc` 등 undefined 표시 가능** → 옵셔널 처리. **미완**.
+- [x] 🟡 **이미지 로딩/실패 대체 UI 없음** → ✅ `ImageCarousel` 빈 이미지 placeholder(#127) + **개별 이미지 로드 실패 폴백**(broken-image)(`7e33dde`).
+- [x] 🟢 **`${vehicle.cc} cc` 등 undefined 표시** → ✅ 단위 필드 가드 + InfoRow `-` 폴백(VehicleDetail·AdminVehicleDetail)(`7e33dde`).
 
 ## 4. 상담 신청 (ConsultationRequestScreen.js)
 
@@ -45,7 +45,7 @@
 ## 5. 마이페이지 (MyPageScreen.js)
 
 - [ ] 🟢 **useEffect 의존성에 구독 함수 누락** → 명시 권장. **미완**.
-- [ ] 🟢 **사용자 정보 카드에 이메일만** → 이름/전화 추가. **미완**.
+- [x] 🟢 **사용자 정보 카드에 이메일만** → ✅ 이름·전화(formatPhone) 추가(`7e33dde`).
 
 ## 6. 상담/거래 서비스 (consultationService.js)
 
@@ -81,7 +81,8 @@
 | 🟡 | Alert vs Toast 피드백 통일 | ⚠️ 부분(#123): 사용자 화면 전환 완료, 관리자/서비스 잔여(`57e536e`) |
 | 🟡 | 중복·데드코드 정리 | ✅ authService(`57e536e`) + completeConsultationDeal(`c493085`) + 동적 import(`ad62aac`) 제거 |
 | 🟢 | 하드코딩 스타일 → theme 토큰 | ⬜ |
-| 🟢 | 이미지 placeholder | ⚠️ 캐러셀 placeholder만 |
+| 🟢 | 이미지 placeholder + 로드 실패 폴백 | ✅ (`7e33dde`) |
+| 🟢 | undefined 표시 옵셔널 / 마이페이지 정보 | ✅ (`7e33dde`) |
 | 🟢 | 상세화면 실시간화 | ✅ VehicleDetail onSnapshot 전환(`5eb731d`) |
 
 ## 추가 제안 기능
