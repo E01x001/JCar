@@ -53,6 +53,20 @@
 - [x] 🟡 **cancelConsultation 동적 `await import` → 정적** → ✅ `getDoc` 정적 import(`ad62aac`).
 - [ ] 🟡 **`completeConsultation` vs `completeConsultationDeal` 중복 트랜잭션** → 통합 필요. **미완**.
 
+## 7. 사용자 피드백 패턴 — Alert vs Toast (#123)
+
+- [ ] 🟡 **Alert.alert(48곳/14파일)와 `useToast`가 혼용** → 피드백 UX 불일치. **미완(#123)**.
+
+**핵심(트랩 주의)**: 단순 치환 불가. 용도별로 나눠야 함.
+- **정보성 단일 알림**("저장 실패", "조회 성공" 등) → **Toast로 전환** 대상.
+- **확인/선택 대화상자**(버튼 있음)는 **Alert/모달 유지** 필수 — Toast는 버튼·블로킹 확인 불가:
+  - `MyPageScreen` 회원탈퇴 확인(취소/탈퇴)
+  - `VehicleRegistrationScreen` 갤러리/카메라 선택
+  - `ConsultationRequestScreen` "확인" 후 goBack
+- 무차별 치환 시 확인 플로우가 깨짐 → 케이스별 분류 후 적용. 한 줄 규칙 권장: **toast = 알림, Alert/모달 = 결정**.
+
+**연관**: 로그인 에러 매핑 중복(섹션 1)과 함께 "**피드백·에러 일관성**" 묶음으로 처리하면 효율적.
+
 ---
 
 ## 횡단(cross-cutting) 우선순위
