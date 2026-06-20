@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
-import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
+import { getFirestore, doc, onSnapshot } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuth } from '@react-native-firebase/auth';
 import { formatPrice } from '../utils/format';
@@ -20,35 +20,30 @@ const VehicleDetailScreen = ({ route, navigation }) => {
   const [isSold, setIsSold] = useState(false);
 
   useEffect(() => {
-    const fetchVehicleDetails = async () => {
-      try {
-        const db = getFirestore();
-        const vehicleDocRef = doc(db, 'vehicles', vehicleId);
-        const vehicleDoc = await getDoc(vehicleDocRef);
-        if (vehicleDoc.exists()) {
-          const vehicleData = vehicleDoc.data();
+    const db = getFirestore();
+    const vehicleDocRef = doc(db, 'vehicles', vehicleId);
+    const currentUser = getAuth().currentUser;
+
+    // Realtime subscription so status changes (e.g. → 'sold') reflect live while
+    // the buyer is viewing — otherwise they could request a consultation on a
+    // car that was just sold.
+    const unsubscribe = onSnapshot(
+      vehicleDocRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const vehicleData = snapshot.data();
           setVehicle(vehicleData);
-
-          // Check if vehicle is sold
-          if (vehicleData.status === 'sold') {
-            setIsSold(true);
-          }
-
-          // Task 62.4: Use modular currentUser
-          const auth = getAuth();
-          const currentUser = auth.currentUser;
-          // Check ownership: use currentOwnerId (new) or sellerId (legacy)
+          setIsSold(vehicleData.status === 'sold');
           const ownerId = vehicleData.currentOwnerId || vehicleData.sellerId;
-          if (currentUser && currentUser.uid === ownerId) {
-            setIsOwnVehicle(true);
-          }
+          setIsOwnVehicle(!!currentUser && currentUser.uid === ownerId);
         }
-      } catch (error) {
-        logger.error('차량 상세정보 불러오기 오류:', error);
+      },
+      (error) => {
+        logger.error('차량 상세정보 구독 오류:', error);
       }
-    };
+    );
 
-    fetchVehicleDetails();
+    return () => unsubscribe();
   }, [vehicleId]);
 
   const handleConsultationRequest = () => {
