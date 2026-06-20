@@ -98,19 +98,21 @@ exports.cascadeDeleteUser = onCall({
   // ============================================================================
 
   const deletionStats = {
-    vehiclesDeleted: 0,
-    consultationsDeleted: 0,
-    imagesDeleted: 0,
+    vehiclesHidden: 0,
+    consultationsHidden: 0,
     userDocumentDeleted: false,
     authUserDeleted: false,
   };
 
   try {
     // ========================================================================
-    // Step 3: Delete user's vehicles
+    // Step 3: Hide the user's vehicles (Task 126 — defer destruction)
     // ========================================================================
+    // Soft-delete only HIDES content; nothing is destroyed until the scheduled
+    // permanent-delete function runs after permanentDeleteDate. This keeps the
+    // 30-day recovery promise real — recoverDeletedUser un-hides everything.
 
-    functions.logger.info("Starting vehicle deletion", {userId: targetUserId});
+    functions.logger.info("Hiding user vehicles", {userId: targetUserId});
 
     const vehiclesSnapshot = await db.collection("vehicles")
         .where("sellerId", "==", targetUserId)
@@ -118,118 +120,49 @@ exports.cascadeDeleteUser = onCall({
 
     if (!vehiclesSnapshot.empty) {
       const vehicleBatch = db.batch();
-
       vehiclesSnapshot.docs.forEach((doc) => {
-        // Task 125: also delete the private contact subdocument (seller PII).
-        // Firestore does NOT cascade-delete subcollections, so deleting only the
-        // parent would leave the PII doc orphaned in storage.
-        vehicleBatch.delete(doc.ref.collection("private").doc("contact"));
-        vehicleBatch.delete(doc.ref);
+        vehicleBatch.update(doc.ref, {hidden: true});
       });
-
       await vehicleBatch.commit();
-      deletionStats.vehiclesDeleted = vehiclesSnapshot.size;
-
-      functions.logger.info("Vehicles deleted", {
-        count: deletionStats.vehiclesDeleted,
-      });
+      deletionStats.vehiclesHidden = vehiclesSnapshot.size;
+      functions.logger.info("Vehicles hidden", {count: deletionStats.vehiclesHidden});
     }
 
     // ========================================================================
-    // Step 4: Delete consultation requests (as buyer and seller)
+    // Step 4: Hide the user's consultation requests (as buyer and seller)
     // ========================================================================
 
-    functions.logger.info("Starting consultation deletion", {userId: targetUserId});
+    functions.logger.info("Hiding user consultations", {userId: targetUserId});
 
-    // Delete consultations where user is the requester (buyer)
     const buyerConsultationsSnapshot = await db.collection("consultation_requests")
         .where("userId", "==", targetUserId)
         .get();
-
-    // Delete consultations where user is the seller
-    // (consultation_requests has vehicleId, we need to find vehicles owned by this user)
     const sellerConsultationsSnapshot = await db.collection("consultation_requests")
         .where("sellerId", "==", targetUserId)
         .get();
 
     const consultationBatch = db.batch();
-
     buyerConsultationsSnapshot.docs.forEach((doc) => {
-      consultationBatch.delete(doc.ref);
+      consultationBatch.update(doc.ref, {hidden: true});
     });
-
     sellerConsultationsSnapshot.docs.forEach((doc) => {
-      consultationBatch.delete(doc.ref);
+      consultationBatch.update(doc.ref, {hidden: true});
     });
 
     if (buyerConsultationsSnapshot.size > 0 || sellerConsultationsSnapshot.size > 0) {
       await consultationBatch.commit();
-      deletionStats.consultationsDeleted =
+      deletionStats.consultationsHidden =
         buyerConsultationsSnapshot.size + sellerConsultationsSnapshot.size;
-
-      functions.logger.info("Consultations deleted", {
+      functions.logger.info("Consultations hidden", {
         buyer: buyerConsultationsSnapshot.size,
         seller: sellerConsultationsSnapshot.size,
-        total: deletionStats.consultationsDeleted,
+        total: deletionStats.consultationsHidden,
       });
     }
 
-    // ========================================================================
-    // Step 5: Delete uploaded images from Firebase Storage
-    // ========================================================================
-    // Task #75: Delete vehicle images from Firebase Storage
-
-    functions.logger.info("Starting Storage image deletion", {userId: targetUserId});
-
-    const bucket = admin.storage().bucket();
-    let storageDeleteErrors = 0;
-
-    // Extract image URLs from vehicles and delete from Storage
-    for (const vehicleDoc of vehiclesSnapshot.docs) {
-      const vehicleData = vehicleDoc.data();
-      const imageUrl = vehicleData.imageUrl;
-
-      // Only process Firebase Storage URLs
-      if (imageUrl && imageUrl.includes("firebasestorage.googleapis.com")) {
-        try {
-          // Extract storage path from URL
-          // Format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media&token={token}
-          const urlParts = imageUrl.split("/o/");
-          if (urlParts.length > 1) {
-            const pathWithQuery = urlParts[1];
-            const storagePath = decodeURIComponent(pathWithQuery.split("?")[0]);
-
-            // Delete file from Storage
-            await bucket.file(storagePath).delete();
-            deletionStats.imagesDeleted++;
-
-            functions.logger.info("Storage image deleted", {
-              vehicleId: vehicleDoc.id,
-              storagePath,
-            });
-          }
-        } catch (storageError) {
-          // Log error but continue deletion process
-          storageDeleteErrors++;
-          functions.logger.warn("Failed to delete storage image", {
-            vehicleId: vehicleDoc.id,
-            imageUrl,
-            error: storageError.message,
-          });
-        }
-      } else {
-        // External URL (e.g., cartory.net), skip deletion
-        functions.logger.info("Skipping external image URL", {
-          vehicleId: vehicleDoc.id,
-          imageUrl,
-        });
-      }
-    }
-
-    functions.logger.info("Storage deletion completed", {
-      imagesDeleted: deletionStats.imagesDeleted,
-      errors: storageDeleteErrors,
-    });
+    // NOTE: vehicle images, private contact subdocs, and the documents
+    // themselves are intentionally PRESERVED here. They are removed only by the
+    // scheduled permanent-delete function after the recovery window (Task 126).
 
     // ========================================================================
     // Step 6: Soft Delete - Mark user for deletion (30-day recovery period)
@@ -387,6 +320,32 @@ exports.recoverDeletedUser = onCall({
       recoveredAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    // Task 126: un-hide the content that soft-delete hid, so recovery restores
+    // the full account (nothing was destroyed during the recovery window).
+    const unhide = admin.firestore.FieldValue.delete();
+
+    const recoverVehicles = await db.collection("vehicles")
+        .where("sellerId", "==", targetUserId)
+        .get();
+    if (!recoverVehicles.empty) {
+      const vb = db.batch();
+      recoverVehicles.docs.forEach((doc) => vb.update(doc.ref, {hidden: unhide}));
+      await vb.commit();
+    }
+
+    const recoverBuy = await db.collection("consultation_requests")
+        .where("userId", "==", targetUserId)
+        .get();
+    const recoverSell = await db.collection("consultation_requests")
+        .where("sellerId", "==", targetUserId)
+        .get();
+    if (recoverBuy.size > 0 || recoverSell.size > 0) {
+      const cb = db.batch();
+      recoverBuy.docs.forEach((doc) => cb.update(doc.ref, {hidden: unhide}));
+      recoverSell.docs.forEach((doc) => cb.update(doc.ref, {hidden: unhide}));
+      await cb.commit();
+    }
+
     // Re-enable Firebase Auth account
     await admin.auth().updateUser(targetUserId, {
       disabled: false,
@@ -394,6 +353,8 @@ exports.recoverDeletedUser = onCall({
 
     functions.logger.info("Account recovered successfully", {
       userId: targetUserId,
+      vehiclesRestored: recoverVehicles.size,
+      consultationsRestored: recoverBuy.size + recoverSell.size,
     });
 
     return {

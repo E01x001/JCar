@@ -50,6 +50,9 @@ export const getFilteredVehicles = async (filters) => {
       ...doc.data(),
     }));
 
+    // Task 126: hide vehicles whose owner is in the account-deletion grace period
+    vehicles = vehicles.filter(v => !v.hidden);
+
     // 클라이언트 사이드 필터링
     // 연도 필터 (Firestore 복합 쿼리 제한으로 클라이언트에서 처리)
     const minYear = filters.minYear ? parseInt(filters.minYear) : null;
@@ -117,6 +120,9 @@ export const subscribeToFilteredVehicles = (filters, callback) => {
           id: doc.id,
           ...doc.data(),
         }));
+
+        // Task 126: hide vehicles whose owner is in the account-deletion grace period
+        vehicles = vehicles.filter(v => !v.hidden);
 
         // 클라이언트 사이드 필터링
         const minYear = filters.minYear ? parseInt(filters.minYear) : null;
