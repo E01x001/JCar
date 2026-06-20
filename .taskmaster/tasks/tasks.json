@@ -4004,12 +4004,12 @@
         "dependencies": [
           "74"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [],
         "complexity": 6,
         "recommendedSubtasks": 2,
         "expansionPrompt": "Break down into: Extract image URLs from deleted vehicle documents; Implement Firebase Storage Admin SDK deletion logic; Integrate with existing cascadeDeleteUser function.",
-        "updatedAt": "2026-06-20T04:10:05.341Z"
+        "updatedAt": "2026-06-20T04:13:14.281Z"
       },
       {
         "id": "76",
@@ -5093,9 +5093,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-20T04:10:05.343Z",
-      "taskCount": 125,
-      "completedCount": 87,
+      "lastModified": "2026-06-20T04:13:14.285Z",
+      "taskCount": 126,
+      "completedCount": 88,
       "tags": [
         "master"
       ]
