@@ -208,13 +208,21 @@ const ConsultationRequestScreen = ({ route }) => {
   };
 
 
+  // Disable past dates in the calendar (local YYYY-MM-DD, not UTC)
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        {isResubmitMode ? '상담 일정 재선택' : '구매 상담 일정 선택'}
+        {isResubmitMode
+          ? '상담 일정 재선택'
+          : isSell ? '판매 상담 일정 선택' : '구매 상담 일정 선택'}
       </Text>
 
       <Calendar
+        minDate={todayStr}
+        disableAllTouchEventsForDisabledDays
         onDayPress={(day) => {
           setSelectedDate(day.dateString);
         }}
