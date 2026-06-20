@@ -2,7 +2,7 @@
 
 **Title:** Implement Firebase Storage Image Cleanup in cascadeDeleteUser
 
-**Status:** in-progress
+**Status:** done
 
 **Dependencies:** 74 ✓
 
