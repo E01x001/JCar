@@ -120,6 +120,10 @@ exports.cascadeDeleteUser = onCall({
       const vehicleBatch = db.batch();
 
       vehiclesSnapshot.docs.forEach((doc) => {
+        // Task 125: also delete the private contact subdocument (seller PII).
+        // Firestore does NOT cascade-delete subcollections, so deleting only the
+        // parent would leave the PII doc orphaned in storage.
+        vehicleBatch.delete(doc.ref.collection("private").doc("contact"));
         vehicleBatch.delete(doc.ref);
       });
 

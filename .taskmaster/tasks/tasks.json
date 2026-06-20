@@ -4004,11 +4004,12 @@
         "dependencies": [
           "74"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [],
         "complexity": 6,
         "recommendedSubtasks": 2,
-        "expansionPrompt": "Break down into: Extract image URLs from deleted vehicle documents; Implement Firebase Storage Admin SDK deletion logic; Integrate with existing cascadeDeleteUser function."
+        "expansionPrompt": "Break down into: Extract image URLs from deleted vehicle documents; Implement Firebase Storage Admin SDK deletion logic; Integrate with existing cascadeDeleteUser function.",
+        "updatedAt": "2026-06-20T04:10:05.341Z"
       },
       {
         "id": "76",
@@ -5068,6 +5069,21 @@
         "testStrategy": "Verify a non-owner authenticated user can read public vehicle fields but NOT sellerPhone/sellerEmail. Owner and admin still see full data. Consultation flow still surfaces contact info to the right parties. Security rules validate.",
         "priority": "high",
         "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [],
+        "complexity": null,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-06-20T04:04:27.487Z"
+      },
+      {
+        "id": "126",
+        "title": "Fix soft-delete contradiction: defer destructive deletion to permanent-delete",
+        "description": "cascadeDeleteUser advertises a 30-day recovery window (Task 76, shown to users in MyPageScreen), but it immediately and permanently deletes vehicles, consultations, and Storage images. recoverDeletedUser only restores the user doc + re-enables auth, so recovered accounts have lost all their data.",
+        "details": "functions/accountManagement/cascadeDelete.js currently hard-deletes vehicles (Step 3, incl. private contact subdoc), consultations (Step 4), and Storage images (Step 5) during what is supposed to be a SOFT delete (Step 6 marks accountStatus=pending_deletion with a 30-day window). Options: (a) on soft-delete, only mark/disable and DEFER destructive deletion; implement the scheduled permanent-delete function (the TODO at the NOTE block) that runs daily and performs the vehicle/consultation/storage/private-subdoc/user/auth deletion for accounts past permanentDeleteDate; recoverDeletedUser then restores everything because nothing was destroyed yet. (b) If immediate destruction is intended, stop advertising recovery of data and update copy. Recommended: (a). Requires a Cloud Scheduler/pubsub scheduled function + moving the Step 3-5 logic there.",
+        "testStrategy": "Soft-delete an account, then recover within window: vehicles/consultations/images/private docs all still present. After permanentDeleteDate, scheduled function removes everything (Firestore + Storage + Auth). Verify no orphaned private subdocs or Storage objects remain.",
+        "priority": "high",
+        "dependencies": [],
         "status": "pending",
         "subtasks": [],
         "complexity": null,
@@ -5077,8 +5093,8 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-06-20T03:37:37.989Z",
-      "taskCount": 124,
+      "lastModified": "2026-06-20T04:10:05.343Z",
+      "taskCount": 125,
       "completedCount": 87,
       "tags": [
         "master"

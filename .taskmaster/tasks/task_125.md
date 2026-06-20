@@ -2,7 +2,7 @@
 
 **Title:** Remove seller PII from publicly-readable vehicle documents
 
-**Status:** pending
+**Status:** in-progress
 
 **Dependencies:** None
 
