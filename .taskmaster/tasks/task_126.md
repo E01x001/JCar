@@ -2,7 +2,7 @@
 
 **Title:** Fix soft-delete contradiction: defer destructive deletion to permanent-delete
 
-**Status:** review
+**Status:** done
 
 **Dependencies:** None
 
