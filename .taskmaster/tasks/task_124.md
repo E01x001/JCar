@@ -2,7 +2,7 @@
 
 **Title:** Roll back auth account if Firestore write fails in registerUser
 
-**Status:** in-progress
+**Status:** done
 
 **Dependencies:** None
 

@@ -2,7 +2,7 @@
 
 **Title:** Introduce a __DEV__-gated logger and prune production console noise
 
-**Status:** pending
+**Status:** done
 
 **Dependencies:** None
 

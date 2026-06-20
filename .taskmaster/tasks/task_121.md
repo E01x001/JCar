@@ -2,7 +2,7 @@
 
 **Title:** Consolidate consultation status enum to match the real 8-state model
 
-**Status:** pending
+**Status:** done
 
 **Dependencies:** None
 
