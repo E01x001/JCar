@@ -10,7 +10,9 @@ import { useToast } from '../hooks/useToast';
 import { VEHICLE_STATUS, VEHICLE_TYPES, isValidVehicleType } from '../constants';
 import useVehicleStore from '../stores/vehicleStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
-import { prepareImageForUpload, uploadImageWithProgress, formatFileSize } from '../utils/imageHelpers';
+import { prepareImageForUpload, prepareImagesForUpload, pickMultipleFromGallery, uploadImageWithProgress } from '../utils/imageHelpers';
+
+const MAX_IMAGES = 8;
 
 const VehicleRegistrationScreen = () => {
   const { user, sellerName, sellerPhone, sellerEmail } = useContext(AuthContext);
@@ -22,8 +24,7 @@ const VehicleRegistrationScreen = () => {
   const [vehicleType, setVehicleType] = useState(''); // ✅ 초기값 "" (선택 안 한 상태)
   const [loading, setLoading] = useState(false);
   const [vehicleData, setVehicleData] = useState(null);
-  const [imageUri, setImageUri] = useState(null);
-  const [imageInfo, setImageInfo] = useState(null); // Store compressed image info
+  const [images, setImages] = useState([]); // Task 127: multiple images [{ uri, size }]
   const [uploadProgress, setUploadProgress] = useState(0); // Track upload progress (0-100)
   const [isUploading, setIsUploading] = useState(false); // Upload state flag
   const [saving, setSaving] = useState(false); // Save in-progress flag (double-submit guard)
@@ -52,23 +53,27 @@ const VehicleRegistrationScreen = () => {
    * Task 107: Optimized image selection with compression
    * Shows alert to choose between gallery or camera, then prepares image
    */
+  const remaining = MAX_IMAGES - images.length;
+
   const handleImageSelect = async () => {
+    if (remaining <= 0) {
+      toast.showWarning('알림', `사진은 최대 ${MAX_IMAGES}장까지 추가할 수 있습니다.`);
+      return;
+    }
+
     Alert.alert(
       '사진 선택',
-      '사진을 어디서 가져오시겠습니까?',
+      `사진을 어디서 가져오시겠습니까? (최대 ${remaining}장 추가 가능)`,
       [
         {
-          text: '갤러리',
+          text: '갤러리 (여러 장)',
           onPress: async () => {
             try {
-              const result = await prepareImageForUpload('gallery');
-              if (result) {
-                setImageUri(result.uri);
-                setImageInfo(result);
-                toast.showSuccess(
-                  '사진 준비 완료',
-                  `크기: ${formatFileSize(result.size)}`
-                );
+              const picked = await pickMultipleFromGallery({ maxFiles: remaining });
+              if (picked.length > 0) {
+                const prepared = await prepareImagesForUpload(picked);
+                setImages((prev) => [...prev, ...prepared].slice(0, MAX_IMAGES));
+                toast.showSuccess('사진 준비 완료', `${prepared.length}장 추가됨`);
               }
             } catch (error) {
               logger.error('Gallery selection error:', error);
@@ -77,17 +82,13 @@ const VehicleRegistrationScreen = () => {
           },
         },
         {
-          text: '카메라',
+          text: '카메라 (1장)',
           onPress: async () => {
             try {
               const result = await prepareImageForUpload('camera');
               if (result) {
-                setImageUri(result.uri);
-                setImageInfo(result);
-                toast.showSuccess(
-                  '사진 촬영 완료',
-                  `크기: ${formatFileSize(result.size)}`
-                );
+                setImages((prev) => [...prev, { uri: result.uri, size: result.size }].slice(0, MAX_IMAGES));
+                toast.showSuccess('사진 촬영 완료', '1장 추가됨');
               }
             } catch (error) {
               logger.error('Camera capture error:', error);
@@ -102,6 +103,10 @@ const VehicleRegistrationScreen = () => {
       ],
       { cancelable: true }
     );
+  };
+
+  const removeImageAt = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const fetchVehicleInfo = async () => {
@@ -177,25 +182,30 @@ const VehicleRegistrationScreen = () => {
       // Task 62.4: Use modular currentUser
       const auth = getAuth();
       const currentUser = auth.currentUser;
-      let uploadedImageUrl = `https://www.cartory.net/cars/${vehicleData.CARURL}`;
+      // Default to the CarZen catalog image when the user adds no photos.
+      let imageUrls = [`https://www.cartory.net/cars/${vehicleData.CARURL}`];
 
-      // Task 107: Image upload with progress tracking
-      if (imageUri) {
+      // Task 127: upload each selected image, tracking overall progress.
+      if (images.length > 0) {
         setIsUploading(true);
         setUploadProgress(0);
 
-        const filename = `vehicle_${Date.now()}_${tempId}.jpg`;
-        const storagePath = `vehicles/${filename}`;
-
         try {
-          uploadedImageUrl = await uploadImageWithProgress(
-            imageUri,
-            storagePath,
-            (progress) => {
-              setUploadProgress(progress);
-            }
-          );
-          logger.debug('✅ Image uploaded:', uploadedImageUrl);
+          const uploaded = [];
+          for (let i = 0; i < images.length; i++) {
+            const filename = `vehicle_${Date.now()}_${tempId}_${i}.jpg`;
+            const url = await uploadImageWithProgress(
+              images[i].uri,
+              `vehicles/${filename}`,
+              (progress) => {
+                // Combine per-image progress into an overall 0-100 value.
+                setUploadProgress(((i + progress / 100) / images.length) * 100);
+              }
+            );
+            uploaded.push(url);
+          }
+          imageUrls = uploaded;
+          logger.debug(`✅ Uploaded ${uploaded.length} images`);
         } catch (uploadError) {
           logger.error('❌ Image upload failed:', uploadError);
           toast.showError('오류', '이미지 업로드 중 오류가 발생했습니다.');
@@ -219,7 +229,8 @@ const VehicleRegistrationScreen = () => {
         price: vehicleData.PRICE,
         cc: vehicleData.CC,
         transmission: vehicleData.MISSION,
-        imageUrl: uploadedImageUrl,
+        imageUrls, // Task 127: full gallery
+        imageUrl: imageUrls[0], // backward-compat single image (list/legacy reads)
         vin: vehicleData.VIN,
         frontTire: vehicleData.FRONTTIRE,
         rearTire: vehicleData.REARTIRE,
@@ -253,8 +264,7 @@ const VehicleRegistrationScreen = () => {
       setRegiNumber('');
       setOwnerName('');
       setVehicleData(null);
-      setImageUri(null);
-      setImageInfo(null);
+      setImages([]);
       setVehicleType('');
 
       // Firestore write (non-blocking)
@@ -373,18 +383,27 @@ const VehicleRegistrationScreen = () => {
         </View>
 
         <TouchableOpacity onPress={handleImageSelect} style={styles.imageButton}>
-          <Text style={styles.imageButtonText}>추가 사진 선택 (선택)</Text>
+          <Text style={styles.imageButtonText}>
+            추가 사진 선택 (선택) {images.length > 0 ? `· ${images.length}/${MAX_IMAGES}` : ''}
+          </Text>
         </TouchableOpacity>
 
-        {imageUri && <Image source={{ uri: imageUri }} style={styles.imagePreview} />}
-
-        {/* Task 107: Display image info and upload progress */}
-        {imageInfo && (
-          <View style={styles.imageInfoContainer}>
-            <Text style={styles.imageInfoText}>
-              📎 압축된 크기: {formatFileSize(imageInfo.size)}
-            </Text>
-          </View>
+        {/* Task 127: multi-image thumbnail strip with per-image remove */}
+        {images.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbStrip}>
+            {images.map((img, index) => (
+              <View key={`${index}-${img.uri}`} style={styles.thumbWrapper}>
+                <Image source={{ uri: img.uri }} style={styles.thumb} />
+                <TouchableOpacity
+                  style={styles.thumbRemove}
+                  onPress={() => removeImageAt(index)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.thumbRemoveText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
         )}
 
         {isUploading && (
@@ -448,10 +467,16 @@ const styles = StyleSheet.create({
   vehicleImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 10 },
   imageButton: { padding: 10, backgroundColor: '#e0e0e0', alignItems: 'center', marginBottom: 10, borderRadius: 6 },
   imageButtonText: { color: '#333' },
-  imagePreview: { width: '100%', height: 200, resizeMode: 'cover', borderRadius: 6, marginBottom: 10 },
-  // Task 107: Image info and progress bar styles
-  imageInfoContainer: { backgroundColor: '#f0f8ff', padding: 8, borderRadius: 6, marginBottom: 10 },
-  imageInfoText: { fontSize: 14, color: '#2B4593', textAlign: 'center' },
+  // Task 127: multi-image thumbnail strip
+  thumbStrip: { marginBottom: 10 },
+  thumbWrapper: { marginRight: 8, position: 'relative' },
+  thumb: { width: 90, height: 90, borderRadius: 6, resizeMode: 'cover' },
+  thumbRemove: {
+    position: 'absolute', top: -6, right: -6,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: '#d11', alignItems: 'center', justifyContent: 'center',
+  },
+  thumbRemoveText: { color: '#fff', fontSize: 16, lineHeight: 18, fontWeight: 'bold' },
   progressContainer: { marginTop: 10, marginBottom: 15 },
   progressText: { fontSize: 14, color: '#2B4593', marginBottom: 5, textAlign: 'center', fontWeight: '600' },
   progressBarBackground: { height: 20, backgroundColor: '#e0e0e0', borderRadius: 10, overflow: 'hidden' },

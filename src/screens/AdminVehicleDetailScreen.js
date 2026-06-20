@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from '../utils/logger';
-import { View, Text, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatPrice, formatPhone } from '../utils/format';
@@ -8,6 +8,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
+import ImageCarousel from '../components/ImageCarousel';
 
 const { width } = Dimensions.get('window');
 
@@ -62,13 +63,10 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Vehicle Image */}
-        <Image
-          source={{ uri: vehicle.imageUrl }}
-          style={[styles.image, {
-            borderRadius: theme.borderRadius.lg,
-            marginBottom: theme.spacing.md,
-          }]}
+        {/* Vehicle Images (Task 127: carousel) */}
+        <ImageCarousel
+          images={vehicle.imageUrls || (vehicle.imageUrl ? [vehicle.imageUrl] : [])}
+          style={{ marginBottom: theme.spacing.md }}
         />
 
         {/* Title and Badges */}

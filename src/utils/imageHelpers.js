@@ -104,6 +104,50 @@ export const pickImageFromCamera = async (options = {}) => {
 };
 
 /**
+ * Pick multiple images from gallery (Task 127)
+ * Cropping is disabled for multi-select (the cropper is single-image only).
+ * @param {Object} options
+ * @param {number} options.maxFiles - Maximum number of images to select
+ * @returns {Promise<Array>} Array of selected image objects (empty if cancelled)
+ */
+export const pickMultipleFromGallery = async (options = {}) => {
+  const { maxFiles = 8 } = options;
+
+  try {
+    const images = await ImagePicker.openPicker({
+      multiple: true,
+      maxFiles,
+      mediaType: 'photo',
+      compressImageQuality: COMPRESSION_QUALITY,
+      includeBase64: false,
+    });
+    return Array.isArray(images) ? images : [images];
+  } catch (error) {
+    if (error.code === 'E_PICKER_CANCELLED') {
+      logger.debug('ℹ️ User cancelled multi image picker');
+      return [];
+    }
+    throw error;
+  }
+};
+
+/**
+ * Compress + validate a batch of picked images for upload (Task 127).
+ * @param {Array} images - Picker image objects (with .path and .size)
+ * @returns {Promise<Array>} Array of { uri, size } prepared images
+ */
+export const prepareImagesForUpload = async (images = []) => {
+  const prepared = [];
+  for (const image of images) {
+    const compressedUri = await compressImage(image.path);
+    const estimatedSize = image.size * COMPRESSION_QUALITY;
+    validateFileSize(estimatedSize);
+    prepared.push({ uri: compressedUri, originalUri: image.path, size: estimatedSize });
+  }
+  return prepared;
+};
+
+/**
  * Compress image to reduce file size
  * @param {string} imageUri - Local file path of image
  * @returns {Promise<string>} Compressed image path

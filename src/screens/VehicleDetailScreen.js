@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from '../utils/logger';
-import { View, Text, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuth } from '@react-native-firebase/auth';
@@ -8,6 +8,7 @@ import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
+import ImageCarousel from '../components/ImageCarousel';
 
 const { width } = Dimensions.get('window');
 
@@ -99,9 +100,10 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         contentContainerStyle={{ paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       >
-        <Image source={{ uri: vehicle.imageUrl }} style={[styles.image, {
-          borderRadius: theme.borderRadius.large,
-        }]} />
+        <ImageCarousel
+          images={vehicle.imageUrls || (vehicle.imageUrl ? [vehicle.imageUrl] : [])}
+          style={{ marginBottom: theme.spacing.md }}
+        />
 
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs }}>
           <Badge status="completed" label={vehicle.vehicleType || '승용차'} />
