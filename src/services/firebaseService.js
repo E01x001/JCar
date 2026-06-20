@@ -25,7 +25,7 @@ export { approveVehicle, rejectVehicle, getPendingVehicles, updateApprovalStatus
 export { getApprovedVehicles, getVehicleById, getVehiclesBySellerId, getVehiclesByStatus, searchVehicles, getVehicleCountByStatus } from './vehicle/vehicleQueryService';
 
 // Consultation services
-export { saveConsultationRequest, deleteConsultationAdmin, updateConsultationStatus, updateAdminMemo, updateSuggestedSlots, completeConsultation, completeConsultationDeal, cancelConsultation, resubmitConsultation, createAdminOwnedVehicle, updateAdminOwnedVehicle } from './consultation/consultationService';
+export { saveConsultationRequest, deleteConsultationAdmin, updateConsultationStatus, updateAdminMemo, updateSuggestedSlots, completeConsultation, cancelConsultation, resubmitConsultation, createAdminOwnedVehicle, updateAdminOwnedVehicle } from './consultation/consultationService';
 export { subscribeToBuyConsultations, subscribeToSellConsultations, subscribeToCompletedConsultations, fetchCompletedConsultationsPaginated, getAdminOwnedVehicles } from './consultation/consultationQueryService';
 export { checkDuplicateConsultation, checkTimeSlotConflict, validateConsultationRequest, canModifyConsultation, canCancelConsultation } from './consultation/consultationValidation';
 
