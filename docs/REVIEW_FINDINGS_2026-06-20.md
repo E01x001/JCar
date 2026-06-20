@@ -20,8 +20,8 @@
 
 - [x] 🔴 **`registerUser` 클라우드 함수 레포 부재** → ✅ git 이력에서 복구 + 배포(`70168bb`). 추가로 Firestore 실패 시 Auth 롤백(`e01cf06`, #124).
 - [x] 🟡 **로그인/회원가입 버튼 로딩·disabled 없음(중복 탭)** → ✅ 중복제출 가드(`595411f`) + Login `finally` 복원 버그까지(`a7fc3e7`).
-- [ ] 🟡 **데드코드**: `authService.js`의 `registerUser`/`loginUser` 미사용(배럴 재export만). 화면이 직접 Firebase 호출 → 서비스 계층 추상화 붕괴. **미완**.
-- [ ] 🟡 **로그인 에러 매핑 중복**(LoginScreen ↔ `handleFirebaseError`). **미완**.
+- [x] 🟡 **데드코드 `authService.js`(registerUser/loginUser)** → ✅ 파일 삭제 + 배럴 재export 제거 + 구식 테스트 제거(`57e536e`).
+- [x] 🟡 **로그인 에러 매핑 중복** → ✅ LoginScreen이 `handleFirebaseError` 사용하도록 일원화(switch 제거, Crashlytics도 중앙화)(`57e536e`).
 
 ## 2. 차량 등록 (VehicleRegistrationScreen.js)
 
@@ -55,7 +55,7 @@
 
 ## 7. 사용자 피드백 패턴 — Alert vs Toast (#123)
 
-- [ ] 🟡 **Alert.alert(48곳/14파일)와 `useToast`가 혼용** → 피드백 UX 불일치. **미완(#123)**.
+- [~] 🟡 **Alert.alert(48곳/14파일)와 `useToast` 혼용** → ⚠️ **부분(#123)**: 가장 노이즈 큰 `ConsultationRequestScreen` 9개 alert를 toast로 전환(성공+이동은 toast+goBack), 확인 대화상자는 의도적 유지(`57e536e`). **잔여**: 관리자 화면의 정보성 alert + 서비스 레이어가 직접 Alert를 띄우는 안티패턴(별도 리팩토링).
 
 **핵심(트랩 주의)**: 단순 치환 불가. 용도별로 나눠야 함.
 - **정보성 단일 알림**("저장 실패", "조회 성공" 등) → **Toast로 전환** 대상.
@@ -78,8 +78,8 @@
 | 🔴 | rate-limit 검증 순서 | ✅ `ad62aac` |
 | 🟡 | 비동기 버튼 로딩·disabled 표준화 | ✅ `595411f` (Login/Register/차량저장/상담) |
 | 🟡 | console.log `__DEV__` 게이팅 | ✅ #122 (`4a27a6c`/`19987ec`/`1efed6d`/`941bd8a`) — 240곳 logger 이관 |
-| 🟡 | Alert vs Toast 피드백 통일 | ⬜ **#123 (다음 예정)** |
-| 🟡 | 중복·데드코드 정리 | ⚠️ 일부(동적 import 등) 완료, authService/completeConsultationDeal 미완 |
+| 🟡 | Alert vs Toast 피드백 통일 | ⚠️ 부분(#123): 사용자 화면 전환 완료, 관리자/서비스 잔여(`57e536e`) |
+| 🟡 | 중복·데드코드 정리 | ⚠️ authService 삭제 + 동적 import 완료(`57e536e`/`ad62aac`), completeConsultationDeal 중복 미완 |
 | 🟢 | 하드코딩 스타일 → theme 토큰 | ⬜ |
 | 🟢 | 이미지 placeholder | ⚠️ 캐러셀 placeholder만 |
 | 🟢 | 상세화면 실시간화 | ⬜ |
