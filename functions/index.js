@@ -78,6 +78,11 @@ exports.recoverDeletedUser = accountManagement.recoverDeletedUser;
 const registration = require("./accountManagement/registerUser");
 exports.registerUser = registration.registerUser;
 
+// Scheduled permanent deletion of past-due soft-deleted accounts (Task 126).
+// Destroys data only after the 30-day recovery window; soft-delete just hides it.
+const permanentDelete = require("./accountManagement/permanentDelete");
+exports.scheduledPermanentDelete = permanentDelete.scheduledPermanentDelete;
+
 // ============================================================================
 // Consultation Request Management Functions
 // ============================================================================
