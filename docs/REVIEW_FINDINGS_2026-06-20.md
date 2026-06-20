@@ -51,7 +51,7 @@
 
 - [x] 🔴 **상태 enum 불일치** → ✅ 통일(#121, `8bda952`). *정정*: 점검 당시 "존재하지 않는 값"으로 본 `confirmed`/`on-hold`는 실제 사용 중인 상태였음(ConsultationCard/쿼리). 따라서 enum을 **실제 8-state(+confirmed/on-hold/archived)** 로 확장하고 매직스트링을 상수화. *narrow 했다면 회귀였음.*
 - [x] 🟡 **cancelConsultation 동적 `await import` → 정적** → ✅ `getDoc` 정적 import(`ad62aac`).
-- [ ] 🟡 **`completeConsultation` vs `completeConsultationDeal` 중복 트랜잭션** → 통합 필요. **미완**.
+- [x] 🟡 **`completeConsultation` vs `completeConsultationDeal` 중복** → ✅ `completeConsultationDeal`은 호출처 없는 데드 중복이라 제거(배럴 포함)(`c493085`). `completeConsultation`만 유지.
 
 ## 7. 사용자 피드백 패턴 — Alert vs Toast (#123)
 
@@ -79,7 +79,7 @@
 | 🟡 | 비동기 버튼 로딩·disabled 표준화 | ✅ `595411f` (Login/Register/차량저장/상담) |
 | 🟡 | console.log `__DEV__` 게이팅 | ✅ #122 (`4a27a6c`/`19987ec`/`1efed6d`/`941bd8a`) — 240곳 logger 이관 |
 | 🟡 | Alert vs Toast 피드백 통일 | ⚠️ 부분(#123): 사용자 화면 전환 완료, 관리자/서비스 잔여(`57e536e`) |
-| 🟡 | 중복·데드코드 정리 | ⚠️ authService 삭제 + 동적 import 완료(`57e536e`/`ad62aac`), completeConsultationDeal 중복 미완 |
+| 🟡 | 중복·데드코드 정리 | ✅ authService(`57e536e`) + completeConsultationDeal(`c493085`) + 동적 import(`ad62aac`) 제거 |
 | 🟢 | 하드코딩 스타일 → theme 토큰 | ⬜ |
 | 🟢 | 이미지 placeholder | ⚠️ 캐러셀 placeholder만 |
 | 🟢 | 상세화면 실시간화 | ✅ VehicleDetail onSnapshot 전환(`5eb731d`) |
