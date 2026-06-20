@@ -5084,7 +5084,7 @@
         "testStrategy": "Soft-delete an account, then recover within window: vehicles/consultations/images/private docs all still present. After permanentDeleteDate, scheduled function removes everything (Firestore + Storage + Auth). Verify no orphaned private subdocs or Storage objects remain.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "review",
         "subtasks": [],
         "complexity": null,
         "recommendedSubtasks": 0,

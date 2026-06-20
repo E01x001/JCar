@@ -1,5 +1,11 @@
 # Design — Deferred Account Deletion (Task 126)
 
+> **구현 상태 (2026-06):** P1·P2·P3 코드 완료(커밋됨), **functions 배포 대기**.
+> - P1 `cascadeDeleteUser` 파괴→숨김 + `recoverDeletedUser` un-hide + `vehicleFilterService` 필터 — done
+> - P2 `scheduledPermanentDelete`(onSchedule 매일 03:00 KST) 신설 — done (배포 시 Cloud Scheduler 활성화)
+> - P3 MyPage 카피 정확화 — done
+> - **남은 것**: `firebase deploy --only functions` (cascadeDeleteUser 갱신 + 신규 스케줄 함수). 그리고 *자가 복구 UI 없음* — Auth disabled 상태라 사용자가 직접 복구 불가 → **관리자 경유 복구**(recoverDeletedUser를 admin이 호출)가 실제 경로(카피의 "고객센터 문의"와 일치). 자가복구를 원하면 별도 작업.
+
 > 목표: "30일 복구 가능" 약속과 실제 동작을 일치시킨다. 탈퇴 시점에는 **아무것도
 > 파괴하지 않고**(숨김만), 30일 마감일에 **스케줄 함수가** 실제로 파괴한다.
 > 복구는 아무것도 안 지워졌으므로 전부 원상복구된다.
