@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import DatePicker from 'react-native-date-picker';
 import { AuthContext } from '../context/AuthContext';
@@ -9,10 +9,12 @@ import { saveConsultationRequest, resubmitConsultation, checkConsultationRateLim
 import useConsultationStore from '../stores/consultationStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 import { logger } from '../utils/logger';
+import { useToast } from '../hooks/useToast';
 
 const ConsultationRequestScreen = ({ route }) => {
   const { user, sellerName, sellerPhone } = useContext(AuthContext);
   const navigation = useNavigation();
+  const toast = useToast();
   const { addOptimisticConsultation, removeOptimisticConsultation, invalidateUserConsultationsCache } = useConsultationStore();
   const [selectedDate, setSelectedDate] = useState('');
   const [time, setTime] = useState(new Date());
@@ -80,19 +82,19 @@ const ConsultationRequestScreen = ({ route }) => {
 
     if (!user) {
       logger.warn('⛔ 사용자 정보 없음');
-      Alert.alert('로그인이 필요합니다.');
+      toast.showWarning('로그인이 필요합니다.');
       return;
     }
 
     if (!selectedDate) {
       logger.warn('⛔ 날짜 미선택');
-      Alert.alert('날짜를 선택해주세요.');
+      toast.showWarning('날짜를 선택해주세요.');
       return;
     }
 
     if (!time) {
       logger.warn('⛔ 시간 미선택');
-      Alert.alert('시간을 선택해주세요.');
+      toast.showWarning('시간을 선택해주세요.');
       return;
     }
 
@@ -109,15 +111,11 @@ const ConsultationRequestScreen = ({ route }) => {
         await resubmitConsultation(consultationId, formattedDate, formattedTime);
         logger.debug('✅ 재신청 성공');
 
-        Alert.alert('상담 재신청 완료', '새로운 일정으로 재신청되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        toast.showSuccess('상담 재신청 완료', '새로운 일정으로 재신청되었습니다.');
+        navigation.goBack();
       } catch (error) {
         logger.error('❌ 재신청 실패:', error);
-        Alert.alert('재신청 실패', '상담 재신청 중 오류가 발생했습니다. 다시 시도해주세요.');
+        toast.showError('재신청 실패', '상담 재신청 중 오류가 발생했습니다. 다시 시도해주세요.');
       } finally {
         setSubmitting(false);
       }
@@ -129,7 +127,7 @@ const ConsultationRequestScreen = ({ route }) => {
     logger.debug('🔁 중복 상담 여부:', isDuplicate);
 
     if (isDuplicate) {
-      Alert.alert('중복 요청', '이미 이 차량에 대한 상담을 신청하셨습니다.');
+      toast.showWarning('중복 요청', '이미 이 차량에 대한 상담을 신청하셨습니다.');
       setSubmitting(false);
       return;
     }
@@ -138,7 +136,7 @@ const ConsultationRequestScreen = ({ route }) => {
     // the user is told "접수 완료" and only afterwards rejected. (Task 82)
     const rateLimit = await checkConsultationRateLimit();
     if (!rateLimit.allowed) {
-      Alert.alert('요청 제한', rateLimit.message || '잠시 후 다시 시도해주세요.');
+      toast.showWarning('요청 제한', rateLimit.message || '잠시 후 다시 시도해주세요.');
       setSubmitting(false);
       return;
     }
@@ -170,12 +168,8 @@ const ConsultationRequestScreen = ({ route }) => {
     invalidateUserConsultationsCache(user.uid);
 
     // Show success and navigate immediately (optimistic)
-    Alert.alert('상담 요청 완료', '정상적으로 접수되었습니다.', [
-      {
-        text: '확인',
-        onPress: () => navigation.goBack(),
-      },
-    ]);
+    toast.showSuccess('상담 요청 완료', '정상적으로 접수되었습니다.');
+    navigation.goBack();
 
     // Fire Firestore write in background (non-blocking)
     executeOptimisticUpdate({
@@ -195,8 +189,8 @@ const ConsultationRequestScreen = ({ route }) => {
         logger.error('❌ Consultation write failed:', error);
         // Remove optimistic consultation
         removeOptimisticConsultation(tempId);
-        // Show error alert (user may have already navigated away)
-        Alert.alert('오류', '상담 요청 저장 중 문제가 발생했습니다. 다시 시도해주세요.');
+        // Show error (user may have already navigated away)
+        toast.showError('오류', '상담 요청 저장 중 문제가 발생했습니다. 다시 시도해주세요.');
       },
       revertFn: () => {
         removeOptimisticConsultation(tempId);

@@ -16,7 +16,6 @@
 // These will be removed once all imports are updated
 
 // Auth services
-export { registerUser, loginUser } from './auth/authService';
 export { getCurrentSession, refreshToken, isSessionValid, getUserToken } from './auth/sessionService';
 export { updateUserProfile, deleteUserAccount, getUserProfile, updateEmail, updatePassword } from './auth/accountService';
 

@@ -67,7 +67,11 @@
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:firebase.google.com)",
       "mcp__task-master-ai__update_subtask",
-      "Bash(npm run lint:fix:*)"
+      "Bash(npm run lint:fix:*)",
+      "Bash(cmd.exe /c \"cd /d C:\\\\JCar\\\\functions && firebase deploy --only functions:getVehicleInfo\")",
+      "mcp__mcp-installer__install_repo_mcp_server",
+      "Bash(claude mcp add:*)",
+      "Read(//c/Users/jyjeo/.claude/commands/**)"
     ],
     "deny": []
   },

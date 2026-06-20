@@ -70,16 +70,11 @@ jest.mock('@react-native-firebase/firestore', () => ({
   deleteField: jest.fn(() => ({ _methodName: 'FieldValue.delete' })),
 }));
 
-// Task 62.4: Import modular auth functions
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@react-native-firebase/auth';
-import { getFirestore, collection, doc, setDoc, updateDoc, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, setDoc, addDoc } from '@react-native-firebase/firestore';
 import { getMessaging, getToken } from '@react-native-firebase/messaging';
-import crashlytics from '@react-native-firebase/crashlytics';
 import functions from '@react-native-firebase/functions';
-import { Alert, Platform, PermissionsAndroid } from 'react-native';
+import { PermissionsAndroid } from 'react-native';
 import {
-  registerUser,
-  loginUser,
   saveConsultationRequest,
   saveFcmToken,
   requestNotificationPermission,
@@ -88,85 +83,6 @@ import {
 describe('firebaseService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('registerUser', () => {
-    it('should successfully register a new user', async () => {
-      const mockUser = { uid: 'test-uid-123' };
-      const mockUserCredential = { user: mockUser };
-
-      // Task 62.4: Mock modular auth functions
-      getAuth.mockReturnValue({});
-      createUserWithEmailAndPassword.mockResolvedValue(mockUserCredential);
-
-      // Mock modular Firestore API
-      getFirestore.mockReturnValue({});
-      doc.mockReturnValue({ id: 'test-uid-123' });
-      setDoc.mockResolvedValue();
-
-      const userData = {
-        email: 'test@example.com',
-        password: 'password123',
-        name: 'Test User',
-        phoneNumber: '01012345678',
-      };
-
-      const result = await registerUser(userData);
-
-      expect(result.success).toBe(true);
-      expect(result.user.uid).toBe('test-uid-123');
-      expect(createUserWithEmailAndPassword).toHaveBeenCalledWith({}, 'test@example.com', 'password123');
-      expect(setDoc).toHaveBeenCalled();
-    });
-
-    it('should handle registration error', async () => {
-      const mockError = new Error('Email already exists');
-      // Task 62.4: Mock modular auth error
-      getAuth.mockReturnValue({});
-      createUserWithEmailAndPassword.mockRejectedValue(mockError);
-
-      const userData = {
-        email: 'existing@example.com',
-        password: 'password123',
-        name: 'Test User',
-        phoneNumber: '01012345678',
-      };
-
-      // The service throws errors instead of returning error objects
-      await expect(registerUser(userData)).rejects.toThrow();
-    });
-  });
-
-  describe('loginUser', () => {
-    it('should successfully log in a user', async () => {
-      const mockUser = { uid: 'test-uid-123' };
-      const mockUserCredential = { user: mockUser };
-
-      // Task 62.4: Mock modular auth
-      getAuth.mockReturnValue({});
-      signInWithEmailAndPassword.mockResolvedValue(mockUserCredential);
-
-      const result = await loginUser({
-        email: 'test@example.com',
-        password: 'password123',
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.user.uid).toBe('test-uid-123');
-    });
-
-    it('should handle login error', async () => {
-      const mockError = new Error('Invalid credentials');
-      mockError.code = 'auth/invalid-credential';
-      // Task 62.4: Mock modular auth error
-      getAuth.mockReturnValue({});
-      signInWithEmailAndPassword.mockRejectedValue(mockError);
-
-      await expect(loginUser({
-        email: 'test@example.com',
-        password: 'wrongpassword',
-      })).rejects.toThrow();
-    });
   });
 
   describe('saveConsultationRequest', () => {
