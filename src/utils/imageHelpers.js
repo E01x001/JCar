@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+
 /**
  * Image Upload Optimization Utilities
  *
@@ -12,6 +12,7 @@
 import ImagePicker from 'react-native-image-crop-picker';
 import { Image } from 'react-native-compressor';
 import storage from '@react-native-firebase/storage';
+import { logger } from './logger';
 
 // Configuration constants
 const MAX_IMAGE_WIDTH = 1920;
@@ -45,7 +46,7 @@ export const pickImageFromGallery = async (options = {}) => {
       includeBase64: false,
     });
 
-    console.log('📷 Image selected from gallery:', {
+    logger.debug('📷 Image selected from gallery:', {
       path: image.path,
       size: (image.size / 1024).toFixed(2) + ' KB',
       dimensions: `${image.width}x${image.height}`,
@@ -54,7 +55,7 @@ export const pickImageFromGallery = async (options = {}) => {
     return image;
   } catch (error) {
     if (error.code === 'E_PICKER_CANCELLED') {
-      console.log('ℹ️ User cancelled image picker');
+      logger.debug('ℹ️ User cancelled image picker');
       return null;
     }
     throw error;
@@ -86,7 +87,7 @@ export const pickImageFromCamera = async (options = {}) => {
       includeBase64: false,
     });
 
-    console.log('📸 Image captured from camera:', {
+    logger.debug('📸 Image captured from camera:', {
       path: image.path,
       size: (image.size / 1024).toFixed(2) + ' KB',
       dimensions: `${image.width}x${image.height}`,
@@ -95,7 +96,7 @@ export const pickImageFromCamera = async (options = {}) => {
     return image;
   } catch (error) {
     if (error.code === 'E_PICKER_CANCELLED') {
-      console.log('ℹ️ User cancelled camera');
+      logger.debug('ℹ️ User cancelled camera');
       return null;
     }
     throw error;
@@ -109,7 +110,7 @@ export const pickImageFromCamera = async (options = {}) => {
  */
 export const compressImage = async (imageUri) => {
   try {
-    console.log('🗜️ Starting image compression...');
+    logger.debug('🗜️ Starting image compression...');
     const startTime = Date.now();
 
     const compressedUri = await Image.compress(imageUri, {
@@ -119,12 +120,12 @@ export const compressImage = async (imageUri) => {
     });
 
     const duration = Date.now() - startTime;
-    console.log(`✅ Image compressed in ${duration}ms`);
-    console.log('   Output:', compressedUri);
+    logger.debug(`✅ Image compressed in ${duration}ms`);
+    logger.debug('   Output:', compressedUri);
 
     return compressedUri;
   } catch (error) {
-    console.error('❌ Image compression failed:', error);
+    logger.error('❌ Image compression failed:', error);
     throw new Error('이미지 압축 중 오류가 발생했습니다.');
   }
 };
@@ -159,7 +160,7 @@ export const uploadImageWithProgress = async (imageUri, storagePath, onProgress)
     // Track upload progress
     uploadTask.on('state_changed', (snapshot) => {
       const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      console.log(`📤 Upload progress: ${progress.toFixed(0)}%`);
+      logger.debug(`📤 Upload progress: ${progress.toFixed(0)}%`);
 
       if (onProgress) {
         onProgress(progress);
@@ -171,11 +172,11 @@ export const uploadImageWithProgress = async (imageUri, storagePath, onProgress)
 
     // Get download URL
     const downloadURL = await reference.getDownloadURL();
-    console.log('✅ Image uploaded successfully:', downloadURL);
+    logger.debug('✅ Image uploaded successfully:', downloadURL);
 
     return downloadURL;
   } catch (error) {
-    console.error('❌ Image upload failed:', error);
+    logger.error('❌ Image upload failed:', error);
     throw new Error('이미지 업로드 중 오류가 발생했습니다.');
   }
 };
@@ -211,11 +212,11 @@ export const prepareImageForUpload = async (source = 'gallery', options = {}) =>
     try {
       validateFileSize(estimatedSize);
     } catch (error) {
-      console.warn('⚠️ File size validation failed:', error.message);
+      logger.warn('⚠️ File size validation failed:', error.message);
       throw error;
     }
 
-    console.log('✅ Image prepared for upload');
+    logger.debug('✅ Image prepared for upload');
     return {
       uri: compressedUri,
       originalUri: image.path,
@@ -223,7 +224,7 @@ export const prepareImageForUpload = async (source = 'gallery', options = {}) =>
       isValid: true,
     };
   } catch (error) {
-    console.error('❌ Image preparation failed:', error);
+    logger.error('❌ Image preparation failed:', error);
     throw error;
   }
 };
@@ -235,9 +236,9 @@ export const prepareImageForUpload = async (source = 'gallery', options = {}) =>
 export const cleanupImageCache = async (imageUri) => {
   try {
     await ImagePicker.cleanSingle(imageUri);
-    console.log('🗑️ Cleaned up temporary image:', imageUri);
+    logger.debug('🗑️ Cleaned up temporary image:', imageUri);
   } catch (error) {
-    console.warn('⚠️ Failed to clean up image cache:', error);
+    logger.warn('⚠️ Failed to clean up image cache:', error);
   }
 };
 

@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+
 /**
  * Vehicle Store
  *
@@ -15,6 +15,7 @@
  */
 
 import {create} from 'zustand';
+import {logger} from '../utils/logger';
 import {
   getFirestore,
   collection,
@@ -65,11 +66,11 @@ const useVehicleStore = create((set, get) => ({
     const isExpired = now - cache.timestamp > CACHE_DURATION_MS;
 
     if (isExpired) {
-      console.log(`🗑️ Cache expired for key: ${cacheKey}`);
+      logger.debug(`🗑️ Cache expired for key: ${cacheKey}`);
       return false;
     }
 
-    console.log(
+    logger.debug(
         `✅ Cache hit for key: ${cacheKey} ` +
       `(age: ${Math.floor((now - cache.timestamp) / 1000)}s)`,
     );
@@ -104,7 +105,7 @@ const useVehicleStore = create((set, get) => ({
         },
       },
     }));
-    console.log(`💾 Cached data for key: ${cacheKey}`);
+    logger.debug(`💾 Cached data for key: ${cacheKey}`);
   },
 
   /**
@@ -112,7 +113,7 @@ const useVehicleStore = create((set, get) => ({
    */
   clearCache: () => {
     set({vehiclesCache: {}});
-    console.log('🗑️ All vehicle cache cleared');
+    logger.debug('🗑️ All vehicle cache cleared');
   },
 
   /**
@@ -136,11 +137,11 @@ const useVehicleStore = create((set, get) => ({
 
     // If already subscribed, don't create new listener
     if (store.unsubscribe) {
-      console.log('⚠️ Already subscribed to approved vehicles');
+      logger.debug('⚠️ Already subscribed to approved vehicles');
       return;
     }
 
-    console.log('🔥 Creating new Firestore listener for approved vehicles');
+    logger.debug('🔥 Creating new Firestore listener for approved vehicles');
     set({loading: true, error: null});
 
     const db = getFirestore();
@@ -155,7 +156,7 @@ const useVehicleStore = create((set, get) => ({
             ...doc.data(),
           }));
 
-          console.log(`✅ Received ${vehicleList.length} approved vehicles`);
+          logger.debug(`✅ Received ${vehicleList.length} approved vehicles`);
 
           set({
             approvedVehicles: vehicleList,
@@ -167,7 +168,7 @@ const useVehicleStore = create((set, get) => ({
           get().setCacheData(cacheKey, vehicleList);
         },
         (error) => {
-          console.error('❌ Error fetching approved vehicles:', error);
+          logger.error('❌ Error fetching approved vehicles:', error);
           set({
             loading: false,
             error: error,
@@ -200,11 +201,11 @@ const useVehicleStore = create((set, get) => ({
 
     // If already subscribed, don't create new listener
     if (store.unsubscribe) {
-      console.log('⚠️ Already subscribed to user vehicles');
+      logger.debug('⚠️ Already subscribed to user vehicles');
       return;
     }
 
-    console.log('🔥 Creating new Firestore listener for user vehicles', userId);
+    logger.debug('🔥 Creating new Firestore listener for user vehicles', userId);
     set({loading: true, error: null});
 
     const db = getFirestore();
@@ -219,7 +220,7 @@ const useVehicleStore = create((set, get) => ({
             ...doc.data(),
           }));
 
-          console.log(`✅ Received ${vehicleList.length} user vehicles`);
+          logger.debug(`✅ Received ${vehicleList.length} user vehicles`);
 
           set({
             vehicles: vehicleList,
@@ -231,7 +232,7 @@ const useVehicleStore = create((set, get) => ({
           get().setCacheData(cacheKey, vehicleList);
         },
         (error) => {
-          console.error('❌ Error fetching user vehicles:', error);
+          logger.error('❌ Error fetching user vehicles:', error);
           set({
             loading: false,
             error: error,
@@ -262,11 +263,11 @@ const useVehicleStore = create((set, get) => ({
 
     // If already subscribed, don't create new listener
     if (store.unsubscribe) {
-      console.log('⚠️ Already subscribed to all vehicles');
+      logger.debug('⚠️ Already subscribed to all vehicles');
       return;
     }
 
-    console.log('🔥 Creating new Firestore listener for all vehicles');
+    logger.debug('🔥 Creating new Firestore listener for all vehicles');
     set({loading: true, error: null});
 
     const db = getFirestore();
@@ -280,7 +281,7 @@ const useVehicleStore = create((set, get) => ({
             ...doc.data(),
           }));
 
-          console.log(`✅ Received ${vehicleList.length} vehicles`);
+          logger.debug(`✅ Received ${vehicleList.length} vehicles`);
 
           set({
             vehicles: vehicleList,
@@ -292,7 +293,7 @@ const useVehicleStore = create((set, get) => ({
           get().setCacheData(cacheKey, vehicleList);
         },
         (error) => {
-          console.error('❌ Error fetching all vehicles:', error);
+          logger.error('❌ Error fetching all vehicles:', error);
           set({
             loading: false,
             error: error,
@@ -309,7 +310,7 @@ const useVehicleStore = create((set, get) => ({
   unsubscribeFromVehicles: () => {
     const {unsubscribe} = get();
     if (unsubscribe) {
-      console.log('🔴 Unsubscribing from vehicle listener');
+      logger.debug('🔴 Unsubscribing from vehicle listener');
       unsubscribe();
       set({unsubscribe: null});
     }
@@ -351,7 +352,7 @@ const useVehicleStore = create((set, get) => ({
       vehicles: [optimisticVehicle, ...state.vehicles],
     }));
 
-    console.log(`✨ Added optimistic vehicle with temp ID: ${tempId}`);
+    logger.debug(`✨ Added optimistic vehicle with temp ID: ${tempId}`);
   },
 
   /**
@@ -363,7 +364,7 @@ const useVehicleStore = create((set, get) => ({
       vehicles: state.vehicles.filter((v) => v._tempId !== tempId),
     }));
 
-    console.log(`❌ Removed optimistic vehicle: ${tempId}`);
+    logger.debug(`❌ Removed optimistic vehicle: ${tempId}`);
   },
 
   /**
@@ -377,7 +378,7 @@ const useVehicleStore = create((set, get) => ({
       delete newCache[cacheKey];
       return {vehiclesCache: newCache};
     });
-    console.log(`🗑️ Invalidated cache for user vehicles: ${userId}`);
+    logger.debug(`🗑️ Invalidated cache for user vehicles: ${userId}`);
   },
 }));
 

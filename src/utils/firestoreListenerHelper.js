@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+
 /**
  * Firestore Listener Helper
  *
@@ -10,6 +10,7 @@
 
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { onSnapshot } from '@react-native-firebase/firestore';
+import { logger } from './logger';
 
 /**
  * Configuration for retry behavior
@@ -122,18 +123,18 @@ export function createFirestoreListener({
     const isFromCache = snapshot.metadata && snapshot.metadata.fromCache;
 
     if (isFromCache && !connectionContext.isOfflineMode) {
-      console.log(`📦 ${listenerName}: Loading from cache (offline mode)`);
+      logger.debug(`📦 ${listenerName}: Loading from cache (offline mode)`);
       connectionContext.setOfflineMode(true);
     }
 
     if (!isFromCache && connectionContext.isOfflineMode) {
-      console.log(`📡 ${listenerName}: Back online - receiving live data`);
+      logger.debug(`📡 ${listenerName}: Back online - receiving live data`);
       connectionContext.resetConnection();
     }
 
     // Reset retry state on successful snapshot
     if (currentAttempt > 0) {
-      console.log(`✅ ${listenerName}: Reconnected successfully`);
+      logger.debug(`✅ ${listenerName}: Reconnected successfully`);
       currentAttempt = 0;
       connectionContext.resetConnection();
     }
@@ -149,7 +150,7 @@ export function createFirestoreListener({
   function handleError(error) {
     if (!isActive) {return;}
 
-    console.error(`❌ ${listenerName}: Error occurred`, error.code, error.message);
+    logger.error(`❌ ${listenerName}: Error occurred`, error.code, error.message);
 
     // Log to Crashlytics
     reportCrashlyticsError(error);
@@ -160,7 +161,7 @@ export function createFirestoreListener({
 
     // Handle non-retryable errors
     if (!isRetryableError(error)) {
-      console.error(`🚫 ${listenerName}: Non-retryable error - ${error.code}`);
+      logger.error(`🚫 ${listenerName}: Non-retryable error - ${error.code}`);
       connectionContext.setReconnecting(false);
 
       // Call user's error handler
@@ -173,7 +174,7 @@ export function createFirestoreListener({
 
     // Check if max retries exceeded
     if (currentAttempt >= RETRY_CONFIG.MAX_RETRIES) {
-      console.error(`🚫 ${listenerName}: Max retries (${RETRY_CONFIG.MAX_RETRIES}) exceeded`);
+      logger.error(`🚫 ${listenerName}: Max retries (${RETRY_CONFIG.MAX_RETRIES}) exceeded`);
       connectionContext.setReconnecting(false);
 
       // Call user's error handler
@@ -188,7 +189,7 @@ export function createFirestoreListener({
     const delay = calculateBackoffDelay(currentAttempt);
     currentAttempt++;
 
-    console.log(`🔄 ${listenerName}: Retry attempt ${currentAttempt}/${RETRY_CONFIG.MAX_RETRIES} in ${delay}ms`);
+    logger.debug(`🔄 ${listenerName}: Retry attempt ${currentAttempt}/${RETRY_CONFIG.MAX_RETRIES} in ${delay}ms`);
 
     connectionContext.setReconnecting(true);
     connectionContext.setRetryAttempt(currentAttempt);
@@ -197,7 +198,7 @@ export function createFirestoreListener({
     retryTimer = setTimeout(() => {
       if (!isActive) {return;}
 
-      console.log(`🔄 ${listenerName}: Retrying now...`);
+      logger.debug(`🔄 ${listenerName}: Retrying now...`);
       subscribeToQuery();
     }, delay);
   }
@@ -224,7 +225,7 @@ export function createFirestoreListener({
         handleError
       );
     } catch (error) {
-      console.error(`❌ ${listenerName}: Failed to create listener`, error);
+      logger.error(`❌ ${listenerName}: Failed to create listener`, error);
       handleError(error);
     }
   }
@@ -256,7 +257,7 @@ export function createSimpleListener(query, onSnapshotCallback, onError) {
       onSnapshotCallback(snapshot);
     },
     (error) => {
-      console.error('Firestore listener error:', error);
+      logger.error('Firestore listener error:', error);
       reportCrashlyticsError(error);
 
       if (onError) {

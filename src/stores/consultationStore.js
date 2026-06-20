@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+
 /**
  * Consultation Store
  *
@@ -15,6 +15,7 @@
  */
 
 import {create} from 'zustand';
+import {logger} from '../utils/logger';
 import {
   getFirestore,
   collection,
@@ -65,11 +66,11 @@ const useConsultationStore = create((set, get) => ({
     const isExpired = now - cache.timestamp > CACHE_DURATION_MS;
 
     if (isExpired) {
-      console.log(`🗑️ Consultation cache expired for key: ${cacheKey}`);
+      logger.debug(`🗑️ Consultation cache expired for key: ${cacheKey}`);
       return false;
     }
 
-    console.log(
+    logger.debug(
         `✅ Consultation cache hit for key: ${cacheKey} ` +
       `(age: ${Math.floor((now - cache.timestamp) / 1000)}s)`,
     );
@@ -104,7 +105,7 @@ const useConsultationStore = create((set, get) => ({
         },
       },
     }));
-    console.log(`💾 Cached consultation data for key: ${cacheKey}`);
+    logger.debug(`💾 Cached consultation data for key: ${cacheKey}`);
   },
 
   /**
@@ -112,7 +113,7 @@ const useConsultationStore = create((set, get) => ({
    */
   clearCache: () => {
     set({consultationsCache: {}});
-    console.log('🗑️ All consultation cache cleared');
+    logger.debug('🗑️ All consultation cache cleared');
   },
 
   /**
@@ -136,11 +137,11 @@ const useConsultationStore = create((set, get) => ({
 
     // If already subscribed, don't create new listener
     if (store.unsubscribe) {
-      console.log('⚠️ Already subscribed to user consultations');
+      logger.debug('⚠️ Already subscribed to user consultations');
       return;
     }
 
-    console.log(`🔥 Creating new Firestore listener for user ${userId} consultations`);
+    logger.debug(`🔥 Creating new Firestore listener for user ${userId} consultations`);
     set({loading: true, error: null});
 
     const db = getFirestore();
@@ -155,7 +156,7 @@ const useConsultationStore = create((set, get) => ({
             ...doc.data(),
           }));
 
-          console.log(`✅ Received ${consultationList.length} user consultations`);
+          logger.debug(`✅ Received ${consultationList.length} user consultations`);
 
           set({
             userConsultations: consultationList,
@@ -167,7 +168,7 @@ const useConsultationStore = create((set, get) => ({
           get().setCacheData(cacheKey, consultationList);
         },
         (error) => {
-          console.error('❌ Error fetching user consultations:', error);
+          logger.error('❌ Error fetching user consultations:', error);
           set({
             loading: false,
             error: error,
@@ -198,11 +199,11 @@ const useConsultationStore = create((set, get) => ({
 
     // If already subscribed, don't create new listener
     if (store.unsubscribe) {
-      console.log('⚠️ Already subscribed to all consultations');
+      logger.debug('⚠️ Already subscribed to all consultations');
       return;
     }
 
-    console.log('🔥 Creating new Firestore listener for all consultations');
+    logger.debug('🔥 Creating new Firestore listener for all consultations');
     set({loading: true, error: null});
 
     const db = getFirestore();
@@ -216,7 +217,7 @@ const useConsultationStore = create((set, get) => ({
             ...doc.data(),
           }));
 
-          console.log(`✅ Received ${consultationList.length} consultations`);
+          logger.debug(`✅ Received ${consultationList.length} consultations`);
 
           set({
             allConsultations: consultationList,
@@ -228,7 +229,7 @@ const useConsultationStore = create((set, get) => ({
           get().setCacheData(cacheKey, consultationList);
         },
         (error) => {
-          console.error('❌ Error fetching all consultations:', error);
+          logger.error('❌ Error fetching all consultations:', error);
           set({
             loading: false,
             error: error,
@@ -245,7 +246,7 @@ const useConsultationStore = create((set, get) => ({
   unsubscribeFromConsultations: () => {
     const {unsubscribe} = get();
     if (unsubscribe) {
-      console.log('🔴 Unsubscribing from consultation listener');
+      logger.debug('🔴 Unsubscribing from consultation listener');
       unsubscribe();
       set({unsubscribe: null});
     }
@@ -287,7 +288,7 @@ const useConsultationStore = create((set, get) => ({
       userConsultations: [optimisticConsultation, ...state.userConsultations],
     }));
 
-    console.log(`✨ Added optimistic consultation with temp ID: ${tempId}`);
+    logger.debug(`✨ Added optimistic consultation with temp ID: ${tempId}`);
   },
 
   /**
@@ -301,7 +302,7 @@ const useConsultationStore = create((set, get) => ({
       ),
     }));
 
-    console.log(`❌ Removed optimistic consultation: ${tempId}`);
+    logger.debug(`❌ Removed optimistic consultation: ${tempId}`);
   },
 
   /**
@@ -315,7 +316,7 @@ const useConsultationStore = create((set, get) => ({
       delete newCache[cacheKey];
       return {consultationsCache: newCache};
     });
-    console.log(`🗑️ Invalidated cache for user consultations: ${userId}`);
+    logger.debug(`🗑️ Invalidated cache for user consultations: ${userId}`);
   },
 }));
 
