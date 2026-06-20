@@ -6,6 +6,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { logger } from '../utils/logger';
 import PropTypes from 'prop-types';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -70,13 +71,13 @@ export const ConnectionProvider = ({ children }) => {
 
       // If connection restored, reset reconnection state
       if (connected && (isReconnecting || isOfflineMode)) {
-        console.log('📡 Connection restored');
+        logger.debug('📡 Connection restored');
         resetConnection();
       }
 
       // If connection lost, enter offline mode
       if (!connected && !isOfflineMode) {
-        console.log('📡 Connection lost - entering offline mode');
+        logger.debug('📡 Connection lost - entering offline mode');
         setIsOfflineMode(true);
       }
     });

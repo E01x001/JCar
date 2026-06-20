@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { firebaseFunctions } from '../firebase/firebaseConfig';
 import { useTheme } from '../theme/ThemeProvider';
@@ -54,14 +55,14 @@ const RegisterScreen = ({ navigation }) => {
       const registerUser = firebaseFunctions.httpsCallable('registerUser');
 
       const result = await registerUser({ email, password, name, phoneNumber });
-      console.log('[DEBUG] registerUser result:', result.data);
+      logger.debug('[DEBUG] registerUser result:', result.data);
 
       toast.showSuccess('회원가입 완료', '로그인 화면으로 이동합니다.');
       setTimeout(() => navigation.navigate('Login'), 1000);
 
     } catch (error) {
-      console.error('--- registerUser Cloud Function Error ---');
-      console.error(error);
+      logger.error('--- registerUser Cloud Function Error ---');
+      logger.error(error);
 
       const errorMsg = error?.code
         ? `${error.code}: ${error.message}`

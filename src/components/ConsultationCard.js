@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useContext } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -90,7 +91,7 @@ const ConsultationCard = ({
         onUpdateSuccess();
       }
     } catch (error) {
-      console.error('상태 업데이트 실패:', error);
+      logger.error('상태 업데이트 실패:', error);
       toast.showError('업데이트 중 오류가 발생했습니다.');
     } finally {
       setIsUpdating(false);
@@ -141,7 +142,7 @@ const ConsultationCard = ({
       }
     } catch (error) {
       // Task 61: Rollback optimistic UI update on failure
-      console.error('거래완료 처리 실패:', error);
+      logger.error('거래완료 처리 실패:', error);
       setOptimisticStatus(null);
       setOriginalConsultation(null);
 
@@ -181,7 +182,7 @@ const ConsultationCard = ({
         onUpdateSuccess();
       }
     } catch (error) {
-      console.error('상담 거절 처리 실패:', error);
+      logger.error('상담 거절 처리 실패:', error);
       toast.showError('거절 처리 중 오류가 발생했습니다.');
       throw error; // Re-throw for modal to handle
     } finally {
@@ -212,7 +213,7 @@ const ConsultationCard = ({
         onUpdateSuccess();
       }
     } catch (error) {
-      console.error('메모 저장 실패:', error);
+      logger.error('메모 저장 실패:', error);
       toast.showError('메모 저장 중 오류가 발생했습니다.');
       throw error; // Re-throw for modal to handle
     } finally {
@@ -243,7 +244,7 @@ const ConsultationCard = ({
         onUpdateSuccess();
       }
     } catch (error) {
-      console.error('대체 시간 저장 실패:', error);
+      logger.error('대체 시간 저장 실패:', error);
       toast.showError('대체 시간 저장 중 오류가 발생했습니다.');
       throw error; // Re-throw for modal to handle
     } finally {

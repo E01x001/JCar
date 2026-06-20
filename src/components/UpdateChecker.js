@@ -1,6 +1,7 @@
 // src/components/UpdateChecker.js
 // Task 62.5: Removed unused Firebase imports and functions (feature disabled)
 import React, { useEffect, useState } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, Modal, Button, ActivityIndicator } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
@@ -15,30 +16,30 @@ const UpdateChecker = () => {
 
   const handleDownloadAndInstall = async () => {
     try {
-      // eslint-disable-next-line no-console
-      console.log('[APK 다운로드 시작]');
+
+      logger.debug('[APK 다운로드 시작]');
       const { dirs } = ReactNativeBlobUtil.fs;
       const downloadPath = `${dirs.DownloadDir}/newApp.apk`;
 
-      // eslint-disable-next-line no-console
-      console.log('[APK 경로]', downloadPath);
-      // eslint-disable-next-line no-console
-      console.log('[APK URL]', updateInfo.apkUrl);
+
+      logger.debug('[APK 경로]', downloadPath);
+
+      logger.debug('[APK URL]', updateInfo.apkUrl);
 
       const res = await ReactNativeBlobUtil.config({
         fileCache: true,
         path: downloadPath,
       }).fetch('GET', updateInfo.apkUrl);
 
-      // eslint-disable-next-line no-console
-      console.log('[APK 다운로드 완료]', res.path());
+
+      logger.debug('[APK 다운로드 완료]', res.path());
 
       // eslint-disable-next-line no-alert
       alert('다운로드 완료 - 설치를 시작합니다.');
       ReactNativeBlobUtil.android.actionViewIntent(res.path(), 'application/vnd.android.package-archive');
     } catch (error) {
 
-      console.error('[APK 다운로드 실패]', error);
+      logger.error('[APK 다운로드 실패]', error);
       // eslint-disable-next-line no-alert
       alert('오류: 다운로드에 실패했습니다.');
     }

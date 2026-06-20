@@ -1,5 +1,6 @@
 // src/services/vehicleFilterService.js
 import { getFirestore, collection, query, where, orderBy, getDocs, onSnapshot } from '@react-native-firebase/firestore';
+import { logger } from '../utils/logger';
 
 /**
  * 필터를 적용하여 차량 목록 조회
@@ -70,7 +71,7 @@ export const getFilteredVehicles = async (filters) => {
 
     return vehicles;
   } catch (error) {
-    console.error('차량 필터링 오류:', error);
+    logger.error('차량 필터링 오류:', error);
     throw error;
   }
 };
@@ -137,13 +138,13 @@ export const subscribeToFilteredVehicles = (filters, callback) => {
         callback(vehicles);
       },
       (error) => {
-        console.error('차량 구독 오류:', error);
+        logger.error('차량 구독 오류:', error);
       }
     );
 
     return unsubscribe;
   } catch (error) {
-    console.error('차량 구독 설정 오류:', error);
+    logger.error('차량 구독 설정 오류:', error);
     throw error;
   }
 };

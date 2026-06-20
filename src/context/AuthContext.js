@@ -2,6 +2,7 @@
 // Task 62.4: Migrated to React Native Firebase Modular API (v22+)
 // Task 63.2: Migrated Crashlytics and Messaging to v22 Modular API
 import React, { createContext, useState, useEffect } from 'react';
+import { logger } from '../utils/logger';
 import { Alert } from 'react-native';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
@@ -13,7 +14,7 @@ import Toast from 'react-native-toast-message';
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // console.log('🔐 AuthProvider initializing...');
+  // logger.debug('🔐 AuthProvider initializing...');
 
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
@@ -65,7 +66,7 @@ export const AuthProvider = ({ children }) => {
             await saveFcmToken(currentUser.uid);
           }
         } catch (error) {
-          console.error('AuthContext: Error loading user data:', error);
+          logger.error('AuthContext: Error loading user data:', error);
           reportCrashlyticsError(error);
           logCrashlyticsMessage('AuthContext: Failed to load user data');
         }
@@ -83,7 +84,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const messagingInstance = getMessaging();
     const unsubscribeTokenRefresh = onTokenRefresh(messagingInstance, async (newToken) => {
-      console.log('🔄 FCM 토큰 갱신됨:', newToken);
+      logger.debug('🔄 FCM 토큰 갱신됨:', newToken);
 
       // Task 62.4: Use modular currentUser
       const auth = getAuth();
@@ -93,9 +94,9 @@ export const AuthProvider = ({ children }) => {
           const db = getFirestore();
           const userDocRef = doc(db, 'users', currentUser.uid);
           await updateDoc(userDocRef, { fcmToken: newToken });
-          console.log('✅ 갱신된 FCM 토큰 저장 완료');
+          logger.debug('✅ 갱신된 FCM 토큰 저장 완료');
         } catch (error) {
-          console.error('❌ 갱신된 FCM 토큰 저장 실패:', error);
+          logger.error('❌ 갱신된 FCM 토큰 저장 실패:', error);
           reportCrashlyticsError(error);
           logCrashlyticsMessage('onTokenRefresh: Failed to save new token');
         }

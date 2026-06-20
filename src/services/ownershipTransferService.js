@@ -12,6 +12,7 @@
  */
 
 import { getFirestore, collection, doc, runTransaction, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, arrayUnion } from '@react-native-firebase/firestore';
+import { logger } from '../utils/logger';
 import { reportCrashlyticsError, logCrashlyticsMessage } from './notification/notificationService';
 import analytics from '@react-native-firebase/analytics';
 import perf from '@react-native-firebase/perf';
@@ -50,7 +51,7 @@ export const transferVehicleToAdmin = async (
   const startTime = Date.now();
 
   try {
-    console.log('🔄 Starting transferVehicleToAdmin transaction', {
+    logger.debug('🔄 Starting transferVehicleToAdmin transaction', {
       vehicleId,
       sellerId,
       consultationRequestId,
@@ -158,7 +159,7 @@ export const transferVehicleToAdmin = async (
         archivedAt: serverTimestamp(),
       });
 
-      console.log('✅ transferVehicleToAdmin transaction completed', {
+      logger.debug('✅ transferVehicleToAdmin transaction completed', {
         transferId,
         vehicleId,
         consultationRequestId,
@@ -208,7 +209,7 @@ export const transferVehicleToAdmin = async (
       transferId,
     };
   } catch (error) {
-    console.error('❌ transferVehicleToAdmin failed:', error);
+    logger.error('❌ transferVehicleToAdmin failed:', error);
 
     // Task 60: Create audit log entry for failure
     const duration = Date.now() - startTime;
@@ -236,7 +237,7 @@ export const transferVehicleToAdmin = async (
         },
       });
     } catch (auditError) {
-      console.error('Failed to create audit log:', auditError);
+      logger.error('Failed to create audit log:', auditError);
     }
 
     // Task 60: Log Analytics event - transfer failed
@@ -309,7 +310,7 @@ export const transferVehicleToBuyer = async (
   const startTime = Date.now();
 
   try {
-    console.log('🔄 Starting transferVehicleToBuyer transaction', {
+    logger.debug('🔄 Starting transferVehicleToBuyer transaction', {
       vehicleId,
       adminId,
       buyerId,
@@ -430,7 +431,7 @@ export const transferVehicleToBuyer = async (
         archivedAt: serverTimestamp(),
       });
 
-      console.log('✅ transferVehicleToBuyer transaction completed', {
+      logger.debug('✅ transferVehicleToBuyer transaction completed', {
         transferId,
         vehicleId,
         buyerId,
@@ -481,7 +482,7 @@ export const transferVehicleToBuyer = async (
       transferId,
     };
   } catch (error) {
-    console.error('❌ transferVehicleToBuyer failed:', error);
+    logger.error('❌ transferVehicleToBuyer failed:', error);
 
     // Task 60: Create audit log entry for failure
     const duration = Date.now() - startTime;
@@ -509,7 +510,7 @@ export const transferVehicleToBuyer = async (
         },
       });
     } catch (auditError) {
-      console.error('Failed to create audit log:', auditError);
+      logger.error('Failed to create audit log:', auditError);
     }
 
     // Task 60: Log Analytics event - transfer failed
@@ -570,7 +571,7 @@ export const getVehicleOwnershipHistory = async (vehicleId) => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('Failed to get ownership history:', error);
+    logger.error('Failed to get ownership history:', error);
     reportCrashlyticsError(error);
     return [];
   }
@@ -598,7 +599,7 @@ export const getAllOwnershipTransfers = async (limitCount = 50) => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('Failed to get ownership transfers:', error);
+    logger.error('Failed to get ownership transfers:', error);
     reportCrashlyticsError(error);
     return [];
   }

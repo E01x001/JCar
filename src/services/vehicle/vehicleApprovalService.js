@@ -4,6 +4,7 @@
  */
 
 import firestore from '@react-native-firebase/firestore';
+import { logger } from '../../utils/logger';
 
 /**
  * Approve a vehicle
@@ -21,7 +22,7 @@ export const approveVehicle = async (vehicleId) => {
 
     return { success: true, message: 'Vehicle approved successfully' };
   } catch (error) {
-    console.error('Error approving vehicle:', error);
+    logger.error('Error approving vehicle:', error);
     throw error;
   }
 };
@@ -43,7 +44,7 @@ export const rejectVehicle = async (vehicleId, reason = '') => {
 
     return { success: true, message: 'Vehicle rejected successfully' };
   } catch (error) {
-    console.error('Error rejecting vehicle:', error);
+    logger.error('Error rejecting vehicle:', error);
     throw error;
   }
 };
@@ -64,7 +65,7 @@ export const getPendingVehicles = async () => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('Error getting pending vehicles:', error);
+    logger.error('Error getting pending vehicles:', error);
     throw error;
   }
 };
@@ -93,7 +94,7 @@ export const updateApprovalStatus = async (vehicleId, status, additionalData = {
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating approval status:', error);
+    logger.error('Error updating approval status:', error);
     throw error;
   }
 };

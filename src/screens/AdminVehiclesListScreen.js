@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
@@ -101,7 +102,7 @@ const AdminVehiclesListScreen = ({ navigation }) => {
                 result.data.message + `\n삭제된 이미지: ${result.data.deletedImages}개`
               );
             } catch (error) {
-              console.error('차량 삭제 오류:', error);
+              logger.error('차량 삭제 오류:', error);
 
               let errorMessage = '차량 삭제 중 문제가 발생했습니다.';
               if (error.code === 'permission-denied') {

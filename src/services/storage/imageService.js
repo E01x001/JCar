@@ -4,6 +4,7 @@
  */
 
 import storage from '@react-native-firebase/storage';
+import { logger } from '../../utils/logger';
 import { Platform } from 'react-native';
 
 /**
@@ -24,7 +25,7 @@ export const uploadImage = async (uri, path) => {
 
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading image:', error);
+    logger.error('Error uploading image:', error);
     throw error;
   }
 };
@@ -39,7 +40,7 @@ export const uploadMultipleImages = async (uris, path) => {
 
     return downloadURLs;
   } catch (error) {
-    console.error('Error uploading multiple images:', error);
+    logger.error('Error uploading multiple images:', error);
     throw error;
   }
 };
@@ -54,7 +55,7 @@ export const deleteImage = async (imageUrl) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting image:', error);
+    logger.error('Error deleting image:', error);
     throw error;
   }
 };
@@ -69,7 +70,7 @@ export const deleteMultipleImages = async (imageUrls) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting multiple images:', error);
+    logger.error('Error deleting multiple images:', error);
     throw error;
   }
 };
@@ -84,7 +85,7 @@ export const getImageDownloadURL = async (path) => {
 
     return downloadURL;
   } catch (error) {
-    console.error('Error getting image download URL:', error);
+    logger.error('Error getting image download URL:', error);
     throw error;
   }
 };
@@ -101,7 +102,7 @@ export const compressAndUploadImage = async (uri, path, quality = 0.8) => {
 
     return downloadURL;
   } catch (error) {
-    console.error('Error compressing and uploading image:', error);
+    logger.error('Error compressing and uploading image:', error);
     throw error;
   }
 };
@@ -119,7 +120,7 @@ export const imageExists = async (path) => {
     if (error.code === 'storage/object-not-found') {
       return false;
     }
-    console.error('Error checking image existence:', error);
+    logger.error('Error checking image existence:', error);
     throw error;
   }
 };
@@ -134,7 +135,7 @@ export const getImageMetadata = async (path) => {
 
     return metadata;
   } catch (error) {
-    console.error('Error getting image metadata:', error);
+    logger.error('Error getting image metadata:', error);
     throw error;
   }
 };

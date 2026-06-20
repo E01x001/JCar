@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useContext } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
 import { getFirestore, collection, query, where, orderBy, onSnapshot } from '@react-native-firebase/firestore';
@@ -52,7 +53,7 @@ const OwnedVehiclesList = ({ onVehiclePress }) => {
         setLoading(false);
       },
       (error) => {
-        console.error('OwnedVehiclesList: Failed to fetch vehicles', error);
+        logger.error('OwnedVehiclesList: Failed to fetch vehicles', error);
         reportCrashlyticsError(error);
         logCrashlyticsMessage('OwnedVehiclesList: Firestore query failed');
         setLoading(false);

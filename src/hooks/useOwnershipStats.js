@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { logger } from '../utils/logger';
 import firestore from '@react-native-firebase/firestore';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 
@@ -34,7 +35,7 @@ const useOwnershipStats = (startDate = null, endDate = null) => {
       setError(null);
 
       try {
-        console.log('📊 Fetching ownership transfer stats', { startDate, endDate });
+        logger.debug('📊 Fetching ownership transfer stats', { startDate, endDate });
 
         // Build query
         let transfersQuery = firestore()
@@ -73,9 +74,9 @@ const useOwnershipStats = (startDate = null, endDate = null) => {
           totalAmount,
         });
 
-        console.log('✅ Ownership stats fetched', { totalTransfers, totalAmount });
+        logger.debug('✅ Ownership stats fetched', { totalTransfers, totalAmount });
       } catch (err) {
-        console.error('❌ Failed to fetch ownership stats:', err);
+        logger.error('❌ Failed to fetch ownership stats:', err);
         reportCrashlyticsError(err);
         logCrashlyticsMessage('useOwnershipStats failed');
         setError(err);

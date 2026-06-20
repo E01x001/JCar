@@ -4,6 +4,7 @@
  */
 
 import firestore from '@react-native-firebase/firestore';
+import { logger } from '../../utils/logger';
 
 /**
  * Check if user already has a pending consultation for a vehicle
@@ -19,7 +20,7 @@ export const checkDuplicateConsultation = async (userId, vehicleId) => {
 
     return !snapshot.empty;
   } catch (error) {
-    console.error('Error checking duplicate consultation:', error);
+    logger.error('Error checking duplicate consultation:', error);
     throw error;
   }
 };
@@ -39,7 +40,7 @@ export const checkTimeSlotConflict = async (vehicleId, preferredDate, preferredT
 
     return !snapshot.empty;
   } catch (error) {
-    console.error('Error checking time slot conflict:', error);
+    logger.error('Error checking time slot conflict:', error);
     throw error;
   }
 };

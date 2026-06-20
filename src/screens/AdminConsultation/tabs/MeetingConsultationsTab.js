@@ -1,4 +1,5 @@
 import React from 'react';
+import { logger } from '../../../utils/logger';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { formatPhone } from '../../../utils/format';
@@ -32,7 +33,7 @@ const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
       Alert.alert('완료', `상담 요청이 ${statusText}되었습니다.`);
     } catch (error) {
       Alert.alert('오류', '상태 업데이트 중 문제가 발생했습니다.');
-      console.error('MeetingConsultationsTab: Failed to update status', error);
+      logger.error('MeetingConsultationsTab: Failed to update status', error);
     }
   };
 

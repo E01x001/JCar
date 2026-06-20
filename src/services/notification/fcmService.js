@@ -10,6 +10,7 @@
  */
 
 import { getMessaging, getToken, requestPermission } from '@react-native-firebase/messaging';
+import { logger } from '../../utils/logger';
 import { getFirestore, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
 
@@ -29,7 +30,7 @@ export const getFCMToken = async () => {
     const token = await getToken(messagingInstance);
     return token;
   } catch (err) {
-    console.error('Failed to get FCM token:', err);
+    logger.error('Failed to get FCM token:', err);
     throw err;
   }
 };
@@ -44,7 +45,7 @@ export const requestFCMNotificationPermission = async () => {
     const authStatus = await requestPermission(messagingInstance);
     return authStatus;
   } catch (err) {
-    console.error('Failed to request notification permission:', err);
+    logger.error('Failed to request notification permission:', err);
     throw err;
   }
 };
@@ -59,13 +60,13 @@ export const requestNotificationPermission = async () => {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       );
-      console.log('Android 13+ 알림 권한 요청 결과:', granted);
+      logger.debug('Android 13+ 알림 권한 요청 결과:', granted);
 
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('✅ 알림 권한 허용됨');
+        logger.debug('✅ 알림 권한 허용됨');
         return true;
       } else {
-        console.log('❌ 알림 권한 거부됨');
+        logger.debug('❌ 알림 권한 거부됨');
         Alert.alert('알림 권한', '알림 기능을 사용하려면 설정에서 알림 권한을 활성화해주세요.');
         return false;
       }
@@ -77,16 +78,16 @@ export const requestNotificationPermission = async () => {
         authStatus === 2;    // messaging.AuthorizationStatus.PROVISIONAL (iOS)
 
       if (enabled) {
-        console.log('✅ 알림 권한 허용됨');
+        logger.debug('✅ 알림 권한 허용됨');
         return true;
       } else {
-        console.log('❌ 알림 권한 거부됨');
+        logger.debug('❌ 알림 권한 거부됨');
         Alert.alert('알림 권한', '알림 기능을 사용하려면 설정에서 알림 권한을 활성화해주세요.');
         return false;
       }
     }
   } catch (error) {
-    console.error('알림 권한 요청 실패:', error);
+    logger.error('알림 권한 요청 실패:', error);
     return false;
   }
 };
@@ -106,8 +107,8 @@ export const saveFcmToken = async (userId) => {
       fcmTokenUpdatedAt: serverTimestamp(),
     }, { merge: true });
 
-    console.log('FCM 토큰 저장 완료:', token);
+    logger.debug('FCM 토큰 저장 완료:', token);
   } catch (error) {
-    console.error('FCM 토큰 저장 실패:', error);
+    logger.error('FCM 토큰 저장 실패:', error);
   }
 };

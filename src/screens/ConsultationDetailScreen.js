@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 
@@ -17,7 +18,7 @@ const ConsultationDetailScreen = ({ route }) => {
           setConsultation(docSnap.data());
         }
       } catch (error) {
-        console.error('상담 데이터 가져오기 실패:', error);
+        logger.error('상담 데이터 가져오기 실패:', error);
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,7 +43,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
           }
         }
       } catch (error) {
-        console.error('차량 상세정보 불러오기 오류:', error);
+        logger.error('차량 상세정보 불러오기 오류:', error);
       }
     };
 

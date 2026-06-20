@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ScrollView, Alert, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
@@ -144,7 +145,7 @@ const AdminPageScreen = ({ navigation }) => {
                 toast.showSuccess('완료', `${result.migrated}건 마이그레이션 완료`);
               }
             } catch (error) {
-              console.error('Migration error:', error);
+              logger.error('Migration error:', error);
               reportCrashlyticsError(error);
               logCrashlyticsMessage('AdminPageScreen: Migration failed');
               Alert.alert('오류', '마이그레이션 중 오류가 발생했습니다.\n\n' + error.message);

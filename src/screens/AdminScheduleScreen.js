@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, FlatList, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFirestore, collection, onSnapshot, doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
@@ -79,7 +80,7 @@ const AdminScheduleScreen = () => {
       Alert.alert('완료', `상담 요청이 ${statusText}되었습니다.`);
     } catch (error) {
       Alert.alert('오류', '상태 변경 중 문제가 발생했습니다.');
-      console.error('AdminScheduleScreen: Failed to update status', error);
+      logger.error('AdminScheduleScreen: Failed to update status', error);
     }
   };
 

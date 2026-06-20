@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { logger } from '../utils/logger';
 import {
   View,
   Text,
@@ -43,7 +44,7 @@ const AdminUserManagementScreen = () => {
       setUsers(usersData);
       setFilteredUsers(usersData);
     } catch (error) {
-      console.error('사용자 목록 불러오기 오류:', error);
+      logger.error('사용자 목록 불러오기 오류:', error);
     } finally {
       setLoading(false);
     }
@@ -120,7 +121,7 @@ const AdminUserManagementScreen = () => {
 
               Alert.alert('완료', `계정이 ${actionText}되었습니다.`);
             } catch (error) {
-              console.error('사용자 상태 변경 오류:', error);
+              logger.error('사용자 상태 변경 오류:', error);
               Alert.alert('오류', `계정 ${actionText} 중 문제가 발생했습니다.`);
             } finally {
               setUpdatingUserId(null);

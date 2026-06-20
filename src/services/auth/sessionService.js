@@ -4,6 +4,7 @@
  */
 
 import auth from '@react-native-firebase/auth';
+import { logger } from '../../utils/logger';
 
 /**
  * Get current user session
@@ -22,7 +23,7 @@ export const getCurrentSession = async () => {
       emailVerified: currentUser.emailVerified,
     };
   } catch (error) {
-    console.error('Error getting current session:', error);
+    logger.error('Error getting current session:', error);
     throw error;
   }
 };
@@ -40,7 +41,7 @@ export const refreshToken = async () => {
     const token = await currentUser.getIdToken(true);
     return token;
   } catch (error) {
-    console.error('Error refreshing token:', error);
+    logger.error('Error refreshing token:', error);
     throw error;
   }
 };
@@ -53,7 +54,7 @@ export const isSessionValid = () => {
     const currentUser = auth().currentUser;
     return currentUser !== null;
   } catch (error) {
-    console.error('Error checking session validity:', error);
+    logger.error('Error checking session validity:', error);
     return false;
   }
 };
@@ -71,7 +72,7 @@ export const getUserToken = async () => {
     const token = await currentUser.getIdToken();
     return token;
   } catch (error) {
-    console.error('Error getting user token:', error);
+    logger.error('Error getting user token:', error);
     throw error;
   }
 };

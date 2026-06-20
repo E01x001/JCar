@@ -1,6 +1,7 @@
 // Task 63.3: Migrated Messaging to v22 Modular API
 // Task 71: Deep linking for FCM push notifications
 import React, {useEffect, useRef} from 'react';
+import { logger } from './utils/logger';
 import {Alert} from 'react-native';
 import { getMessaging, onMessage, getInitialNotification, onNotificationOpenedApp } from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
@@ -13,7 +14,7 @@ import { requestNotificationPermission } from './services/notification/fcmServic
 import { toastConfig } from './config/toastConfig';
 
 const App = () => {
-  // console.log('🚀 App component rendering...');
+  // logger.debug('🚀 App component rendering...');
 
   // Navigation ref for deep linking
   const navigationRef = useRef(null);
@@ -24,11 +25,11 @@ const App = () => {
    */
   const handleNotificationNavigation = (data) => {
     if (!data || !data.screen) {
-      console.log('⚠️ No screen data in notification');
+      logger.debug('⚠️ No screen data in notification');
       return;
     }
 
-    console.log('🧭 Navigating to screen:', data.screen, 'with data:', data);
+    logger.debug('🧭 Navigating to screen:', data.screen, 'with data:', data);
 
     // Wait for navigation to be ready
     setTimeout(() => {
@@ -47,12 +48,12 @@ const App = () => {
 
         try {
           navigationRef.current.navigate(data.screen, params);
-          console.log('✅ Navigation successful');
+          logger.debug('✅ Navigation successful');
         } catch (error) {
-          console.error('❌ Navigation failed:', error);
+          logger.error('❌ Navigation failed:', error);
         }
       } else {
-        console.error('❌ Navigation ref not ready');
+        logger.error('❌ Navigation ref not ready');
       }
     }, 500); // Small delay to ensure navigation is mounted
   };
@@ -70,7 +71,7 @@ const App = () => {
   useEffect(() => {
     const messagingInstance = getMessaging();
     const unsubscribe = onMessage(messagingInstance, async remoteMessage => {
-      console.log('📬 포그라운드 메시지 수신:', remoteMessage);
+      logger.debug('📬 포그라운드 메시지 수신:', remoteMessage);
 
       // 알림 제목과 본문 추출
       const title = remoteMessage.notification?.title || '새 알림';
@@ -95,7 +96,7 @@ const App = () => {
 
       // 데이터 처리 - Deep linking
       if (remoteMessage.data) {
-        console.log('📦 메시지 데이터:', remoteMessage.data);
+        logger.debug('📦 메시지 데이터:', remoteMessage.data);
         // Note: 자동 이동은 하지 않음 (사용자가 Toast를 탭해야 이동)
         // 자동 이동을 원하면 여기서 handleNotificationNavigation(remoteMessage.data) 호출
       }
@@ -112,7 +113,7 @@ const App = () => {
     getInitialNotification(messagingInstance)
       .then(remoteMessage => {
         if (remoteMessage) {
-          console.log('🚀 앱이 종료 상태에서 알림으로 열림:', remoteMessage);
+          logger.debug('🚀 앱이 종료 상태에서 알림으로 열림:', remoteMessage);
 
           // Deep linking - 알림 데이터로 화면 이동
           if (remoteMessage.data) {
@@ -121,12 +122,12 @@ const App = () => {
         }
       })
       .catch(error => {
-        console.error('❌ getInitialNotification 오류:', error);
+        logger.error('❌ getInitialNotification 오류:', error);
       });
 
     // 앱이 백그라운드 상태에서 알림을 탭했을 때
     const unsubscribe = onNotificationOpenedApp(messagingInstance, remoteMessage => {
-      console.log('👆 백그라운드에서 알림 탭됨:', remoteMessage);
+      logger.debug('👆 백그라운드에서 알림 탭됨:', remoteMessage);
 
       // Deep linking - 알림 데이터로 화면 이동
       if (remoteMessage.data) {

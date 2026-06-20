@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
@@ -41,7 +42,7 @@ const AdminOwnedVehicleDetailScreen = ({ route, navigation }) => {
           setLoading(false);
         },
         (error) => {
-          console.error('AdminOwnedVehicleDetailScreen: Failed to fetch vehicle', error);
+          logger.error('AdminOwnedVehicleDetailScreen: Failed to fetch vehicle', error);
           reportCrashlyticsError(error);
           logCrashlyticsMessage('AdminOwnedVehicleDetailScreen: Firestore query failed');
           toast.showError('차량 정보를 불러오는데 실패했습니다.');
@@ -77,7 +78,7 @@ const AdminOwnedVehicleDetailScreen = ({ route, navigation }) => {
         navigation.goBack();
       }, 500);
     } catch (error) {
-      console.error('AdminOwnedVehicleDetailScreen: Failed to mark as sold', error);
+      logger.error('AdminOwnedVehicleDetailScreen: Failed to mark as sold', error);
       reportCrashlyticsError(error);
       logCrashlyticsMessage('AdminOwnedVehicleDetailScreen: Update failed');
       toast.showError('판매완료 처리에 실패했습니다.');

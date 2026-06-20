@@ -1,3 +1,4 @@
+import { logger } from './logger';
 /**
  * Optimistic UI Helper Functions
  *
@@ -77,7 +78,7 @@ export const executeOptimisticUpdate = async ({
 
     return result;
   } catch (error) {
-    console.error('❌ Server write failed:', error);
+    logger.error('❌ Server write failed:', error);
 
     // Revert optimistic update
     if (revertFn) {

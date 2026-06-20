@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { getFirestore, collection, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
@@ -70,7 +71,7 @@ const VehicleRegistrationScreen = () => {
                 );
               }
             } catch (error) {
-              console.error('Gallery selection error:', error);
+              logger.error('Gallery selection error:', error);
               toast.showError('오류', error.message || '사진 선택 중 오류가 발생했습니다.');
             }
           },
@@ -89,7 +90,7 @@ const VehicleRegistrationScreen = () => {
                 );
               }
             } catch (error) {
-              console.error('Camera capture error:', error);
+              logger.error('Camera capture error:', error);
               toast.showError('오류', error.message || '사진 촬영 중 오류가 발생했습니다.');
             }
           },
@@ -122,7 +123,7 @@ const VehicleRegistrationScreen = () => {
       const getVehicleInfo = functions('asia-northeast3').httpsCallable('getVehicleInfo');
       const result = await getVehicleInfo({ regiNumber, ownerName });
 
-      console.log('API 응답:', result.data);
+      logger.debug('API 응답:', result.data);
 
       if (!result.data.success) {
         toast.showError('조회 실패', '차량 정보를 찾을 수 없습니다.');
@@ -133,7 +134,7 @@ const VehicleRegistrationScreen = () => {
       toast.showInfo('조회 성공', '차량 정보를 성공적으로 가져왔습니다.');
 
     } catch (error) {
-      console.error('차량 정보 조회 실패:', error);
+      logger.error('차량 정보 조회 실패:', error);
       // Firebase Function error handling
       const errorMessage = error.message || '차량 정보를 조회하는 중 오류가 발생했습니다.';
       toast.showError('오류', errorMessage);
@@ -194,9 +195,9 @@ const VehicleRegistrationScreen = () => {
               setUploadProgress(progress);
             }
           );
-          console.log('✅ Image uploaded:', uploadedImageUrl);
+          logger.debug('✅ Image uploaded:', uploadedImageUrl);
         } catch (uploadError) {
-          console.error('❌ Image upload failed:', uploadError);
+          logger.error('❌ Image upload failed:', uploadError);
           toast.showError('오류', '이미지 업로드 중 오류가 발생했습니다.');
           setIsUploading(false);
           setSaving(false);
@@ -273,11 +274,11 @@ const VehicleRegistrationScreen = () => {
           return newVehicleRef.id;
         },
         onSuccess: (realId) => {
-          console.log(`✅ Vehicle saved successfully with ID: ${realId}`);
+          logger.debug(`✅ Vehicle saved successfully with ID: ${realId}`);
           // Firestore listener will automatically update the store
         },
         onError: (error) => {
-          console.error('❌ Firestore write failed:', error);
+          logger.error('❌ Firestore write failed:', error);
           // Remove optimistic vehicle
           removeOptimisticVehicle(tempId);
           // Show error to user
@@ -293,7 +294,7 @@ const VehicleRegistrationScreen = () => {
 
     } catch (error) {
       // This catches errors from image upload or data preparation
-      console.error('저장 준비 중 오류:', error);
+      logger.error('저장 준비 중 오류:', error);
       toast.showError('오류', '차량 정보를 저장하는 중 문제가 발생했습니다.');
       // Remove optimistic vehicle if we added it
       removeOptimisticVehicle(tempId);

@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useState, useContext } from 'react';
+import { logger } from '../utils/logger';
 import {
   View,
   Text,
@@ -62,7 +63,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
 
             // Verify user owns this consultation
             if (data.userId !== user.uid) {
-              console.error('UserConsultationDetailScreen: User does not own this consultation');
+              logger.error('UserConsultationDetailScreen: User does not own this consultation');
               setConsultation(null);
               setLoading(false);
               return;
@@ -80,7 +81,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
                   setVehicle({ id: vehicleDoc.id, ...vehicleDoc.data() });
                 }
               } catch (error) {
-                console.error('UserConsultationDetailScreen: Failed to fetch vehicle', error);
+                logger.error('UserConsultationDetailScreen: Failed to fetch vehicle', error);
                 reportCrashlyticsError(error);
               }
             }
@@ -90,7 +91,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
           setLoading(false);
         },
         (error) => {
-          console.error('UserConsultationDetailScreen: Failed to fetch consultation', error);
+          logger.error('UserConsultationDetailScreen: Failed to fetch consultation', error);
           reportCrashlyticsError(error);
           setLoading(false);
         }
@@ -349,7 +350,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
                 toast.showError('취소 불가', result.error || '상담을 취소할 수 없습니다.');
               }
             } catch (error) {
-              console.error('Failed to cancel consultation:', error);
+              logger.error('Failed to cancel consultation:', error);
               reportCrashlyticsError(error);
               toast.showError('취소 실패', '상담 취소 중 오류가 발생했습니다.');
             } finally {
@@ -367,7 +368,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
    */
   function handleResubmitConsultation() {
     if (!consultation || !vehicle) {
-      console.error('Missing consultation or vehicle data for resubmission');
+      logger.error('Missing consultation or vehicle data for resubmission');
       toast.showError('오류', '상담 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
       return;
     }

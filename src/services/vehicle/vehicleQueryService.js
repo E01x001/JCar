@@ -4,6 +4,7 @@
  */
 
 import firestore from '@react-native-firebase/firestore';
+import { logger } from '../../utils/logger';
 
 /**
  * Get approved vehicles
@@ -22,7 +23,7 @@ export const getApprovedVehicles = async (limit = 20) => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('Error getting approved vehicles:', error);
+    logger.error('Error getting approved vehicles:', error);
     throw error;
   }
 };
@@ -46,7 +47,7 @@ export const getVehicleById = async (vehicleId) => {
       ...doc.data(),
     };
   } catch (error) {
-    console.error('Error getting vehicle by ID:', error);
+    logger.error('Error getting vehicle by ID:', error);
     throw error;
   }
 };
@@ -67,7 +68,7 @@ export const getVehiclesBySellerId = async (sellerId) => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('Error getting vehicles by seller ID:', error);
+    logger.error('Error getting vehicles by seller ID:', error);
     throw error;
   }
 };
@@ -88,7 +89,7 @@ export const getVehiclesByStatus = async (status) => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('Error getting vehicles by status:', error);
+    logger.error('Error getting vehicles by status:', error);
     throw error;
   }
 };
@@ -131,7 +132,7 @@ export const searchVehicles = async (filters = {}) => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('Error searching vehicles:', error);
+    logger.error('Error searching vehicles:', error);
     throw error;
   }
 };
@@ -148,7 +149,7 @@ export const getVehicleCountByStatus = async (status) => {
 
     return snapshot.size;
   } catch (error) {
-    console.error('Error getting vehicle count:', error);
+    logger.error('Error getting vehicle count:', error);
     throw error;
   }
 };

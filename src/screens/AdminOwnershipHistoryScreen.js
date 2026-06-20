@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { logger } from '../utils/logger';
 import {
   View,
   Text,
@@ -70,7 +71,7 @@ const AdminOwnershipHistoryScreen = ({ navigation }) => {
   // Fetch ownership transfers (Modular API)
   const fetchTransfers = useCallback(async () => {
     try {
-      console.log('📥 Fetching ownership transfers');
+      logger.debug('📥 Fetching ownership transfers');
 
       // Get Firestore instance
       const db = getFirestore();
@@ -87,9 +88,9 @@ const AdminOwnershipHistoryScreen = ({ navigation }) => {
 
       setTransfers(transfersData);
       setError(null);
-      console.log(`✅ Fetched ${transfersData.length} ownership transfers`);
+      logger.debug(`✅ Fetched ${transfersData.length} ownership transfers`);
     } catch (err) {
-      console.error('❌ Failed to fetch ownership transfers:', err);
+      logger.error('❌ Failed to fetch ownership transfers:', err);
       reportCrashlyticsError(err);
       setError('소유권 이전 기록을 불러오는 중 오류가 발생했습니다.');
     } finally {

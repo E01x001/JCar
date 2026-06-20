@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { logger } from '../utils/logger';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -36,9 +37,9 @@ const ConnectionStatusBanner = () => {
   const handleRefresh = async () => {
     try {
       const state = await NetInfo.refresh();
-      console.log('📡 Manual refresh - Connection:', state.isConnected);
+      logger.debug('📡 Manual refresh - Connection:', state.isConnected);
     } catch (error) {
-      console.error('Manual refresh failed:', error);
+      logger.error('Manual refresh failed:', error);
     }
   };
 

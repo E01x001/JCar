@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useContext } from 'react';
+import { logger } from '../utils/logger';
 import firestore from '@react-native-firebase/firestore';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
@@ -120,7 +121,7 @@ const useConsultationStats = () => {
           });
         },
         (error) => {
-          console.error('useConsultationStats: Failed to fetch consultation statistics', error);
+          logger.error('useConsultationStats: Failed to fetch consultation statistics', error);
           reportCrashlyticsError(error);
           logCrashlyticsMessage('useConsultationStats: Firestore query failed');
 

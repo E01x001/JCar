@@ -4,6 +4,7 @@
  */
 
 import auth from '@react-native-firebase/auth';
+import { logger } from '../../utils/logger';
 import firestore from '@react-native-firebase/firestore';
 
 /**
@@ -21,7 +22,7 @@ export const updateUserProfile = async (uid, updates) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating user profile:', error);
+    logger.error('Error updating user profile:', error);
     throw error;
   }
 };
@@ -47,7 +48,7 @@ export const deleteUserAccount = async (uid) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting user account:', error);
+    logger.error('Error deleting user account:', error);
     throw error;
   }
 };
@@ -68,7 +69,7 @@ export const getUserProfile = async (uid) => {
 
     return userDoc.data();
   } catch (error) {
-    console.error('Error getting user profile:', error);
+    logger.error('Error getting user profile:', error);
     throw error;
   }
 };
@@ -96,7 +97,7 @@ export const updateEmail = async (newEmail) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating email:', error);
+    logger.error('Error updating email:', error);
     throw error;
   }
 };
@@ -115,7 +116,7 @@ export const updatePassword = async (newPassword) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating password:', error);
+    logger.error('Error updating password:', error);
     throw error;
   }
 };
