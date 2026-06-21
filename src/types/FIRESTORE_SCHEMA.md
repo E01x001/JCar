@@ -25,8 +25,9 @@ Stores all vehicle listings in the system.
 | `manufacturer` | string | Yes | Manufacturer/brand |
 | `year` | number | Yes | Manufacturing year |
 | `imageUrl` | string[] | Yes | Array of image URLs |
-| `status` | string | Yes | 'pending', 'approved', 'rejected', 'sold' |
-| `price` | number | Yes | Vehicle price |
+| `status` | string | Yes | 검수 축: 'pending', 'approved', 'rejected', 'sold' |
+| `dealStage` | string | No | 거래 축(C2B2C): 'listed', 'acquiring', 'in_stock', 'sold'. 승인 시 'listed' 세팅 |
+| `price` | number | Yes | Vehicle price (소유자 본인·관리자에게만 표시) |
 | `mileage` | number | Yes | Vehicle mileage (km) |
 | `fuelType` | string | No | Fuel type |
 | `transmission` | string | No | Transmission type |

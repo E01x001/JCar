@@ -7,7 +7,7 @@ import firestore from '@react-native-firebase/firestore';
 import { logger } from '../../utils/logger';
 
 /**
- * Get approved vehicles
+ * Get vehicles exposed to buyers (status 'approved' = listed/acquiring/in_stock)
  */
 export const getApprovedVehicles = async (limit = 20) => {
   try {
@@ -101,7 +101,7 @@ export const searchVehicles = async (filters = {}) => {
   try {
     let query = firestore().collection('vehicles');
 
-    // Apply status filter (default to approved)
+    // 노출 대상 = status 'approved' (default). 특정 status 지정 시 override 가능.
     query = query.where('status', '==', filters.status || 'approved');
 
     // Apply manufacturer filter

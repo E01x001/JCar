@@ -13,6 +13,7 @@
 
 import { getFirestore, collection, doc, runTransaction, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, arrayUnion } from '@react-native-firebase/firestore';
 import { logger } from '../utils/logger';
+import { DEAL_STAGE } from '../constants/vehicle';
 import { reportCrashlyticsError, logCrashlyticsMessage } from './notification/notificationService';
 import analytics from '@react-native-firebase/analytics';
 import perf from '@react-native-firebase/perf';
@@ -146,6 +147,7 @@ export const transferVehicleToAdmin = async (
       transaction.update(vehicleRef, {
         currentOwnerId: adminId,
         isAdminOwned: true,
+        dealStage: DEAL_STAGE.IN_STOCK, // 매입 완료 → 재고(노출 유지)
         availableForPurchase: true,
         ownershipHistory: arrayUnion(ownershipHistoryEntry),
         updatedAt: serverTimestamp(),
@@ -416,6 +418,7 @@ export const transferVehicleToBuyer = async (
         currentOwnerId: buyerId,
         isAdminOwned: false,
         status: 'sold',
+        dealStage: DEAL_STAGE.SOLD, // 거래 축 정본도 닫음 → 노출 목록에서 제외
         availableForPurchase: false,
         ownershipHistory: arrayUnion(ownershipHistoryEntry),
         soldAt: serverTimestamp(),

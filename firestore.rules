@@ -56,21 +56,25 @@ service cloud.firestore {
       //       Sensitive fields (sellerId, currentOwnerId, sellerPhone) should be
       //       filtered client-side for non-owners/non-admins.
       allow read: if request.auth != null && (
-        // Public users can only see approved vehicles
+        // Public users can see exposed vehicles (거래 단계 기준)
         resource.data.status == 'approved' ||
+        resource.data.get('dealStage', '') in ['listed', 'acquiring', 'in_stock'] ||
         // Vehicle owner can see their own vehicle (any status)
         request.auth.uid == resource.data.get('currentOwnerId', resource.data.sellerId) ||
         // Admins can see all vehicles
         isAdmin()
       );
 
-      // Authenticated active users can create their own vehicles.
-      // status MUST start as 'pending' — only admins may approve (see update rule),
-      // otherwise a user could self-publish by writing status:'approved'.
+      // 자동노출 정책: 사용자가 등록 즉시 노출되는 매물을 만들 수 있다.
+      // dealStage는 'listed'로만 시작 가능하고, 매입/판매/관리자소유 같은 권한
+      // 필드는 자가설정 불가(아래 조건으로 차단). 품질은 사후 모더레이션으로 통제.
       allow create: if request.auth != null &&
                     isActiveUser() &&
                     request.auth.uid == request.resource.data.sellerId &&
-                    request.resource.data.status == 'pending' &&
+                    request.resource.data.status == 'approved' &&
+                    request.resource.data.get('dealStage', '') == 'listed' &&
+                    request.resource.data.get('isAdminOwned', false) == false &&
+                    request.resource.data.get('currentOwnerId', request.auth.uid) == request.auth.uid &&
                     request.resource.data.vehicleId is string &&
                     request.resource.data.vehicleName is string &&
                     request.resource.data.manufacturer is string &&
@@ -92,7 +96,22 @@ service cloud.firestore {
                         (!('isAdminOwned' in request.resource.data) || request.resource.data.isAdminOwned == resource.data.get('isAdminOwned', false)) &&
                         (!('ownershipHistory' in request.resource.data) || request.resource.data.ownershipHistory == resource.data.get('ownershipHistory', [])) &&
                         // Prevent owner from changing approval/sold status (admin-only)
-                        (request.resource.data.get('status', 'pending') == resource.data.get('status', 'pending'))
+                        (request.resource.data.get('status', 'pending') == resource.data.get('status', 'pending')) &&
+                        // Prevent owner from tampering with the deal stage (admin/buyer-flow only)
+                        (request.resource.data.get('dealStage', '') == resource.data.get('dealStage', ''))
+                      ) ||
+                      // Buyer-initiated stage transition: any active authenticated user may
+                      // move a LISTED vehicle to ACQUIRING when requesting a buy consultation.
+                      // Nothing else may change — sensitive fields are frozen.
+                      (
+                        resource.data.get('dealStage', '') == 'listed' &&
+                        request.resource.data.dealStage == 'acquiring' &&
+                        request.resource.data.status == resource.data.status &&
+                        request.resource.data.get('currentOwnerId', null) == resource.data.get('currentOwnerId', null) &&
+                        request.resource.data.get('isAdminOwned', false) == resource.data.get('isAdminOwned', false) &&
+                        request.resource.data.get('price', 0) == resource.data.get('price', 0) &&
+                        request.resource.data.get('sellerId', '') == resource.data.get('sellerId', '') &&
+                        (!('ownershipHistory' in request.resource.data) || request.resource.data.ownershipHistory == resource.data.get('ownershipHistory', []))
                       )
                     );
 

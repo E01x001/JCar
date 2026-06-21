@@ -22,6 +22,49 @@ export const VEHICLE_STATUS = {
 };
 
 /**
+ * Vehicle Deal Stage (거래 단계 축)
+ *
+ * Separate from VEHICLE_STATUS (검수 축). Tracks the C2B2C trade lifecycle:
+ * - LISTED: 검수 통과·노출 중, 아직 관리자가 매입하지 않은 판매자 소유 차량
+ * - ACQUIRING: 구매 희망자의 상담이 들어와 관리자 매입을 진행 중
+ * - IN_STOCK: 관리자가 매입 완료한 재고 차량(즉시 거래 가능)
+ * - SOLD: 구매자에게 판매 완료
+ */
+export const DEAL_STAGE = {
+  LISTED: 'listed',
+  ACQUIRING: 'acquiring',
+  IN_STOCK: 'in_stock',
+  SOLD: 'sold',
+};
+
+/**
+ * Deal stages that should appear in the buyer-facing marketplace listing.
+ * acquiring(매입진행중)도 노출 유지 — 무계약금 단순 상담으로 매물을 감추지 않고
+ * "매입진행중" 배지로 표시한다(설계 결정). sold만 목록에서 제외.
+ */
+export const DEAL_STAGE_VISIBLE = [DEAL_STAGE.LISTED, DEAL_STAGE.ACQUIRING, DEAL_STAGE.IN_STOCK];
+
+/**
+ * Deal Stage Labels for UI Display (Korean)
+ */
+export const DEAL_STAGE_LABELS = {
+  [DEAL_STAGE.LISTED]: '매입예정',
+  [DEAL_STAGE.ACQUIRING]: '매입진행중',
+  [DEAL_STAGE.IN_STOCK]: '즉시거래',
+  [DEAL_STAGE.SOLD]: '판매완료',
+};
+
+/**
+ * Deal Stage → Badge status 매핑 (Badge 컴포넌트 색 재사용)
+ */
+export const DEAL_STAGE_BADGE_STATUS = {
+  [DEAL_STAGE.LISTED]: 'pending',     // 매입예정 (대기 톤)
+  [DEAL_STAGE.ACQUIRING]: 'on-hold',  // 매입진행중
+  [DEAL_STAGE.IN_STOCK]: 'approved',  // 즉시거래 (가능 톤)
+  [DEAL_STAGE.SOLD]: 'archived',      // 판매완료
+};
+
+/**
  * Vehicle Types (Korean classification)
  *
  * Valid vehicle type categories from external CarZen API:

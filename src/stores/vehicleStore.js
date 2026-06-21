@@ -146,6 +146,7 @@ const useVehicleStore = create((set, get) => ({
 
     const db = getFirestore();
     const vehiclesRef = collection(db, 'vehicles');
+    // 노출 대상 = status 'approved' (sold만 제외). 규칙·인덱스 친화적.
     const q = query(vehiclesRef, where('status', '==', 'approved'));
 
     const unsubscribe = onSnapshot(

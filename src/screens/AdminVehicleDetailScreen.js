@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from '../utils/logger';
-import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions, Alert } from 'react-native';
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatPrice, formatPhone } from '../utils/format';
@@ -8,8 +8,10 @@ import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
 import Tag from '../components/Tag';
 import Badge from '../components/Badge';
+import Button from '../components/Button';
 import StateScreen from '../components/StateScreen';
 import ImageCarousel from '../components/ImageCarousel';
+import { setVehicleHidden } from '../services/vehicle/vehicleApprovalService';
 
 const { width } = Dimensions.get('window');
 
@@ -18,6 +20,7 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
   const theme = useTheme();
   const [vehicle, setVehicle] = useState(null);
   const [contact, setContact] = useState(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const fetchVehicleDetails = async () => {
@@ -41,6 +44,37 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
 
     fetchVehicleDetails();
   }, [vehicleId]);
+
+  // 자동노출 정책: 사전승인 없음. 관리자는 부적절 매물을 사후에 '숨김/노출'로 관리.
+  const handleToggleHidden = () => {
+    const nextHidden = !vehicle.hidden;
+    Alert.alert(
+      nextHidden ? '매물 숨김' : '매물 노출',
+      nextHidden
+        ? '이 매물을 구매자 목록에서 숨기시겠습니까?'
+        : '이 매물을 다시 구매자 목록에 노출하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: nextHidden ? '숨김' : '노출',
+          style: nextHidden ? 'destructive' : 'default',
+          onPress: async () => {
+            setProcessing(true);
+            try {
+              await setVehicleHidden(vehicleId, nextHidden);
+              setVehicle((prev) => ({ ...prev, hidden: nextHidden }));
+              Alert.alert('완료', nextHidden ? '매물을 숨겼습니다.' : '매물을 다시 노출했습니다.');
+            } catch (error) {
+              logger.error('매물 숨김 처리 오류:', error);
+              Alert.alert('오류', '처리 중 문제가 발생했습니다.');
+            } finally {
+              setProcessing(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   if (!vehicle) {
     return (
@@ -213,6 +247,20 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
             </View>
           ))}
         </Card>
+
+        {/* 사후 모더레이션 — 숨김/노출 토글 (판매 완료 차량 제외) */}
+        {vehicle.dealStage !== 'sold' && (
+          <View style={styles.actionRow}>
+            <Button
+              variant={vehicle.hidden ? 'primary' : 'secondary'}
+              title={vehicle.hidden ? '다시 노출' : '매물 숨김'}
+              onPress={handleToggleHidden}
+              disabled={processing}
+              loading={processing}
+              style={styles.actionButton}
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -250,6 +298,14 @@ const styles = StyleSheet.create({
   infoValue: {
     flex: 1,
     textAlign: 'right',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  actionButton: {
+    flex: 1,
   },
 });
 

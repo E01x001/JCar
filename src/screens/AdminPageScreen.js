@@ -17,6 +17,7 @@ import Button from '../components/Button';
 import StateScreen from '../components/StateScreen';
 import OwnedVehiclesList from '../components/OwnedVehiclesList';
 import { migrateConsultationStatusField } from '../scripts/migrateConsultationStatus';
+import { migrateVehicleDealStage } from '../scripts/migrateVehicleDealStage';
 import useVehicleStore from '../stores/vehicleStore';
 import useConsultationStore from '../stores/consultationStore';
 
@@ -150,6 +151,41 @@ const AdminPageScreen = ({ navigation }) => {
               logCrashlyticsMessage('AdminPageScreen: Migration failed');
               Alert.alert('오류', '마이그레이션 중 오류가 발생했습니다.\n\n' + error.message);
               toast.showError('마이그레이션 실패', error.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDealStageBackfill = () => {
+    Alert.alert(
+      '차량 거래단계(dealStage) 백필',
+      '기존 차량에 거래 단계 필드를 채웁니다.\n(sold→sold, 매입재고→in_stock, 승인→listed)\n\n⚠️ 한 번만 실행하면 됩니다. 백필 전에는 목록이 비어 보일 수 있습니다.\n\n계속하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '실행',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              toast.showInfo('백필 시작', '차량 거래단계를 채우는 중...');
+              const result = await migrateVehicleDealStage();
+
+              if (result.success) {
+                Alert.alert(
+                  '백필 완료',
+                  `✅ 완료!\n\n처리: ${result.migrated}건\n스킵: ${result.skipped}건`,
+                  [{ text: '확인' }]
+                );
+                toast.showSuccess('완료', `${result.migrated}건 백필 완료`);
+              }
+            } catch (error) {
+              logger.error('DealStage backfill error:', error);
+              reportCrashlyticsError(error);
+              logCrashlyticsMessage('AdminPageScreen: DealStage backfill failed');
+              Alert.alert('오류', '백필 중 오류가 발생했습니다.\n\n' + error.message);
+              toast.showError('백필 실패', error.message);
             }
           },
         },
@@ -316,6 +352,15 @@ const AdminPageScreen = ({ navigation }) => {
                   }}
                 />
               )}
+              <Button
+                variant="primary"
+                title="차량 거래단계 백필 (dealStage)"
+                onPress={handleDealStageBackfill}
+                style={{
+                  marginTop: theme.spacing.sm,
+                  backgroundColor: theme.colors.success.main,
+                }}
+              />
               <Button
                 variant="primary"
                 title="Test Crashlytics"
