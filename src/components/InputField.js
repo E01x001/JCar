@@ -77,18 +77,19 @@ const InputField = ({
           {
             borderColor: getBorderColor(),
             borderWidth: getBorderWidth(),
-            borderRadius: theme.borderRadius.medium,
+            borderRadius: theme.borderRadius.input,
             backgroundColor: theme.colors.background.primary,
             color: theme.colors.text.primary,
             fontSize: theme.typography.fontSize.bodyLarge,
             paddingHorizontal: theme.spacing.md,
           },
+          // 시안: focus 시 4px 블루 글로우 링
           isFocused && {
             shadowColor: theme.colors.primary.main,
             shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
+            shadowOpacity: 0.18,
+            shadowRadius: 6,
+            elevation: 3,
           },
         ]}
         {...otherProps}

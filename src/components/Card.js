@@ -14,9 +14,10 @@ import { useTheme } from '../theme/ThemeProvider';
  *
  * @param {Object} props
  * @param {React.ReactNode} props.children - Card content
+ * @param {boolean} [props.elevated=false] - 시안 소프트 그림자 카드(테두리 제거)
  * @param {Object} [props.style] - Additional styles
  */
-const Card = ({ children, style }) => {
+const Card = ({ children, elevated = false, style }) => {
   const theme = useTheme();
 
   return (
@@ -25,11 +26,12 @@ const Card = ({ children, style }) => {
         styles.card,
         {
           backgroundColor: theme.colors.background.card,
-          borderRadius: theme.borderRadius.large,
+          borderRadius: elevated ? theme.borderRadius.card : theme.borderRadius.large,
           padding: theme.spacing.md,
-          borderWidth: 1,
-          borderColor: theme.colors.border.light,
         },
+        elevated
+          ? theme.shadows.soft
+          : { borderWidth: 1, borderColor: theme.colors.border.light },
         style,
       ]}
     >
@@ -46,6 +48,7 @@ const styles = StyleSheet.create({
 
 Card.propTypes = {
   children: PropTypes.node.isRequired,
+  elevated: PropTypes.bool,
   style: PropTypes.oneOfType([
     PropTypes.object,
     PropTypes.array,
