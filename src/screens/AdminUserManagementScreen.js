@@ -4,18 +4,25 @@ import {
   View,
   Text,
   FlatList,
-  TextInput,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
   Switch,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeProvider';
+import { formatPhone } from '../utils/format';
+import Card from '../components/Card';
+import Tag from '../components/Tag';
+import Badge from '../components/Badge';
+import Avatar from '../components/Avatar';
+import SearchBar from '../components/SearchBar';
+import EmptyState from '../components/EmptyState';
 
 const AdminUserManagementScreen = () => {
+  const theme = useTheme();
   const { user: currentUser } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -37,9 +44,9 @@ const AdminUserManagementScreen = () => {
       const db = getFirestore();
       const usersRef = collection(db, 'users');
       const snapshot = await getDocs(usersRef);
-      const usersData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
+      const usersData = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
       }));
       setUsers(usersData);
       setFilteredUsers(usersData);
@@ -132,251 +139,151 @@ const AdminUserManagementScreen = () => {
     );
   };
 
-  const getStatusBadge = (status) => {
-    if (status === 'suspended') {
-      return {
-        text: '정지됨',
-        color: '#dc3545',
-        icon: 'block',
-      };
-    }
-    return {
-      text: '활성',
-      color: '#28a745',
-      icon: 'check-circle',
-    };
-  };
-
   const renderUserItem = ({ item }) => {
-    const statusBadge = getStatusBadge(item.status);
     const isAdmin = item.role === 'admin';
     const isUpdating = updatingUserId === item.id;
     const isSuspended = item.status === 'suspended';
 
     return (
-      <View style={styles.userItem}>
+      <Card elevated style={styles.userCard}>
+        <Avatar name={item.name} size={44} />
         <View style={styles.userInfo}>
           <View style={styles.userHeader}>
-            <Text style={styles.userName}>{item.name}</Text>
-            {isAdmin && (
-              <View style={styles.adminBadge}>
-                <Text style={styles.adminBadgeText}>관리자</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.userEmail}>{item.email}</Text>
-          <Text style={styles.userPhone}>{item.phoneNumber}</Text>
-
-          <View style={styles.statusRow}>
-            <Icon name={statusBadge.icon} size={16} color={statusBadge.color} />
-            <Text style={[styles.statusText, { color: statusBadge.color }]}>
-              {statusBadge.text}
+            <Text style={[styles.userName, { color: theme.colors.text.primary }]} numberOfLines={1}>
+              {item.name}
             </Text>
+            {isAdmin && <Tag variant="accent" label="관리자" />}
           </View>
+          <Text style={[styles.userMeta, { color: theme.colors.text.secondary }]} numberOfLines={1}>
+            {item.email}
+          </Text>
+          <Text style={[styles.userMeta, { color: theme.colors.text.secondary }]}>
+            {formatPhone(item.phoneNumber)}
+          </Text>
+          <Badge
+            variant="chip"
+            status={isSuspended ? 'rejected' : 'approved'}
+            label={isSuspended ? '정지됨' : '활성'}
+            style={styles.statusChip}
+          />
         </View>
 
         <View style={styles.actionContainer}>
           {isUpdating ? (
-            <ActivityIndicator size="small" color="#007bff" />
+            <ActivityIndicator size="small" color={theme.colors.primary.main} />
           ) : (
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>
-                {isSuspended ? '정지' : '활성'}
-              </Text>
-              <Switch
-                value={!isSuspended}
-                onValueChange={() => handleToggleUserStatus(item.id, item.status, item.name)}
-                trackColor={{ false: '#dc3545', true: '#28a745' }}
-                thumbColor="#fff"
-                disabled={isAdmin}
-              />
-            </View>
+            <Switch
+              value={!isSuspended}
+              onValueChange={() => handleToggleUserStatus(item.id, item.status, item.name)}
+              trackColor={{ false: theme.colors.danger.main, true: theme.colors.success.main }}
+              thumbColor={theme.colors.neutral.white}
+              disabled={isAdmin}
+            />
           )}
         </View>
-      </View>
+      </Card>
     );
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
-        <Text style={styles.loadingText}>사용자 목록 불러오는 중...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background.secondary }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
+        <Text style={[styles.loadingText, { color: theme.colors.text.secondary }]}>
+          사용자 목록 불러오는 중...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Icon name="search" size={24} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="이름, 이메일 또는 전화번호로 검색"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Icon name="clear" size={24} color="#666" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.statsContainer}>
-        <Text style={styles.statsText}>
-          전체 사용자: {users.length}명
-          {searchQuery && ` (검색 결과: ${filteredUsers.length}명)`}
-        </Text>
-      </View>
-
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
       <FlatList
         data={filteredUsers}
         renderItem={renderUserItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="people-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>
-              {searchQuery ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
+        ListHeaderComponent={
+          <View>
+            <SearchBar
+              placeholder="이름, 이메일 또는 전화번호로 검색"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.searchBar}
+            />
+            <Text style={[styles.statsText, { color: theme.colors.text.secondary }]}>
+              전체 사용자 {users.length}명
+              {searchQuery ? ` · 검색 결과 ${filteredUsers.length}명` : ''}
             </Text>
           </View>
         }
+        ListEmptyComponent={
+          <EmptyState
+            icon="people-outline"
+            title={searchQuery ? '검색 결과가 없어요' : '등록된 사용자가 없어요'}
+            message={searchQuery ? '다른 검색어로 시도해 보세요' : undefined}
+          />
+        }
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    margin: 15,
-    marginBottom: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  statsContainer: {
-    backgroundColor: '#fff',
-    marginHorizontal: 15,
-    marginBottom: 10,
-    padding: 12,
-    borderRadius: 8,
-    elevation: 1,
-  },
-  statsText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
   },
   listContainer: {
-    paddingHorizontal: 15,
+    padding: 20,
+    flexGrow: 1,
   },
-  userItem: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
+  searchBar: {
+    marginBottom: 12,
+  },
+  statsText: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   userInfo: {
     flex: 1,
-    marginRight: 15,
+    marginHorizontal: 14,
   },
   userHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    gap: 8,
+    marginBottom: 4,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginRight: 10,
-  },
-  adminBadge: {
-    backgroundColor: '#ff9800',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  adminBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
-  },
-  userPhone: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 5,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    marginTop: 15,
     fontSize: 16,
-    color: '#999',
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  userMeta: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  statusChip: {
+    marginTop: 10,
   },
   actionContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 80,
-  },
-  switchContainer: {
-    alignItems: 'center',
-  },
-  switchLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 5,
-    fontWeight: '600',
+    minWidth: 52,
   },
 });
 

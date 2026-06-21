@@ -290,3 +290,13 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - 2-3 잔여(스케줄/사용자관리/탭헤더) → 다음.
 - 2-4 C2B2C 거래체결(08).
 - 2-5 (옵션) 5탭 네비.
+
+## 2-3 잔여 (스케줄·사용자관리) ✅
+- `AdminUserManagementScreen`: **전면 토큰화**(기존 theme 미사용 + 비브랜드 #007bff 하드코딩 제거).
+  SearchBar/Card elevated/Avatar/Tag(관리자)/상태 chip(활성=approved초록, 정지=rejected빨강)/EmptyState 적용.
+  로직(fetch/filter/toggle/Switch/activity log) 보존. formatPhone 재사용.
+- `AdminScheduleScreen`: 캘린더 선택일 흰색 하드코딩(#ffffff×2) → neutral.white 토큰.
+- `AdminConsultationScreen`: 이미 토큰화 완료(0 하드코딩) — 변경 불요.
+- 검증: lint 0 error, Metro 번들 성공.
+
+→ **2-3 관리자 콘솔 완료.** 남은 묶음: 2-4 C2B2C(08), 2-5(옵션) 5탭 네비.
