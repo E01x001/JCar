@@ -14,7 +14,7 @@
 | ⑤ 구현 | /pipeline:implement | ⬜ 대기 |
 | ⑥ 검증 | /pipeline:verify | ✅ 완료 (정적·번들·테스트 통과) |
 | ⑦ 정리 | /pipeline:wrap | ✅ 완료 |
-| ⑧ 배포 | /pipeline:ship | ⬜ 대기 |
+| ⑧ 배포 | /pipeline:ship | ✅ 커밋 완료 (브랜치 feat/ui-redesign-phase1, 푸시·PR 미실행) |
 
 ---
 
@@ -208,6 +208,22 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 5. **Pretendard 폰트 번들**: 네이티브 설정(android assets + react-native.config). 1차 시스템폰트 폴백 → 2차.
 
 다음: `/pipeline:ship`.
+
+---
+
+## ⑧ 배포 결과 (Ship)
+- 브랜치: **`feat/ui-redesign-phase1`** (main에서 분기).
+- 커밋 3개 (내 작업만, pre-commit 훅 eslint+jest 통과):
+  1. `0933a5c feat(theme): 시안 디자인 토큰 확장 및 깨진 토큰 참조 복구`
+  2. `c526133 feat(components): 시안 스펙 공통 컴포넌트 갱신 및 신규 6종`
+  3. `5652c54 feat(ui): 메인홈 검색중심 개편·로그인 토큰화·마이페이지 빈상태`
+- `UI_inapp/` → `.gitignore` 처리(커밋 제외).
+- **미커밋 잔류(의도)**: AppNavigator/ConsultationRequestScreen/ForgotPasswordScreen/VehicleDetailScreen — 세션 전 기존 변경, 사용자 결정으로 제외.
+- **푸시·PR 미실행** (사용자 추가 승인 시 진행).
+
+### 배포 후 관찰
+- 시각 확인: `/run` 또는 에뮬레이터로 로그인/메인홈/마이페이지 빈상태/차량카드 렌더 확인.
+- 회귀 관찰: Button secondary 외형 변경 영향 화면, Crashlytics(렌더 크래시 없는지).
 
 ### Phase 3 — 마감 (검증/정리)
 - [ ] **S13. verify** — 번들+lint+주요 화면 렌더 점검(⑥).
