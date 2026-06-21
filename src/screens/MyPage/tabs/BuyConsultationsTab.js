@@ -17,22 +17,22 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
 
   const getStatusBadge = (status) => {
     if (status === 'approved') {
-      return <Badge status="completed" label="승인됨" />;
+      return <Badge variant="chip" status="approved" label="승인됨" />;
     } else if (status === 'rejected') {
-      return <Badge status="rejected" label="거절됨" />;
+      return <Badge variant="chip" status="rejected" label="거절됨" />;
     } else if (status === 'completed') {
-      return <Badge status="completed" label="완료됨" />;
+      return <Badge variant="chip" status="completed" label="완료됨" />;
     } else if (status === 'cancelled') {
-      return <Badge status="cancelled" label="취소됨" />;
+      return <Badge variant="chip" status="cancelled" label="취소됨" />;
     } else if (status === 'meeting') {
-      return <Badge status="approved" label="상담중" />;
+      return <Badge variant="chip" status="approved" label="상담중" />;
     }
-    return <Badge status="pending" label="대기중" />;
+    return <Badge variant="chip" status="pending" label="대기중" />;
   };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => onNavigateToConsultation(item.id)}>
-      <Card style={{ marginBottom: theme.spacing.sm }}>
+      <Card elevated style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.consultHeader}>
           <Text style={[styles.consultText, {
             fontSize: theme.typography.fontSize.body,

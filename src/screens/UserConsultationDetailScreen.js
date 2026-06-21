@@ -106,17 +106,17 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'approved':
-        return <Badge status="completed" label="승인됨" />;
+        return <Badge variant="chip" status="approved" label="승인됨" />;
       case 'rejected':
-        return <Badge status="rejected" label="거절됨" />;
+        return <Badge variant="chip" status="rejected" label="거절됨" />;
       case 'completed':
-        return <Badge status="completed" label="완료됨" />;
+        return <Badge variant="chip" status="completed" label="완료됨" />;
       case 'cancelled':
-        return <Badge status="cancelled" label="취소됨" />;
+        return <Badge variant="chip" status="cancelled" label="취소됨" />;
       case 'meeting':
-        return <Badge status="approved" label="상담중" />;
+        return <Badge variant="chip" status="approved" label="상담중" />;
       default:
-        return <Badge status="pending" label="대기중" />;
+        return <Badge variant="chip" status="pending" label="대기중" />;
     }
   };
 

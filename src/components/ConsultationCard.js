@@ -343,10 +343,10 @@ const ConsultationCard = ({
         activeOpacity={onNavigateToVehicle ? 0.7 : 1}
         disabled={!onNavigateToVehicle}
       >
-        <Card style={[{ marginBottom: theme.spacing.sm }, style]}>
+        <Card elevated style={[{ marginBottom: theme.spacing.sm }, style]}>
           {/* Header: Badge + User Name + Memo Icon */}
           <View style={styles.header}>
-            <Badge status={displayStatus} />
+            <Badge variant="chip" status={displayStatus} />
             <Text
               style={[
                 styles.userName,

@@ -240,3 +240,30 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 4. `feat(ui): 차량/마이페이지 토큰화 (S11-S12)`
 </content>
 </invoke>
+
+---
+
+# 2차 UI 개편 (진행 중)
+
+> 추천 순서: ①회원가입 ②유저 핵심동선 정합 ③관리자 콘솔(07) ④C2B2C(08) ⑤(옵션)5탭 네비.
+> 1차 토큰/컴포넌트 재사용, 변수 연결 정합성 유지. 한 묶음씩 구현·검증·커밋.
+
+## 2-1. 회원가입 ✅
+- `RegisterScreen`: 플로팅 백버튼 → 헤더바(‹ 회원가입), 폼을 `Card elevated`로 래핑, 풀폭 CTA, 인트로 문구. 로직/검증/Functions 호출 보존. 기존 InputField/Button 재사용.
+
+## 2-2. 유저 핵심동선 — 상태 칩 정합 ✅
+- MyPage `Buy/SellConsultationsTab`: 상태 배지 `variant="chip"` 전환 + Card `elevated`.
+- `UserConsultationDetailScreen`: 상태 배지 chip 전환.
+- **버그 수정**: "승인됨"이 `status="completed"`(파랑)로 잘못 매핑 → `status="approved"`(초록, 시안 정합).
+- 공유 `ConsultationCard`(관리자 상담탭에서도 사용): 상태 배지 chip + Card elevated → 관리자 상담 리스트도 함께 시안화.
+
+### 검증
+- lint 0 error, Metro 프로덕션 번들 성공.
+
+### 2-3(관리자)에서 처리할 발견사항
+- 관리자 상담 탭(Pending/Approved/Rejected/Meeting/Completed)의 Badge는 **상태가 아니라 타입(구매/판매) 라벨**로 오용 중 + enum에 없는 `status="failed"`·`status="success"`(깨진 값) 사용. → 블라인드 chip 전환 부적절, 2-3에서 타입 태그/상태 분리 설계 + 깨진 status 값 정리 필요.
+
+## 남은 묶음
+- 2-3 관리자 콘솔(07): AdminVehiclesList/AdminConsultation(+tabs)/AdminSchedule/AdminUserManagement/AdminPage — 큰 묶음, decompose에서 분할.
+- 2-4 C2B2C 거래체결(08).
+- 2-5 (옵션) 5탭 네비 — 별도 승인.
