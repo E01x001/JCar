@@ -1,142 +1,227 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, Image, StatusBar, KeyboardAvoidingView, Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuth, signInWithEmailAndPassword } from '@react-native-firebase/auth';
 import { handleFirebaseError } from '../utils/errorHandler';
-import { useTheme } from '../theme/ThemeProvider';
-import Button from '../components/Button';
-import InputField from '../components/InputField';
 import { useToast } from '../hooks/useToast';
+import { useTheme } from '../theme/ThemeProvider';
 
 const LoginScreen = ({ navigation }) => {
-  const theme = useTheme();
   const toast = useToast();
-  const [email, setEmail] = useState('');
+  const theme = useTheme();
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passFocused, setPassFocused]   = useState(false);
 
-  // 이메일 형식 검증 함수
-  const validateEmail = (emailInput) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(emailInput);
-  };
+  const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   const handleLogin = async () => {
-    // 중복 제출 방지
-    if (loading) {
-      return;
-    }
-
-    // 빈 값 체크
-    if (!email) {
-      setEmailError('이메일 주소를 입력해주세요.');
-      return;
-    }
-
-    // 이메일 형식 검증
-    if (!validateEmail(email)) {
-      setEmailError('올바른 이메일 형식이 아닙니다.');
-      return;
-    }
-
-    if (!password) {
-      toast.showError('입력 오류', '비밀번호를 입력해주세요.');
-      return;
-    }
-
-    // 에러 초기화
+    if (loading) { return; }
+    if (!email)              { setEmailError('이메일 주소를 입력해주세요.'); return; }
+    if (!validateEmail(email)) { setEmailError('올바른 이메일 형식이 아닙니다.'); return; }
+    if (!password)           { toast.showError('입력 오류', '비밀번호를 입력해주세요.'); return; }
     setEmailError('');
     setLoading(true);
-
     try {
-      // Task 62.4: Use modular signInWithEmailAndPassword
-      const auth = getAuth();
-      await signInWithEmailAndPassword(auth, email, password);
-      toast.showSuccess('로그인 성공', '환영합니다!');
+      await signInWithEmailAndPassword(getAuth(), email, password);
     } catch (error) {
-      // Centralized mapping + Crashlytics logging (errorHandler covers all the
-      // auth/* codes this screen used to map by hand).
-      const errorMessage = handleFirebaseError(error, { operation: 'login', email });
-      toast.showError('로그인 실패', errorMessage);
+      toast.showError('로그인 실패', handleFirebaseError(error, { operation: 'login', email }));
     } finally {
-      // Always re-enable: a successful sign-in may still keep this screen
-      // mounted (e.g. suspended account is signed back out, or no users/{uid}
-      // doc exists), which would otherwise leave the button permanently disabled.
       setLoading(false);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background.secondary }]}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
+    <View style={[styles.bg, { backgroundColor: theme.colors.primary.dark }]}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary.dark} />
 
-      <View style={[styles.formContainer, { marginTop: theme.spacing.xl }]}>
-        <InputField
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (emailError) {
-              setEmailError('');
-            }
-          }}
-          placeholder="이메일 입력"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          error={emailError}
-        />
-        <InputField
-          value={password}
-          onChangeText={setPassword}
-          placeholder="비밀번호 입력"
-          secureTextEntry
-        />
+      {/* Decorative background circles */}
+      <View style={styles.circleTopRight} />
+      <View style={styles.circleBottomLeft} />
 
-        <Button
-          variant="primary"
-          title="로그인"
-          onPress={handleLogin}
-          loading={loading}
-          disabled={loading}
-          style={{ marginTop: theme.spacing.sm }}
-        />
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <KeyboardAvoidingView
+          style={styles.kav}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          {/* Hero — logo + tagline */}
+          <View style={styles.hero}>
+            <Image
+              source={require('../assets/logo.png')}
+              style={styles.logo}
+              tintColor="#fff"
+              resizeMode="contain"
+            />
+            <Text style={styles.tagline}>{'믿을 수 있는\n중고차 거래의 시작'}</Text>
+            <Text style={styles.subTagline}>차량 인증 · 상담 예약 · 안전한 거래</Text>
+          </View>
 
-        <View style={styles.subActionsContainer}>
-          <Button
-            variant="text"
-            title="비밀번호 찾기"
-            onPress={() => navigation.navigate('ForgotPassword')}
-          />
-          <Button
-            variant="text"
-            title="회원가입"
-            onPress={() => navigation.navigate('Register')}
-          />
-        </View>
-      </View>
+          {/* Glass card */}
+          <View style={styles.card}>
+            <TextInput
+              style={[styles.input, emailFocused && styles.inputFocused]}
+              value={email}
+              onChangeText={(t) => { setEmail(t); if (emailError) { setEmailError(''); } }}
+              placeholder="이메일 주소"
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
+            />
+            {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+
+            <TextInput
+              style={[styles.input, { marginTop: 12 }, passFocused && styles.inputFocused]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="비밀번호 입력"
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              secureTextEntry
+              onFocus={() => setPassFocused(true)}
+              onBlur={() => setPassFocused(false)}
+            />
+
+            <TouchableOpacity
+              style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.loginBtnText, { color: theme.colors.primary.main }]}>{loading ? '로그인 중...' : '로그인'}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.links}>
+              <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} activeOpacity={0.7}>
+                <Text style={styles.linkText}>비밀번호 찾기</Text>
+              </TouchableOpacity>
+              <Text style={styles.linkDot}>·</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')} activeOpacity={0.7}>
+                <Text style={styles.linkText}>회원가입</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  bg: {
     flex: 1,
-    justifyContent: 'center',
+    // 배경색은 theme.colors.primary.dark로 인라인 지정(토큰화)
+  },
+  safe: { flex: 1 },
+  kav: { flex: 1, justifyContent: 'space-between' },
+
+  // Decorative circles
+  circleTopRight: {
+    position: 'absolute',
+    right: -50,
+    top: 130,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  circleBottomLeft: {
+    position: 'absolute',
+    left: -40,
+    bottom: 200,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+
+  // Hero
+  hero: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingTop: 60,
+    justifyContent: 'flex-start',
+  },
+  logo: { width: 158, height: 50 },
+  tagline: {
+    color: '#fff',
+    fontSize: 27,
+    fontWeight: '800',
+    lineHeight: 38,
+    marginTop: 28,
+    letterSpacing: -0.3,
+  },
+  subTagline: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    marginTop: 12,
+    lineHeight: 22,
+  },
+
+  // Glass card
+  card: {
+    marginHorizontal: 20,
+    marginBottom: 26,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 24,
+    padding: 24,
+  },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 15,
+    color: '#fff',
+  },
+  inputFocused: {
+    borderColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.20)',
+  },
+  fieldError: {
+    color: '#FF8A95',
+    fontSize: 12,
+    marginTop: 5,
+    marginLeft: 4,
+  },
+  loginBtn: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 17,
+    marginTop: 18,
     alignItems: 'center',
-    padding: 20,
   },
-  logo: {
-    width: 150,
-    height: 150,
-    resizeMode: 'contain',
+  loginBtnDisabled: { opacity: 0.7 },
+  loginBtnText: {
+    // color는 theme.colors.primary.main으로 인라인 지정(토큰화)
+    fontSize: 16,
+    fontWeight: '800',
   },
-  formContainer: {
-    width: '100%',
-  },
-  subActionsContainer: {
+  links: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 18,
+    gap: 10,
+  },
+  linkText: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  linkDot: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 14,
   },
 });
 

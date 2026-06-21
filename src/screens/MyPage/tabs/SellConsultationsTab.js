@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { useTheme } from '../../../theme/ThemeProvider';
 import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
-import StateScreen from '../../../components/StateScreen';
+import EmptyState from '../../../components/EmptyState';
 
 const SellConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
   const theme = useTheme();
@@ -82,17 +82,24 @@ const SellConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
         flexGrow: 1,
       }}
       ListEmptyComponent={
-        <StateScreen
-          icon="sell"
-          title="판매 상담 내역이 없습니다"
-          message="차량 판매 상담을 신청하면 여기에 표시됩니다."
-        />
+        <View style={styles.emptyWrap}>
+          <EmptyState
+            icon="sell"
+            title="아직 판매 상담 내역이 없어요"
+            message={'내 차량을 등록하고\n판매 상담을 받아보세요'}
+          />
+        </View>
       }
     />
   );
 };
 
 const styles = StyleSheet.create({
+  emptyWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
   consultHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { useTheme } from '../../../theme/ThemeProvider';
 import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
-import StateScreen from '../../../components/StateScreen';
+import EmptyState from '../../../components/EmptyState';
 
 const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
   const theme = useTheme();
@@ -34,17 +34,24 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
         flexGrow: 1,
       }}
       ListEmptyComponent={
-        <StateScreen
-          icon="directions-car"
-          title="등록된 차량이 없습니다"
-          message="차량을 등록하면 여기에 표시됩니다."
-        />
+        <View style={styles.emptyWrap}>
+          <EmptyState
+            icon="directions-car"
+            title="아직 등록한 차량이 없어요"
+            message={'내 차량을 등록하고\n판매를 시작해 보세요'}
+          />
+        </View>
       }
     />
   );
 };
 
 const styles = StyleSheet.create({
+  emptyWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
   vehicleRow: {
     flexDirection: 'row',
     alignItems: 'center',
