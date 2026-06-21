@@ -1,8 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { logger } from '../utils/logger';
-import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Picker } from '@react-native-picker/picker';
+import { useTheme } from '../theme/ThemeProvider';
+import Card from '../components/Card';
+import InputField from '../components/InputField';
+import Button from '../components/Button';
 import { getFirestore, collection, doc, writeBatch, serverTimestamp } from '@react-native-firebase/firestore';
 import { getAuth } from '@react-native-firebase/auth';
 import { getApp } from '@react-native-firebase/app';
@@ -17,6 +22,7 @@ import { prepareImageForUpload, prepareImagesForUpload, pickMultipleFromGallery,
 const MAX_IMAGES = 8;
 
 const VehicleRegistrationScreen = () => {
+  const theme = useTheme();
   const { user, sellerName, sellerPhone, sellerEmail } = useContext(AuthContext);
   const toast = useToast();
   const { addOptimisticVehicle, removeOptimisticVehicle, invalidateUserVehiclesCache } = useVehicleStore();
@@ -358,109 +364,132 @@ const VehicleRegistrationScreen = () => {
       <View style={styles.screenTitleBar}>
         <Text style={styles.screenTitle}>차량 등록</Text>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.label}>차량번호</Text>
-        <TextInput
-          value={regiNumber}
-          onChangeText={(text) => setRegiNumber(formatRegiNumber(text))}
-          style={styles.input}
-          placeholder="예: 서울12가 3456"
-          placeholderTextColor="#aaa"
-        />
+      <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled">
+        <Card elevated style={styles.formCard}>
+          <InputField
+            label="차량번호"
+            value={regiNumber}
+            onChangeText={(text) => setRegiNumber(formatRegiNumber(text))}
+            placeholder="예: 서울12가 3456"
+          />
+          <InputField
+            label="소유자명"
+            value={ownerName}
+            onChangeText={setOwnerName}
+            placeholder="소유자 이름 입력"
+          />
 
-        <Text style={styles.label}>소유자명</Text>
-        <TextInput
-          value={ownerName}
-          onChangeText={setOwnerName}
-          style={styles.input}
-          placeholder="소유자 이름 입력"
-          placeholderTextColor="#aaa"
-        />
-
-        <Text style={styles.label}>차량 종류</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={vehicleType}
-            onValueChange={(itemValue) => setVehicleType(itemValue)}
-            style={[styles.picker, { color: vehicleType ? '#000' : '#aaa' }]} // ✅ 선택 여부에 따라 글자색 다르게
-            dropdownIconColor="#000"
-          >
-            <Picker.Item label="차량 종류 선택" value="" color="#aaa" />
-            <Picker.Item label="승용차" value="승용차" color="#eeeeee" />
-            <Picker.Item label="택시" value="택시" color="#eeeeee" />
-            <Picker.Item label="렌터카" value="렌터카" color="#eeeeee" />
-            <Picker.Item label="화물차" value="화물차" color="#eeeeee" />
-            <Picker.Item label="군용차" value="군용차" color="#eeeeee" />
-            <Picker.Item label="외교차" value="외교차" color="#eeeeee" />
-          </Picker>
-        </View>
-
-        <TouchableOpacity onPress={handleImageSelect} style={styles.imageButton}>
-          <Text style={styles.imageButtonText}>
-            추가 사진 선택 (선택) {images.length > 0 ? `· ${images.length}/${MAX_IMAGES}` : ''}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Task 127: multi-image thumbnail strip with per-image remove */}
-        {images.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbStrip}>
-            {images.map((img, index) => (
-              <View key={`${index}-${img.uri}`} style={styles.thumbWrapper}>
-                <Image source={{ uri: img.uri }} style={styles.thumb} />
-                <TouchableOpacity
-                  style={styles.thumbRemove}
-                  onPress={() => removeImageAt(index)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text style={styles.thumbRemoveText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-        )}
-
-        {isUploading && (
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>업로드 중... {uploadProgress.toFixed(0)}%</Text>
-            <View style={styles.progressBarBackground}>
-              <View style={[styles.progressBarFill, { width: `${uploadProgress}%` }]} />
-            </View>
+          <Text style={[styles.fieldLabel, { color: theme.colors.text.secondary }]}>차량 종류</Text>
+          <View style={[styles.pickerContainer, {
+            borderColor: theme.colors.border.subtle,
+            borderRadius: theme.borderRadius.input,
+            backgroundColor: theme.colors.background.primary,
+          }]}>
+            <Picker
+              selectedValue={vehicleType}
+              onValueChange={(itemValue) => setVehicleType(itemValue)}
+              style={{ color: vehicleType ? theme.colors.text.primary : theme.colors.text.tertiary }}
+              dropdownIconColor={theme.colors.text.secondary}
+            >
+              <Picker.Item label="차량 종류 선택" value="" color={theme.colors.text.tertiary} />
+              <Picker.Item label="승용차" value="승용차" />
+              <Picker.Item label="택시" value="택시" />
+              <Picker.Item label="렌터카" value="렌터카" />
+              <Picker.Item label="화물차" value="화물차" />
+              <Picker.Item label="군용차" value="군용차" />
+              <Picker.Item label="외교차" value="외교차" />
+            </Picker>
           </View>
-        )}
 
-        <View style={styles.buttonContainer}>
-          <Button title="차량 정보 조회" onPress={fetchVehicleInfo} disabled={loading} color="#2B4593" />
-          {loading && <ActivityIndicator size="large" color="#2B4593" />}
-        </View>
+          <TouchableOpacity
+            onPress={handleImageSelect}
+            activeOpacity={0.8}
+            style={[styles.imageTile, {
+              borderColor: theme.colors.border.subtle,
+              borderRadius: theme.borderRadius.input,
+              backgroundColor: theme.colors.background.secondary,
+            }]}
+          >
+            <Icon name="add-photo-alternate" size={22} color={theme.colors.primary.main} />
+            <Text style={[styles.imageTileText, { color: theme.colors.text.secondary }]}>
+              추가 사진 선택 (선택){images.length > 0 ? ` · ${images.length}/${MAX_IMAGES}` : ''}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Task 127: multi-image thumbnail strip with per-image remove */}
+          {images.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbStrip}>
+              {images.map((img, index) => (
+                <View key={`${index}-${img.uri}`} style={styles.thumbWrapper}>
+                  <Image source={{ uri: img.uri }} style={styles.thumb} />
+                  <TouchableOpacity
+                    style={styles.thumbRemove}
+                    onPress={() => removeImageAt(index)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.thumbRemoveText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+
+          {isUploading && (
+            <View style={styles.progressContainer}>
+              <Text style={[styles.progressText, { color: theme.colors.text.secondary }]}>업로드 중... {uploadProgress.toFixed(0)}%</Text>
+              <View style={[styles.progressBarBackground, { backgroundColor: theme.colors.background.tertiary }]}>
+                <View style={[styles.progressBarFill, { width: `${uploadProgress}%`, backgroundColor: theme.colors.primary.main }]} />
+              </View>
+            </View>
+          )}
+
+          <Button
+            variant="primary"
+            title={loading ? '조회 중...' : '차량 정보 조회'}
+            onPress={fetchVehicleInfo}
+            loading={loading}
+            disabled={loading}
+            fullWidth
+            style={styles.lookupButton}
+          />
+        </Card>
 
         {vehicleData && (
-          <View style={styles.vehiclePreview}>
-            <Text style={styles.previewTitle}>🚗 차량 정보 미리보기</Text>
+          <Card elevated style={styles.previewCard}>
+            <Text style={[styles.previewTitle, { color: theme.colors.text.primary }]}>차량 정보 미리보기</Text>
             {vehicleData.CARURL && (
               <Image
                 source={{ uri: `https://www.cartory.net/cars/${vehicleData.CARURL}` }}
                 style={styles.vehicleImage}
               />
             )}
-            <Text>🔹 차량번호: {regiNumber}</Text>
-            <Text>🔹 소유자명: {ownerName}</Text>
-            <Text>🔹 차량명: {vehicleData.CARNAME}</Text>
-            <Text>🔹 제조사: {vehicleData.CARVENDER}</Text>
-            <Text>🔹 연식: {vehicleData.CARYEAR}</Text>
-            <Text>🔹 연료: {vehicleData.FUEL}</Text>
-            <Text>🔹 변속기: {vehicleData.MISSION}</Text>
-            <Text>🔹 배기량: {vehicleData.CC} cc</Text>
-            <Text>🔹 연비: {vehicleData.FUELECO} km/L</Text>
+            {[
+              ['차량번호', regiNumber],
+              ['소유자명', ownerName],
+              ['차량명', vehicleData.CARNAME],
+              ['제조사', vehicleData.CARVENDER],
+              ['연식', vehicleData.CARYEAR],
+              ['연료', vehicleData.FUEL],
+              ['변속기', vehicleData.MISSION],
+              ['배기량', vehicleData.CC ? `${vehicleData.CC} cc` : '-'],
+              ['연비', vehicleData.FUELECO ? `${vehicleData.FUELECO} km/L` : '-'],
+            ].map(([k, v]) => (
+              <View key={k} style={[styles.previewRow, { borderBottomColor: theme.colors.border.light }]}>
+                <Text style={[styles.previewKey, { color: theme.colors.text.secondary }]}>{k}</Text>
+                <Text style={[styles.previewVal, { color: theme.colors.text.primary }]}>{v || '-'}</Text>
+              </View>
+            ))}
 
-            <View style={styles.buttonContainer}>
-              <Button
-                title={saving ? '저장 중...' : '차량 정보 저장'}
-                onPress={saveVehicleData}
-                disabled={saving || isUploading}
-                color="#2B4593"
-              />
-            </View>
-          </View>
+            <Button
+              variant="primary"
+              title={saving ? '저장 중...' : '차량 정보 저장'}
+              onPress={saveVehicleData}
+              loading={saving}
+              disabled={saving || isUploading}
+              fullWidth
+              style={styles.saveButton}
+            />
+          </Card>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -468,34 +497,41 @@ const VehicleRegistrationScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
   screenTitleBar: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 6 },
   screenTitle: { fontSize: 20, fontWeight: '800', color: '#212529', letterSpacing: -0.2 },
   scrollViewContent: { padding: 20, paddingBottom: 30 },
-  label: { fontSize: 16, fontWeight: '600', color: '#000', marginBottom: 5 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 15, borderRadius: 8, backgroundColor: '#fff', fontSize: 16 },
-  pickerContainer: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, overflow: 'hidden', marginBottom: 15, backgroundColor: '#fff' },
-  picker: { height: 55, width: '100%', fontSize: 16 }, // ✅ 높이와 글자 크기 조정
-  buttonContainer: { marginTop: 20, alignItems: 'center' },
-  vehiclePreview: { marginTop: 30, padding: 15, backgroundColor: '#fff', borderRadius: 10, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
-  previewTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  vehicleImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 10 },
-  imageButton: { padding: 10, backgroundColor: '#e0e0e0', alignItems: 'center', marginBottom: 10, borderRadius: 6 },
-  imageButtonText: { color: '#333' },
+  formCard: { padding: 20 },
+  fieldLabel: { fontSize: 12, fontWeight: '500', marginBottom: 7 },
+  pickerContainer: { borderWidth: 1.5, overflow: 'hidden', marginBottom: 12 },
+  imageTile: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderStyle: 'dashed', paddingVertical: 16, marginBottom: 4,
+  },
+  imageTileText: { fontSize: 14, fontWeight: '600' },
+  lookupButton: { marginTop: 16 },
+  // Preview card
+  previewCard: { padding: 20, marginTop: 16 },
+  previewTitle: { fontSize: 16, fontWeight: '800', marginBottom: 12 },
+  vehicleImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 12 },
+  previewRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 11, borderBottomWidth: 1 },
+  previewKey: { fontSize: 14 },
+  previewVal: { fontSize: 14, fontWeight: '600' },
+  saveButton: { marginTop: 18 },
   // Task 127: multi-image thumbnail strip
-  thumbStrip: { marginBottom: 10 },
+  thumbStrip: { marginVertical: 10 },
   thumbWrapper: { marginRight: 8, position: 'relative' },
-  thumb: { width: 90, height: 90, borderRadius: 6, resizeMode: 'cover' },
+  thumb: { width: 90, height: 90, borderRadius: 12, resizeMode: 'cover' },
   thumbRemove: {
     position: 'absolute', top: -6, right: -6,
     width: 22, height: 22, borderRadius: 11,
-    backgroundColor: '#d11', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#DC3545', alignItems: 'center', justifyContent: 'center',
   },
   thumbRemoveText: { color: '#fff', fontSize: 16, lineHeight: 18, fontWeight: 'bold' },
-  progressContainer: { marginTop: 10, marginBottom: 15 },
-  progressText: { fontSize: 14, color: '#2B4593', marginBottom: 5, textAlign: 'center', fontWeight: '600' },
-  progressBarBackground: { height: 20, backgroundColor: '#e0e0e0', borderRadius: 10, overflow: 'hidden' },
-  progressBarFill: { height: '100%', backgroundColor: '#28a745', borderRadius: 10 },
+  progressContainer: { marginTop: 10, marginBottom: 6 },
+  progressText: { fontSize: 13, marginBottom: 6, textAlign: 'center', fontWeight: '600' },
+  progressBarBackground: { height: 10, borderRadius: 5, overflow: 'hidden' },
+  progressBarFill: { height: '100%', borderRadius: 5 },
 });
 
 export default VehicleRegistrationScreen;

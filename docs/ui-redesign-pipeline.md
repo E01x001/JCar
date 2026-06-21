@@ -343,3 +343,11 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - 상단 세그먼트 탭바(상담 구매/판매 TabView): 인디케이터 3px 라운드, 굵은 라벨, 톤다운 배경으로 시안화.
 - **⚠️ 적용에 네이티브 재빌드 필요**: `npx react-native-asset` 후 `npm run android`. JS 번들만으론 폰트 미반영(런타임 디바이스 확인 필요).
 - 검증(정적): lint 0 error, Metro 번들 성공.
+
+## 충실도 향상 2: 화면별 시안 대조 (UI_redesign 스크린샷 기준)
+현재 앱 스크린샷(UI_redesign/) 7장을 시안과 대조. 대부분(홈/상담/내정보/차량상세)은 시안과 근접.
+가장 큰 갭 = **차량 등록**(구식 폼, 디자인시스템 미적용) → 재구성.
+- VehicleRegistrationScreen: 구식 TextInput(#ccc)/RN기본 Button → InputField + Card elevated +
+  토큰화 Picker + 점선 사진 타일(add-photo 아이콘) + 풀폭 Primary CTA. 미리보기를 키-값 카드로.
+  로직(차량조회 API/이미지업로드/저장) 전부 보존.
+- 검증: lint 0 error, Metro 번들 성공.
