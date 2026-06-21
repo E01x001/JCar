@@ -62,6 +62,7 @@ export const colors = {
   border: {
     default: '#DEE2E6',
     light: '#E9ECEF',
+    subtle: '#E1E5EA', // 시안: 입력/고스트 버튼 테두리
     dark: '#ADB5BD',
   },
 
@@ -89,6 +90,22 @@ export const colors = {
     completed: '#28A745',    // success color
     cancelled: '#6C757D',    // gray color
     'on-hold': '#FFA000',    // warning color
+  },
+
+  // 시안 톤다운 상태 칩 (bg/fg/dot) — Badge 신규 스타일용 (additive)
+  statusChip: {
+    pending:   { bg: '#FFF6E5', fg: '#C77700', dot: '#FFA000' }, // 대기중
+    approved:  { bg: '#E7F6EC', fg: '#1E7E34', dot: '#28A745' }, // 승인됨
+    rejected:  { bg: '#FCE9EB', fg: '#B02A37', dot: '#DC3545' }, // 거절됨
+    completed: { bg: '#EAEFFB', fg: '#2B4593', dot: '#2B4593' }, // 완료
+    neutral:   { bg: '#F1F3F5', fg: '#495057', dot: '#ADB5BD' }, // 기타/취소
+  },
+
+  // 시안 태그 칩 (차종 등)
+  tag: {
+    info:    { bg: '#EAF4FF', fg: '#1A6FB5' },
+    neutral: { bg: '#F1F3F5', fg: '#495057' },
+    accent:  { bg: '#EEF1FA', fg: '#2B4593' },
   },
 };
 
