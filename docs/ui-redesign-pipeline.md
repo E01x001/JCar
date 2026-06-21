@@ -300,3 +300,16 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - 검증: lint 0 error, Metro 번들 성공.
 
 → **2-3 관리자 콘솔 완료.** 남은 묶음: 2-4 C2B2C(08), 2-5(옵션) 5탭 네비.
+
+## 2-4. C2B2C 거래 체결 (08) ✅
+시안 08은 신규 화면이 아니라 **기존 거래 모달의 바텀시트 비주얼 정의**임을 확인.
+- **정합성 버그**: `theme.colors.background.paper`가 5개 모달에서 깨진 키(undefined 배경)로
+  사용 중 → `background.paper='#FFFFFF'` 별칭(additive)으로 일괄 복구.
+- `CompleteDealModal`(판매/구매 체결): 중앙 페이드 모달 → **바텀시트**(slide, 라운드 top,
+  그랩 핸들) + 시안의 **"체결 시 처리 내용" 번호 스텝**(sell 3단계: 완료→보유등록→판매완료(red),
+  buy 2단계). 폼/검증/analytics 전부 보존.
+- `OwnershipTransferConfirmModal`(소유권 이전): 바텀시트로 전환(그랩 핸들). 로직 보존.
+- 검증: lint 0 error, Metro 번들 성공.
+
+→ **2-4 완료.** 남은 것: 2-5(옵션) 5탭 네비. 나머지 거래 모달(SoldVehicle/OwnershipTransferDetail/
+  RejectConsultation)은 background.paper 별칭으로 정상 렌더되며, 바텀시트 전환은 선택(후속).

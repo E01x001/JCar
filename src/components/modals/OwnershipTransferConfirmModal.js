@@ -17,7 +17,6 @@ import {
 import PropTypes from 'prop-types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../../theme/ThemeProvider';
-import Card from '../Card';
 import Button from '../Button';
 
 /**
@@ -92,30 +91,31 @@ const OwnershipTransferConfirmModal = ({
     <Modal
       visible={isVisible}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={handleCancel}
     >
       <View style={styles.overlay}>
         <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
+          style={[StyleSheet.absoluteFill, styles.dim]}
           activeOpacity={1}
           onPress={handleCancel}
           disabled={isLoading}
         />
-        <View style={styles.modalContainer}>
-          <Card
-            style={[
-              styles.modalCard,
-              {
-                backgroundColor: theme.colors.background.paper,
-                borderRadius: theme.borderRadius.lg,
-              },
-            ]}
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: theme.colors.background.paper,
+              borderTopLeftRadius: theme.borderRadius.cardLg,
+              borderTopRightRadius: theme.borderRadius.cardLg,
+            },
+          ]}
+        >
+          <View style={[styles.grabHandle, { backgroundColor: theme.colors.border.subtle }]} />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
               {/* Header */}
               <View style={styles.header}>
                 <MaterialIcons
@@ -421,8 +421,7 @@ const OwnershipTransferConfirmModal = ({
                   }
                 />
               </View>
-            </ScrollView>
-          </Card>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -432,16 +431,24 @@ const OwnershipTransferConfirmModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
-  modalContainer: {
-    width: '90%',
-    maxWidth: 500,
-    maxHeight: '80%',
+  dim: {
+    backgroundColor: 'rgba(15, 22, 38, 0.55)',
   },
-  modalCard: {
+  sheet: {
     width: '100%',
+    maxHeight: '90%',
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    paddingBottom: 30,
+  },
+  grabHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 18,
   },
   header: {
     flexDirection: 'row',

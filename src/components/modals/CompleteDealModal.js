@@ -19,7 +19,6 @@ import PropTypes from 'prop-types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import analytics from '@react-native-firebase/analytics';
 import { useTheme } from '../../theme/ThemeProvider';
-import Card from '../Card';
 import InputField from '../InputField';
 import Button from '../Button';
 import OwnershipTransferConfirmModal from './OwnershipTransferConfirmModal';
@@ -244,16 +243,28 @@ const CompleteDealModal = ({
     }
   };
 
+  // 시안 08: 체결 시 처리 내용 (트랜잭션 효과 요약)
+  const completionSteps = isSellType
+    ? [
+        { n: 1, text: '상담 상태 → 완료(completed)', danger: false },
+        { n: 2, text: '관리자 보유 차량으로 등록', danger: false },
+        { n: 3, text: '차량 상태 → 판매완료(sold)', danger: true },
+      ]
+    : [
+        { n: 1, text: '상담 상태 → 완료(completed)', danger: false },
+        { n: 2, text: '보유 차량을 구매자에게 소유권 이전', danger: false },
+      ];
+
   return (
     <Modal
       visible={isVisible}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={handleCancel}
     >
       <View style={styles.overlay}>
         <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
+          style={[StyleSheet.absoluteFill, styles.dim]}
           activeOpacity={1}
           onPress={handleCancel}
         />
@@ -261,36 +272,67 @@ const CompleteDealModal = ({
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidingView}
         >
-          <View style={styles.modalContainer}>
-            <Card
-              style={[
-                styles.modalCard,
-                {
-                  backgroundColor: theme.colors.background.paper,
-                  borderRadius: theme.borderRadius.lg,
-                },
-              ]}
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: theme.colors.background.paper,
+                borderTopLeftRadius: theme.borderRadius.cardLg,
+                borderTopRightRadius: theme.borderRadius.cardLg,
+              },
+            ]}
+          >
+            {/* Grab handle */}
+            <View style={[styles.grabHandle, { backgroundColor: theme.colors.border.subtle }]} />
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
+              {/* Header */}
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    fontSize: theme.typography.fontSize.h3,
+                    fontWeight: theme.typography.fontWeight.extraBold,
+                    color: theme.colors.text.primary,
+                  },
+                ]}
               >
-                {/* Header */}
-                <Text
-                  style={[
-                    styles.title,
-                    {
-                      fontSize: theme.typography.fontSize.h3,
-                      fontWeight: theme.typography.fontWeight.bold,
-                      color: theme.colors.text.primary,
-                      marginBottom: theme.spacing.md,
-                    },
-                  ]}
-                >
-                  거래 완료
-                </Text>
+                {isSellType ? '판매 상담 체결' : '구매 상담 체결'}
+              </Text>
+              <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>
+                {isSellType ? '차량을 매입하고 거래를 완료합니다' : '소유권을 이전하고 거래를 완료합니다'}
+              </Text>
 
-                {/* Deal Amount Input */}
+              {/* 체결 시 처리 내용 */}
+              <Text style={[styles.stepsHeading, { color: theme.colors.text.primary }]}>체결 시 처리 내용</Text>
+              <View style={styles.stepsList}>
+                {completionSteps.map((step) => (
+                  <View key={step.n} style={styles.stepRow}>
+                    <View
+                      style={[
+                        styles.stepNum,
+                        {
+                          backgroundColor: step.danger ? theme.colors.statusChip.rejected.bg : theme.colors.statusChip.completed.bg,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.stepNumText,
+                          { color: step.danger ? theme.colors.statusChip.rejected.fg : theme.colors.primary.main },
+                        ]}
+                      >
+                        {step.n}
+                      </Text>
+                    </View>
+                    <Text style={[styles.stepText, { color: theme.colors.text.secondary }]}>{step.text}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Deal Amount Input */}
                 <InputField
                   label="거래금액 (원) *"
                   value={dealAmount}
@@ -427,7 +469,6 @@ const CompleteDealModal = ({
                   />
                 </View>
               </ScrollView>
-            </Card>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -453,22 +494,63 @@ const CompleteDealModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  dim: {
+    backgroundColor: 'rgba(15, 22, 38, 0.55)',
   },
   keyboardAvoidingView: {
     width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 20,
   },
-  modalContainer: {
+  sheet: {
     width: '100%',
-    maxWidth: 400,
+    maxHeight: '90%',
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    paddingBottom: 30,
   },
-  modalCard: {
-    width: '100%',
+  grabHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 18,
   },
   title: {},
+  subtitle: {
+    fontSize: 13,
+    marginTop: 6,
+    marginBottom: 18,
+  },
+  stepsHeading: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  stepsList: {
+    gap: 10,
+    marginBottom: 20,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+  },
+  stepNum: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepNumText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  stepText: {
+    flex: 1,
+    fontSize: 13,
+  },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -476,6 +558,7 @@ const styles = StyleSheet.create({
   checkboxLabel: {},
   buttonRow: {
     flexDirection: 'row',
+    marginTop: 4,
   },
 });
 

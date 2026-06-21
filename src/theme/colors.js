@@ -47,6 +47,7 @@ export const colors = {
     secondary: '#F8F9FA',
     tertiary: '#F1F3F5',
     card: '#FFFFFF',
+    paper: '#FFFFFF', // 별칭(정합성 복구): 모달들이 background.paper 참조하나 키 없어 깨져 있었음
     disabled: '#E9ECEF',
   },
 
