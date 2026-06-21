@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { logger } from '../utils/logger';
-import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, Button, ScrollView, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { getFirestore, collection, doc, writeBatch, serverTimestamp } from '@react-native-firebase/firestore';
 import { getAuth } from '@react-native-firebase/auth';
@@ -344,7 +345,10 @@ const VehicleRegistrationScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.screenTitleBar}>
+        <Text style={styles.screenTitle}>차량 등록</Text>
+      </View>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <Text style={styles.label}>차량번호</Text>
         <TextInput
@@ -456,6 +460,8 @@ const VehicleRegistrationScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
+  screenTitleBar: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 6 },
+  screenTitle: { fontSize: 20, fontWeight: '800', color: '#212529', letterSpacing: -0.2 },
   scrollViewContent: { padding: 20, paddingBottom: 30 },
   label: { fontSize: 16, fontWeight: '600', color: '#000', marginBottom: 5 },
   input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 15, borderRadius: 8, backgroundColor: '#fff', fontSize: 16 },

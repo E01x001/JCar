@@ -153,7 +153,7 @@ const VehiclesListScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['top', 'bottom']}>
       {loading ? (
         <SkeletonLoader count={5} style={styles.skeletonPad} />
       ) : (

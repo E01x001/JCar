@@ -325,3 +325,10 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - 검증: lint 0 error, Metro 번들 성공.
 
 → **2차 전부 완료 (2-1~2-5).** 시안 01~08 + 5탭 IA 반영 완료.
+
+## 후속: 탭 상단 헤더 제거 ✅
+시안에 맞춰 유저 탭 화면의 React-Navigation 상단 헤더를 제거(headerShown:false).
+- 탭 화면이 상태바에 붙지 않도록 SafeArea edges에 'top' 추가(홈/마이/상담/등록).
+- 타이틀이 없던 등록·상담 화면에 인-스크린 타이틀("차량 등록"/"상담 내역") 추가.
+- 푸시 상세 화면(VehicleDetail/ConsultationRequest 등)의 헤더(뒤로가기)는 유지.
+- 검증: lint 0 error, Metro 번들 성공.

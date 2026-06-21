@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
 import { AuthContext } from '../context/AuthContext';
@@ -76,7 +76,10 @@ const UserConsultationsScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['top', 'bottom']}>
+      <View style={styles.titleBar}>
+        <Text style={[styles.titleText, { color: theme.colors.text.primary }]}>상담 내역</Text>
+      </View>
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -91,6 +94,16 @@ const UserConsultationsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  titleBar: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  titleText: {
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
 });
 

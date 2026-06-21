@@ -103,7 +103,7 @@ const MyPageScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['top', 'bottom']}>
       {/* User Info Card */}
       <Card elevated style={styles.profileCard}>
         <Avatar name={sellerName && sellerName !== 'Unknown' ? sellerName : 'J'} size={52} />

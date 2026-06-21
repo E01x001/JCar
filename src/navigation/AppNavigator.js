@@ -87,7 +87,8 @@ const UserTabs = () => (
         else if (route.name === 'MyPage') {iconName = 'person';}
         return <Icon name={iconName} size={size} color={color} />;
       },
-      ...navigationStyles.header,
+      // 시안: 탭 화면은 상단 네비 헤더 없이 화면 자체 헤더/콘텐츠 사용
+      headerShown: false,
       ...navigationStyles.tabBar,
     })}
   >
