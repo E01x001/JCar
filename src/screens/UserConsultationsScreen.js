@@ -64,14 +64,26 @@ const UserConsultationsScreen = ({ navigation }) => {
   const renderTabBar = (props) => (
     <TabBar
       {...props}
-      indicatorStyle={{ backgroundColor: theme.colors.primary.main }}
-      style={{ backgroundColor: theme.colors.background.card }}
+      indicatorStyle={{
+        backgroundColor: theme.colors.primary.main,
+        height: 3,
+        borderRadius: 3,
+      }}
+      style={{
+        backgroundColor: theme.colors.background.secondary,
+        elevation: 0,
+        shadowOpacity: 0,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border.light,
+      }}
       labelStyle={{
         fontSize: theme.typography.fontSize.body,
-        fontWeight: theme.typography.fontWeight.semiBold,
+        fontWeight: theme.typography.fontWeight.bold,
+        textTransform: 'none',
       }}
+      pressColor="transparent"
       activeColor={theme.colors.primary.main}
-      inactiveColor={theme.colors.text.secondary}
+      inactiveColor={theme.colors.text.tertiary}
     />
   );
 

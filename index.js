@@ -9,6 +9,10 @@ import firestore from '@react-native-firebase/firestore';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import App from './src/App';
 import {name as appName} from './app.json';
+import {applyPretendard} from './src/theme/applyPretendard';
+
+// 시안 정합: 앱 전역 폰트를 Pretendard로 (weight별 매핑)
+applyPretendard();
 
 /**
  * Task 106.1: Enable Firestore Offline Persistence

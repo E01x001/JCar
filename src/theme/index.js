@@ -10,6 +10,7 @@ import typography from './typography';
 import spacing from './spacing';
 import borderRadius from './borderRadius';
 import shadows from './shadows';
+import fonts from './fonts';
 
 /**
  * Main theme object containing all design tokens
@@ -20,9 +21,10 @@ export const theme = {
   spacing,
   borderRadius,
   shadows,
+  fonts,
 };
 
 // Export individual tokens for convenience
-export { colors, typography, spacing, borderRadius, shadows };
+export { colors, typography, spacing, borderRadius, shadows, fonts };
 
 export default theme;

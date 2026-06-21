@@ -332,3 +332,14 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - 타이틀이 없던 등록·상담 화면에 인-스크린 타이틀("차량 등록"/"상담 내역") 추가.
 - 푸시 상세 화면(VehicleDetail/ConsultationRequest 등)의 헤더(뒤로가기)는 유지.
 - 검증: lint 0 error, Metro 번들 성공.
+
+## 충실도 향상 1: Pretendard 폰트 번들 + 탭바
+- 시안이 쓰는 **Pretendard** 5웨이트(Regular~ExtraBold) `src/assets/fonts/`에 번들.
+- `react-native.config.js`: 폰트 에셋 링크 경로(`npx react-native-asset`로 android/iOS 등록).
+- `src/theme/fonts.js`: weight→Pretendard 파일명 매핑(`familyForWeight`). theme.fonts로 노출.
+- `src/theme/applyPretendard.js`: Text/TextInput render를 감싸 fontWeight를 보고 알맞은
+  Pretendard 패밀리를 주입 → **화면 수정 없이 앱 전역 Pretendard**. 방어적(실패 시 시스템폰트 폴백).
+  `index.js`에서 applyPretendard() 호출.
+- 상단 세그먼트 탭바(상담 구매/판매 TabView): 인디케이터 3px 라운드, 굵은 라벨, 톤다운 배경으로 시안화.
+- **⚠️ 적용에 네이티브 재빌드 필요**: `npx react-native-asset` 후 `npm run android`. JS 번들만으론 폰트 미반영(런타임 디바이스 확인 필요).
+- 검증(정적): lint 0 error, Metro 번들 성공.
