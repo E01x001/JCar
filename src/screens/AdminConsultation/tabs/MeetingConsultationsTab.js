@@ -59,9 +59,10 @@ const MeetingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
 
   const renderItem = (item) => (
     <TouchableOpacity key={item.id} onPress={() => onNavigateToVehicle(item.vehicleId)}>
-      <Card style={{ marginBottom: theme.spacing.sm }}>
+      <Card elevated style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.header}>
           <Badge
+            variant="chip"
             status={item.consultationStatus}
             label={getStatusLabel(item.consultationStatus)}
           />

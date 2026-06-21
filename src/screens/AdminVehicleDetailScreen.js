@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatPrice, formatPhone } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
+import Tag from '../components/Tag';
 import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
 import ImageCarousel from '../components/ImageCarousel';
@@ -72,11 +73,9 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
         {/* Title and Badges */}
         <View style={{ marginBottom: theme.spacing.md }}>
           <View style={[styles.badgeContainer, { marginBottom: theme.spacing.xs }]}>
+            <Tag variant="info" label={vehicle.vehicleType || '승용차'} />
             <Badge
-              status={vehicle.status || 'pending'}
-              label={vehicle.vehicleType || '승용차'}
-            />
-            <Badge
+              variant="chip"
               status={vehicle.status || 'pending'}
               label={vehicle.status === 'approved' ? '승인됨' : vehicle.status === 'rejected' ? '거절됨' : '대기중'}
             />

@@ -12,8 +12,8 @@ import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
 import Card from '../components/Card';
+import Tag from '../components/Tag';
 import Button from '../components/Button';
-import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
 import OwnedVehiclesList from '../components/OwnedVehiclesList';
 import { migrateConsultationStatusField } from '../scripts/migrateConsultationStatus';
@@ -207,10 +207,10 @@ const AdminPageScreen = ({ navigation }) => {
               />
             ) : (
               vehicles.map((item) => (
-                <Card key={item.id} style={{ marginHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+                <Card elevated key={item.id} style={{ marginHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm }}>
                   {item.vehicleType && (
-                    <Badge
-                      status="pending"
+                    <Tag
+                      variant="info"
                       label={item.vehicleType}
                       style={{ marginBottom: theme.spacing.xs }}
                     />

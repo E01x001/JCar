@@ -4,6 +4,7 @@ import { useTheme } from '../../../theme/ThemeProvider';
 import { formatPhone, formatPrice } from '../../../utils/format';
 import { fetchCompletedConsultationsPaginated } from '../../../services/consultation/consultationQueryService';
 import Card from '../../../components/Card';
+import Tag from '../../../components/Tag';
 import Badge from '../../../components/Badge';
 import Button from '../../../components/Button';
 import StateScreen from '../../../components/StateScreen';
@@ -97,8 +98,8 @@ const CompletedConsultationsTab = ({ consultations: initialConsultations, onNavi
     return type === 'sell' ? '판매상담' : '구매상담';
   };
 
-  const getTypeBadgeStatus = (type) => {
-    return type === 'sell' ? 'warning' : 'success';
+  const getTypeTagVariant = (type) => {
+    return type === 'sell' ? 'neutral' : 'info';
   };
 
   // Task 58: Load initial page on mount or filter change
@@ -149,21 +150,19 @@ const CompletedConsultationsTab = ({ consultations: initialConsultations, onNavi
 
     return (
       <TouchableOpacity key={item.id} onPress={() => onNavigateToVehicle(item.vehicleId)}>
-        <Card style={{ marginBottom: theme.spacing.sm }}>
+        <Card elevated style={{ marginBottom: theme.spacing.sm }}>
           <View style={styles.header}>
-            <Badge
-              status={getTypeBadgeStatus(item.type)}
+            <Tag
+              variant={getTypeTagVariant(item.type)}
               label={getTypeLabel(item.type)}
             />
             <Badge
+              variant="chip"
               status={statusBadgeStatus}
               label={statusBadgeLabel}
             />
             {item.isOwnershipTransferred && (
-              <Badge
-                status="success"
-                label="소유권이전"
-              />
+              <Tag variant="accent" label="소유권이전" />
             )}
           </View>
 

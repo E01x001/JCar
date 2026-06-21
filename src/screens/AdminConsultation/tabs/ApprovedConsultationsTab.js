@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { useTheme } from '../../../theme/ThemeProvider';
 import { formatPhone } from '../../../utils/format';
 import Card from '../../../components/Card';
+import Tag from '../../../components/Tag';
 import Badge from '../../../components/Badge';
 import StateScreen from '../../../components/StateScreen';
 
@@ -14,12 +15,13 @@ const ApprovedConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => onNavigateToVehicle(item.vehicleId)}>
-      <Card style={{ marginBottom: theme.spacing.sm }}>
+      <Card elevated style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.header}>
-          <Badge
-            status="completed"
+          <Tag
+            variant={item.type === 'sell' ? 'neutral' : 'info'}
             label={item.type === 'sell' ? '판매' : '구매'}
           />
+          <Badge variant="chip" status="approved" label="승인됨" />
           <Text style={[styles.userName, {
             fontSize: theme.typography.fontSize.body,
             fontWeight: theme.typography.fontWeight.semiBold,

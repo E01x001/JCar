@@ -4,7 +4,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react
 import { useTheme } from '../../../theme/ThemeProvider';
 import { formatPhone } from '../../../utils/format';
 import Card from '../../../components/Card';
-import Badge from '../../../components/Badge';
+import Tag from '../../../components/Tag';
 import Button from '../../../components/Button';
 import StateScreen from '../../../components/StateScreen';
 import { getFirestore, doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
@@ -51,10 +51,10 @@ const PendingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => onNavigateToVehicle(item.vehicleId)}>
-      <Card style={{ marginBottom: theme.spacing.sm }}>
+      <Card elevated style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.header}>
-          <Badge
-            status="pending"
+          <Tag
+            variant={item.type === 'sell' ? 'neutral' : 'info'}
             label={item.type === 'sell' ? '판매' : '구매'}
           />
           <Text style={[styles.userName, {

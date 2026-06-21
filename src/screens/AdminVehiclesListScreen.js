@@ -7,6 +7,7 @@ import functions from '@react-native-firebase/functions';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
+import Tag from '../components/Tag';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
 import StateScreen from '../components/StateScreen';
@@ -131,12 +132,19 @@ const AdminVehiclesListScreen = ({ navigation }) => {
         onPress={() => navigation.navigate('AdminVehicleDetail', { vehicleId: item.id })}
         activeOpacity={0.7}
       >
-        <Card style={{ marginHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+        <Card elevated style={{ marginHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm }}>
           <View style={styles.cardContent}>
             <View style={styles.vehicleInfo}>
-              {/* Vehicle Type Badge */}
+              {/* Vehicle Type Tag + Approval Status Chip */}
               <View style={styles.header}>
-                <Badge status="completed" label={item.vehicleType || '승용차'} />
+                <Tag variant="info" label={item.vehicleType || '승용차'} />
+                {item.status ? (
+                  <Badge
+                    variant="chip"
+                    status={item.status}
+                    label={item.status === 'approved' ? '승인됨' : item.status === 'rejected' ? '거절됨' : '대기중'}
+                  />
+                ) : null}
                 <Text style={[styles.vehicleName, {
                   fontSize: theme.typography.fontSize.h3,
                   fontWeight: theme.typography.fontWeight.semiBold,

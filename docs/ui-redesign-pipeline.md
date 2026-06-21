@@ -267,3 +267,26 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - 2-3 관리자 콘솔(07): AdminVehiclesList/AdminConsultation(+tabs)/AdminSchedule/AdminUserManagement/AdminPage — 큰 묶음, decompose에서 분할.
 - 2-4 C2B2C 거래체결(08).
 - 2-5 (옵션) 5탭 네비 — 별도 승인.
+
+## 2-3. 관리자 콘솔 (상담·차량) ✅ 1차분
+신규 **Tag 컴포넌트**(분류용 칩, colors.tag 토큰)를 추가해 "상태 vs 분류" 의미 분리.
+- 신규: `src/components/Tag.js` (variant info/neutral/accent), index export.
+- 관리자 상담 탭 5종(Pending/Approved/Rejected/Meeting/Completed):
+  - 구매/판매 **타입 라벨 → Tag**(상태 배지 오용 제거), 실제 상태는 Badge `chip`.
+  - **깨진 status 값 정리**: `failed`/`success`/`warning`(enum 외 → 회색 폴백 버그)을
+    Tag 또는 유효 status(chip)로 교체. 소유권이전 플래그 → Tag(accent).
+  - Card `elevated` 적용.
+- `AdminVehicleDetailScreen`: 차종 → Tag, 승인상태 → Badge chip.
+- `AdminVehiclesListScreen`: 차종 badge → Tag + **카드에 승인상태 chip 추가**(기존엔 상태 미표시), Card elevated.
+- `AdminPageScreen`: 차종 badge → Tag, Card elevated, 미사용 Badge import 제거.
+
+### 검증
+- lint 0 error, Metro 프로덕션 번들 성공. 깨진 status 값 전수 grep 0건.
+
+### 2-3 남은 화면 (다음 증분)
+- `AdminScheduleScreen`(캘린더), `AdminUserManagementScreen`, `AdminConsultationScreen`(탭 컨테이너/TabView 헤더), `AdminVehiclesListScreen` 카드의 VehicleCard화(선택).
+
+## 남은 묶음
+- 2-3 잔여(스케줄/사용자관리/탭헤더) → 다음.
+- 2-4 C2B2C 거래체결(08).
+- 2-5 (옵션) 5탭 네비.
