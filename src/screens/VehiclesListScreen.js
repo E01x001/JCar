@@ -14,6 +14,7 @@ import StateScreen from '../components/StateScreen';
 import SearchBar from '../components/SearchBar';
 import CategoryChip from '../components/CategoryChip';
 import VehicleCard from '../components/VehicleCard';
+import { canViewVehiclePrice } from '../utils/vehiclePrice';
 import Avatar from '../components/Avatar';
 import SectionHeader from '../components/SectionHeader';
 
@@ -21,7 +22,7 @@ const ALL_CATEGORY = '전체';
 
 const VehiclesListScreen = ({ navigation }) => {
   const theme = useTheme();
-  const { user, sellerName } = useContext(AuthContext);
+  const { user, role, sellerName } = useContext(AuthContext);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -82,7 +83,9 @@ const VehiclesListScreen = ({ navigation }) => {
         price: item.price,
         imageUrl: item.imageUrl,
         carType: item.vehicleType,
+        dealStage: item.dealStage,
       }}
+      hidePrice={!canViewVehiclePrice(item, { uid: user?.uid, role })}
       onPress={() => navigation.navigate('VehicleDetail', { vehicleId: item.id })}
       style={styles.cardSpacing}
     />

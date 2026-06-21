@@ -20,7 +20,8 @@ export const getFilteredVehicles = async (filters) => {
     const db = getFirestore();
     const vehiclesRef = collection(db, 'vehicles');
 
-    // 기본 쿼리: 승인된 차량만
+    // 기본 쿼리: 노출 대상 = status 'approved' (listed/acquiring/in_stock는 모두 approved,
+    // sold만 status='sold'로 제외됨). 규칙·인덱스 친화적이라 dealStage in 쿼리 대신 사용.
     const queryConstraints = [where('status', '==', 'approved')];
 
     // Firestore 쿼리로 처리할 수 있는 필터
@@ -91,7 +92,8 @@ export const subscribeToFilteredVehicles = (filters, callback) => {
     const db = getFirestore();
     const vehiclesRef = collection(db, 'vehicles');
 
-    // 기본 쿼리: 승인된 차량만
+    // 기본 쿼리: 노출 대상 = status 'approved' (listed/acquiring/in_stock는 모두 approved,
+    // sold만 status='sold'로 제외됨). 규칙·인덱스 친화적이라 dealStage in 쿼리 대신 사용.
     const queryConstraints = [where('status', '==', 'approved')];
 
     // 가격 필터 (Firestore에서 처리)

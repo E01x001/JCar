@@ -26,6 +26,7 @@ import {
 import functions from '@react-native-firebase/functions';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/notificationService';
 import { CONSULTATION_STATUS } from '../../constants';
+import { DEAL_STAGE } from '../../constants/vehicle';
 import { logger } from '../../utils/logger';
 
 /**
@@ -86,6 +87,28 @@ export const saveConsultationRequest = async (data) => {
     const db = getFirestore();
     const consultationsRef = collection(db, 'consultation_requests');
     await addDoc(consultationsRef, validData);
+
+    // 구매 상담이 미매입(listed) 차량에 들어오면 매입진행(acquiring)으로 전환.
+    // 이미 acquiring/in_stock/sold 이거나 sell 상담이면 건드리지 않는다.
+    if (validData.type === 'buy' && validData.vehicleId) {
+      try {
+        await runTransaction(db, async (transaction) => {
+          const vehicleRef = doc(db, 'vehicles', validData.vehicleId);
+          const vehicleDoc = await transaction.get(vehicleRef);
+          if (vehicleDoc.exists() && vehicleDoc.data().dealStage === DEAL_STAGE.LISTED) {
+            transaction.update(vehicleRef, {
+              dealStage: DEAL_STAGE.ACQUIRING,
+              updatedAt: serverTimestamp(),
+            });
+          }
+        });
+      } catch (stageError) {
+        // 단계 전환 실패가 상담 접수 자체를 막지 않도록 분리 처리
+        logger.error('차량 acquiring 전환 실패:', stageError);
+        reportCrashlyticsError(stageError);
+      }
+    }
+
     return { success: true };
   } catch (error) {
     logger.error('상담 요청 저장 오류:', error);
@@ -291,7 +314,8 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
 
       transaction.update(consultationRef, consultationUpdateData);
 
-      // 2. Create admin_owned_vehicles document
+      // 2. Create admin_owned_vehicles document (감사/이력용 기록 — 정본 아님)
+      //    정본(SSOT)은 vehicles 문서. 이 컬렉션은 매입 이력 조회용으로만 유지.
       const ownedVehiclesCol = collection(db, 'admin_owned_vehicles');
       const ownedVehicleRef = doc(ownedVehiclesCol);
       transaction.set(ownedVehicleRef, {
@@ -314,10 +338,16 @@ export const completeConsultation = async ({ docId, dealAmount, adminNotes = '',
         createdAt: serverTimestamp(),
       });
 
-      // 3. Update vehicle status to 'sold'
+      // 3. 매입 완료 → vehicles 정본 갱신: 재고(in_stock)로 살려두고 관리자 소유로 이전.
+      //    더 이상 status='sold'로 죽이지 않음(재고차도 목록에 노출되어야 함).
       transaction.update(vehicleRef, {
-        status: 'sold',
-        soldDate: serverTimestamp(),
+        dealStage: DEAL_STAGE.IN_STOCK,
+        isAdminOwned: true,
+        currentOwnerId: completedBy,
+        availableForPurchase: true,
+        purchasePrice: Number(dealAmount),
+        purchasedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       return { success: true };

@@ -5,10 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { getFirestore, collection, doc, writeBatch, serverTimestamp } from '@react-native-firebase/firestore';
 import { getAuth } from '@react-native-firebase/auth';
-import functions from '@react-native-firebase/functions';
+import { getApp } from '@react-native-firebase/app';
+import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
-import { VEHICLE_STATUS, VEHICLE_TYPES, isValidVehicleType } from '../constants';
+import { VEHICLE_STATUS, VEHICLE_TYPES, isValidVehicleType, DEAL_STAGE } from '../constants';
 import useVehicleStore from '../stores/vehicleStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 import { prepareImageForUpload, prepareImagesForUpload, pickMultipleFromGallery, uploadImageWithProgress } from '../utils/imageHelpers';
@@ -126,7 +127,9 @@ const VehicleRegistrationScreen = () => {
     try {
       // Task #72: Use Firebase Function proxy for secure API key storage
       // Function deployed in asia-northeast3 (Seoul) for lower latency
-      const getVehicleInfo = functions('asia-northeast3').httpsCallable('getVehicleInfo');
+      // 리전 지정은 getFunctions(app, region) 모듈러 API 사용 (RN Firebase v22)
+      const fns = getFunctions(getApp(), 'asia-northeast3');
+      const getVehicleInfo = httpsCallable(fns, 'getVehicleInfo');
       const result = await getVehicleInfo({ regiNumber, ownerName });
 
       logger.debug('API 응답:', result.data);
@@ -246,10 +249,16 @@ const VehicleRegistrationScreen = () => {
         vehicleType,
         createdAt: new Date(), // Use local time for optimistic data
         sellerId: user.uid,
+        currentOwnerId: user.uid, // 소유 축 정본: 등록 시 판매자 = 현재 소유자
+        isAdminOwned: false,
         sellerName: sellerName || 'Unknown',
         sellerPhone: sellerPhone || 'Unknown',
         sellerEmail: sellerEmail || 'Unknown',
-        status: 'pending', // Vehicles start as pending approval
+        // 자동노출 정책: 등록 즉시 구매자 목록에 노출(사전승인 없음).
+        // 품질 문제는 관리자가 사후에 hidden 처리로 내림(post-moderation).
+        status: 'approved',
+        dealStage: DEAL_STAGE.LISTED,
+        hidden: false,
       };
 
       // Optimistic update: Add immediately to store
@@ -259,7 +268,7 @@ const VehicleRegistrationScreen = () => {
       invalidateUserVehiclesCache(user.uid);
 
       // Show success immediately (optimistic)
-      toast.showSuccess('성공', '차량 정보가 저장되었습니다. 관리자 승인을 기다리세요.');
+      toast.showSuccess('성공', '차량이 등록되어 목록에 노출됩니다.');
 
       // Clear form immediately
       setRegiNumber('');

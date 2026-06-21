@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { logger } from '../utils/logger';
+import { AuthContext } from '../context/AuthContext';
+import { PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
+import { DEAL_STAGE_LABELS, DEAL_STAGE_BADGE_STATUS } from '../constants/vehicle';
 import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { getFirestore, doc, onSnapshot } from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +17,7 @@ const { width } = Dimensions.get('window');
 
 const VehicleDetailScreen = ({ route, navigation }) => {
   const theme = useTheme();
+  const { role } = useContext(AuthContext);
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
   const [isOwnVehicle, setIsOwnVehicle] = useState(false);
@@ -64,24 +68,16 @@ const VehicleDetailScreen = ({ route, navigation }) => {
     );
   }
 
-  const InfoRow = ({ label, value }) => (
-    <View style={[styles.infoCard, {
-      marginBottom: theme.spacing.sm,
-      padding: theme.spacing.md,
-      backgroundColor: theme.colors.background.secondary,
-      borderRadius: theme.borderRadius.medium,
-      borderWidth: 1,
-      borderColor: theme.colors.border.light,
-    }]}>
-      <Text style={[styles.infoTitle, {
-        fontSize: theme.typography.fontSize.body,
-        fontWeight: theme.typography.fontWeight.semiBold,
-        color: theme.colors.text.secondary,
-      }]}>{label}</Text>
-      <Text style={{
-        fontSize: theme.typography.fontSize.body,
-        color: theme.colors.text.primary,
-      }}>{value || '-'}</Text>
+  const InfoRow = ({ label, value, isLast = false }) => (
+    <View style={[styles.infoRow, !isLast && styles.infoRowBorder]}>
+      <Text style={[styles.infoLabel, { color: theme.colors.text.secondary }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: theme.colors.text.primary }]}>{value || '-'}</Text>
+    </View>
+  );
+
+  const InfoGroup = ({ children }) => (
+    <View style={[styles.infoGroup, { backgroundColor: theme.colors.background.secondary }]}>
+      {children}
     </View>
   );
 
@@ -102,6 +98,14 @@ const VehicleDetailScreen = ({ route, navigation }) => {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs }}>
           <Badge status="completed" label={vehicle.vehicleType || '승용차'} />
+          {DEAL_STAGE_LABELS[vehicle.dealStage] ? (
+            <Badge
+              variant="chip"
+              status={DEAL_STAGE_BADGE_STATUS[vehicle.dealStage]}
+              label={DEAL_STAGE_LABELS[vehicle.dealStage]}
+              style={styles.stageBadge}
+            />
+          ) : null}
         </View>
 
         <Text style={[styles.title, {
@@ -118,36 +122,33 @@ const VehicleDetailScreen = ({ route, navigation }) => {
           marginBottom: theme.spacing.lg,
         }]}>{vehicle.subModel}</Text>
 
-        <Text style={[styles.sectionTitle, {
-          fontSize: theme.typography.fontSize.h4,
-          fontWeight: theme.typography.fontWeight.bold,
-          color: theme.colors.primary.main,
-          marginBottom: theme.spacing.md,
-        }]}>기본 정보</Text>
+        {/* Price — 소유자 본인 또는 관리자만 표시. 일반 구매자는 "상담 후 안내" */}
+        <Text style={[styles.priceHero, {
+          color: (isOwnVehicle || role === 'admin') ? theme.colors.primary.main : theme.colors.text.secondary,
+        }]}>
+          {(isOwnVehicle || role === 'admin') ? formatPrice(vehicle.price) : PRICE_HIDDEN_LABEL}
+        </Text>
 
-        <InfoRow label="제조사" value={vehicle.manufacturer} />
-        <InfoRow label="연식" value={vehicle.year ? `${vehicle.year}년` : '-'} />
-        <InfoRow label="연료 종류" value={vehicle.fuelType} />
-        <InfoRow label="변속기" value={vehicle.transmission} />
-        <InfoRow label="구동 방식" value={vehicle.driveType} />
-        <InfoRow label="배기량" value={vehicle.cc ? `${vehicle.cc} cc` : '-'} />
-        <InfoRow label="연비" value={vehicle.fuelEco ? `${vehicle.fuelEco} km/L` : '-'} />
-        <InfoRow label="연료탱크 용량" value={vehicle.fuelTank ? `${vehicle.fuelTank} L` : '-'} />
-        <InfoRow label="가격" value={formatPrice(vehicle.price)} />
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>기본 정보</Text>
+        <InfoGroup>
+          <InfoRow label="제조사"      value={vehicle.manufacturer} />
+          <InfoRow label="연식"        value={vehicle.year ? `${vehicle.year}년` : '-'} />
+          <InfoRow label="연료 종류"   value={vehicle.fuelType} />
+          <InfoRow label="변속기"      value={vehicle.transmission} />
+          <InfoRow label="구동 방식"   value={vehicle.driveType} />
+          <InfoRow label="배기량"      value={vehicle.cc ? `${vehicle.cc} cc` : '-'} />
+          <InfoRow label="연비"        value={vehicle.fuelEco ? `${vehicle.fuelEco} km/L` : '-'} />
+          <InfoRow label="주행거리"    value={vehicle.mileage ? `${vehicle.mileage} km` : '-'} isLast />
+        </InfoGroup>
 
-        <Text style={[styles.sectionTitle, {
-          fontSize: theme.typography.fontSize.h4,
-          fontWeight: theme.typography.fontWeight.bold,
-          color: theme.colors.primary.main,
-          marginTop: theme.spacing.lg,
-          marginBottom: theme.spacing.md,
-        }]}>부품 정보</Text>
-
-        <InfoRow label="앞 타이어" value={vehicle.frontTire} />
-        <InfoRow label="뒤 타이어" value={vehicle.rearTire} />
-        <InfoRow label="엔진 오일 용량" value={vehicle.engineOilLiter ? `${vehicle.engineOilLiter} L` : '-'} />
-        <InfoRow label="와이퍼 정보" value={vehicle.wiperInfo} />
-        <InfoRow label="배터리 모델" value={vehicle.battery} />
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.primary, marginTop: theme.spacing.lg }]}>부품 정보</Text>
+        <InfoGroup>
+          <InfoRow label="앞 타이어"       value={vehicle.frontTire} />
+          <InfoRow label="뒤 타이어"       value={vehicle.rearTire} />
+          <InfoRow label="엔진 오일 용량"  value={vehicle.engineOilLiter ? `${vehicle.engineOilLiter} L` : '-'} />
+          <InfoRow label="와이퍼 정보"     value={vehicle.wiperInfo} />
+          <InfoRow label="배터리 모델"     value={vehicle.battery} isLast />
+        </InfoGroup>
       </ScrollView>
 
       <View style={[styles.bottomButtonContainer, {
@@ -181,6 +182,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  stageBadge: {
+    marginLeft: 8,
+  },
   container: {
     flex: 1,
   },
@@ -199,13 +203,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sectionTitle: {},
-  infoCard: {
+  priceHero: {
+    fontSize: 30,
+    fontWeight: '800',
+    marginBottom: 20,
+    letterSpacing: -0.5,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 8,
+    letterSpacing: -0.2,
+  },
+  infoGroup: {
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 13,
   },
-  infoTitle: {
+  infoRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECEEF1',
+  },
+  infoLabel: {
+    fontSize: 14,
+    flex: 1,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'right',
     flex: 1,
   },
   bottomButtonContainer: {

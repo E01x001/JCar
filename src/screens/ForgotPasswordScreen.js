@@ -1,211 +1,176 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, StatusBar, KeyboardAvoidingView, Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { useToast } from '../hooks/useToast';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const toast = useToast();
-  const [email, setEmail] = useState('');
+  const [email, setEmail]         = useState('');
   const [emailError, setEmailError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [focused, setFocused]     = useState(false);
 
-  // 이메일 형식 검증 함수
-  const validateEmail = (emailInput) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(emailInput);
-  };
+  const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   const handlePasswordReset = async () => {
-    // 속도 제한: 이미 제출 중이면 무시
-    if (isSubmitting) {
-      return;
-    }
-
-    // 빈 값 체크
-    if (!email) {
-      setEmailError('이메일 주소를 입력해주세요.');
-      return;
-    }
-
-    // 이메일 형식 검증
-    if (!validateEmail(email)) {
-      setEmailError('올바른 이메일 형식이 아닙니다.');
-      return;
-    }
-
-    // 에러 초기화
+    if (isSubmitting) { return; }
+    if (!email)              { setEmailError('이메일 주소를 입력해주세요.'); return; }
+    if (!validateEmail(email)) { setEmailError('올바른 이메일 형식이 아닙니다.'); return; }
     setEmailError('');
-
-    // 제출 중 상태로 변경 (버튼 비활성화)
     setIsSubmitting(true);
-
     try {
-      // Task 62.4: Use modular sendPasswordResetEmail
-      const auth = getAuth();
-      await sendPasswordResetEmail(auth, email);
-
-      // 성공 시 일반화된 메시지 표시 (보안: 이메일 존재 여부 노출 방지)
-      toast.showSuccess('비밀번호 재설정', '등록된 이메일인 경우 비밀번호 재설정 링크가 발송되었습니다.');
-
-      // 로그인 화면으로 이동
-      setTimeout(() => {
-        navigation.navigate('Login');
-      }, 1500);
+      await sendPasswordResetEmail(getAuth(), email);
+      toast.showSuccess('비밀번호 재설정', '등록된 이메일인 경우 재설정 링크가 발송되었습니다.');
+      setTimeout(() => navigation.navigate('Login'), 1500);
     } catch (error) {
-      // Task 63.4: Crashlytics v22 modular API
       reportCrashlyticsError(error);
       logCrashlyticsMessage(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
-
-      // Firebase Auth 에러 코드를 한글 메시지로 변환
-      let errorMessage = '이메일 발송 중 오류가 발생했습니다.';
-
-      switch (error.code) {
-        case 'auth/invalid-email':
-          errorMessage = '올바른 이메일 형식이 아닙니다.';
-          break;
-        case 'auth/user-not-found':
-          // 보안: 사용자 존재 여부를 노출하지 않음
-          errorMessage = '등록된 이메일인 경우 비밀번호 재설정 링크가 발송되었습니다.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = '네트워크 연결을 확인해주세요.';
-          break;
-        default:
-          errorMessage = '이메일 발송 중 오류가 발생했습니다. 다시 시도해주세요.';
-      }
-
-      // user-not-found는 보안상 성공 메시지로 표시
       if (error.code === 'auth/user-not-found') {
-        toast.showSuccess('비밀번호 재설정', errorMessage);
-        setTimeout(() => {
-          navigation.navigate('Login');
-        }, 1500);
+        toast.showSuccess('비밀번호 재설정', '등록된 이메일인 경우 재설정 링크가 발송되었습니다.');
+        setTimeout(() => navigation.navigate('Login'), 1500);
+      } else if (error.code === 'auth/too-many-requests') {
+        toast.showError('오류 발생', '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+      } else if (error.code === 'auth/network-request-failed') {
+        toast.showError('오류 발생', '네트워크 연결을 확인해주세요.');
       } else {
-        toast.showError('오류 발생', errorMessage);
+        toast.showError('오류 발생', '이메일 발송 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
     } finally {
-      // 30초 후 버튼 재활성화 (무차별 대입 공격 방지)
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 30000);
+      setTimeout(() => setIsSubmitting(false), 30000);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>‹ 뒤로</Text>
-      </TouchableOpacity>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
-      <Text style={styles.title}>비밀번호 찾기</Text>
-      <Text style={styles.subtitle}>{'가입 시 사용한 이메일 주소를 입력하시면,\n비밀번호 재설정 링크를 보내드립니다.'}</Text>
-      <TextInput
-        style={[styles.input, emailError ? styles.inputError : null]}
-        placeholder="이메일 입력"
-        placeholderTextColor="#aaa"
-        value={email}
-        onChangeText={(text) => {
-          setEmail(text);
-          if (emailError) {
-            setEmailError('');
-          }
-        }}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      {emailError ? (
-        <Text style={styles.errorText}>{emailError}</Text>
-      ) : null}
-      <TouchableOpacity
-        style={[styles.button, isSubmitting && styles.buttonDisabled]}
-        onPress={handlePasswordReset}
-        disabled={isSubmitting}
-      >
-        <Text style={styles.buttonText}>
-          {isSubmitting ? '처리 중...' : '재설정 이메일 발송'}
-        </Text>
-      </TouchableOpacity>
+    <View style={styles.bg}>
+      <StatusBar barStyle="light-content" backgroundColor="#1A2B5C" />
+
+      {/* Decorative circles (same as Login) */}
+      <View style={styles.circleTopRight} />
+      <View style={styles.circleBottomLeft} />
+
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <KeyboardAvoidingView
+          style={styles.kav}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          {/* Back button */}
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backBtnText}>← 뒤로</Text>
+          </TouchableOpacity>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <Text style={styles.heroTitle}>{'비밀번호\n재설정'}</Text>
+            <Text style={styles.heroSub}>가입한 이메일로 재설정 링크를 보내드립니다.</Text>
+          </View>
+
+          {/* Glass card */}
+          <View style={styles.card}>
+            <Text style={styles.label}>이메일</Text>
+            <TextInput
+              style={[styles.input, focused && styles.inputFocused, emailError && styles.inputError]}
+              value={email}
+              onChangeText={(t) => { setEmail(t); if (emailError) { setEmailError(''); } }}
+              placeholder="이메일 주소를 입력하세요"
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+            />
+            {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+
+            <TouchableOpacity
+              style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
+              onPress={handlePasswordReset}
+              disabled={isSubmitting}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.submitBtnText}>
+                {isSubmitting ? '처리 중...' : '재설정 링크 발송'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.loginLink}
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.loginLinkText}>로그인으로 돌아가기</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  bg: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#1A2B5C',
   },
-  backButton: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
+  safe: { flex: 1 },
+  kav: { flex: 1, justifyContent: 'space-between' },
+
+  circleTopRight: {
+    position: 'absolute', right: -50, top: 100,
+    width: 220, height: 220, borderRadius: 110,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  backButtonText: {
-    fontSize: 16,
-    color: '#2B4593',
+  circleBottomLeft: {
+    position: 'absolute', left: -40, bottom: 200,
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  logo: {
-    width: 150,
-    height: 150,
-    resizeMode: 'contain',
-    marginBottom: 20,
+
+  backBtn: { paddingHorizontal: 24, paddingTop: 20 },
+  backBtnText: { color: 'rgba(255,255,255,0.8)', fontSize: 15, fontWeight: '600' },
+
+  hero: { flex: 1, paddingHorizontal: 32, paddingTop: 28 },
+  heroTitle: {
+    color: '#fff', fontSize: 32, fontWeight: '800',
+    lineHeight: 42, letterSpacing: -0.5,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
+  heroSub: {
+    color: 'rgba(255,255,255,0.6)', fontSize: 14, marginTop: 12, lineHeight: 22,
   },
-  subtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    color: '#666',
-    marginBottom: 30,
+
+  card: {
+    marginHorizontal: 20, marginBottom: 32,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 24, padding: 24,
   },
+  label: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '600', marginBottom: 8 },
   input: {
-    width: '100%',
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#2B4593',
-    borderRadius: 8,
-    paddingLeft: 15,
-    marginBottom: 5,
-    backgroundColor: '#fff',
-    fontSize: 16,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16,
+    fontSize: 15, color: '#fff',
   },
-  inputError: {
-    borderColor: '#DC3545',
+  inputFocused: { borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.20)' },
+  inputError:   { borderColor: 'rgba(255,100,100,0.6)' },
+  fieldError:   { color: '#FF8A95', fontSize: 12, marginTop: 5, marginLeft: 4 },
+
+  submitBtn: {
+    backgroundColor: '#fff', borderRadius: 14,
+    paddingVertical: 17, marginTop: 20, alignItems: 'center',
   },
-  errorText: {
-    width: '100%',
-    color: '#DC3545',
-    fontSize: 12,
-    marginBottom: 15,
-    paddingLeft: 5,
-  },
-  button: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#2B4593',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: '#ADB5BD',
-    opacity: 0.6,
-  },
-  buttonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: '#2B4593', fontSize: 16, fontWeight: '800' },
+
+  loginLink: { alignItems: 'center', marginTop: 18 },
+  loginLinkText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600' },
 });
 
 export default ForgotPasswordScreen;

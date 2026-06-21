@@ -1,7 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View, Text, TouchableOpacity, StyleSheet, ScrollView,
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import DatePicker from 'react-native-date-picker';
 import { AuthContext } from '../context/AuthContext';
 import { getFirestore, collection, query, where, getDocs } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
@@ -10,130 +11,86 @@ import useConsultationStore from '../stores/consultationStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 import { logger } from '../utils/logger';
 import { useToast } from '../hooks/useToast';
+import { useTheme } from '../theme/ThemeProvider';
+
+// Generate time slots 09:00–18:00 in 10-min steps
+const TIME_SLOTS = (() => {
+  const slots = [];
+  for (let h = 9; h <= 17; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const label = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      slots.push(label);
+    }
+  }
+  slots.push('18:00');
+  return slots;
+})();
 
 const ConsultationRequestScreen = ({ route }) => {
   const { user, sellerName, sellerPhone } = useContext(AuthContext);
   const navigation = useNavigation();
   const toast = useToast();
+  const theme = useTheme();
   const { addOptimisticConsultation, removeOptimisticConsultation, invalidateUserConsultationsCache } = useConsultationStore();
-  const [selectedDate, setSelectedDate] = useState('');
-  const [time, setTime] = useState(new Date());
-  const [open, setOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const { vehicle, isSell, consultationId, existingDate, existingTime } = route.params;
 
-  // Detect resubmission mode
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const { vehicle, isSell, consultationId, existingDate, existingTime } = route.params;
   const isResubmitMode = !!consultationId;
 
-  // Pre-populate form when resubmitting
   useEffect(() => {
     if (isResubmitMode && existingDate && existingTime) {
       setSelectedDate(existingDate);
-
-      // Parse existing time and set it
-      const [hours, minutes] = existingTime.split(':').map(Number);
-      const newTime = new Date();
-      newTime.setHours(hours, minutes, 0, 0);
-      setTime(newTime);
+      setSelectedTime(existingTime);
     }
   }, [isResubmitMode, existingDate, existingTime]);
 
-  const adjustToNearestTenMinutes = (date) => {
-    const minutes = date.getMinutes();
-    const remainder = minutes % 10;
-    if (remainder !== 0) {
-      date.setMinutes(minutes + (10 - remainder), 0, 0);
-    }
-    return date;
-  };
-
   const checkDuplicateConsultation = async (userId, vehicleId) => {
     const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
     const q = query(
-      consultationsRef,
+      collection(db, 'consultation_requests'),
       where('userId', '==', userId),
       where('vehicleId', '==', vehicleId)
     );
     const snapshot = await getDocs(q);
-
-    // Filter out cancelled consultations - they should not count as duplicates
-    // (check both consultationStatus and legacy status for backward compatibility)
-    const activeConsultations = snapshot.docs.filter(doc => {
-      const data = doc.data();
-      const status = data.consultationStatus || data.status;
-      return status !== 'cancelled';
+    const active = snapshot.docs.filter(doc => {
+      const s = doc.data().consultationStatus || doc.data().status;
+      return s !== 'cancelled';
     });
-
-    logger.debug('중복 검사:', snapshot.docs.length, '건 중 활성', activeConsultations.length, '건');
-    return activeConsultations.length > 0;
+    return active.length > 0;
   };
 
-  // Time conflict checking removed - handled server-side via Firestore rules
-  // Server will reject requests with duplicate vehicleId/date/time combinations
-
   const handleSubmit = async () => {
-    // 중복 제출 방지
-    if (submitting) {
-      return;
-    }
-
-    logger.debug(isResubmitMode ? '🟡 상담 재신청 버튼 클릭됨' : '🟡 상담 요청 버튼 클릭됨');
-
-    if (!user) {
-      logger.warn('⛔ 사용자 정보 없음');
-      toast.showWarning('로그인이 필요합니다.');
-      return;
-    }
-
-    if (!selectedDate) {
-      logger.warn('⛔ 날짜 미선택');
-      toast.showWarning('날짜를 선택해주세요.');
-      return;
-    }
-
-    if (!time) {
-      logger.warn('⛔ 시간 미선택');
-      toast.showWarning('시간을 선택해주세요.');
-      return;
-    }
-
-    const formattedDate = selectedDate;
-    const formattedTime = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
-    logger.debug('📅 선택된 날짜:', formattedDate);
-    logger.debug('⏰ 선택된 시간:', formattedTime);
+    if (submitting) { return; }
+    if (!user) { toast.showWarning('로그인이 필요합니다.'); return; }
+    if (!selectedDate) { toast.showWarning('날짜를 선택해주세요.'); return; }
+    if (!selectedTime) { toast.showWarning('시간을 선택해주세요.'); return; }
 
     setSubmitting(true);
 
-    // Handle resubmission mode
     if (isResubmitMode) {
       try {
-        await resubmitConsultation(consultationId, formattedDate, formattedTime);
-        logger.debug('✅ 재신청 성공');
-
+        await resubmitConsultation(consultationId, selectedDate, selectedTime);
         toast.showSuccess('상담 재신청 완료', '새로운 일정으로 재신청되었습니다.');
         navigation.goBack();
       } catch (error) {
-        logger.error('❌ 재신청 실패:', error);
-        toast.showError('재신청 실패', '상담 재신청 중 오류가 발생했습니다. 다시 시도해주세요.');
+        logger.error('재신청 실패:', error);
+        toast.showError('재신청 실패', '상담 재신청 중 오류가 발생했습니다.');
       } finally {
         setSubmitting(false);
       }
       return;
     }
 
-    // Handle new consultation request mode
     const isDuplicate = await checkDuplicateConsultation(user.uid, vehicle.vehicleId);
-    logger.debug('🔁 중복 상담 여부:', isDuplicate);
-
     if (isDuplicate) {
       toast.showWarning('중복 요청', '이미 이 차량에 대한 상담을 신청하셨습니다.');
       setSubmitting(false);
       return;
     }
 
-    // Rate limit must be checked BEFORE the optimistic success below, otherwise
-    // the user is told "접수 완료" and only afterwards rejected. (Task 82)
     const rateLimit = await checkConsultationRateLimit();
     if (!rateLimit.allowed) {
       toast.showWarning('요청 제한', rateLimit.message || '잠시 후 다시 시도해주세요.');
@@ -141,138 +98,288 @@ const ConsultationRequestScreen = ({ route }) => {
       return;
     }
 
-    // Task 106.2: Optimistic UI - Generate temp ID for optimistic update
     const tempId = generateTempId('temp_consultation');
-
-    // Time conflict checking removed - server-side validation will handle duplicates
-
     const consultationData = {
       userId: user.uid,
       userName: sellerName || '익명',
       userPhone: sellerPhone || '미등록',
       vehicleId: vehicle.vehicleId,
       vehicleName: vehicle.vehicleName,
-      preferredDate: formattedDate,
-      preferredTime: formattedTime,
+      preferredDate: selectedDate,
+      preferredTime: selectedTime,
       consultationStatus: 'pending',
       type: isSell ? 'sell' : 'buy',
-      createdAt: new Date(), // Use local time for optimistic data
+      createdAt: new Date(),
     };
 
-    logger.debug('🚀 저장할 상담 요청 데이터:', consultationData);
-
-    // Task 106.2: Optimistic UI - Add consultation immediately
     addOptimisticConsultation(consultationData, tempId);
-
-    // Invalidate cache to show new consultation
     invalidateUserConsultationsCache(user.uid);
-
-    // Show success and navigate immediately (optimistic)
     toast.showSuccess('상담 요청 완료', '정상적으로 접수되었습니다.');
     navigation.goBack();
 
-    // Fire Firestore write in background (non-blocking)
     executeOptimisticUpdate({
-      optimisticFn: null, // Already done above
+      optimisticFn: null,
       serverFn: async () => {
         const result = await saveConsultationRequest(consultationData);
-        if (!result.success) {
-          throw result.error || new Error('Failed to save consultation');
-        }
+        if (!result.success) { throw result.error || new Error('Failed to save'); }
         return result;
       },
-      onSuccess: () => {
-        logger.debug('✅ Consultation saved successfully');
-        // Firestore listener will automatically update the store
-      },
+      onSuccess: () => logger.debug('Consultation saved'),
       onError: (error) => {
-        logger.error('❌ Consultation write failed:', error);
-        // Remove optimistic consultation
+        logger.error('Consultation write failed:', error);
         removeOptimisticConsultation(tempId);
-        // Show error (user may have already navigated away)
-        toast.showError('오류', '상담 요청 저장 중 문제가 발생했습니다. 다시 시도해주세요.');
+        toast.showError('오류', '상담 요청 저장 중 문제가 발생했습니다.');
       },
-      revertFn: () => {
-        removeOptimisticConsultation(tempId);
-      },
+      revertFn: () => removeOptimisticConsultation(tempId),
     });
 
-    // Optimistic entry added and background write scheduled; safe to re-enable.
     setSubmitting(false);
   };
 
-
-  // Disable past dates in the calendar (local YYYY-MM-DD, not UTC)
   const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  const PRIMARY = '#2B4593';
+  const BG      = '#F8F9FA';
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {isResubmitMode
-          ? '상담 일정 재선택'
-          : isSell ? '판매 상담 일정 선택' : '구매 상담 일정 선택'}
-      </Text>
-
-      <Calendar
-        minDate={todayStr}
-        disableAllTouchEventsForDisabledDays
-        onDayPress={(day) => {
-          setSelectedDate(day.dateString);
-        }}
-        markedDates={{
-          [selectedDate]: {
-            selected: true,
-            selectedColor: '#28a745',
-            selectedTextColor: '#fff',
-          },
-        }}
-      />
-
-      <Text style={styles.selectedText}>
-        {selectedDate ? `선택된 날짜: ${selectedDate}` : '날짜를 선택하세요'}
-      </Text>
-
-      <TouchableOpacity onPress={() => setOpen(true)} style={styles.dateButton}>
-        <Text>{`${time.getHours()}시 ${time.getMinutes()}분`}</Text>
-      </TouchableOpacity>
-
-      <DatePicker
-        modal
-        open={open}
-        date={time}
-        mode="time"
-        minuteInterval={10}
-        onConfirm={(newTime) => {
-          const adjustedTime = adjustToNearestTenMinutes(newTime);
-          setTime(adjustedTime);
-          setOpen(false);
-        }}
-        onCancel={() => setOpen(false)}
-      />
-
-      <TouchableOpacity
-        style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-        onPress={handleSubmit}
-        disabled={submitting}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.submitButtonText}>
-          {submitting ? '처리 중...' : isResubmitMode ? '상담 재신청' : '상담 요청'}
+    <View style={styles.screen}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Text style={[styles.headerBack, { color: PRIMARY }]}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          {isResubmitMode ? '일정 재선택' : isSell ? '판매 상담 일정 선택' : '구매 상담 일정 선택'}
         </Text>
-      </TouchableOpacity>
+        <View style={{ width: 32 }} />
+      </View>
+
+      <ScrollView
+        style={{ flex: 1, backgroundColor: BG }}
+        contentContainerStyle={{ paddingBottom: 120, paddingTop: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Vehicle mini-card */}
+        <View style={styles.vehicleCard}>
+          <View style={styles.vehicleImg} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.vehicleName}>{vehicle?.vehicleName}</Text>
+            <Text style={[styles.vehiclePrice, { color: PRIMARY }]}>
+              {vehicle?.price ? `${vehicle.price.toLocaleString()}원` : '-'}
+            </Text>
+          </View>
+          <View style={[styles.vehicleBadge, { backgroundColor: '#EAF4FF' }]}>
+            <Text style={[styles.vehicleBadgeText, { color: '#1A6FB5' }]}>
+              {isSell ? '판매' : '구매'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Calendar */}
+        <Text style={styles.sectionTitle}>날짜 선택</Text>
+        <View style={styles.calendarCard}>
+          <Calendar
+            minDate={todayStr}
+            disableAllTouchEventsForDisabledDays
+            onDayPress={(day) => setSelectedDate(day.dateString)}
+            markedDates={{
+              [selectedDate]: {
+                selected: true,
+                selectedColor: PRIMARY,
+                selectedTextColor: '#fff',
+              },
+            }}
+            theme={{
+              backgroundColor: '#fff',
+              calendarBackground: '#fff',
+              selectedDayBackgroundColor: PRIMARY,
+              selectedDayTextColor: '#fff',
+              todayTextColor: PRIMARY,
+              dayTextColor: '#212529',
+              textDisabledColor: '#CED4DA',
+              arrowColor: PRIMARY,
+              monthTextColor: '#212529',
+              textDayFontWeight: '600',
+              textMonthFontWeight: '800',
+              textDayHeaderFontSize: 12,
+              textDayFontSize: 14,
+            }}
+          />
+        </View>
+
+        {/* Time grid */}
+        <Text style={styles.sectionTitle}>시간 선택</Text>
+        <View style={styles.timeGrid}>
+          {TIME_SLOTS.map((slot) => {
+            const active = selectedTime === slot;
+            return (
+              <TouchableOpacity
+                key={slot}
+                style={[
+                  styles.timeChip,
+                  active
+                    ? { backgroundColor: PRIMARY, borderColor: PRIMARY }
+                    : { backgroundColor: '#fff', borderColor: '#E1E5EA' },
+                ]}
+                onPress={() => setSelectedTime(slot)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.timeChipText,
+                  { color: active ? '#fff' : '#495057' },
+                ]}>
+                  {slot}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Summary card */}
+        {(selectedDate || selectedTime) ? (
+          <View style={[styles.summaryCard, { backgroundColor: '#EEF1FA' }]}>
+            <Text style={[styles.summaryLabel, { color: PRIMARY }]}>선택된 일정</Text>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryValue}>{selectedDate || '날짜 미선택'}</Text>
+              <Text style={[styles.summaryTime, { color: PRIMARY }]}>{selectedTime || '-'}</Text>
+            </View>
+          </View>
+        ) : null}
+      </ScrollView>
+
+      {/* Sticky submit button */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.submitBtn, { backgroundColor: PRIMARY }, submitting && styles.submitBtnDisabled]}
+          onPress={handleSubmit}
+          disabled={submitting}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.submitBtnText}>
+            {submitting ? '처리 중...' : isResubmitMode ? '상담 재신청' : '상담 요청하기'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  selectedText: { fontSize: 16, marginVertical: 10 },
-  dateButton: { padding: 10, backgroundColor: '#eee', marginTop: 10, alignItems: 'center' },
-  submitButton: { backgroundColor: '#28a745', padding: 12, marginTop: 20 },
-  submitButtonDisabled: { backgroundColor: '#94d3a2' },
-  submitButtonText: { color: '#fff', fontSize: 16, textAlign: 'center' },
+  screen: { flex: 1, backgroundColor: '#F8F9FA' },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    paddingHorizontal: 18,
+    paddingTop: 50,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F3F5',
+  },
+  headerBack:  { fontSize: 24, fontWeight: '700', lineHeight: 30 },
+  headerTitle: { fontSize: 17, fontWeight: '800', color: '#212529' },
+
+  // Vehicle card
+  vehicleCard: {
+    marginHorizontal: 22,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 13,
+    shadowColor: '#1A2B5C',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  vehicleImg: {
+    width: 54, height: 54, borderRadius: 12,
+    backgroundColor: '#E8ECF3',
+  },
+  vehicleName:  { fontSize: 16, fontWeight: '800', color: '#212529', marginBottom: 4 },
+  vehiclePrice: { fontSize: 14, fontWeight: '800' },
+  vehicleBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  vehicleBadgeText: { fontSize: 12, fontWeight: '700' },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#212529',
+    marginHorizontal: 22,
+    marginTop: 22,
+    marginBottom: 12,
+  },
+
+  calendarCard: {
+    marginHorizontal: 22,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: '#1A2B5C',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+
+  timeGrid: {
+    marginHorizontal: 22,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  timeChip: {
+    width: '30%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  timeChipText: { fontSize: 14, fontWeight: '700' },
+
+  summaryCard: {
+    marginHorizontal: 22,
+    marginTop: 20,
+    borderRadius: 16,
+    padding: 18,
+  },
+  summaryLabel: { fontSize: 13, fontWeight: '700', marginBottom: 10 },
+  summaryRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  summaryValue: { fontSize: 15, fontWeight: '700', color: '#212529' },
+  summaryTime:  { fontSize: 15, fontWeight: '800' },
+
+  footer: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    backgroundColor: '#fff',
+    padding: 14,
+    paddingBottom: 26,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F3F5',
+    shadowColor: '#1A2B5C',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.10,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  submitBtn: {
+    borderRadius: 14,
+    paddingVertical: 17,
+    alignItems: 'center',
+    shadowColor: '#2B4593',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.26,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
 
 export default ConsultationRequestScreen;

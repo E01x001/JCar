@@ -74,11 +74,20 @@ exports.getVehicleInfo = onCall(
 
         const jsonResponse = await response.json();
 
-        // Check for API errors
+        // 진단용: 실제 응답 메타(데이터 본문 제외) 로깅 — 성공 판정 필드 확인
+        console.log("CarZen response meta:", JSON.stringify({
+          errCode: jsonResponse.errCode,
+          errMsg: jsonResponse.errMsg,
+          result: jsonResponse.result,
+          status: jsonResponse.data?.STATUS,
+        }));
+
+        // Check for API errors.
+        // STATUS는 숫자/문자 모두 올 수 있어 String()으로 정규화 후 비교.
         if (
           jsonResponse.errCode !== "0000" ||
           jsonResponse.result !== "SUCCESS" ||
-          jsonResponse.data?.STATUS !== "200"
+          String(jsonResponse.data?.STATUS) !== "200"
         ) {
           throw new HttpsError(
               "not-found",

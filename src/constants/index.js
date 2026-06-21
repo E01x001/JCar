@@ -31,6 +31,10 @@ export {
   FUEL_TYPES,
   TRANSMISSION_TYPES,
   isValidVehicleType,
+  DEAL_STAGE,
+  DEAL_STAGE_VISIBLE,
+  DEAL_STAGE_LABELS,
+  DEAL_STAGE_BADGE_STATUS,
 } from './vehicle';
 
 // User constants
