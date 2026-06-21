@@ -50,6 +50,9 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
         style,
       ]}
     >
+      {/* 이미지 클립용 내부 래퍼 — 그림자는 바깥(Pressable)에, overflow는 안쪽에 분리
+          (같은 View에 overflow:hidden+shadow를 주면 iOS에서 그림자가 잘려 모서리가 이상해짐) */}
+      <View style={[styles.clip, { borderRadius: theme.borderRadius.card }]}>
       <View style={styles.imageWrap}>
         {image ? (
           <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
@@ -105,12 +108,16 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
             : (price !== null && price !== undefined ? formatPrice(price) : '가격 문의')}
         </Text>
       </View>
+      </View>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
+    // 그림자 호스트 — overflow를 주지 않음(그림자가 잘리지 않도록)
+  },
+  clip: {
     overflow: 'hidden',
   },
   imageWrap: {
