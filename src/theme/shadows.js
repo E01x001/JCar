@@ -22,14 +22,15 @@ export const shadows = {
   },
 
   // --- 시안(J-Car.dc.html) 소프트 엘리베이션 (additive) ---
-  // 네이비 톤의 부드러운 그림자. 테두리 대신 떠 있는 카드 표현.
-  // 아래로 내려앉도록 offset>radius 비율로 조정(큰 radius는 모서리 광배를 만듦).
+  // 시안 hero 카드: 0 8px 24px rgba(26,43,92,.07) — 아주 옅고 부드러운 아래쪽 그림자.
+  // 큰 radius는 모서리 광배를 만들므로 CSS blur(24)의 RN 환산(~12) 수준으로 유지하고
+  // opacity를 낮춰 거의 안 보이게(시안 느낌) 한다.
   soft: {
     shadowColor: '#1A2B5C',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 1,
   },
   // Primary 버튼 강조 그림자
   button: {
