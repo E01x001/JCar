@@ -31,21 +31,20 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => onNavigateToConsultation(item.id)}>
+    <TouchableOpacity onPress={() => onNavigateToConsultation(item.id)} activeOpacity={0.8}>
       <Card elevated style={{ marginBottom: theme.spacing.sm }}>
-        <View style={styles.consultHeader}>
-          <Text style={[styles.consultText, {
-            fontSize: theme.typography.fontSize.body,
-            fontWeight: theme.typography.fontWeight.semiBold,
-            color: theme.colors.text.primary,
-          }]}>{item?.vehicleName ?? '차량명 없음'}</Text>
+        <View style={styles.consultRow}>
+          <View style={[styles.thumb, { backgroundColor: theme.colors.background.tertiary }]} />
+          <View style={styles.consultInfo}>
+            <Text style={[styles.consultName, { color: theme.colors.text.primary }]} numberOfLines={1}>
+              {item?.vehicleName ?? '차량명 없음'}
+            </Text>
+            <Text style={[styles.consultDate, { color: theme.colors.text.secondary }]} numberOfLines={1}>
+              {[item?.preferredDate, item?.preferredTime].filter(Boolean).join(' · ') || '일정 미정'}
+            </Text>
+          </View>
           {getStatusBadge(item.consultationStatus)}
         </View>
-        <Text style={[styles.consultDetail, {
-          fontSize: theme.typography.fontSize.bodySmall,
-          color: theme.colors.text.secondary,
-          marginTop: theme.spacing.xs,
-        }]}>일정: {item?.preferredDate ?? ''} {item?.preferredTime ?? ''}</Text>
 
         {/* Show rejection reason preview if rejected */}
         {item.consultationStatus === 'rejected' && item.rejectionReason && (
@@ -100,13 +99,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  consultHeader: {
+  consultRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 13,
   },
-  consultText: {},
-  consultDetail: {},
+  thumb: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+  },
+  consultInfo: { flex: 1, minWidth: 0 },
+  consultName: { fontSize: 15, fontWeight: '800' },
+  consultDate: { fontSize: 12, marginTop: 3 },
   rejectionPreview: {
     fontStyle: 'italic',
   },
