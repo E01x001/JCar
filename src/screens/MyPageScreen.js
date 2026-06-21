@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { View, Text, StyleSheet, Alert, Dimensions } from 'react-native';
+import React, { useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TabView, TabBar } from 'react-native-tab-view';
 import { getAuth, signOut } from '@react-native-firebase/auth';
 import functions from '@react-native-firebase/functions';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
@@ -11,8 +10,8 @@ import { useToast } from '../hooks/useToast';
 import { formatPhone } from '../utils/format';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import BuyConsultationsTab from './MyPage/tabs/BuyConsultationsTab';
-import SellConsultationsTab from './MyPage/tabs/SellConsultationsTab';
+import Avatar from '../components/Avatar';
+import SectionHeader from '../components/SectionHeader';
 import MyVehiclesTab from './MyPage/tabs/MyVehiclesTab';
 import useVehicleStore from '../stores/vehicleStore';
 import useConsultationStore from '../stores/consultationStore';
@@ -24,27 +23,10 @@ const MyPageScreen = ({ navigation }) => {
 
   // Task 84: Use Zustand stores for centralized state management with caching
   const {
-    vehicles: userVehicles,
+    vehicles,
     subscribeToUserVehicles,
     unsubscribeFromVehicles,
   } = useVehicleStore();
-
-  const {
-    userConsultations: consultations,
-    subscribeToUserConsultations,
-    unsubscribeFromConsultations,
-  } = useConsultationStore();
-
-  // User's vehicles (all statuses: pending, approved, rejected)
-  // No additional filtering needed - already filtered by sellerId in the query
-  const vehicles = userVehicles;
-
-  const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: 'buy', title: '구매 상담' },
-    { key: 'sell', title: '판매 상담' },
-    { key: 'vehicles', title: '내 차량' },
-  ]);
 
   // Task 84: Subscribe to real-time updates with caching
   useEffect(() => {
@@ -52,11 +34,9 @@ const MyPageScreen = ({ navigation }) => {
 
     // Subscribe to user's own vehicles (all statuses)
     subscribeToUserVehicles(user.uid);
-    subscribeToUserConsultations(user.uid);
 
     return () => {
       unsubscribeFromVehicles();
-      unsubscribeFromConsultations();
     };
   }, [user]);
 
@@ -64,52 +44,10 @@ const MyPageScreen = ({ navigation }) => {
     navigation.navigate('VehicleDetail', { vehicleId });
   };
 
-  const handleNavigateToConsultationDetail = (consultationId) => {
-    navigation.navigate('UserConsultationDetail', { consultationId });
-  };
-
-  const renderScene = ({ route }) => {
-    switch (route.key) {
-      case 'buy':
-        return (
-          <BuyConsultationsTab
-            consultations={consultations}
-            onNavigateToConsultation={handleNavigateToConsultationDetail}
-          />
-        );
-      case 'sell':
-        return (
-          <SellConsultationsTab
-            consultations={consultations}
-            onNavigateToConsultation={handleNavigateToConsultationDetail}
-          />
-        );
-      case 'vehicles':
-        return <MyVehiclesTab vehicles={vehicles} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
-      default:
-        return null;
-    }
-  };
-
-  const renderTabBar = (props) => (
-    <TabBar
-      {...props}
-      indicatorStyle={{ backgroundColor: theme.colors.primary.main }}
-      style={{ backgroundColor: theme.colors.background.card }}
-      labelStyle={{
-        fontSize: theme.typography.fontSize.body,
-        fontWeight: theme.typography.fontWeight.semiBold,
-      }}
-      activeColor={theme.colors.primary.main}
-      inactiveColor={theme.colors.text.secondary}
-    />
-  );
-
   const handleLogout = async () => {
     try {
       // Task 72: Cleanup Firestore listeners before logout to prevent permission errors
       unsubscribeFromVehicles();
-      unsubscribeFromConsultations();
       useVehicleStore.getState().reset();
       useConsultationStore.getState().reset();
 
@@ -166,54 +104,44 @@ const MyPageScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
-      <View style={styles.container}>
-        {/* User Info Card */}
-        <Card style={{ margin: theme.spacing.md, marginBottom: theme.spacing.sm }}>
+      {/* User Info Card */}
+      <Card elevated style={styles.profileCard}>
+        <Avatar name={sellerName && sellerName !== 'Unknown' ? sellerName : 'J'} size={52} />
+        <View style={styles.profileInfo}>
           {sellerName && sellerName !== 'Unknown' && (
-            <Text style={[styles.userInfo, {
-              fontSize: theme.typography.fontSize.body,
-              color: theme.colors.text.primary,
-              fontWeight: theme.typography.fontWeight.semiBold,
-              marginBottom: theme.spacing.xs,
-            }]}>{sellerName}</Text>
+            <Text style={[styles.userName, { color: theme.colors.text.primary }]}>{sellerName}</Text>
           )}
-          <Text style={[styles.userInfo, {
-            fontSize: theme.typography.fontSize.body,
-            color: theme.colors.text.secondary,
-          }]}>이메일: {user?.email ?? '이메일 없음'}</Text>
+          <Text style={[styles.userMeta, { color: theme.colors.text.secondary }]} numberOfLines={1}>
+            {user?.email ?? '이메일 없음'}
+          </Text>
           {sellerPhone && sellerPhone !== 'Unknown' && (
-            <Text style={[styles.userInfo, {
-              fontSize: theme.typography.fontSize.body,
-              color: theme.colors.text.secondary,
-              marginTop: theme.spacing.xs,
-            }]}>전화: {formatPhone(sellerPhone)}</Text>
+            <Text style={[styles.userMeta, { color: theme.colors.text.secondary }]}>
+              {formatPhone(sellerPhone)}
+            </Text>
           )}
-        </Card>
-
-        {/* TabView */}
-        <TabView
-          navigationState={{ index, routes }}
-          renderScene={renderScene}
-          renderTabBar={renderTabBar}
-          onIndexChange={setIndex}
-          initialLayout={{ width: Dimensions.get('window').width }}
-        />
-
-        {/* Action Buttons */}
-        <View style={{ padding: theme.spacing.md, paddingTop: 0 }}>
-          <Button
-            variant="secondary"
-            title="로그아웃"
-            onPress={handleLogout}
-            style={{ marginBottom: theme.spacing.sm }}
-          />
-
-          <Button
-            variant="danger"
-            title="회원탈퇴"
-            onPress={handleDeleteAccount}
-          />
         </View>
+      </Card>
+
+      <SectionHeader title="내 차량" style={styles.sectionHeader} />
+      <View style={styles.listWrap}>
+        <MyVehiclesTab vehicles={vehicles} onNavigateToVehicle={handleNavigateToVehicleDetail} />
+      </View>
+
+      {/* Action Buttons */}
+      <View style={styles.actions}>
+        <Button
+          variant="secondary"
+          title="로그아웃"
+          onPress={handleLogout}
+          fullWidth
+          style={styles.logoutButton}
+        />
+        <Button
+          variant="danger"
+          title="회원탈퇴"
+          onPress={handleDeleteAccount}
+          fullWidth
+        />
       </View>
     </SafeAreaView>
   );
@@ -223,8 +151,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  title: {},
-  userInfo: {},
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 16,
+    marginBottom: 8,
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 3,
+  },
+  userMeta: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  sectionHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  listWrap: {
+    flex: 1,
+  },
+  actions: {
+    padding: 16,
+    paddingTop: 8,
+  },
+  logoutButton: {
+    marginBottom: 10,
+  },
 });
 
 export default MyPageScreen;

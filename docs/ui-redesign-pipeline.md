@@ -313,3 +313,15 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 
 → **2-4 완료.** 남은 것: 2-5(옵션) 5탭 네비. 나머지 거래 모달(SoldVehicle/OwnershipTransferDetail/
   RejectConsultation)은 background.paper 별칭으로 정상 렌더되며, 바텀시트 전환은 선택(후속).
+
+## 2-5. 5탭 네비 (B안: 실용 4탭) ✅
+시안 5탭(홈/차량/등록/상담/마이)을 리스크 낮춘 **4탭(홈/등록/상담/마이)** 으로 구현.
+- 신규 `UserConsultationsScreen`: 마이페이지에 묶여 있던 구매/판매 상담을 **전용 탭으로 분리**.
+  데이터/네비(useConsultationStore, BuyConsultationsTab/SellConsultationsTab) 재사용.
+- `MyPageScreen` 간소화: 상담 TabView 제거 → 프로필(Avatar)+내 차량+로그아웃/탈퇴.
+  소비하던 store는 vehicle만 구독(consultation은 새 화면이 구독). 로그아웃 cleanup 보존.
+- `AppNavigator` UserTabs: Vehicles(홈, home 아이콘)/Register/Consultations(신규)/MyPage 4탭.
+  ※ AppNavigator는 세션 전 미커밋(헤더/탭바 화이트 스타일)이 있던 파일 — 이 커밋에 함께 포함됨.
+- 검증: lint 0 error, Metro 번들 성공.
+
+→ **2차 전부 완료 (2-1~2-5).** 시안 01~08 + 5탭 IA 반영 완료.

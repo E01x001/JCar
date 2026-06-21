@@ -12,6 +12,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen'; // 잊어버린 비밀번호 화면 추가
 import VehiclesListScreen from '../screens/VehiclesListScreen';
 import VehicleRegistrationScreen from '../screens/VehicleRegistrationScreen';
+import UserConsultationsScreen from '../screens/UserConsultationsScreen';
 import MyPageScreen from '../screens/MyPageScreen';
 import VehicleDetailScreen from '../screens/VehicleDetailScreen';
 import ConsultationRequestScreen from '../screens/ConsultationRequestScreen';
@@ -34,40 +35,43 @@ const Tab = createBottomTabNavigator();
 const navigationStyles = {
   header: {
     headerStyle: {
-      backgroundColor: theme.colors.primary.main,
-      elevation: 4,
-      shadowColor: theme.colors.neutral.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      backgroundColor: '#fff',
+      elevation: 0,
+      shadowColor: '#1A2B5C',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F1F3F5',
     },
-    headerTintColor: theme.colors.text.white,
+    headerTintColor: theme.colors.primary.main,
     headerTitleStyle: {
       fontSize: theme.typography.fontSize.h3,
-      fontWeight: theme.typography.fontWeight.semiBold,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: '#212529',
     },
     headerTitleAlign: 'center',
   },
   tabBar: {
     tabBarStyle: {
-      backgroundColor: theme.colors.background.primary,
-      borderTopWidth: 3,
-      borderTopColor: theme.colors.primary.main,
-      height: 60,
+      backgroundColor: '#fff',
+      borderTopWidth: 1,
+      borderTopColor: '#F1F3F5',
+      height: 62,
       paddingBottom: 8,
-      paddingTop: 8,
-      elevation: 8,
-      shadowColor: theme.colors.neutral.black,
+      paddingTop: 6,
+      elevation: 0,
+      shadowColor: '#1A2B5C',
       shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
     },
     tabBarActiveTintColor: theme.colors.primary.main,
-    tabBarInactiveTintColor: theme.colors.text.tertiary,
-    tabBarActiveBackgroundColor: theme.colors.primary.opacity10,
+    tabBarInactiveTintColor: '#ADB5BD',
     tabBarLabelStyle: {
-      fontSize: theme.typography.fontSize.bodySmall,
-      fontWeight: theme.typography.fontWeight.semiBold,
+      fontSize: 11,
+      fontWeight: '700',
+      marginTop: 2,
     },
   },
 };
@@ -77,8 +81,9 @@ const UserTabs = () => (
     screenOptions={({ route }) => ({
       tabBarIcon: ({ color, size }) => {
         let iconName;
-        if (route.name === 'Vehicles') {iconName = 'directions-car';}
+        if (route.name === 'Vehicles') {iconName = 'home';}
         else if (route.name === 'Register') {iconName = 'add-circle-outline';}
+        else if (route.name === 'Consultations') {iconName = 'question-answer';}
         else if (route.name === 'MyPage') {iconName = 'person';}
         return <Icon name={iconName} size={size} color={color} />;
       },
@@ -86,8 +91,9 @@ const UserTabs = () => (
       ...navigationStyles.tabBar,
     })}
   >
-    <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '차량 목록' }} />
+    <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '홈' }} />
     <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ title: '차량 등록' }} />
+    <Tab.Screen name="Consultations" component={UserConsultationsScreen} options={{ title: '상담 내역' }} />
     <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '내 정보' }} />
   </Tab.Navigator>
 );

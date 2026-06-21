@@ -1,0 +1,97 @@
+import React, { useState, useEffect, useContext } from 'react';
+import { View, StyleSheet, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TabView, TabBar } from 'react-native-tab-view';
+import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeProvider';
+import BuyConsultationsTab from './MyPage/tabs/BuyConsultationsTab';
+import SellConsultationsTab from './MyPage/tabs/SellConsultationsTab';
+import useConsultationStore from '../stores/consultationStore';
+
+/**
+ * UserConsultationsScreen
+ *
+ * 시안 5탭 구조(B안)의 "상담" 전용 탭. 기존 마이페이지에 묶여 있던 구매/판매 상담을
+ * 독립 화면으로 분리. 데이터/네비 로직은 기존(useConsultationStore) 재사용.
+ */
+const UserConsultationsScreen = ({ navigation }) => {
+  const { user } = useContext(AuthContext);
+  const theme = useTheme();
+
+  const {
+    userConsultations: consultations,
+    subscribeToUserConsultations,
+    unsubscribeFromConsultations,
+  } = useConsultationStore();
+
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'buy', title: '구매 상담' },
+    { key: 'sell', title: '판매 상담' },
+  ]);
+
+  useEffect(() => {
+    if (!user) {return () => {};}
+    subscribeToUserConsultations(user.uid);
+    return () => unsubscribeFromConsultations();
+  }, [user]);
+
+  const handleNavigateToConsultationDetail = (consultationId) => {
+    navigation.navigate('UserConsultationDetail', { consultationId });
+  };
+
+  const renderScene = ({ route }) => {
+    switch (route.key) {
+      case 'buy':
+        return (
+          <BuyConsultationsTab
+            consultations={consultations}
+            onNavigateToConsultation={handleNavigateToConsultationDetail}
+          />
+        );
+      case 'sell':
+        return (
+          <SellConsultationsTab
+            consultations={consultations}
+            onNavigateToConsultation={handleNavigateToConsultationDetail}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderTabBar = (props) => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: theme.colors.primary.main }}
+      style={{ backgroundColor: theme.colors.background.card }}
+      labelStyle={{
+        fontSize: theme.typography.fontSize.body,
+        fontWeight: theme.typography.fontWeight.semiBold,
+      }}
+      activeColor={theme.colors.primary.main}
+      inactiveColor={theme.colors.text.secondary}
+    />
+  );
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        renderTabBar={renderTabBar}
+        onIndexChange={setIndex}
+        initialLayout={{ width: Dimensions.get('window').width }}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+
+export default UserConsultationsScreen;
