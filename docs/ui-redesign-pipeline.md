@@ -382,3 +382,11 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
     ※ 인기 메트릭 미보유 → 현재는 전체 목록을 해당 섹션에 노출(추후 실 메트릭 연결).
   - 검색/카테고리/필터 활성 시 단일 결과 목록(풀 카드) 모드로 전환.
 - 검증: lint 0 error, Metro 번들 성공.
+
+## 가격 정책 일원화: 관리자만 가격 노출
+"가격은 모두 관리자와의 상담을 통해서만" 규칙을 전 화면에 일관 적용.
+- vehiclePrice.canViewVehiclePrice: 소유자 예외 제거 → **관리자만 true**.
+- VehicleDetailScreen: 가격 표시 조건 (isOwnVehicle || admin) → **admin만**. 그 외 "상담 후 안내".
+- MyVehiclesTab(내 차량): 소유자 본인에게도 가격 숨김 → "상담 후 안내".
+- 홈(VehiclesList): 이미 hidePrice = role!=='admin' 적용됨.
+- 검증: lint 0 error, 번들 성공. 사용자 화면에 formatPrice 직접 노출 0건(전부 admin/hidePrice 분기).

@@ -122,11 +122,11 @@ const VehicleDetailScreen = ({ route, navigation }) => {
           marginBottom: theme.spacing.lg,
         }]}>{vehicle.subModel}</Text>
 
-        {/* Price — 소유자 본인 또는 관리자만 표시. 일반 구매자는 "상담 후 안내" */}
+        {/* Price — 관리자만 표시. 일반 사용자(소유자 포함)는 상담을 통해서만 가격 확인 */}
         <Text style={[styles.priceHero, {
-          color: (isOwnVehicle || role === 'admin') ? theme.colors.primary.main : theme.colors.text.secondary,
+          color: role === 'admin' ? theme.colors.primary.main : theme.colors.text.secondary,
         }]}>
-          {(isOwnVehicle || role === 'admin') ? formatPrice(vehicle.price) : PRICE_HIDDEN_LABEL}
+          {role === 'admin' ? formatPrice(vehicle.price) : PRICE_HIDDEN_LABEL}
         </Text>
 
         <Text style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>기본 정보</Text>

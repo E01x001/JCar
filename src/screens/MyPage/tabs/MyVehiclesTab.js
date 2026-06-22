@@ -2,12 +2,7 @@ import React from 'react';
 import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
 import EmptyState from '../../../components/EmptyState';
-
-// 시안 차량카드 C(미니멀 텍스트): 만원 단위 숫자만 표기
-const toManwon = (price) => {
-  const n = Math.round(Number(price) / 10000);
-  return Number.isNaN(n) ? '-' : n.toLocaleString();
-};
+import { PRICE_HIDDEN_LABEL } from '../../../utils/vehiclePrice';
 
 const resolveImage = (imageUrl) => {
   if (Array.isArray(imageUrl)) { return imageUrl[0] || null; }
@@ -77,8 +72,7 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
         </View>
 
         <View style={styles.priceWrap}>
-          <Text style={[styles.price, { color: theme.colors.primary.main }]}>{toManwon(item.price)}</Text>
-          <Text style={[styles.priceUnit, { color: theme.colors.text.tertiary }]}>만원</Text>
+          <Text style={[styles.priceHidden, { color: theme.colors.text.tertiary }]}>{PRICE_HIDDEN_LABEL}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -128,9 +122,8 @@ const styles = StyleSheet.create({
   tag: { paddingVertical: 3, paddingHorizontal: 7, borderRadius: 6 },
   tagText: { fontSize: 10, fontWeight: '700' },
   meta: { fontSize: 12, marginTop: 3 },
-  priceWrap: { alignItems: 'flex-end' },
-  price: { fontSize: 17, fontWeight: '800' },
-  priceUnit: { fontSize: 11, marginTop: 1 },
+  priceWrap: { alignItems: 'flex-end', maxWidth: 90 },
+  priceHidden: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
 });
 
 export default MyVehiclesTab;

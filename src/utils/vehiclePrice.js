@@ -2,27 +2,22 @@
 /**
  * Vehicle price visibility rules.
  *
- * 가격은 거래 단계(dealStage)가 아니라 "보는 사람이 누구인가"로 결정된다:
- * - 관리자: 모든 차량 가격을 본다
- * - 해당 차량의 소유자(본인): 본인이 설정한 가격만 본다
- * - 그 외 일반 구매자: 어떤 차량의 가격도 볼 수 없다
+ * 가격은 관리자만 볼 수 있다. 일반 사용자(차량 소유자 포함)는 어떤 화면에서도
+ * 가격을 보지 않으며, 가격은 오직 관리자와의 상담을 통해서만 안내된다.
  *
  * @see canViewVehiclePrice
  */
 
 /**
- * 주어진 뷰어가 해당 차량의 가격을 볼 수 있는지 판단한다.
+ * 주어진 뷰어가 해당 차량의 가격을 볼 수 있는지 판단한다(관리자만 true).
  *
- * @param {Object} vehicle - 차량 객체(currentOwnerId/sellerId 포함)
+ * @param {Object} vehicle - 차량 객체
  * @param {Object} viewer - 뷰어 정보 { uid, role }
  * @returns {boolean} 가격 표시 가능 여부
  */
 export const canViewVehiclePrice = (vehicle, viewer) => {
-  if (!vehicle || !viewer) { return false; }
-  if (viewer.role === 'admin') { return true; }
-
-  const ownerId = vehicle.currentOwnerId || vehicle.sellerId;
-  return Boolean(viewer.uid) && ownerId === viewer.uid;
+  if (!viewer) { return false; }
+  return viewer.role === 'admin';
 };
 
 /**
