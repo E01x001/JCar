@@ -406,3 +406,16 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - VehicleRegistrationScreen.fetchVehicleInfo: start/finish/cancel 연동.
 - 멘트(상담형·가벼움, 이모지 없음): 0/25/50/70/90% 구간 교체.
 - 검증: lint 0 error, Metro 번들 성공.
+
+## 차량 상세 시안 적용 + 변수 매핑 점검
+- VehicleDetailScreen 전면 재구성(시안): 헤더 제거(플로팅 백버튼) + 이미지 영역(차종 태그) +
+  라운드 시트(타이틀+상태칩, 서브모델, 메타) + **가격 안내 배너**(₩ "가격은 상담 시 안내드려요")
+  / 관리자는 실가격 + 기본정보·부품정보 카드 + 하단 바(가격 상담 안내 + 구매 상담 신청).
+  AppNavigator: VehicleDetail headerShown:false.
+- 변수 매핑 점검(사용자 요청):
+  - **mileage(주행거리)**: 상세에서 읽지만 saveVehicleData에 없고 CarZen 등록원부 조회에도 없음
+    → 항상 "-"였음(이름 불일치가 아니라 데이터 소스 부재). 행 제거.
+  - 배기량/연비 "-"는 전기차 등 해당없는 차량의 정상 빈값.
+  - 나머지 필드명(manufacturer/year/fuelType/transmission/driveType/cc/fuelEco/frontTire/
+    rearTire/engineOilLiter/wiperInfo/battery)은 저장↔조회 일치 확인.
+  - 개선: 빈 값/Unknown 행은 숨김 처리(깨진 "-" 행 제거), 섹션 비면 섹션 자체 숨김.

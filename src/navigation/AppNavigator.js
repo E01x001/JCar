@@ -169,7 +169,7 @@ const AppNavigator = ({ navigationRef }) => {
             <Stack.Screen
               name="VehicleDetail"
               component={VehicleDetailScreen}
-              options={{ headerShown: true, title: '차량 상세' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="ConsultationRequest"
