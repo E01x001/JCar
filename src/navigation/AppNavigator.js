@@ -11,6 +11,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen'; // 잊어버린 비밀번호 화면 추가
 import VehiclesListScreen from '../screens/VehiclesListScreen';
+import VehicleBrowseScreen from '../screens/VehicleBrowseScreen';
 import VehicleRegistrationScreen from '../screens/VehicleRegistrationScreen';
 import UserConsultationsScreen from '../screens/UserConsultationsScreen';
 import MyPageScreen from '../screens/MyPageScreen';
@@ -82,6 +83,7 @@ const UserTabs = () => (
       tabBarIcon: ({ color, size }) => {
         let iconName;
         if (route.name === 'Vehicles') {iconName = 'home';}
+        else if (route.name === 'VehicleBrowse') {iconName = 'directions-car';}
         else if (route.name === 'Register') {iconName = 'add-circle-outline';}
         else if (route.name === 'Consultations') {iconName = 'question-answer';}
         else if (route.name === 'MyPage') {iconName = 'person';}
@@ -93,9 +95,10 @@ const UserTabs = () => (
     })}
   >
     <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '홈' }} />
-    <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ title: '차량 등록' }} />
-    <Tab.Screen name="Consultations" component={UserConsultationsScreen} options={{ title: '상담 내역' }} />
-    <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '내 정보' }} />
+    <Tab.Screen name="VehicleBrowse" component={VehicleBrowseScreen} options={{ title: '차량' }} />
+    <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ title: '등록' }} />
+    <Tab.Screen name="Consultations" component={UserConsultationsScreen} options={{ title: '상담' }} />
+    <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '마이' }} />
   </Tab.Navigator>
 );
 

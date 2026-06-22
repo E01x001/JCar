@@ -390,3 +390,10 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - MyVehiclesTab(내 차량): 소유자 본인에게도 가격 숨김 → "상담 후 안내".
 - 홈(VehiclesList): 이미 hidePrice = role!=='admin' 적용됨.
 - 검증: lint 0 error, 번들 성공. 사용자 화면에 formatPrice 직접 노출 0건(전부 admin/hidePrice 분기).
+
+## 차량 등록 플로우 + 5탭 네비
+- 차량 등록(VehicleRegistrationScreen): 단일폼 → **3단계 위저드**(조회/사진·종류/영업권리)
+  + 등록 완료 모달. businessRightsIncluded·licenseInfo 저장 필드 추가. 기존 로직 보존.
+- 5탭 네비: 홈(Vehicles)/차량(VehicleBrowse·신규)/등록(Register)/상담/마이.
+- 신규 VehicleBrowseScreen: 차량 목록(제목+검색+정렬칩 최신/연식/제조사+카드+등록 FAB), 가격 숨김.
+- 검증: lint 0 error, Metro 번들 성공.
