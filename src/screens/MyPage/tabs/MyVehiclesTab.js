@@ -50,7 +50,7 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
         ]}
       >
         {image ? (
-          <Image source={{ uri: image }} style={styles.thumb} resizeMode="cover" />
+          <Image source={{ uri: image }} style={[styles.thumb, styles.thumbBg]} resizeMode="contain" />
         ) : (
           <View style={[styles.thumb, { backgroundColor: theme.colors.background.tertiary }]} />
         )}
@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 14,
   },
+  thumbBg: { backgroundColor: '#EEF1F5' },
   info: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   name: { fontSize: 16, fontWeight: '800', flexShrink: 1 },
