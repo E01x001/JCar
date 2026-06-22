@@ -1,32 +1,37 @@
 import React, { useState, useContext } from 'react';
 import { logger } from '../utils/logger';
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Switch, Modal, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Picker } from '@react-native-picker/picker';
 import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
+import CategoryChip from '../components/CategoryChip';
+
+const VEHICLE_TYPE_OPTIONS = ['승용차', '택시', '렌터카', '화물차', '군용차', '외교차'];
+// 영업 권리 거래 가치가 있는 차종(시안: 화물차·택시·렌터카)
+const BIZ_RIGHTS_TYPES = ['화물차', '택시', '렌터카'];
 import { getFirestore, collection, doc, writeBatch, serverTimestamp } from '@react-native-firebase/firestore';
 import { getAuth } from '@react-native-firebase/auth';
 import { getApp } from '@react-native-firebase/app';
 import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
-import { VEHICLE_STATUS, VEHICLE_TYPES, isValidVehicleType, DEAL_STAGE } from '../constants';
+import { isValidVehicleType, DEAL_STAGE } from '../constants';
 import useVehicleStore from '../stores/vehicleStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 import { prepareImageForUpload, prepareImagesForUpload, pickMultipleFromGallery, uploadImageWithProgress } from '../utils/imageHelpers';
 
 const MAX_IMAGES = 8;
 
-const VehicleRegistrationScreen = () => {
+const VehicleRegistrationScreen = ({ navigation }) => {
   const theme = useTheme();
   const { user, sellerName, sellerPhone, sellerEmail } = useContext(AuthContext);
   const toast = useToast();
   const { addOptimisticVehicle, removeOptimisticVehicle, invalidateUserVehiclesCache } = useVehicleStore();
 
+  const [step, setStep] = useState(1); // 1 조회 · 2 사진/종류 · 3 영업권리
   const [regiNumber, setRegiNumber] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [vehicleType, setVehicleType] = useState(''); // ✅ 초기값 "" (선택 안 한 상태)
@@ -36,6 +41,22 @@ const VehicleRegistrationScreen = () => {
   const [uploadProgress, setUploadProgress] = useState(0); // Track upload progress (0-100)
   const [isUploading, setIsUploading] = useState(false); // Upload state flag
   const [saving, setSaving] = useState(false); // Save in-progress flag (double-submit guard)
+  const [bizRights, setBizRights] = useState(false); // 영업 권리 함께 판매
+  const [licenseInfo, setLicenseInfo] = useState(''); // 번호판 종류 / 운송 권역
+  const [showSuccess, setShowSuccess] = useState(false); // 등록 완료 모달
+  const [doneName, setDoneName] = useState(''); // 완료 모달에 표시할 차량명
+  const bizApplicable = BIZ_RIGHTS_TYPES.includes(vehicleType);
+
+  const resetForm = () => {
+    setRegiNumber('');
+    setOwnerName('');
+    setVehicleData(null);
+    setImages([]);
+    setVehicleType('');
+    setBizRights(false);
+    setLicenseInfo('');
+    setStep(1);
+  };
 
   const isValidRegiNumber = (number) => {
     const regex = /^([가-힣]{0,2})?(\d{2,3})([가-힣A-Z외임])\s?(\d{3,4})$/;
@@ -253,6 +274,8 @@ const VehicleRegistrationScreen = () => {
         regiNumber,
         ownerName,
         vehicleType,
+        businessRightsIncluded: bizApplicable ? bizRights : false,
+        licenseInfo: (bizApplicable && bizRights) ? licenseInfo.trim() : '',
         createdAt: new Date(), // Use local time for optimistic data
         sellerId: user.uid,
         currentOwnerId: user.uid, // 소유 축 정본: 등록 시 판매자 = 현재 소유자
@@ -273,15 +296,9 @@ const VehicleRegistrationScreen = () => {
       // Clear cache to show new vehicle immediately
       invalidateUserVehiclesCache(user.uid);
 
-      // Show success immediately (optimistic)
-      toast.showSuccess('성공', '차량이 등록되어 목록에 노출됩니다.');
-
-      // Clear form immediately
-      setRegiNumber('');
-      setOwnerName('');
-      setVehicleData(null);
-      setImages([]);
-      setVehicleType('');
+      // 등록 완료 모달 표시 (시안 플로우). 폼은 모달 액션에서 resetForm으로 정리.
+      setDoneName(vehicleData.CARNAME);
+      setShowSuccess(true);
 
       // Firestore write (non-blocking)
       const db = getFirestore();
@@ -359,179 +376,302 @@ const VehicleRegistrationScreen = () => {
     }
   };
 
+  const STEP_LABEL = { 1: '차량 정보 조회', 2: '사진 추가', 3: '영업 권리 확인' };
+
+  const goToStep2 = () => {
+    if (!vehicleData) { toast.showWarning('알림', '먼저 차량 정보를 조회해주세요.'); return; }
+    setStep(2);
+  };
+  const goToStep3 = () => {
+    if (!isValidVehicleType(vehicleType)) { toast.showWarning('입력 오류', '차량 종류를 선택해주세요.'); return; }
+    setStep(3);
+  };
+  const closeSuccess = (route) => {
+    setShowSuccess(false);
+    resetForm();
+    if (route) { navigation.navigate(route); }
+  };
+
+  const c = theme.colors;
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.screenTitleBar}>
-        <Text style={styles.screenTitle}>차량 등록</Text>
-      </View>
-      <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled">
-        <Card elevated style={styles.formCard}>
-          <InputField
-            label="차량번호"
-            value={regiNumber}
-            onChangeText={(text) => setRegiNumber(formatRegiNumber(text))}
-            placeholder="예: 서울12가 3456"
-          />
-          <InputField
-            label="소유자명"
-            value={ownerName}
-            onChangeText={setOwnerName}
-            placeholder="소유자 이름 입력"
-          />
-
-          <Text style={[styles.fieldLabel, { color: theme.colors.text.secondary }]}>차량 종류</Text>
-          <View style={[styles.pickerContainer, {
-            borderColor: theme.colors.border.subtle,
-            borderRadius: theme.borderRadius.input,
-            backgroundColor: theme.colors.background.primary,
-          }]}>
-            <Picker
-              selectedValue={vehicleType}
-              onValueChange={(itemValue) => setVehicleType(itemValue)}
-              style={{ color: vehicleType ? theme.colors.text.primary : theme.colors.text.tertiary }}
-              dropdownIconColor={theme.colors.text.secondary}
-            >
-              <Picker.Item label="차량 종류 선택" value="" color={theme.colors.text.tertiary} />
-              <Picker.Item label="승용차" value="승용차" />
-              <Picker.Item label="택시" value="택시" />
-              <Picker.Item label="렌터카" value="렌터카" />
-              <Picker.Item label="화물차" value="화물차" />
-              <Picker.Item label="군용차" value="군용차" />
-              <Picker.Item label="외교차" value="외교차" />
-            </Picker>
-          </View>
-
-          <TouchableOpacity
-            onPress={handleImageSelect}
-            activeOpacity={0.8}
-            style={[styles.imageTile, {
-              borderColor: theme.colors.border.subtle,
-              borderRadius: theme.borderRadius.input,
-              backgroundColor: theme.colors.background.secondary,
-            }]}
-          >
-            <Icon name="add-photo-alternate" size={22} color={theme.colors.primary.main} />
-            <Text style={[styles.imageTileText, { color: theme.colors.text.secondary }]}>
-              추가 사진 선택 (선택){images.length > 0 ? ` · ${images.length}/${MAX_IMAGES}` : ''}
-            </Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background.secondary }]} edges={['top', 'bottom']}>
+      {/* 헤더 */}
+      <View style={[styles.header, { borderBottomColor: c.border.light, backgroundColor: c.background.card }]}>
+        {step > 1 ? (
+          <TouchableOpacity onPress={() => setStep(step - 1)} hitSlop={10} style={styles.backBtn}>
+            <Icon name="chevron-left" size={28} color={c.primary.main} />
           </TouchableOpacity>
+        ) : <View style={styles.backBtn} />}
+        <Text style={[styles.headerTitle, { color: c.text.primary }]}>차량 등록</Text>
+        <View style={styles.backBtn} />
+      </View>
 
-          {/* Task 127: multi-image thumbnail strip with per-image remove */}
-          {images.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbStrip}>
-              {images.map((img, index) => (
-                <View key={`${index}-${img.uri}`} style={styles.thumbWrapper}>
-                  <Image source={{ uri: img.uri }} style={styles.thumb} />
-                  <TouchableOpacity
-                    style={styles.thumbRemove}
-                    onPress={() => removeImageAt(index)}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Text style={styles.thumbRemoveText}>×</Text>
-                  </TouchableOpacity>
+      {/* 진행 바 */}
+      <View style={styles.progressWrap}>
+        <View style={styles.progressTrack}>
+          {[1, 2, 3].map((s) => (
+            <View key={s} style={[styles.progressSeg, { backgroundColor: s <= step ? c.primary.main : c.border.light }]} />
+          ))}
+        </View>
+        <Text style={[styles.progressLabel, { color: c.text.tertiary }]}>{step} / 3 · {STEP_LABEL[step]}</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        {/* STEP 1 — 차량 정보 조회 */}
+        {step === 1 && (
+          <>
+            <Card elevated style={styles.card}>
+              <InputField label="차량번호" value={regiNumber} onChangeText={(t) => setRegiNumber(formatRegiNumber(t))} placeholder="예: 서울12가 3456" />
+              <InputField label="소유자명" value={ownerName} onChangeText={setOwnerName} placeholder="소유자 이름 입력" />
+              <Button
+                variant="secondary"
+                title={loading ? '조회 중...' : '차량 정보 조회'}
+                onPress={fetchVehicleInfo}
+                loading={loading}
+                disabled={loading}
+                fullWidth
+                style={styles.mt8}
+              />
+            </Card>
+
+            {vehicleData ? (
+              <Card elevated style={styles.card}>
+                <Text style={[styles.cardTitle, { color: c.text.primary }]}>차량 정보 미리보기</Text>
+                <Image
+                  source={{ uri: `https://www.cartory.net/cars/${vehicleData.CARURL}` }}
+                  style={[styles.previewImage, { backgroundColor: '#EEF1F5' }]}
+                  resizeMode="contain"
+                />
+                {[
+                  ['차량번호', regiNumber],
+                  ['소유자명', ownerName],
+                  ['차량명', vehicleData.CARNAME],
+                  ['제조사', vehicleData.CARVENDER],
+                  ['연식', vehicleData.CARYEAR],
+                  ['연료', vehicleData.FUEL],
+                  ['변속기 · 배기량', `${vehicleData.MISSION || '-'} · ${vehicleData.CC ? `${vehicleData.CC} cc` : '-'}`],
+                ].map(([k, v]) => (
+                  <View key={k} style={[styles.kvRow, { borderBottomColor: c.border.light }]}>
+                    <Text style={[styles.kvKey, { color: c.text.tertiary }]}>{k}</Text>
+                    <Text style={[styles.kvVal, { color: c.text.primary }]}>{v || '-'}</Text>
+                  </View>
+                ))}
+                <Button variant="primary" title="다음 단계" onPress={goToStep2} fullWidth style={styles.mt16} />
+              </Card>
+            ) : null}
+
+            <View style={[styles.infoBanner, { backgroundColor: c.statusChip.completed.bg }]}>
+              <Icon name="info" size={18} color={c.primary.main} />
+              <Text style={[styles.infoText, { color: c.primary.main }]}>차량번호·소유자명으로 등록원부를 자동 조회합니다.</Text>
+            </View>
+          </>
+        )}
+
+        {/* STEP 2 — 차량 종류 + 사진 */}
+        {step === 2 && (
+          <>
+            <Card elevated style={styles.card}>
+              <Text style={[styles.cardTitle, { color: c.text.primary }]}>차량 사진 추가</Text>
+              <Text style={[styles.cardDesc, { color: c.text.secondary }]}>실제 차량 사진을 추가하면 구매자 신뢰도가 높아져요. 최대 {MAX_IMAGES}장.</Text>
+
+              <Text style={[styles.fieldLabel, { color: c.text.primary }]}>차량 종류</Text>
+              <View style={styles.chipWrap}>
+                {VEHICLE_TYPE_OPTIONS.map((t) => (
+                  <CategoryChip key={t} label={t} selected={vehicleType === t} onPress={() => setVehicleType(t)} style={styles.chip} />
+                ))}
+              </View>
+
+              <TouchableOpacity
+                onPress={handleImageSelect}
+                activeOpacity={0.8}
+                style={[styles.imageTile, { borderColor: c.border.subtle, borderRadius: theme.borderRadius.input, backgroundColor: c.background.secondary }]}
+              >
+                <Icon name="add" size={22} color={c.primary.main} />
+                <Text style={[styles.imageTileText, { color: c.text.secondary }]}>사진 추가 · {images.length}/{MAX_IMAGES}</Text>
+              </TouchableOpacity>
+
+              {images.length > 0 && (
+                <View style={styles.thumbGrid}>
+                  {images.map((img, index) => (
+                    <View key={`${index}-${img.uri}`} style={styles.thumbWrapper}>
+                      <Image source={{ uri: img.uri }} style={styles.thumb} />
+                      <TouchableOpacity style={styles.thumbRemove} onPress={() => removeImageAt(index)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <Icon name="close" size={14} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </Card>
+
+            <View style={styles.navRow}>
+              <Button variant="ghost" title="이전" onPress={() => setStep(1)} style={styles.navPrev} />
+              <Button variant="primary" title="다음 단계" onPress={goToStep3} style={styles.navNext} />
+            </View>
+          </>
+        )}
+
+        {/* STEP 3 — 영업 권리 + 요약 */}
+        {step === 3 && (
+          <>
+            <Card elevated style={styles.card}>
+              <Text style={[styles.cardTitle, { color: c.text.primary }]}>영업 권리 함께 판매</Text>
+              <Text style={[styles.cardDesc, { color: c.text.secondary }]}>
+                화물차·택시·렌터카는 차량과 별개로 운송 면허·영업용 번호판에 거래 가치가 있어요.
+                {bizApplicable ? ' 함께 판매할지 선택하세요.' : ' 이 차종은 해당되지 않습니다.'}
+              </Text>
+
+              {bizApplicable && (
+                <>
+                  <View style={[styles.toggleCard, { backgroundColor: c.background.secondary }]}>
+                    <View style={[styles.toggleBadge, { backgroundColor: c.statusChip.completed.bg }]}>
+                      <Text style={[styles.toggleBadgeText, { color: c.primary.main }]}>면허</Text>
+                    </View>
+                    <View style={styles.toggleInfo}>
+                      <Text style={[styles.toggleTitle, { color: c.text.primary }]}>영업용 번호판·면허 함께 판매</Text>
+                      <Text style={[styles.toggleSub, { color: c.text.secondary }]}>번호판 권리·운송사업 허가 포함</Text>
+                    </View>
+                    <Switch
+                      value={bizRights}
+                      onValueChange={setBizRights}
+                      trackColor={{ false: c.border.default, true: c.primary.main }}
+                      thumbColor={c.neutral.white}
+                    />
+                  </View>
+
+                  {bizRights && (
+                    <>
+                      <InputField label="번호판 종류 / 운송 권역" value={licenseInfo} onChangeText={setLicenseInfo} placeholder="예: 영업용 / 서울 개별화물" style={styles.mt12} />
+                      <View style={[styles.warnBanner, { backgroundColor: c.statusChip.pending.bg }]}>
+                        <Text style={[styles.warnText, { color: c.statusChip.pending.fg }]}>면허·번호판 권리는 관리자 검토 후 별도 안내됩니다. 명의이전 절차가 추가될 수 있어요.</Text>
+                      </View>
+                    </>
+                  )}
+                </>
+              )}
+            </Card>
+
+            <Card elevated style={styles.card}>
+              <Text style={[styles.cardTitle, { color: c.text.primary }]}>등록 요약</Text>
+              {[
+                ['차량', vehicleData ? `${vehicleData.CARNAME} · ${vehicleData.CARVENDER}` : '-'],
+                ['차량 종류', vehicleType || '-'],
+                ['사진', `${images.length}장 첨부`],
+                ['영업 권리', (bizApplicable && bizRights) ? '포함 (영업 권리 함께 판매)' : '미포함 (차량만 판매)'],
+              ].map(([k, v]) => (
+                <View key={k} style={[styles.kvRow, { borderBottomColor: c.border.light }]}>
+                  <Text style={[styles.kvKey, { color: c.text.tertiary }]}>{k}</Text>
+                  <Text style={[styles.kvVal, { color: k === '영업 권리' && bizApplicable && bizRights ? c.primary.main : c.text.primary }]}>{v}</Text>
                 </View>
               ))}
-            </ScrollView>
-          )}
+            </Card>
 
-          {isUploading && (
-            <View style={styles.progressContainer}>
-              <Text style={[styles.progressText, { color: theme.colors.text.secondary }]}>업로드 중... {uploadProgress.toFixed(0)}%</Text>
-              <View style={[styles.progressBarBackground, { backgroundColor: theme.colors.background.tertiary }]}>
-                <View style={[styles.progressBarFill, { width: `${uploadProgress}%`, backgroundColor: theme.colors.primary.main }]} />
+            {isUploading && (
+              <View style={styles.progressContainer}>
+                <Text style={[styles.progressText, { color: c.text.secondary }]}>업로드 중... {uploadProgress.toFixed(0)}%</Text>
+                <View style={[styles.progressBarBackground, { backgroundColor: c.background.tertiary }]}>
+                  <View style={[styles.progressBarFill, { width: `${uploadProgress}%`, backgroundColor: c.primary.main }]} />
+                </View>
               </View>
-            </View>
-          )}
-
-          <Button
-            variant="primary"
-            title={loading ? '조회 중...' : '차량 정보 조회'}
-            onPress={fetchVehicleInfo}
-            loading={loading}
-            disabled={loading}
-            fullWidth
-            style={styles.lookupButton}
-          />
-        </Card>
-
-        {vehicleData && (
-          <Card elevated style={styles.previewCard}>
-            <Text style={[styles.previewTitle, { color: theme.colors.text.primary }]}>차량 정보 미리보기</Text>
-            {vehicleData.CARURL && (
-              <Image
-                source={{ uri: `https://www.cartory.net/cars/${vehicleData.CARURL}` }}
-                style={styles.vehicleImage}
-              />
             )}
-            {[
-              ['차량번호', regiNumber],
-              ['소유자명', ownerName],
-              ['차량명', vehicleData.CARNAME],
-              ['제조사', vehicleData.CARVENDER],
-              ['연식', vehicleData.CARYEAR],
-              ['연료', vehicleData.FUEL],
-              ['변속기', vehicleData.MISSION],
-              ['배기량', vehicleData.CC ? `${vehicleData.CC} cc` : '-'],
-              ['연비', vehicleData.FUELECO ? `${vehicleData.FUELECO} km/L` : '-'],
-            ].map(([k, v]) => (
-              <View key={k} style={[styles.previewRow, { borderBottomColor: theme.colors.border.light }]}>
-                <Text style={[styles.previewKey, { color: theme.colors.text.secondary }]}>{k}</Text>
-                <Text style={[styles.previewVal, { color: theme.colors.text.primary }]}>{v || '-'}</Text>
-              </View>
-            ))}
 
-            <Button
-              variant="primary"
-              title={saving ? '저장 중...' : '차량 정보 저장'}
-              onPress={saveVehicleData}
-              loading={saving}
-              disabled={saving || isUploading}
-              fullWidth
-              style={styles.saveButton}
-            />
-          </Card>
+            <View style={styles.navRow}>
+              <Button variant="ghost" title="이전" onPress={() => setStep(2)} disabled={saving || isUploading} style={styles.navPrev} />
+              <Button variant="primary" title={saving ? '등록 중...' : '등록 완료'} onPress={saveVehicleData} loading={saving} disabled={saving || isUploading} style={styles.navNext} />
+            </View>
+          </>
         )}
       </ScrollView>
+
+      {/* 등록 완료 모달 */}
+      <Modal visible={showSuccess} transparent animationType="fade" onRequestClose={() => closeSuccess()}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: c.background.card }]}>
+            <View style={[styles.checkCircle, { backgroundColor: c.statusChip.approved.bg }]}>
+              <Icon name="check" size={36} color={c.success.main} />
+            </View>
+            <Text style={[styles.modalTitle, { color: c.text.primary }]}>차량 등록 완료</Text>
+            <Text style={[styles.modalDesc, { color: c.text.secondary }]}>{doneName || '차량'}가 등록되어{'\n'}구매자 목록에 노출됩니다.</Text>
+            <View style={[styles.modalNote, { backgroundColor: c.background.secondary }]}>
+              <Text style={[styles.modalNoteText, { color: c.text.tertiary }]}>품질 검토 후 문제가 있으면{'\n'}관리자가 안내드려요</Text>
+            </View>
+            <Button variant="primary" title="내 차량 보기" onPress={() => closeSuccess('MyPage')} fullWidth style={styles.mt8} />
+            <Pressable onPress={() => closeSuccess('Vehicles')} hitSlop={8} style={styles.modalHome}>
+              <Text style={[styles.modalHomeText, { color: c.text.tertiary }]}>홈으로</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
-  screenTitleBar: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 6 },
-  screenTitle: { fontSize: 20, fontWeight: '800', color: '#212529', letterSpacing: -0.2 },
-  scrollViewContent: { padding: 20, paddingBottom: 30 },
-  formCard: { padding: 20 },
-  fieldLabel: { fontSize: 12, fontWeight: '500', marginBottom: 7 },
-  pickerContainer: { borderWidth: 1.5, overflow: 'hidden', marginBottom: 12 },
-  imageTile: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 1.5, borderStyle: 'dashed', paddingVertical: 16, marginBottom: 4,
-  },
-  imageTileText: { fontSize: 14, fontWeight: '600' },
-  lookupButton: { marginTop: 16 },
-  // Preview card
-  previewCard: { padding: 20, marginTop: 16 },
-  previewTitle: { fontSize: 16, fontWeight: '800', marginBottom: 12 },
-  vehicleImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 12 },
-  previewRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 11, borderBottomWidth: 1 },
-  previewKey: { fontSize: 14 },
-  previewVal: { fontSize: 14, fontWeight: '600' },
-  saveButton: { marginTop: 18 },
-  // Task 127: multi-image thumbnail strip
-  thumbStrip: { marginVertical: 10 },
-  thumbWrapper: { marginRight: 8, position: 'relative' },
-  thumb: { width: 90, height: 90, borderRadius: 12, resizeMode: 'cover' },
-  thumbRemove: {
-    position: 'absolute', top: -6, right: -6,
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: '#DC3545', alignItems: 'center', justifyContent: 'center',
-  },
-  thumbRemoveText: { color: '#fff', fontSize: 16, lineHeight: 18, fontWeight: 'bold' },
-  progressContainer: { marginTop: 10, marginBottom: 6 },
+  container: { flex: 1 },
+  // 헤더
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1 },
+  backBtn: { width: 40, height: 32, justifyContent: 'center' },
+  headerTitle: { fontSize: 16, fontWeight: '700' },
+  // 진행 바
+  progressWrap: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 4 },
+  progressTrack: { flexDirection: 'row', gap: 6 },
+  progressSeg: { flex: 1, height: 5, borderRadius: 3 },
+  progressLabel: { fontSize: 12, marginTop: 9 },
+  scroll: { padding: 20, paddingBottom: 30 },
+  card: { padding: 20, marginBottom: 14 },
+  cardTitle: { fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  cardDesc: { fontSize: 13, lineHeight: 19, marginBottom: 14 },
+  fieldLabel: { fontSize: 13, fontWeight: '700', marginBottom: 10, marginTop: 4 },
+  mt8: { marginTop: 8 },
+  mt12: { marginTop: 12 },
+  mt16: { marginTop: 16 },
+  // 미리보기/요약 키-값
+  previewImage: { width: '100%', height: 180, borderRadius: 14, marginBottom: 14 },
+  kvRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 11, borderBottomWidth: 1 },
+  kvKey: { fontSize: 14 },
+  kvVal: { fontSize: 14, fontWeight: '700', flexShrink: 1, textAlign: 'right', marginLeft: 12 },
+  // 정보/경고 배너
+  infoBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14 },
+  infoText: { fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 },
+  warnBanner: { padding: 13, borderRadius: 12, marginTop: 12 },
+  warnText: { fontSize: 12, lineHeight: 18, fontWeight: '600' },
+  // 종류 칩
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  chip: { marginRight: 8, marginBottom: 8 },
+  // 사진 타일/썸네일
+  imageTile: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderStyle: 'dashed', paddingVertical: 16 },
+  imageTileText: { fontSize: 14, fontWeight: '700' },
+  thumbGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
+  thumbWrapper: { position: 'relative' },
+  thumb: { width: 76, height: 76, borderRadius: 12, resizeMode: 'cover' },
+  thumbRemove: { position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: 11, backgroundColor: '#DC3545', alignItems: 'center', justifyContent: 'center' },
+  // 영업 권리 토글
+  toggleCard: { flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, borderRadius: 14 },
+  toggleBadge: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  toggleBadgeText: { fontSize: 13, fontWeight: '800' },
+  toggleInfo: { flex: 1 },
+  toggleTitle: { fontSize: 14, fontWeight: '700' },
+  toggleSub: { fontSize: 12, marginTop: 2 },
+  // 이전/다음 버튼 행
+  navRow: { flexDirection: 'row', gap: 12 },
+  navPrev: { flex: 1 },
+  navNext: { flex: 2 },
+  // 업로드 진행
+  progressContainer: { marginBottom: 14 },
   progressText: { fontSize: 13, marginBottom: 6, textAlign: 'center', fontWeight: '600' },
   progressBarBackground: { height: 10, borderRadius: 5, overflow: 'hidden' },
   progressBarFill: { height: '100%', borderRadius: 5 },
+  // 완료 모달
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,22,38,0.55)', justifyContent: 'center', paddingHorizontal: 32 },
+  modalCard: { borderRadius: 24, padding: 28, alignItems: 'center' },
+  checkCircle: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '800', marginTop: 18 },
+  modalDesc: { fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 8 },
+  modalNote: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, marginTop: 18, alignSelf: 'stretch' },
+  modalNoteText: { fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  modalHome: { paddingVertical: 12, marginTop: 6 },
+  modalHomeText: { fontSize: 14, fontWeight: '600' },
 });
 
 export default VehicleRegistrationScreen;
