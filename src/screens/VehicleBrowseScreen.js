@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { subscribeToFilteredVehicles } from '../services/vehicleFilterService';
+import { subscribeToFilteredVehicles, getActiveFilterCount } from '../services/vehicleFilterService';
 import { useTheme } from '../theme/ThemeProvider';
 import { AuthContext } from '../context/AuthContext';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -10,6 +10,7 @@ import StateScreen from '../components/StateScreen';
 import SearchBar from '../components/SearchBar';
 import CategoryChip from '../components/CategoryChip';
 import VehicleCard from '../components/VehicleCard';
+import VehicleFilterModal from '../components/filters/VehicleFilterModal';
 
 const SORTS = [
   { key: 'recent', label: '최신순' },
@@ -35,18 +36,28 @@ const VehicleBrowseScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [sortKey, setSortKey] = useState('recent');
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filters, setFilters] = useState({
+    minPrice: '',
+    maxPrice: '',
+    minYear: '',
+    maxYear: '',
+    manufacturers: [],
+    sortBy: 'price_asc',
+  });
 
   useEffect(() => {
     if (!user) {return () => {};}
     setLoading(true);
-    const unsubscribe = subscribeToFilteredVehicles({}, (list) => {
+    const unsubscribe = subscribeToFilteredVehicles(filters, (list) => {
       setVehicles(list);
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [user]);
+  }, [filters, user]);
 
   const hidePrice = role !== 'admin';
+  const activeFilterCount = getActiveFilterCount(filters);
 
   const filtered = sortVehicles(
     vehicles.filter((v) => {
@@ -78,6 +89,20 @@ const VehicleBrowseScreen = ({ navigation }) => {
     <View>
       <View style={styles.searchRow}>
         <SearchBar value={searchText} onChangeText={setSearchText} style={styles.searchFlex} />
+        <TouchableOpacity
+          style={[styles.filterButton, {
+            backgroundColor: activeFilterCount > 0 ? theme.colors.primary.main : theme.colors.background.tertiary,
+            borderRadius: theme.borderRadius.button,
+          }]}
+          onPress={() => setFilterModalVisible(true)}
+        >
+          <Icon name="tune" size={22} color={activeFilterCount > 0 ? theme.colors.text.white : theme.colors.primary.main} />
+          {activeFilterCount > 0 && (
+            <View style={[styles.filterBadge, { backgroundColor: theme.colors.danger.main }]}>
+              <Text style={[styles.filterBadgeText, { color: theme.colors.text.white }]}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
       <View style={styles.sortRow}>
         {SORTS.map((s) => (
@@ -114,6 +139,13 @@ const VehicleBrowseScreen = ({ navigation }) => {
         />
       )}
 
+      <VehicleFilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApply={setFilters}
+        initialFilters={filters}
+      />
+
       {/* 등록 FAB */}
       <Pressable
         onPress={() => navigation.navigate('Register')}
@@ -136,8 +168,11 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 90, flexGrow: 1 },
   skeletonPad: { paddingTop: 8 },
   emptyState: { flex: 1 },
-  searchRow: { paddingHorizontal: 20, paddingTop: 14 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 14 },
   searchFlex: { flex: 1 },
+  filterButton: { width: 48, height: 48, justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  filterBadge: { position: 'absolute', top: -4, right: -4, borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
+  filterBadgeText: { fontSize: 12, fontWeight: '700' },
   sortRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingVertical: 14 },
   sortChip: { marginRight: 8 },
   cardSpacing: { marginHorizontal: 20, marginBottom: 14 },
