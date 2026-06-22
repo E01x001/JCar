@@ -115,7 +115,7 @@ const VehiclesListScreen = ({ navigation }) => {
     return (
       <TouchableOpacity onPress={() => goDetail(item.id)} activeOpacity={0.75} style={styles.popRow}>
         {image ? (
-          <Image source={{ uri: image }} style={styles.popThumb} resizeMode="cover" />
+          <Image source={{ uri: image }} style={[styles.popThumb, styles.popThumbBg]} resizeMode="contain" />
         ) : (
           <View style={[styles.popThumb, { backgroundColor: theme.colors.background.tertiary }]} />
         )}
@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   popThumb: { width: 70, height: 52, borderRadius: 10 },
+  popThumbBg: { backgroundColor: '#EEF1F5' },
   popInfo: { flex: 1, minWidth: 0 },
   popName: { fontSize: 14, fontWeight: '700' },
   popMeta: { fontSize: 12, marginTop: 2 },

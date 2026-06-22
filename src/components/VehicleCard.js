@@ -55,7 +55,7 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
       <View style={[styles.clip, { borderRadius: theme.borderRadius.card }]}>
       <View style={styles.imageWrap}>
         {image ? (
-          <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+          <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: theme.colors.background.tertiary }]}>
             <Text style={{ color: theme.colors.text.tertiary, fontSize: 12 }}>차량 이미지</Text>
@@ -123,6 +123,8 @@ const styles = StyleSheet.create({
   imageWrap: {
     height: 150,
     position: 'relative',
+    backgroundColor: '#EEF1F5', // contain 레터박스 영역을 옅은 회색으로 자연스럽게
+    paddingVertical: 8,
   },
   image: {
     width: '100%',
