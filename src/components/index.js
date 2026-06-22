@@ -18,6 +18,7 @@ export { default as SearchBar } from './SearchBar';
 export { default as CategoryChip } from './CategoryChip';
 
 // State Components
+export { default as ApiProgressOverlay } from './ApiProgressOverlay';
 export { default as GlobalLoader } from './GlobalLoader';
 export { default as SkeletonLoader } from './SkeletonLoader';
 export { default as StateScreen } from './StateScreen';

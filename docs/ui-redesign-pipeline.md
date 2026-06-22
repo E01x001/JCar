@@ -397,3 +397,12 @@ theme 레이어를 **additive(기존 키 유지, 신규 키 추가)** 로 시안
 - 5탭 네비: 홈(Vehicles)/차량(VehicleBrowse·신규)/등록(Register)/상담/마이.
 - 신규 VehicleBrowseScreen: 차량 목록(제목+검색+정렬칩 최신/연식/제조사+카드+등록 FAB), 가격 숨김.
 - 검증: lint 0 error, Metro 번들 성공.
+
+## 차량 조회 진행 오버레이 (추정형 진행률 + 구간 멘트)
+단일 API(CarZen 조회)는 실제 진행률이 없으므로 추정형 진행으로 대기 경험 개선.
+- 신규 useFakeProgress 훅: 시간 곡선으로 cap(90%)까지 점근 → 응답 도착 시 finish()로 100% 마무리.
+  응답 전 절대 100% 도달 안 함(정직). cancel()로 에러/취소 초기화. 타이머 정리.
+- 신규 ApiProgressOverlay 컴포넌트(모달): 큰 % + 진행바 + 임계값별 안내 문구. 재사용 가능.
+- VehicleRegistrationScreen.fetchVehicleInfo: start/finish/cancel 연동.
+- 멘트(상담형·가벼움, 이모지 없음): 0/25/50/70/90% 구간 교체.
+- 검증: lint 0 error, Metro 번들 성공.

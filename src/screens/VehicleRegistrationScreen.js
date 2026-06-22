@@ -8,6 +8,17 @@ import Card from '../components/Card';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 import CategoryChip from '../components/CategoryChip';
+import ApiProgressOverlay from '../components/ApiProgressOverlay';
+import { useFakeProgress } from '../hooks/useFakeProgress';
+
+// 차량 정보 조회 진행 중 안내 문구(상담형·가벼움). 임계값(%)별 교체.
+const LOOKUP_MESSAGES = [
+  { at: 0, text: '차량번호로 등록원부를 조회하고 있어요' },
+  { at: 25, text: '제조사와 연식을 확인하는 중이에요' },
+  { at: 50, text: '배기량·연료·변속기 제원을 불러오는 중이에요' },
+  { at: 70, text: '거의 다 됐어요. 정보를 맞춰보는 중이에요' },
+  { at: 90, text: '조회한 정보를 정리하고 있어요' },
+];
 
 const VEHICLE_TYPE_OPTIONS = ['승용차', '택시', '렌터카', '화물차', '군용차', '외교차'];
 // 영업 권리 거래 가치가 있는 차종(시안: 화물차·택시·렌터카)
@@ -46,6 +57,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
   const [showSuccess, setShowSuccess] = useState(false); // 등록 완료 모달
   const [doneName, setDoneName] = useState(''); // 완료 모달에 표시할 차량명
   const bizApplicable = BIZ_RIGHTS_TYPES.includes(vehicleType);
+  const lookup = useFakeProgress(LOOKUP_MESSAGES); // 조회 진행 오버레이
 
   const resetForm = () => {
     setRegiNumber('');
@@ -150,6 +162,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
     }
 
     setLoading(true);
+    lookup.start(); // 추정형 진행 오버레이 시작
 
     try {
       // Task #72: Use Firebase Function proxy for secure API key storage
@@ -162,15 +175,17 @@ const VehicleRegistrationScreen = ({ navigation }) => {
       logger.debug('API 응답:', result.data);
 
       if (!result.data.success) {
+        lookup.cancel();
         toast.showError('조회 실패', '차량 정보를 찾을 수 없습니다.');
         return;
       }
 
       setVehicleData(result.data.data);
-      toast.showInfo('조회 성공', '차량 정보를 성공적으로 가져왔습니다.');
+      lookup.finish(); // 응답 도착 → 100%로 마무리
 
     } catch (error) {
       logger.error('차량 정보 조회 실패:', error);
+      lookup.cancel();
       // Firebase Function error handling
       const errorMessage = error.message || '차량 정보를 조회하는 중 오류가 발생했습니다.';
       toast.showError('오류', errorMessage);
@@ -583,6 +598,14 @@ const VehicleRegistrationScreen = ({ navigation }) => {
           </>
         )}
       </ScrollView>
+
+      {/* 차량 정보 조회 진행 오버레이 */}
+      <ApiProgressOverlay
+        visible={lookup.active}
+        progress={lookup.progress}
+        message={lookup.message}
+        title="차량 정보 조회 중"
+      />
 
       {/* 등록 완료 모달 */}
       <Modal visible={showSuccess} transparent animationType="fade" onRequestClose={() => closeSuccess()}>
