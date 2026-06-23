@@ -58,7 +58,7 @@ Avatar.propTypes = {
   name: PropTypes.string,
   size: PropTypes.number,
   variant: PropTypes.oneOf(['solid', 'soft']),
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default Avatar;

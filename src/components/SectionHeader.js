@@ -55,7 +55,7 @@ SectionHeader.propTypes = {
   title: PropTypes.string.isRequired,
   actionLabel: PropTypes.string,
   onActionPress: PropTypes.func,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default SectionHeader;

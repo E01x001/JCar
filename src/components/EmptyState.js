@@ -90,7 +90,7 @@ EmptyState.propTypes = {
   icon: PropTypes.string,
   title: PropTypes.string.isRequired,
   message: PropTypes.string,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default EmptyState;

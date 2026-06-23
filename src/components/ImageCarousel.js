@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
 ImageCarousel.propTypes = {
   images: PropTypes.arrayOf(PropTypes.string),
   height: PropTypes.number,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default ImageCarousel;

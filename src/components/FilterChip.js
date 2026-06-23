@@ -74,7 +74,7 @@ FilterChip.propTypes = {
   label: PropTypes.string.isRequired,
   active: PropTypes.bool.isRequired,
   onPress: PropTypes.func.isRequired,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default FilterChip;

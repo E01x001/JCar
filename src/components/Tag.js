@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
 Tag.propTypes = {
   label: PropTypes.string.isRequired,
   variant: PropTypes.oneOf(['info', 'neutral', 'accent']),
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default Tag;

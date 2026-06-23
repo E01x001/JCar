@@ -134,7 +134,7 @@ InputField.propTypes = {
   error: PropTypes.string,
   label: PropTypes.string,
   secureTextEntry: PropTypes.bool,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default InputField;

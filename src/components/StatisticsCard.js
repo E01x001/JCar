@@ -116,7 +116,7 @@ StatisticsCard.propTypes = {
   label: PropTypes.string.isRequired,
   count: PropTypes.number.isRequired,
   variant: PropTypes.oneOf(['primary', 'success', 'warning', 'error', 'info']),
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default StatisticsCard;

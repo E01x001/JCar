@@ -90,7 +90,7 @@ SearchBar.propTypes = {
   value: PropTypes.string,
   onChangeText: PropTypes.func,
   onPress: PropTypes.func,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default SearchBar;

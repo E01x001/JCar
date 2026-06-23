@@ -167,7 +167,7 @@ Badge.propTypes = {
   status: PropTypes.oneOf(['pending', 'approved', 'confirmed', 'on-hold', 'rejected', 'completed', 'cancelled', 'archived']).isRequired,
   label: PropTypes.string,
   variant: PropTypes.oneOf(['solid', 'chip']),
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default Badge;

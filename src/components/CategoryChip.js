@@ -65,7 +65,7 @@ CategoryChip.propTypes = {
   label: PropTypes.string.isRequired,
   selected: PropTypes.bool,
   onPress: PropTypes.func.isRequired,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default CategoryChip;

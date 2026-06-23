@@ -189,7 +189,7 @@ VehicleCard.propTypes = {
   onPress: PropTypes.func,
   statusDot: PropTypes.string,
   hidePrice: PropTypes.bool,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default VehicleCard;

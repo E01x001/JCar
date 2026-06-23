@@ -508,7 +508,7 @@ ConsultationCard.propTypes = {
   }).isRequired,
   onNavigateToVehicle: PropTypes.func,
   onUpdateSuccess: PropTypes.func,
-  style: PropTypes.object,
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
 export default ConsultationCard;
