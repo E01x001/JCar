@@ -1,49 +1,40 @@
 import React, { useState } from 'react';
 import { logger } from '../utils/logger';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { firebaseFunctions } from '../firebase/firebaseConfig';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
-import Card from '../components/Card';
 import { useToast } from '../hooks/useToast';
 
 const RegisterScreen = ({ navigation }) => {
   const theme = useTheme();
+  const c = theme.colors;
   const toast = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [step, setStep] = useState(1); // 1 기본 정보 · 2 이메일 인증
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const isValidPassword = (password) => /^(?=.*[a-z])(?=.*\d).{8,}$/.test(password);
+  const isValidPassword = (v) => /^(?=.*[a-z])(?=.*\d).{8,}$/.test(v);
+  const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
-  const handleRegister = async () => {
-    // 중복 제출 방지
-    if (loading) {
-      return;
-    }
+  const handleNext = async () => {
+    if (loading) { return; }
 
     const newErrors = {};
-
-    if (!name) {newErrors.name = '이름을 입력해주세요.';}
-    if (!phoneNumber) {newErrors.phoneNumber = '전화번호를 입력해주세요.';}
-    if (!email) {newErrors.email = '이메일을 입력해주세요.';}
-    if (!password) {newErrors.password = '비밀번호를 입력해주세요.';}
-    if (!confirmPassword) {newErrors.confirmPassword = '비밀번호 확인을 입력해주세요.';}
-
-    if (password && confirmPassword && password !== confirmPassword) {
-      newErrors.confirmPassword = '비밀번호가 일치하지 않습니다.';
-    }
-
-    if (password && !isValidPassword(password)) {
-      newErrors.password = '비밀번호는 8자 이상이며, 소문자와 숫자를 포함해야 합니다.';
-    }
+    if (!name) { newErrors.name = '이름을 입력해주세요.'; }
+    if (!phoneNumber) { newErrors.phoneNumber = '전화번호를 입력해주세요.'; }
+    if (!email) { newErrors.email = '이메일을 입력해주세요.'; }
+    else if (!isValidEmail(email)) { newErrors.email = '올바른 이메일 형식이 아닙니다.'; }
+    if (!password) { newErrors.password = '비밀번호를 입력해주세요.'; }
+    else if (!isValidPassword(password)) { newErrors.password = '8자 이상이며 소문자와 숫자를 포함해야 합니다.'; }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -52,64 +43,68 @@ const RegisterScreen = ({ navigation }) => {
 
     setErrors({});
     setLoading(true);
-
     try {
-      // RNFirebase Functions 호출 방식 (핵심 수정)
       const registerUser = firebaseFunctions.httpsCallable('registerUser');
-
-      const result = await registerUser({ email, password, name, phoneNumber });
-      logger.debug('[DEBUG] registerUser result:', result.data);
-
-      toast.showSuccess('회원가입 완료', '로그인 화면으로 이동합니다.');
-      setTimeout(() => navigation.navigate('Login'), 1000);
-
+      await registerUser({ email, password, name, phoneNumber });
+      setStep(2);
     } catch (error) {
-      logger.error('--- registerUser Cloud Function Error ---');
-      logger.error(error);
-
-      const errorMsg = error?.code
-        ? `${error.code}: ${error.message}`
-        : error?.message || '알 수 없는 오류가 발생했습니다.';
-      toast.showError('회원가입 실패', errorMsg);
+      logger.error('registerUser 오류:', error);
+      const msg = error?.message || '회원가입 중 오류가 발생했습니다.';
+      toast.showError('회원가입 실패', msg);
     } finally {
       setLoading(false);
     }
   };
 
+  const onResend = () => {
+    // UI 플로우(이메일 인증 강제·발송은 백엔드 이관 후 별도). 안내만 노출.
+    toast.showInfo('안내', '인증 메일 발송은 추후 지원됩니다. 지금 바로 로그인할 수 있어요.');
+  };
+
   return (
-    <SafeAreaView style={[styles.wrapper, { backgroundColor: theme.colors.background.secondary }]} edges={['top']}>
-      {/* 헤더바: ‹ 회원가입 */}
-      <View style={[styles.header, { borderBottomColor: theme.colors.border.light }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={10} style={styles.backButton}>
-          <Icon name="chevron-left" size={28} color={theme.colors.primary.main} />
+    <SafeAreaView style={[styles.wrapper, { backgroundColor: c.background.card }]} edges={['top', 'bottom']}>
+      {/* 헤더 */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => (step === 2 ? navigation.navigate('Login') : navigation.goBack())}
+          hitSlop={10}
+          style={styles.backBtn}
+        >
+          <Icon name="chevron-left" size={28} color={c.primary.main} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>회원가입</Text>
-        <View style={styles.backButton} />
+        <Text style={[styles.headerTitle, { color: c.text.primary }]}>회원가입</Text>
+        <View style={styles.backBtn} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.intro, { color: theme.colors.text.secondary }]}>
-          J-Car 계정을 만들고 안전한 중고차 거래를 시작하세요
+      {/* 진행 바 */}
+      <View style={styles.progressWrap}>
+        <View style={styles.progressTrack}>
+          {[1, 2].map((s) => (
+            <View key={s} style={[styles.progressSeg, { backgroundColor: s <= step ? c.primary.main : c.border.light }]} />
+          ))}
+        </View>
+        <Text style={[styles.progressLabel, { color: c.text.tertiary }]}>
+          {step} / 2 · {step === 1 ? '기본 정보 입력' : '이메일 인증'}
         </Text>
+      </View>
 
-        <Card elevated style={styles.formCard}>
+      {step === 1 ? (
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Text style={[styles.intro, { color: c.text.secondary }]}>
+            J-Car 계정을 만들고 안전한 중고차 거래를 시작하세요
+          </Text>
+
           <InputField
             label="이름"
             value={name}
-            onChangeText={(text) => {
-              setName(text);
-              if (errors.name) {setErrors({...errors, name: ''});}
-            }}
+            onChangeText={(t) => { setName(t); if (errors.name) { setErrors({ ...errors, name: '' }); } }}
             placeholder="이름 입력"
             error={errors.name}
           />
           <InputField
-            label="전화번호"
+            label="휴대폰 번호"
             value={phoneNumber}
-            onChangeText={(text) => {
-              setPhoneNumber(text);
-              if (errors.phoneNumber) {setErrors({...errors, phoneNumber: ''});}
-            }}
+            onChangeText={(t) => { setPhoneNumber(t); if (errors.phoneNumber) { setErrors({ ...errors, phoneNumber: '' }); } }}
             placeholder="전화번호 입력 (예: 01012345678)"
             keyboardType="phone-pad"
             error={errors.phoneNumber}
@@ -117,10 +112,7 @@ const RegisterScreen = ({ navigation }) => {
           <InputField
             label="이메일"
             value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (errors.email) {setErrors({...errors, email: ''});}
-            }}
+            onChangeText={(t) => { setEmail(t); if (errors.email) { setErrors({ ...errors, email: '' }); } }}
             placeholder="이메일 입력"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -129,77 +121,77 @@ const RegisterScreen = ({ navigation }) => {
           <InputField
             label="비밀번호"
             value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (errors.password) {setErrors({...errors, password: ''});}
-            }}
-            placeholder="비밀번호 입력 (8자 이상, 소문자+숫자 포함)"
+            onChangeText={(t) => { setPassword(t); if (errors.password) { setErrors({ ...errors, password: '' }); } }}
+            placeholder="8자 이상 입력 (소문자+숫자 포함)"
             secureTextEntry
             error={errors.password}
           />
-          <InputField
-            label="비밀번호 확인"
-            value={confirmPassword}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              if (errors.confirmPassword) {setErrors({...errors, confirmPassword: ''});}
-            }}
-            placeholder="비밀번호 확인"
-            secureTextEntry
-            error={errors.confirmPassword}
-          />
-        </Card>
 
-        <Button
-          variant="primary"
-          title="회원가입"
-          onPress={handleRegister}
-          loading={loading}
-          disabled={loading}
-          fullWidth
-          style={styles.submitButton}
-        />
-      </ScrollView>
+          <Button
+            variant="primary"
+            title="다음"
+            onPress={handleNext}
+            loading={loading}
+            disabled={loading}
+            fullWidth
+            style={styles.cta}
+          />
+        </ScrollView>
+      ) : (
+        <View style={styles.verifyBody}>
+          <View style={styles.verifyCenter}>
+            <View style={[styles.mailBadge, { backgroundColor: c.statusChip.approved.bg }]}>
+              <Icon name="mark-email-read" size={36} color={c.success.main} />
+            </View>
+            <Text style={[styles.verifyTitle, { color: c.text.primary }]}>인증 메일을 보냈어요</Text>
+            <Text style={[styles.verifyDesc, { color: c.text.secondary }]}>
+              <Text style={{ color: c.primary.main, fontWeight: '700' }}>{email}</Text>
+              {' 으로\n전송된 링크를 눌러 가입을 완료하세요'}
+            </Text>
+
+            <Pressable onPress={onResend} style={[styles.resend, { backgroundColor: c.background.secondary }]} hitSlop={6}>
+              <Text style={[styles.resendText, { color: c.text.secondary }]}>
+                메일이 안 보이나요? <Text style={{ color: c.primary.main, fontWeight: '700' }}>재전송</Text>
+              </Text>
+            </Pressable>
+          </View>
+
+          <Button
+            variant="primary"
+            title="인증 완료, 로그인하기"
+            onPress={() => navigation.navigate('Login')}
+            fullWidth
+            style={styles.cta}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
+  wrapper: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 12, paddingVertical: 10,
   },
-  backButton: {
-    width: 40,
-    height: 32,
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  intro: {
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 18,
-  },
-  formCard: {
-    padding: 20,
-  },
-  submitButton: {
-    marginTop: 20,
-  },
+  backBtn: { width: 40, height: 32, justifyContent: 'center' },
+  headerTitle: { fontSize: 16, fontWeight: '700' },
+  progressWrap: { paddingHorizontal: 22, paddingTop: 6, paddingBottom: 4 },
+  progressTrack: { flexDirection: 'row', gap: 6 },
+  progressSeg: { flex: 1, height: 5, borderRadius: 3 },
+  progressLabel: { fontSize: 12, marginTop: 9 },
+  body: { padding: 22, paddingTop: 14 },
+  intro: { fontSize: 14, lineHeight: 21, marginBottom: 18 },
+  cta: { marginTop: 20 },
+  // Step 2
+  verifyBody: { flex: 1, paddingHorizontal: 22, paddingBottom: 8 },
+  verifyCenter: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  mailBadge: { width: 80, height: 80, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  verifyTitle: { fontSize: 20, fontWeight: '800', marginTop: 24 },
+  verifyDesc: { fontSize: 14, lineHeight: 22, textAlign: 'center', marginTop: 10 },
+  resend: { marginTop: 22, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12 },
+  resendText: { fontSize: 13 },
 });
 
 export default RegisterScreen;
