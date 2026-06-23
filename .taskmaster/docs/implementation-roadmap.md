@@ -77,6 +77,13 @@ JCar is a React Native CLI-based used car trading platform with Firebase backend
 - Add favorite/bookmark vehicles feature
 - Implement vehicle comparison feature (side-by-side)
 
+### 3.1b Vehicle Mileage (주행거리) — ON HOLD
+**Priority**: Low / Deferred
+**Description**: Display vehicle mileage on cards and detail screen
+- **현재 상태**: CarZen 등록원부 조회 응답에 주행거리가 없어 저장 불가 → 차량 상세에서 주행거리 행 제거됨(빈 값 숨김 처리).
+- **보류 사유**: 등록 위저드에 수동 입력 필드를 넣으면 채울 수 있으나, **등록자가 허위로 입력할 수 있어** 신뢰성 문제. 단순 입력 필드만 추가하는 것은 지양하기로 결정.
+- **진행 조건(이걸 갖출 때만 구현)**: 검증 수단 동반 필요 — 계기판/정비이력 사진 인증, 또는 관리자 검수 프로세스. (7.3 Vehicle History Reports와 연계 가능)
+
 ### 3.2 Image & Media Management
 **Priority**: Medium
 **Description**: Improve image handling and user experience
