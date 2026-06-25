@@ -1,12 +1,14 @@
-import React, { useContext } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { AuthContext } from '../context/AuthContext';
 import { theme } from '../theme';
+import SplashScreen from '../screens/SplashScreen';
+import OnboardingScreen, { ONBOARDED_KEY } from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen'; // 잊어버린 비밀번호 화면 추가
@@ -128,21 +130,31 @@ const AdminTabs = () => (
 
 const AppNavigator = ({ navigationRef }) => {
   const { user, role, loading } = useContext(AuthContext);
+  const [onboarded, setOnboarded] = useState(null); // null=확인 중
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={theme.colors.primary.main} />
-      </View>
-    );
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDED_KEY)
+      .then((v) => setOnboarded(v === 'true'))
+      .catch(() => setOnboarded(true)); // 읽기 실패 시 온보딩 건너뜀
+  }, []);
+
+  // 인증 확인/온보딩 확인 중에는 브랜드 스플래시
+  if (loading || onboarded === null) {
+    return <SplashScreen />;
   }
+
+  // 비로그인 + 미온보딩이면 온보딩부터, 아니면 로그인부터
+  const initialRouteName = user ? undefined : (onboarded ? 'Login' : 'Onboarding');
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator screenOptions={{
-        headerShown: false,
-        ...navigationStyles.header,
-      }}>
+      <Stack.Navigator
+        initialRouteName={initialRouteName}
+        screenOptions={{
+          headerShown: false,
+          ...navigationStyles.header,
+        }}
+      >
         {user && role === 'admin' && (
           <>
             <Stack.Screen name="AdminHome" component={AdminTabs} />
@@ -190,6 +202,7 @@ const AppNavigator = ({ navigationRef }) => {
         )}
         {!user && (
           <>
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
