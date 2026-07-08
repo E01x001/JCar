@@ -65,12 +65,14 @@ jest.mock('@react-native-firebase/firestore', () => ({
   limit: jest.fn(),
   startAfter: jest.fn(),
   onSnapshot: jest.fn(),
+  writeBatch: jest.fn(),
+  deleteDoc: jest.fn(),
   runTransaction: jest.fn(),
   serverTimestamp: jest.fn(() => ({ _methodName: 'FieldValue.serverTimestamp' })),
   deleteField: jest.fn(() => ({ _methodName: 'FieldValue.delete' })),
 }));
 
-import { getFirestore, collection, doc, setDoc, addDoc } from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, setDoc, addDoc, writeBatch } from '@react-native-firebase/firestore';
 import { getMessaging, getToken } from '@react-native-firebase/messaging';
 import functions from '@react-native-firebase/functions';
 import { PermissionsAndroid } from 'react-native';
@@ -95,10 +97,12 @@ describe('firebaseService', () => {
         httpsCallable: jest.fn().mockReturnValue(mockHttpsCallable),
       });
 
-      // Mock modular Firestore API
+      // Mock modular Firestore API (슬롯 선점 배치 쓰기)
       getFirestore.mockReturnValue({});
       collection.mockReturnValue({ _collectionPath: 'consultation_requests' });
-      addDoc.mockResolvedValue({ id: 'consultation-123' });
+      doc.mockReturnValue({ id: 'consultation-123' });
+      const mockBatch = { set: jest.fn(), update: jest.fn(), commit: jest.fn().mockResolvedValue() };
+      writeBatch.mockReturnValue(mockBatch);
 
       const consultationData = {
         userId: 'user-123',
@@ -115,7 +119,9 @@ describe('firebaseService', () => {
       const result = await saveConsultationRequest(consultationData);
 
       expect(result.success).toBe(true);
-      expect(addDoc).toHaveBeenCalled();
+      // 상담 문서 + 슬롯 문서 배치 커밋 확인
+      expect(mockBatch.set).toHaveBeenCalledTimes(2);
+      expect(mockBatch.commit).toHaveBeenCalled();
     });
 
     it('should handle missing fields with defaults', async () => {
@@ -127,15 +133,18 @@ describe('firebaseService', () => {
         httpsCallable: jest.fn().mockReturnValue(mockHttpsCallable),
       });
 
-      // Mock modular Firestore API
+      // Mock modular Firestore API (필드 없음 → 슬롯 없이 상담 문서만)
       getFirestore.mockReturnValue({});
       collection.mockReturnValue({ _collectionPath: 'consultation_requests' });
-      addDoc.mockResolvedValue({ id: 'consultation-123' });
+      doc.mockReturnValue({ id: 'consultation-123' });
+      const mockBatch = { set: jest.fn(), update: jest.fn(), commit: jest.fn().mockResolvedValue() };
+      writeBatch.mockReturnValue(mockBatch);
 
       const result = await saveConsultationRequest({});
 
       expect(result.success).toBe(true);
-      expect(addDoc).toHaveBeenCalled();
+      expect(mockBatch.set).toHaveBeenCalledTimes(1); // 슬롯 정보 없으니 상담 문서만
+      expect(mockBatch.commit).toHaveBeenCalled();
     });
   });
 

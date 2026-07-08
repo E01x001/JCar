@@ -19,6 +19,7 @@ import {
   getDoc,
   addDoc,
   updateDoc,
+  writeBatch,
   serverTimestamp,
   runTransaction,
   deleteField,
@@ -28,6 +29,7 @@ import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/n
 import { CONSULTATION_STATUS } from '../../constants';
 import { DEAL_STAGE } from '../../constants/vehicle';
 import { logger } from '../../utils/logger';
+import { addSlotClaimToBatch, releaseSlot, isSlotConflictError } from './consultationSlotService';
 
 /**
  * Check the consultation request rate limit for the current user.
@@ -85,8 +87,22 @@ export const saveConsultationRequest = async (data) => {
     };
 
     const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
-    await addDoc(consultationsRef, validData);
+    // 슬롯 선점 + 상담 생성을 한 배치로 원자 처리(이중예약 방지, C4/C5).
+    // 이미 점유된 슬롯이면 규칙(consultation_slots update 금지)에 의해
+    // 커밋 전체가 permission-denied로 실패한다.
+    const consultationRef = doc(collection(db, 'consultation_requests'));
+    const batch = writeBatch(db);
+    batch.set(consultationRef, validData);
+    if (validData.vehicleId && validData.preferredDate && validData.preferredTime && validData.userId) {
+      addSlotClaimToBatch(batch, db, {
+        vehicleId: validData.vehicleId,
+        preferredDate: validData.preferredDate,
+        preferredTime: validData.preferredTime,
+        userId: validData.userId,
+        consultationId: consultationRef.id,
+      });
+    }
+    await batch.commit();
 
     // 구매 상담이 미매입(listed) 차량에 들어오면 매입진행(acquiring)으로 전환.
     // 이미 acquiring/in_stock/sold 이거나 sell 상담이면 건드리지 않는다.
@@ -115,7 +131,12 @@ export const saveConsultationRequest = async (data) => {
     reportCrashlyticsError(error);
     logCrashlyticsMessage('saveConsultationRequest failed');
     // UI feedback is handled by the caller (optimistic onError) to avoid double alerts.
-    return { success: false, error };
+    return {
+      success: false,
+      error,
+      // 슬롯 선점 실패(동시 예약 경쟁 패배)면 호출측이 맞춤 안내를 띄울 수 있게 표시
+      slotConflict: isSlotConflictError(error),
+    };
   }
 };
 
@@ -176,6 +197,19 @@ export const updateConsultationStatus = async (consultationId, newStatus, adminI
     const db = getFirestore();
     const consultationRef = doc(db, 'consultation_requests', consultationId);
     await updateDoc(consultationRef, updateData);
+
+    // 거절/취소 시 점유 슬롯 해제 → 다른 사용자가 해당 시간에 예약 가능 (best-effort)
+    if ([CONSULTATION_STATUS.REJECTED, CONSULTATION_STATUS.CANCELLED].includes(newStatus)) {
+      try {
+        const snapshot = await getDoc(consultationRef);
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          await releaseSlot(data.vehicleId, data.preferredDate, data.preferredTime);
+        }
+      } catch (slotError) {
+        logger.error('거절/취소 슬롯 해제 실패:', slotError);
+      }
+    }
 
     return { success: true };
   } catch (error) {
@@ -424,6 +458,11 @@ export const cancelConsultation = async (consultationId) => {
       cancelledAt: serverTimestamp(),
     });
 
+    // 점유했던 시간 슬롯 해제(best-effort — 실패해도 취소 자체는 유효)
+    await releaseSlot(currentData.vehicleId, currentData.preferredDate, currentData.preferredTime, {
+      requesterId: currentData.userId,
+    });
+
     logger.debug('✅ 상담 취소 성공');
     return { success: true };
   } catch (error) {
@@ -449,7 +488,14 @@ export const resubmitConsultation = async (consultationId, preferredDate, prefer
   try {
     const db = getFirestore();
     const consultationRef = doc(db, 'consultation_requests', consultationId);
-    await updateDoc(consultationRef, {
+
+    // 기존 문서를 읽어 이전 슬롯 정보 확보(재신청 후 해제용)
+    const prevSnapshot = await getDoc(consultationRef);
+    const prev = prevSnapshot.exists() ? prevSnapshot.data() : null;
+
+    // 새 슬롯 선점 + 재신청 업데이트를 한 배치로(이중예약 방지)
+    const batch = writeBatch(db);
+    batch.update(consultationRef, {
       consultationStatus: 'pending',
       preferredDate,
       preferredTime,
@@ -458,6 +504,21 @@ export const resubmitConsultation = async (consultationId, preferredDate, prefer
       rejectedAt: deleteField(),
       resubmittedAt: serverTimestamp(),
     });
+    if (prev?.vehicleId && prev?.userId) {
+      addSlotClaimToBatch(batch, db, {
+        vehicleId: prev.vehicleId,
+        preferredDate,
+        preferredTime,
+        userId: prev.userId,
+        consultationId,
+      });
+    }
+    await batch.commit();
+
+    // 이전 일정 슬롯 해제(거절 시 이미 해제됐을 수 있음 — best-effort)
+    if (prev?.vehicleId && (prev.preferredDate !== preferredDate || prev.preferredTime !== preferredTime)) {
+      await releaseSlot(prev.vehicleId, prev.preferredDate, prev.preferredTime, { requesterId: prev.userId });
+    }
 
     return { success: true };
   } catch (error) {

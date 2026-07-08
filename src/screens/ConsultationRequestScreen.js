@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { getFirestore, collection, query, where, getDocs } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { saveConsultationRequest, resubmitConsultation, checkConsultationRateLimit } from '../services/consultation/consultationService';
+import { isSlotTaken } from '../services/consultation/consultationSlotService';
 import useConsultationStore from '../stores/consultationStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 import { logger } from '../utils/logger';
@@ -71,6 +72,13 @@ const ConsultationRequestScreen = ({ route }) => {
 
     setSubmitting(true);
 
+    // 이미 다른 상담이 점유한 시간인지 사전 확인(빠른 피드백 — 최종 방어는 배치 create)
+    if (await isSlotTaken(vehicle.vehicleId, selectedDate, selectedTime)) {
+      toast.showWarning('예약 불가', '이미 예약된 시간입니다. 다른 시간을 선택해주세요.');
+      setSubmitting(false);
+      return;
+    }
+
     if (isResubmitMode) {
       try {
         await resubmitConsultation(consultationId, selectedDate, selectedTime);
@@ -122,14 +130,22 @@ const ConsultationRequestScreen = ({ route }) => {
       optimisticFn: null,
       serverFn: async () => {
         const result = await saveConsultationRequest(consultationData);
-        if (!result.success) { throw result.error || new Error('Failed to save'); }
+        if (!result.success) {
+          const err = result.error || new Error('Failed to save');
+          err.slotConflict = result.slotConflict;
+          throw err;
+        }
         return result;
       },
       onSuccess: () => logger.debug('Consultation saved'),
       onError: (error) => {
         logger.error('Consultation write failed:', error);
         removeOptimisticConsultation(tempId);
-        toast.showError('오류', '상담 요청 저장 중 문제가 발생했습니다.');
+        if (error?.slotConflict) {
+          toast.showWarning('예약 불가', '방금 다른 사용자가 해당 시간을 예약했습니다. 다른 시간을 선택해주세요.');
+        } else {
+          toast.showError('오류', '상담 요청 저장 중 문제가 발생했습니다.');
+        }
       },
       revertFn: () => removeOptimisticConsultation(tempId),
     });

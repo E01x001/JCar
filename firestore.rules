@@ -202,6 +202,30 @@ service cloud.firestore {
       allow delete: if isAdmin() && isActiveUser();
     }
 
+    // Consultation slots: 이중예약 방지용 슬롯 선점 문서 (PII 없음).
+    // 문서 ID = {vehicleId}_{date}_{time}. create-only 정책이 원자적 선점을 보장한다:
+    // 이미 존재하는 슬롯에 대한 set은 update로 취급되어 거부되고,
+    // 슬롯을 포함한 배치 커밋 전체가 실패한다 (consultationSlotService.js 참고).
+    match /consultation_slots/{slotId} {
+      // 인증 사용자는 슬롯 점유 여부를 조회할 수 있다(시간 점유 사실만 노출)
+      allow read: if request.auth != null;
+
+      // 본인 명의로만 선점 가능
+      allow create: if request.auth != null &&
+                    isActiveUser() &&
+                    request.resource.data.userId == request.auth.uid &&
+                    request.resource.data.vehicleId is string &&
+                    request.resource.data.preferredDate is string &&
+                    request.resource.data.preferredTime is string;
+
+      // 점유된 슬롯은 변경 불가(선점의 원자성 근거)
+      allow update: if false;
+
+      // 해제: 관리자(거절/일정변경) 또는 슬롯 소유자(취소/재신청)
+      allow delete: if isAdmin() ||
+                    (request.auth != null && request.auth.uid == resource.data.userId);
+    }
+
     // Admin activity log collection: Only admins can write, no one can delete
     match /admin_activity_log/{logId} {
       // Only admins can read logs

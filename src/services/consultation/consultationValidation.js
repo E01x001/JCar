@@ -5,6 +5,15 @@
 
 import firestore from '@react-native-firebase/firestore';
 import { logger } from '../../utils/logger';
+import { CONSULTATION_STATUS } from '../../constants/consultation';
+
+// 슬롯을 점유 중으로 간주하는 상태(취소/거절/완료 계열 제외)
+const SLOT_OCCUPYING_STATUSES = [
+  CONSULTATION_STATUS.PENDING,
+  CONSULTATION_STATUS.APPROVED,
+  CONSULTATION_STATUS.CONFIRMED,
+  CONSULTATION_STATUS.ON_HOLD,
+];
 
 /**
  * Check if user already has a pending consultation for a vehicle
@@ -15,7 +24,8 @@ export const checkDuplicateConsultation = async (userId, vehicleId) => {
       .collection('consultation_requests')
       .where('userId', '==', userId)
       .where('vehicleId', '==', vehicleId)
-      .where('status', '==', 'pending')
+      // 주의: 문서 필드명은 'status'가 아니라 'consultationStatus'다 (과거 버그로 항상 빈 결과였음)
+      .where('consultationStatus', '==', CONSULTATION_STATUS.PENDING)
       .get();
 
     return !snapshot.empty;
@@ -35,7 +45,7 @@ export const checkTimeSlotConflict = async (vehicleId, preferredDate, preferredT
       .where('vehicleId', '==', vehicleId)
       .where('preferredDate', '==', preferredDate)
       .where('preferredTime', '==', preferredTime)
-      .where('status', 'in', ['pending', 'approved'])
+      .where('consultationStatus', 'in', SLOT_OCCUPYING_STATUSES)
       .get();
 
     return !snapshot.empty;
@@ -100,8 +110,8 @@ export const validateConsultationRequest = (data) => {
  * Check if consultation can be modified
  */
 export const canModifyConsultation = (consultation) => {
-  // Can only modify pending consultations
-  if (consultation.status !== 'pending') {
+  // Can only modify pending consultations (필드명: consultationStatus)
+  if (consultation.consultationStatus !== CONSULTATION_STATUS.PENDING) {
     return {
       canModify: false,
       reason: 'Only pending consultations can be modified',
@@ -130,8 +140,8 @@ export const canModifyConsultation = (consultation) => {
  * Check if consultation can be cancelled
  */
 export const canCancelConsultation = (consultation) => {
-  // Can only cancel pending or approved consultations
-  if (!['pending', 'approved'].includes(consultation.status)) {
+  // Can only cancel pending or approved/confirmed consultations (필드명: consultationStatus)
+  if (![CONSULTATION_STATUS.PENDING, CONSULTATION_STATUS.APPROVED, CONSULTATION_STATUS.CONFIRMED].includes(consultation.consultationStatus)) {
     return {
       canCancel: false,
       reason: 'Only pending or approved consultations can be cancelled',
