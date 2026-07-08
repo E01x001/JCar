@@ -12,6 +12,7 @@ import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelp
 import { logger } from '../utils/logger';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
+import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 
 // Generate time slots 09:00–18:00 in 10-min steps
 const TIME_SLOTS = (() => {
@@ -27,7 +28,7 @@ const TIME_SLOTS = (() => {
 })();
 
 const ConsultationRequestScreen = ({ route }) => {
-  const { user, sellerName, sellerPhone } = useContext(AuthContext);
+  const { user, role, sellerName, sellerPhone } = useContext(AuthContext);
   const navigation = useNavigation();
   const toast = useToast();
   const theme = useTheme();
@@ -166,7 +167,9 @@ const ConsultationRequestScreen = ({ route }) => {
           <View style={{ flex: 1 }}>
             <Text style={styles.vehicleName}>{vehicle?.vehicleName}</Text>
             <Text style={[styles.vehiclePrice, { color: PRIMARY }]}>
-              {vehicle?.price ? `${vehicle.price.toLocaleString()}원` : '-'}
+              {canViewVehiclePrice(vehicle, { uid: user?.uid, role })
+                ? (vehicle?.price ? `${vehicle.price.toLocaleString()}원` : '-')
+                : PRICE_HIDDEN_LABEL}
             </Text>
           </View>
           <View style={[styles.vehicleBadge, { backgroundColor: '#EAF4FF' }]}>

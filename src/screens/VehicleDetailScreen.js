@@ -6,7 +6,7 @@ import { getFirestore, doc, onSnapshot } from '@react-native-firebase/firestore'
 import { getAuth } from '@react-native-firebase/auth';
 import { logger } from '../utils/logger';
 import { AuthContext } from '../context/AuthContext';
-import { PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
+import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 import { DEAL_STAGE_LABELS, DEAL_STAGE_BADGE_STATUS } from '../constants/vehicle';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
@@ -63,6 +63,8 @@ const VehicleDetailScreen = ({ route, navigation }) => {
 
   const images = vehicle.imageUrls || (vehicle.imageUrl ? [vehicle.imageUrl] : []);
   const isAdmin = role === 'admin';
+  // 가격 게이팅은 SSOT(utils/vehiclePrice) 경유 — 정책 변경 시 한 곳만 수정
+  const showPrice = canViewVehiclePrice(vehicle, { role });
 
   // 상태 칩(판매됨/거래단계/판매중)
   const stageLabel = DEAL_STAGE_LABELS[vehicle.dealStage];
@@ -133,7 +135,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
           {!!meta && <Text style={[styles.meta, { color: c.text.secondary }]}>{meta}</Text>}
 
           {/* 가격 — 관리자만 실가격, 그 외엔 상담 안내 배너 */}
-          {isAdmin ? (
+          {showPrice ? (
             <Text style={[styles.priceHero, { color: c.primary.main }]}>{formatPrice(vehicle.price)}</Text>
           ) : (
             <View style={[styles.priceBanner, { backgroundColor: c.statusChip.completed.bg }]}>
@@ -172,7 +174,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         <View style={styles.bottomRow}>
           <View style={styles.bottomLeft}>
             <Text style={[styles.bottomLeftSm, { color: c.text.tertiary }]}>가격</Text>
-            <Text style={[styles.bottomLeftMd, { color: c.text.secondary }]}>{isAdmin ? formatPrice(vehicle.price) : '상담 안내'}</Text>
+            <Text style={[styles.bottomLeftMd, { color: c.text.secondary }]}>{showPrice ? formatPrice(vehicle.price) : '상담 안내'}</Text>
           </View>
           <Button
             variant="primary"

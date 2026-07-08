@@ -11,6 +11,7 @@ import SearchBar from '../components/SearchBar';
 import CategoryChip from '../components/CategoryChip';
 import VehicleCard from '../components/VehicleCard';
 import VehicleFilterModal from '../components/filters/VehicleFilterModal';
+import { canViewVehiclePrice } from '../utils/vehiclePrice';
 
 const SORTS = [
   { key: 'recent', label: '최신순' },
@@ -32,6 +33,9 @@ const sortVehicles = (list, sortKey) => {
 const VehicleBrowseScreen = ({ navigation }) => {
   const theme = useTheme();
   const { user, role } = useContext(AuthContext);
+  // 가격 비공개 정책: 일반 사용자는 가격 표시/필터/정렬 모두 차단
+  const hidePrice = !canViewVehiclePrice(null, { role });
+  const defaultSortBy = hidePrice ? 'year_desc' : 'price_asc';
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
@@ -43,7 +47,7 @@ const VehicleBrowseScreen = ({ navigation }) => {
     minYear: '',
     maxYear: '',
     manufacturers: [],
-    sortBy: 'price_asc',
+    sortBy: defaultSortBy,
   });
 
   useEffect(() => {
@@ -56,8 +60,7 @@ const VehicleBrowseScreen = ({ navigation }) => {
     return () => unsubscribe();
   }, [filters, user]);
 
-  const hidePrice = role !== 'admin';
-  const activeFilterCount = getActiveFilterCount(filters);
+  const activeFilterCount = getActiveFilterCount(filters, defaultSortBy);
 
   const filtered = sortVehicles(
     vehicles.filter((v) => {
@@ -144,6 +147,7 @@ const VehicleBrowseScreen = ({ navigation }) => {
         onClose={() => setFilterModalVisible(false)}
         onApply={setFilters}
         initialFilters={filters}
+        hidePrice={hidePrice}
       />
 
       {/* 등록 FAB */}

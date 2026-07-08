@@ -16,7 +16,7 @@ import CategoryChip from '../components/CategoryChip';
 import VehicleCard from '../components/VehicleCard';
 import Avatar from '../components/Avatar';
 import SectionHeader from '../components/SectionHeader';
-import { PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
+import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 
 const ALL_CATEGORY = '전체';
 const RECENT_LIMIT = 10;
@@ -39,13 +39,17 @@ const VehiclesListScreen = ({ navigation }) => {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
+  // 홈 공개 브라우즈에서는 일반 사용자에게 가격을 노출하지 않는다(상담 후 안내).
+  // 가격 필터/정렬도 함께 차단 — 가격대 좁히기로 실가격 유추 가능하기 때문.
+  const hidePrice = !canViewVehiclePrice(null, { role });
+  const defaultSortBy = hidePrice ? 'year_desc' : 'price_asc';
   const [filters, setFilters] = useState({
     minPrice: '',
     maxPrice: '',
     minYear: '',
     maxYear: '',
     manufacturers: [],
-    sortBy: 'price_asc',
+    sortBy: defaultSortBy,
   });
 
   useEffect(() => {
@@ -59,10 +63,7 @@ const VehiclesListScreen = ({ navigation }) => {
   }, [filters, user]);
 
   const handleApplyFilters = (newFilters) => setFilters(newFilters);
-  const activeFilterCount = getActiveFilterCount(filters);
-
-  // 홈 공개 브라우즈에서는 일반 사용자에게 가격을 노출하지 않는다(상담 후 안내).
-  const hidePrice = role !== 'admin';
+  const activeFilterCount = getActiveFilterCount(filters, defaultSortBy);
 
   // 검색/카테고리/필터가 활성화되면 단일 결과 목록 모드
   const isBrowsing = Boolean(searchText) || selectedCategory !== ALL_CATEGORY || activeFilterCount > 0;
@@ -228,6 +229,7 @@ const VehiclesListScreen = ({ navigation }) => {
         onClose={() => setFilterModalVisible(false)}
         onApply={handleApplyFilters}
         initialFilters={filters}
+        hidePrice={hidePrice}
       />
     </SafeAreaView>
   );

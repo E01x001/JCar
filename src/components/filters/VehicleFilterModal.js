@@ -11,14 +11,17 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const VehicleFilterModal = ({ visible, onClose, onApply, initialFilters }) => {
+// 가격 비공개 정책(일반 사용자): 가격 필터/정렬 자체를 노출하지 않는다.
+// 가격대 좁히기(이진탐색)로 실가격을 유추할 수 있기 때문 — utils/vehiclePrice.js 참고.
+const VehicleFilterModal = ({ visible, onClose, onApply, initialFilters, hidePrice = false }) => {
+  const defaultSortBy = hidePrice ? 'year_desc' : 'price_asc';
   const [filters, setFilters] = useState({
     minPrice: '',
     maxPrice: '',
     minYear: '',
     maxYear: '',
     manufacturers: [],
-    sortBy: 'price_asc', // price_asc, price_desc, year_asc, year_desc
+    sortBy: defaultSortBy, // price_asc, price_desc, year_asc, year_desc
   });
 
   // 주요 제조사 목록
@@ -40,17 +43,27 @@ const VehicleFilterModal = ({ visible, onClose, onApply, initialFilters }) => {
   ];
 
   const sortOptions = [
-    { value: 'price_asc', label: '가격 낮은순' },
-    { value: 'price_desc', label: '가격 높은순' },
+    ...(hidePrice ? [] : [
+      { value: 'price_asc', label: '가격 낮은순' },
+      { value: 'price_desc', label: '가격 높은순' },
+    ]),
     { value: 'year_asc', label: '연식 오래된순' },
     { value: 'year_desc', label: '연식 최신순' },
   ];
 
   useEffect(() => {
     if (initialFilters) {
-      setFilters(initialFilters);
+      // 비공개 모드면 초기값에 남아있을 수 있는 가격 필터/정렬도 정리
+      setFilters(hidePrice
+        ? {
+            ...initialFilters,
+            minPrice: '',
+            maxPrice: '',
+            sortBy: initialFilters.sortBy?.startsWith('price') ? defaultSortBy : initialFilters.sortBy,
+          }
+        : initialFilters);
     }
-  }, [initialFilters]);
+  }, [initialFilters, hidePrice, defaultSortBy]);
 
   const toggleManufacturer = (manufacturer) => {
     setFilters((prev) => {
@@ -61,8 +74,19 @@ const VehicleFilterModal = ({ visible, onClose, onApply, initialFilters }) => {
     });
   };
 
+  // 비공개 모드에선 가격 관련 값이 어떤 경로로 들어왔어도 걸러서 내보낸다.
+  const sanitize = (f) => {
+    if (!hidePrice) { return f; }
+    return {
+      ...f,
+      minPrice: '',
+      maxPrice: '',
+      sortBy: f.sortBy?.startsWith('price') ? defaultSortBy : f.sortBy,
+    };
+  };
+
   const handleApply = () => {
-    onApply(filters);
+    onApply(sanitize(filters));
     onClose();
   };
 
@@ -73,7 +97,7 @@ const VehicleFilterModal = ({ visible, onClose, onApply, initialFilters }) => {
       minYear: '',
       maxYear: '',
       manufacturers: [],
-      sortBy: 'price_asc',
+      sortBy: defaultSortBy,
     };
     setFilters(resetFilters);
     onApply(resetFilters);
@@ -97,31 +121,33 @@ const VehicleFilterModal = ({ visible, onClose, onApply, initialFilters }) => {
           </View>
 
           <ScrollView style={styles.scrollView}>
-            {/* Price Range */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>가격 범위 (만원)</Text>
-              <View style={styles.rangeInputs}>
-                <TextInput
-                  style={styles.rangeInput}
-                  placeholder="최소"
-                  keyboardType="numeric"
-                  value={filters.minPrice}
-                  onChangeText={(text) =>
-                    setFilters((prev) => ({ ...prev, minPrice: text }))
-                  }
-                />
-                <Text style={styles.rangeSeparator}>~</Text>
-                <TextInput
-                  style={styles.rangeInput}
-                  placeholder="최대"
-                  keyboardType="numeric"
-                  value={filters.maxPrice}
-                  onChangeText={(text) =>
-                    setFilters((prev) => ({ ...prev, maxPrice: text }))
-                  }
-                />
+            {/* Price Range — 관리자 전용(가격 비공개 정책) */}
+            {!hidePrice && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>가격 범위 (만원)</Text>
+                <View style={styles.rangeInputs}>
+                  <TextInput
+                    style={styles.rangeInput}
+                    placeholder="최소"
+                    keyboardType="numeric"
+                    value={filters.minPrice}
+                    onChangeText={(text) =>
+                      setFilters((prev) => ({ ...prev, minPrice: text }))
+                    }
+                  />
+                  <Text style={styles.rangeSeparator}>~</Text>
+                  <TextInput
+                    style={styles.rangeInput}
+                    placeholder="최대"
+                    keyboardType="numeric"
+                    value={filters.maxPrice}
+                    onChangeText={(text) =>
+                      setFilters((prev) => ({ ...prev, maxPrice: text }))
+                    }
+                  />
+                </View>
               </View>
-            </View>
+            )}
 
             {/* Year Range */}
             <View style={styles.section}>

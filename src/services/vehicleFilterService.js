@@ -163,14 +163,14 @@ export const subscribeToFilteredVehicles = (filters, callback) => {
  * @param {Object} filters - 필터 옵션
  * @returns {boolean} 필터가 비어있으면 true
  */
-export const isFilterEmpty = (filters) => {
+export const isFilterEmpty = (filters, defaultSortBy = 'price_asc') => {
   return (
     !filters.minPrice &&
     !filters.maxPrice &&
     !filters.minYear &&
     !filters.maxYear &&
     (!filters.manufacturers || filters.manufacturers.length === 0) &&
-    filters.sortBy === 'price_asc'
+    filters.sortBy === defaultSortBy
   );
 };
 
@@ -180,13 +180,13 @@ export const isFilterEmpty = (filters) => {
  * @param {Object} filters - 필터 옵션
  * @returns {number} 활성화된 필터 개수
  */
-export const getActiveFilterCount = (filters) => {
+export const getActiveFilterCount = (filters, defaultSortBy = 'price_asc') => {
   let count = 0;
 
   if (filters.minPrice || filters.maxPrice) {count++;}
   if (filters.minYear || filters.maxYear) {count++;}
   if (filters.manufacturers && filters.manufacturers.length > 0) {count++;}
-  if (filters.sortBy && filters.sortBy !== 'price_asc') {count++;}
+  if (filters.sortBy && filters.sortBy !== defaultSortBy) {count++;}
 
   return count;
 };
