@@ -39,7 +39,7 @@ import {
  * @property {Object} consultationsCache - Cache for consultation listings
  * @property {boolean} loading - Loading state
  * @property {Error|null} error - Error state
- * @property {Function|null} unsubscribe - Firestore listener unsubscribe function
+ * @property {Object} unsubscribers - cacheKey별 Firestore 리스너 해제 함수 맵
  */
 
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -51,7 +51,8 @@ const useConsultationStore = create((set, get) => ({
   consultationsCache: {}, // Cache key -> { data, timestamp }
   loading: false,
   error: null,
-  unsubscribe: null,
+  // cacheKey → unsubscribe 함수 (vehicleStore와 동일 패턴 — 구독 공존 보장)
+  unsubscribers: {},
 
   /**
    * Check if cache is valid
@@ -135,8 +136,8 @@ const useConsultationStore = create((set, get) => ({
       return;
     }
 
-    // If already subscribed, don't create new listener
-    if (store.unsubscribe) {
+    // 같은 사용자(cacheKey)에 이미 구독 중이면 중복 생성하지 않는다
+    if (store.unsubscribers[cacheKey]) {
       logger.debug('⚠️ Already subscribed to user consultations');
       return;
     }
@@ -176,7 +177,7 @@ const useConsultationStore = create((set, get) => ({
         },
     );
 
-    set({unsubscribe});
+    set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
   },
 
   /**
@@ -197,8 +198,8 @@ const useConsultationStore = create((set, get) => ({
       return;
     }
 
-    // If already subscribed, don't create new listener
-    if (store.unsubscribe) {
+    // 같은 쿼리(cacheKey)에 이미 구독 중이면 중복 생성하지 않는다
+    if (store.unsubscribers[cacheKey]) {
       logger.debug('⚠️ Already subscribed to all consultations');
       return;
     }
@@ -237,36 +238,40 @@ const useConsultationStore = create((set, get) => ({
         },
     );
 
-    set({unsubscribe});
+    set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
   },
 
   /**
    * Unsubscribe from Firestore listener
    */
-  unsubscribeFromConsultations: () => {
-    const {unsubscribe} = get();
-    if (unsubscribe) {
-      logger.debug('🔴 Unsubscribing from consultation listener');
-      unsubscribe();
-      set({unsubscribe: null});
-    }
+  unsubscribeFromConsultations: (cacheKey) => {
+    const {unsubscribers} = get();
+    const keys = cacheKey ? [cacheKey] : Object.keys(unsubscribers);
+    if (keys.length === 0) {return;}
+    logger.debug(`🔴 Unsubscribing consultation listeners: ${keys.join(', ')}`);
+    const next = {...unsubscribers};
+    keys.forEach((key) => {
+      if (next[key]) {
+        next[key]();
+        delete next[key];
+      }
+    });
+    set({unsubscribers: next});
   },
 
   /**
    * Reset store to initial state
    */
   reset: () => {
-    const {unsubscribe} = get();
-    if (unsubscribe) {
-      unsubscribe();
-    }
+    const {unsubscribers} = get();
+    Object.values(unsubscribers).forEach((fn) => fn && fn());
     set({
       userConsultations: [],
       allConsultations: [],
       consultationsCache: {},
       loading: false,
       error: null,
-      unsubscribe: null,
+      unsubscribers: {},
     });
   },
 

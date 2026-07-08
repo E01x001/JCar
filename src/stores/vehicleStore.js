@@ -39,7 +39,7 @@ import {
  * @property {Object} vehiclesCache - Cache for vehicle listings
  * @property {boolean} loading - Loading state
  * @property {Error|null} error - Error state
- * @property {Function|null} unsubscribe - Firestore listener unsubscribe function
+ * @property {Object} unsubscribers - cacheKey별 Firestore 리스너 해제 함수 맵
  */
 
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -51,7 +51,9 @@ const useVehicleStore = create((set, get) => ({
   vehiclesCache: {}, // Cache key -> { data, timestamp }
   loading: false,
   error: null,
-  unsubscribe: null,
+  // cacheKey → unsubscribe 함수. 과거 단일 슬롯은 서로 다른 구독(관리자 전체 vs
+  // 사용자 목록)이 공존하지 못하고 두 번째 구독이 조용히 무시되는 버그가 있었다.
+  unsubscribers: {},
 
   /**
    * Check if cache is valid
@@ -135,8 +137,8 @@ const useVehicleStore = create((set, get) => ({
       return;
     }
 
-    // If already subscribed, don't create new listener
-    if (store.unsubscribe) {
+    // 같은 쿼리(cacheKey)에 이미 구독 중이면 중복 생성하지 않는다
+    if (store.unsubscribers[cacheKey]) {
       logger.debug('⚠️ Already subscribed to approved vehicles');
       return;
     }
@@ -177,7 +179,7 @@ const useVehicleStore = create((set, get) => ({
         },
     );
 
-    set({unsubscribe});
+    set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
   },
 
   /**
@@ -200,8 +202,8 @@ const useVehicleStore = create((set, get) => ({
       return;
     }
 
-    // If already subscribed, don't create new listener
-    if (store.unsubscribe) {
+    // 같은 사용자(cacheKey)에 이미 구독 중이면 중복 생성하지 않는다
+    if (store.unsubscribers[cacheKey]) {
       logger.debug('⚠️ Already subscribed to user vehicles');
       return;
     }
@@ -241,7 +243,7 @@ const useVehicleStore = create((set, get) => ({
         },
     );
 
-    set({unsubscribe});
+    set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
   },
 
   /**
@@ -262,8 +264,8 @@ const useVehicleStore = create((set, get) => ({
       return;
     }
 
-    // If already subscribed, don't create new listener
-    if (store.unsubscribe) {
+    // 같은 쿼리(cacheKey)에 이미 구독 중이면 중복 생성하지 않는다
+    if (store.unsubscribers[cacheKey]) {
       logger.debug('⚠️ Already subscribed to all vehicles');
       return;
     }
@@ -302,36 +304,41 @@ const useVehicleStore = create((set, get) => ({
         },
     );
 
-    set({unsubscribe});
+    set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
   },
 
   /**
-   * Unsubscribe from Firestore listener
+   * Unsubscribe from Firestore listener(s).
+   * @param {string} [cacheKey] - 지정 시 해당 구독만, 생략 시 전체 해제
    */
-  unsubscribeFromVehicles: () => {
-    const {unsubscribe} = get();
-    if (unsubscribe) {
-      logger.debug('🔴 Unsubscribing from vehicle listener');
-      unsubscribe();
-      set({unsubscribe: null});
-    }
+  unsubscribeFromVehicles: (cacheKey) => {
+    const {unsubscribers} = get();
+    const keys = cacheKey ? [cacheKey] : Object.keys(unsubscribers);
+    if (keys.length === 0) {return;}
+    logger.debug(`🔴 Unsubscribing vehicle listeners: ${keys.join(', ')}`);
+    const next = {...unsubscribers};
+    keys.forEach((key) => {
+      if (next[key]) {
+        next[key]();
+        delete next[key];
+      }
+    });
+    set({unsubscribers: next});
   },
 
   /**
    * Reset store to initial state
    */
   reset: () => {
-    const {unsubscribe} = get();
-    if (unsubscribe) {
-      unsubscribe();
-    }
+    const {unsubscribers} = get();
+    Object.values(unsubscribers).forEach((fn) => fn && fn());
     set({
       vehicles: [],
       approvedVehicles: [],
       vehiclesCache: {},
       loading: false,
       error: null,
-      unsubscribe: null,
+      unsubscribers: {},
     });
   },
 
