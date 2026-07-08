@@ -2,7 +2,6 @@
 // Task 71: Deep linking for FCM push notifications
 import React, {useEffect, useRef} from 'react';
 import { logger } from './utils/logger';
-import {Alert} from 'react-native';
 import { getMessaging, onMessage, getInitialNotification, onNotificationOpenedApp } from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from './context/AuthContext';

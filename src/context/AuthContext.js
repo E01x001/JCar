@@ -3,7 +3,6 @@
 // Task 63.2: Migrated Crashlytics and Messaging to v22 Modular API
 import React, { createContext, useState, useEffect } from 'react';
 import { logger } from '../utils/logger';
-import { Alert } from 'react-native';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
 import { saveFcmToken } from '../services/notification/fcmService';
@@ -64,11 +63,26 @@ export const AuthProvider = ({ children }) => {
 
             // ✅ FCM 토큰 저장
             await saveFcmToken(currentUser.uid);
+          } else {
+            // 인증은 됐지만 users/{uid} 문서가 없는 경우(가입 직후 전파 지연,
+            // 또는 registerUser의 Firestore 쓰기 실패). 이전에는 조용히
+            // user=null로 남아 로그인 화면으로 튕겼다 → 기본 프로필로 진입시키고
+            // 서버에 상황을 보고한다.
+            logCrashlyticsMessage(`AuthContext: users/${currentUser.uid} doc missing — defaulting to user role`);
+            setUser(currentUser);
+            setRole('user');
+            setSellerName(currentUser.displayName || 'Unknown');
+            setSellerPhone('Unknown');
+            setSellerEmail(currentUser.email || 'Unknown');
           }
         } catch (error) {
           logger.error('AuthContext: Error loading user data:', error);
           reportCrashlyticsError(error);
           logCrashlyticsMessage('AuthContext: Failed to load user data');
+          // 프로필 조회 실패(네트워크 등)로 인증 사용자를 로그인 화면으로
+          // 되돌리지 않는다 — 최소 권한(user)으로 진입시킨다.
+          setUser(currentUser);
+          setRole('user');
         }
       } else {
         setUser(null);

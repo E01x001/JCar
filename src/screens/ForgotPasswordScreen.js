@@ -32,17 +32,21 @@ const ForgotPasswordScreen = ({ navigation }) => {
       reportCrashlyticsError(error);
       logCrashlyticsMessage(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
       if (error.code === 'auth/user-not-found') {
+        // 이메일 존재 여부 노출 방지: 성공과 동일하게 응답 (버튼은 잠근 채 이동)
         toast.showSuccess('비밀번호 재설정', '등록된 이메일인 경우 재설정 링크가 발송되었습니다.');
         setTimeout(() => navigation.navigate('Login'), 1500);
-      } else if (error.code === 'auth/too-many-requests') {
-        toast.showError('오류 발생', '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
-      } else if (error.code === 'auth/network-request-failed') {
-        toast.showError('오류 발생', '네트워크 연결을 확인해주세요.');
       } else {
-        toast.showError('오류 발생', '이메일 발송 중 오류가 발생했습니다. 다시 시도해주세요.');
+        if (error.code === 'auth/too-many-requests') {
+          toast.showError('오류 발생', '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+        } else if (error.code === 'auth/network-request-failed') {
+          toast.showError('오류 발생', '네트워크 연결을 확인해주세요.');
+        } else {
+          toast.showError('오류 발생', '이메일 발송 중 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+        // 실패 시 즉시 재시도 가능해야 한다(과거: 모든 경로 30초 잠금 버그).
+        // 성공 경로는 1.5초 뒤 Login으로 떠나므로 잠금 유지가 중복 발송을 막는다.
+        setIsSubmitting(false);
       }
-    } finally {
-      setTimeout(() => setIsSubmitting(false), 30000);
     }
   };
 
