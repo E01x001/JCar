@@ -146,3 +146,4 @@ NUL
 
 # 리디자인 참고용 스크린샷 (커밋 제외)
 UI_inapp/
+.supabase-db-password.txt
