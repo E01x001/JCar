@@ -207,6 +207,43 @@ JCar is a React Native CLI-based used car trading platform with Firebase backend
 - Implement inspection record integration
 - Add report generation and sharing
 
+## Phase 8: 2026-07-07 총점검 후 도출 신규 항목
+
+> 배포 전 총점검([docs/PRE_DEPLOY_REVIEW_2026-07-07.md](../../docs/PRE_DEPLOY_REVIEW_2026-07-07.md))에서 나온 개선/신규 기능. 🔴 항목은 리뷰 문서에서 추적.
+
+### 8.1 가격 비공개의 서버 레벨 강제 (출시 차단 연계)
+**Priority**: Critical
+- `price`/`sellerId`를 admin·owner 전용 서브컬렉션 또는 public·admin 2문서 구조로 분리(가격은 role 검사 callable로만 해석).
+- 필터에서 가격대/가격정렬을 비관리자에게 숨기고 서버측에서도 price 필터 파라미터 거부.
+- Supabase 이전 시 RLS 컬럼 통제로 근본화([supabase-migration-readiness.md](../../docs/supabase-migration-readiness.md)).
+
+### 8.2 예약 정합성 인프라
+**Priority**: High
+- 결정적 슬롯 문서ID(`vehicleId_date_time`) 기반 트랜잭션 예약으로 이중예약 원천 차단.
+- 상담 생성·레이트리밋을 단일 서버 callable로 통합(클라 우회 불가).
+- 완료/소유권 이전 멱등키(`consultationId` 문서ID).
+
+### 8.3 관측성 & 상태 리스너 리팩토링
+**Priority**: Medium
+- zustand 스토어 리스너를 cacheKey별 unsubscribe 맵으로 전환(구독 공존·누수 해결).
+- 전체 컬렉션 구독 페이지네이션·limit 표준화.
+- Firebase Analytics 핵심 이벤트(상담신청/승인/이탈 퍼널) + 성능 모니터링.
+
+### 8.4 접근성 & i18n 기반
+**Priority**: Medium
+- 아이콘 전용 터치에 `accessibilityRole`/`accessibilityLabel` 부여(내비·모달 닫기 우선).
+- 문자열 추출 → i18n 스캐폴딩(한/영), 통화/날짜 로케일 포맷.
+
+### 8.5 신규 사용자 기능 후보 (제품)
+**Priority**: Low~Medium
+- **찜/관심 차량** + 알림(가격 변동 없이 상태 변화 알림).
+- **인앱 알림센터**(FCM 히스토리 영속화).
+- **상담 채팅**(구매자↔에이전트) — 7.1과 통합.
+- **차량 비교**(2~3대 스펙 사이드바이).
+- **상담 리마인더 푸시**(예약 1일/1시간 전).
+- **차량 이력 인증**(계기판/정비이력 사진 인증) — 이게 갖춰지면 주행거리 입력(3.1b 보류) 해제 가능.
+- **에이전트 리뷰/평점**(상담 완료 후).
+
 ## Immediate Next Steps
 
 Based on current project state and priority, recommend starting with:
