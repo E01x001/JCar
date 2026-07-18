@@ -34,4 +34,4 @@ export { getFCMToken, requestFCMNotificationPermission, requestNotificationPermi
 export { reportCrashlyticsError, logCrashlyticsMessage } from './notification/notificationService';
 
 // Storage services
-export { uploadImage, uploadMultipleImages, deleteImage, deleteMultipleImages, getImageDownloadURL, compressAndUploadImage, imageExists, getImageMetadata } from './storage/imageService';
+export { uploadImage, uploadMultipleImages, deleteImage, deleteMultipleImages, getImageDownloadURL, compressAndUploadImage } from './storage/imageService';

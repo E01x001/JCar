@@ -1,29 +1,46 @@
 /**
- * Image Service
- * Handles image upload, download, and management operations with Firebase Storage
+ * Image Service (Phase 2b — Firebase Storage → Supabase Storage 'vehicles' 버킷)
+ *
+ * 개선(배포점검 반영):
+ *  - 파일명은 타임스탬프+난수로 생성 → 동일 원본명 충돌/덮어쓰기 방지
+ *  - 다중 업로드 부분 실패 시 이미 올라간 파일 정리(고아 파일 방지)
  */
-
-import storage from '@react-native-firebase/storage';
+import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
-import { Platform } from 'react-native';
+
+const BUCKET = 'vehicles';
+
+const extFromUri = (uri) => {
+  const m = /\.(\w{2,5})(?:\?|$)/.exec(uri || '');
+  return (m ? m[1] : 'jpg').toLowerCase();
+};
+
+const randomName = (uri) =>
+  `vehicle_${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${extFromUri(uri)}`;
+
+/** 공개 URL에서 버킷 내 경로 추출 */
+const pathFromPublicUrl = (url) => {
+  const marker = `/object/public/${BUCKET}/`;
+  const i = url.indexOf(marker);
+  return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+};
 
 /**
- * Upload image to Firebase Storage
+ * 이미지 1장 업로드 → 공개 URL 반환
  */
-export const uploadImage = async (uri, path) => {
+export const uploadImage = async (uri) => {
   try {
-    const filename = uri.substring(uri.lastIndexOf('/') + 1);
-    const uploadPath = `${path}/${filename}`;
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const path = randomName(uri);
 
-    // For Android, we need to handle the file URI properly
-    const fileUri = Platform.OS === 'android' ? uri : uri.replace('file://', '');
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
+    if (error) { throw error; }
 
-    const reference = storage().ref(uploadPath);
-    await reference.putFile(fileUri);
-
-    const downloadURL = await reference.getDownloadURL();
-
-    return downloadURL;
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    return data.publicUrl;
   } catch (error) {
     logger.error('Error uploading image:', error);
     throw error;
@@ -31,28 +48,38 @@ export const uploadImage = async (uri, path) => {
 };
 
 /**
- * Upload multiple images
+ * 다중 업로드 — 하나라도 실패하면 성공분을 정리하고 throw
  */
-export const uploadMultipleImages = async (uris, path) => {
-  try {
-    const uploadPromises = uris.map(uri => uploadImage(uri, path));
-    const downloadURLs = await Promise.all(uploadPromises);
+export const uploadMultipleImages = async (uris) => {
+  const results = await Promise.allSettled(uris.map((uri) => uploadImage(uri)));
+  const failed = results.filter((r) => r.status === 'rejected');
 
-    return downloadURLs;
-  } catch (error) {
-    logger.error('Error uploading multiple images:', error);
-    throw error;
+  if (failed.length > 0) {
+    const uploaded = results
+      .filter((r) => r.status === 'fulfilled')
+      .map((r) => r.value);
+    if (uploaded.length > 0) {
+      // 부분 성공분 정리 (실패해도 원 에러를 우선 보고)
+      try { await deleteMultipleImages(uploaded); } catch (e) { logger.error('부분 업로드 정리 실패:', e); }
+    }
+    logger.error('Error uploading multiple images:', failed[0].reason);
+    throw failed[0].reason;
   }
+
+  return results.map((r) => r.value);
 };
 
 /**
- * Delete image from Firebase Storage
+ * 공개 URL로 이미지 삭제
+ * 참고: 클라이언트 삭제는 Storage RLS 정책이 허용해야 동작(현재 정책상 실패 가능)
+ * — 정리 작업은 서버(Edge Function)에서 수행하는 것이 정석.
  */
 export const deleteImage = async (imageUrl) => {
   try {
-    const reference = storage().refFromURL(imageUrl);
-    await reference.delete();
-
+    const path = pathFromPublicUrl(imageUrl);
+    if (!path) { return { success: false }; }
+    const { error } = await supabase.storage.from(BUCKET).remove([path]);
+    if (error) { throw error; }
     return { success: true };
   } catch (error) {
     logger.error('Error deleting image:', error);
@@ -61,83 +88,32 @@ export const deleteImage = async (imageUrl) => {
 };
 
 /**
- * Delete multiple images
+ * 다중 삭제 — 개별 실패는 무시하고 계속(allSettled)
  */
 export const deleteMultipleImages = async (imageUrls) => {
-  try {
-    const deletePromises = imageUrls.map(url => deleteImage(url));
-    await Promise.all(deletePromises);
-
-    return { success: true };
-  } catch (error) {
-    logger.error('Error deleting multiple images:', error);
-    throw error;
+  const results = await Promise.allSettled(imageUrls.map((url) => deleteImage(url)));
+  const failed = results.filter((r) => r.status === 'rejected');
+  if (failed.length > 0) {
+    logger.error(`이미지 ${failed.length}건 삭제 실패(무시하고 진행)`);
   }
+  return { success: failed.length === 0 };
 };
 
 /**
- * Get image download URL
+ * 경로의 공개 URL
  */
 export const getImageDownloadURL = async (path) => {
-  try {
-    const reference = storage().ref(path);
-    const downloadURL = await reference.getDownloadURL();
-
-    return downloadURL;
-  } catch (error) {
-    logger.error('Error getting image download URL:', error);
-    throw error;
-  }
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 };
 
 /**
  * Compress and upload image
  * Note: Actual compression would require additional library like react-native-image-resizer
  */
-export const compressAndUploadImage = async (uri, path, quality = 0.8) => {
-  try {
-    // TODO: Implement image compression using react-native-image-resizer or similar
-    // For now, just upload the original image
-    const downloadURL = await uploadImage(uri, path);
-
-    return downloadURL;
-  } catch (error) {
-    logger.error('Error compressing and uploading image:', error);
-    throw error;
-  }
-};
-
-/**
- * Check if image exists in storage
- */
-export const imageExists = async (path) => {
-  try {
-    const reference = storage().ref(path);
-    await reference.getDownloadURL();
-
-    return true;
-  } catch (error) {
-    if (error.code === 'storage/object-not-found') {
-      return false;
-    }
-    logger.error('Error checking image existence:', error);
-    throw error;
-  }
-};
-
-/**
- * Get image metadata
- */
-export const getImageMetadata = async (path) => {
-  try {
-    const reference = storage().ref(path);
-    const metadata = await reference.getMetadata();
-
-    return metadata;
-  } catch (error) {
-    logger.error('Error getting image metadata:', error);
-    throw error;
-  }
+export const compressAndUploadImage = async (uri) => {
+  // TODO: react-native-image-resizer 도입 시 압축 추가
+  return uploadImage(uri);
 };
 
 export default {
@@ -147,6 +123,4 @@ export default {
   deleteMultipleImages,
   getImageDownloadURL,
   compressAndUploadImage,
-  imageExists,
-  getImageMetadata,
 };

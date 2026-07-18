@@ -1,77 +1,64 @@
 // src/services/vehicleFilterService.js
-import { getFirestore, collection, query, where, orderBy, getDocs, onSnapshot } from '@react-native-firebase/firestore';
+// Phase 2b: Firestore → Supabase. 화면이 쓰는 export 시그니처는 그대로 유지한다.
+import { supabase } from '../lib/supabase';
+import { vehicleRowToApp } from '../lib/mappers';
+import { subscribeVehicles } from './vehicle/supabaseVehicleService';
 import { logger } from '../utils/logger';
 
 /**
- * 필터를 적용하여 차량 목록 조회
- * Firestore의 제한사항으로 인해 일부 필터는 클라이언트 사이드에서 처리
- *
- * @param {Object} filters - 필터 옵션
- * @param {string} filters.minPrice - 최소 가격 (만원)
- * @param {string} filters.maxPrice - 최대 가격 (만원)
- * @param {string} filters.minYear - 최소 연도
- * @param {string} filters.maxYear - 최대 연도
- * @param {Array} filters.manufacturers - 제조사 목록
- * @param {string} filters.sortBy - 정렬 기준 (price_asc, price_desc, year_asc, year_desc)
- * @returns {Promise<Array>} 필터링된 차량 목록
+ * 가격 포함 행 매핑.
+ * vehicle_pricing은 admin 전용 RLS — 관리자에겐 join으로 price가 오고,
+ * 일반 사용자에겐 null이 온다(가격 비공개 정책이 DB 레벨에서 강제됨).
  */
-export const getFilteredVehicles = async (filters) => {
+const rowWithPricingToApp = (row) => {
+  const { vehicle_pricing: pricing, ...rest } = row;
+  const v = vehicleRowToApp(rest);
+  return { ...v, price: pricing?.price ?? null };
+};
+
+/**
+ * 필터를 적용하여 차량 목록 조회.
+ * @param {Object} filters - { minPrice, maxPrice, minYear, maxYear, manufacturers, sortBy }
+ *   (만원 단위 문자열 입력은 기존 UI 그대로)
+ */
+export const getFilteredVehicles = async (filters = {}) => {
   try {
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
+    let query = supabase
+      .from('vehicles')
+      .select('*, vehicle_pricing(price)')
+      .eq('status', 'approved')
+      .eq('hidden', false)
+      .limit(300);
 
-    // 기본 쿼리: 노출 대상 = status 'approved' (listed/acquiring/in_stock는 모두 approved,
-    // sold만 status='sold'로 제외됨). 규칙·인덱스 친화적이라 dealStage in 쿼리 대신 사용.
-    const queryConstraints = [where('status', '==', 'approved')];
+    // 연식 필터는 DB에서 처리
+    const minYear = filters.minYear ? parseInt(filters.minYear, 10) : null;
+    const maxYear = filters.maxYear ? parseInt(filters.maxYear, 10) : null;
+    if (minYear) { query = query.gte('year', minYear); }
+    if (maxYear) { query = query.lte('year', maxYear); }
 
-    // Firestore 쿼리로 처리할 수 있는 필터
-    // 가격 필터 (Firestore에서 처리)
-    const minPrice = filters.minPrice ? parseInt(filters.minPrice) * 10000 : null;
-    const maxPrice = filters.maxPrice ? parseInt(filters.maxPrice) * 10000 : null;
-
-    if (minPrice) {
-      queryConstraints.push(where('price', '>=', minPrice));
-    }
-    if (maxPrice) {
-      queryConstraints.push(where('price', '<=', maxPrice));
-    }
-
-    // 정렬 적용
-    if (filters.sortBy) {
-      const [field, direction] = filters.sortBy.split('_');
-      queryConstraints.push(orderBy(field, direction === 'asc' ? 'asc' : 'desc'));
-    }
-
-    // 쿼리 실행
-    const q = query(vehiclesRef, ...queryConstraints);
-    const snapshot = await getDocs(q);
-
-    let vehicles = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    // Task 126: hide vehicles whose owner is in the account-deletion grace period
-    vehicles = vehicles.filter(v => !v.hidden);
-
-    // 클라이언트 사이드 필터링
-    // 연도 필터 (Firestore 복합 쿼리 제한으로 클라이언트에서 처리)
-    const minYear = filters.minYear ? parseInt(filters.minYear) : null;
-    const maxYear = filters.maxYear ? parseInt(filters.maxYear) : null;
-
-    if (minYear) {
-      vehicles = vehicles.filter(v => v.year >= minYear);
-    }
-    if (maxYear) {
-      vehicles = vehicles.filter(v => v.year <= maxYear);
-    }
-
-    // 제조사 필터 (클라이언트에서 처리)
+    // 제조사 필터
     if (filters.manufacturers && filters.manufacturers.length > 0) {
-      vehicles = vehicles.filter(v =>
-        filters.manufacturers.includes(v.manufacturer)
-      );
+      query = query.in('manufacturer', filters.manufacturers);
     }
+
+    // 정렬: 연식/최신은 DB, 가격은 join 값이라 클라 정렬(관리자 전용)
+    const sortBy = filters.sortBy || '';
+    if (sortBy === 'year_asc') { query = query.order('year', { ascending: true }); }
+    else if (sortBy === 'year_desc') { query = query.order('year', { ascending: false }); }
+    else { query = query.order('created_at', { ascending: false }); }
+
+    const { data, error } = await query;
+    if (error) { throw error; }
+
+    let vehicles = data.map(rowWithPricingToApp);
+
+    // 가격 범위/정렬 (관리자만 의미 있음 — 일반 사용자는 price=null)
+    const minPrice = filters.minPrice ? parseInt(filters.minPrice, 10) * 10000 : null;
+    const maxPrice = filters.maxPrice ? parseInt(filters.maxPrice, 10) * 10000 : null;
+    if (minPrice) { vehicles = vehicles.filter((v) => v.price != null && v.price >= minPrice); }
+    if (maxPrice) { vehicles = vehicles.filter((v) => v.price != null && v.price <= maxPrice); }
+    if (sortBy === 'price_asc') { vehicles = [...vehicles].sort((a, b) => (a.price ?? 0) - (b.price ?? 0)); }
+    else if (sortBy === 'price_desc') { vehicles = [...vehicles].sort((a, b) => (b.price ?? 0) - (a.price ?? 0)); }
 
     return vehicles;
   } catch (error) {
@@ -81,87 +68,17 @@ export const getFilteredVehicles = async (filters) => {
 };
 
 /**
- * 실시간으로 필터링된 차량 목록을 구독
- *
- * @param {Object} filters - 필터 옵션
- * @param {Function} callback - 차량 목록 업데이트 시 호출되는 콜백
- * @returns {Function} unsubscribe 함수
+ * 실시간으로 필터링된 차량 목록을 구독.
+ * @returns {Function} unsubscribe
  */
 export const subscribeToFilteredVehicles = (filters, callback) => {
-  try {
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
-
-    // 기본 쿼리: 노출 대상 = status 'approved' (listed/acquiring/in_stock는 모두 approved,
-    // sold만 status='sold'로 제외됨). 규칙·인덱스 친화적이라 dealStage in 쿼리 대신 사용.
-    const queryConstraints = [where('status', '==', 'approved')];
-
-    // 가격 필터 (Firestore에서 처리)
-    const minPrice = filters.minPrice ? parseInt(filters.minPrice) * 10000 : null;
-    const maxPrice = filters.maxPrice ? parseInt(filters.maxPrice) * 10000 : null;
-
-    if (minPrice) {
-      queryConstraints.push(where('price', '>=', minPrice));
-    }
-    if (maxPrice) {
-      queryConstraints.push(where('price', '<=', maxPrice));
-    }
-
-    // 정렬 적용
-    if (filters.sortBy) {
-      const [field, direction] = filters.sortBy.split('_');
-      queryConstraints.push(orderBy(field, direction === 'asc' ? 'asc' : 'desc'));
-    }
-
-    // 실시간 구독
-    const q = query(vehiclesRef, ...queryConstraints);
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        let vehicles = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // Task 126: hide vehicles whose owner is in the account-deletion grace period
-        vehicles = vehicles.filter(v => !v.hidden);
-
-        // 클라이언트 사이드 필터링
-        const minYear = filters.minYear ? parseInt(filters.minYear) : null;
-        const maxYear = filters.maxYear ? parseInt(filters.maxYear) : null;
-
-        if (minYear) {
-          vehicles = vehicles.filter(v => v.year >= minYear);
-        }
-        if (maxYear) {
-          vehicles = vehicles.filter(v => v.year <= maxYear);
-        }
-
-        if (filters.manufacturers && filters.manufacturers.length > 0) {
-          vehicles = vehicles.filter(v =>
-            filters.manufacturers.includes(v.manufacturer)
-          );
-        }
-
-        callback(vehicles);
-      },
-      (error) => {
-        logger.error('차량 구독 오류:', error);
-      }
-    );
-
-    return unsubscribe;
-  } catch (error) {
-    logger.error('차량 구독 설정 오류:', error);
-    throw error;
-  }
+  return subscribeVehicles(() => getFilteredVehicles(filters), callback, {
+    channelKey: 'vehicles-filtered',
+  });
 };
 
 /**
  * 필터가 비어있는지 확인
- *
- * @param {Object} filters - 필터 옵션
- * @returns {boolean} 필터가 비어있으면 true
  */
 export const isFilterEmpty = (filters, defaultSortBy = 'price_asc') => {
   return (
@@ -176,9 +93,6 @@ export const isFilterEmpty = (filters, defaultSortBy = 'price_asc') => {
 
 /**
  * 활성화된 필터 개수 계산
- *
- * @param {Object} filters - 필터 옵션
- * @returns {number} 활성화된 필터 개수
  */
 export const getActiveFilterCount = (filters, defaultSortBy = 'price_asc') => {
   let count = 0;

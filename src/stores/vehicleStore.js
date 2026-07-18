@@ -16,13 +16,13 @@
 
 import {create} from 'zustand';
 import {logger} from '../utils/logger';
+// Phase 2b: Firestore → Supabase (조회/구독은 supabaseVehicleService 경유)
 import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  onSnapshot,
-} from '@react-native-firebase/firestore';
+  fetchExposedVehicles,
+  fetchMyVehicles,
+  fetchAllVehicles,
+  subscribeVehicles,
+} from '../services/vehicle/supabaseVehicleService';
 
 /**
  * Cache entry structure
@@ -143,40 +143,17 @@ const useVehicleStore = create((set, get) => ({
       return;
     }
 
-    logger.debug('🔥 Creating new Firestore listener for approved vehicles');
+    logger.debug('🔥 Creating new Supabase listener for approved vehicles');
     set({loading: true, error: null});
 
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
-    // 노출 대상 = status 'approved' (sold만 제외). 규칙·인덱스 친화적.
-    const q = query(vehiclesRef, where('status', '==', 'approved'));
-
-    const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const vehicleList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
+    const unsubscribe = subscribeVehicles(
+        () => fetchExposedVehicles(),
+        (vehicleList) => {
           logger.debug(`✅ Received ${vehicleList.length} approved vehicles`);
-
-          set({
-            approvedVehicles: vehicleList,
-            loading: false,
-            error: null,
-          });
-
-          // Update cache
+          set({approvedVehicles: vehicleList, loading: false, error: null});
           get().setCacheData(cacheKey, vehicleList);
         },
-        (error) => {
-          logger.error('❌ Error fetching approved vehicles:', error);
-          set({
-            loading: false,
-            error: error,
-          });
-        },
+        {channelKey: 'store-approved'},
     );
 
     set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
@@ -208,39 +185,17 @@ const useVehicleStore = create((set, get) => ({
       return;
     }
 
-    logger.debug('🔥 Creating new Firestore listener for user vehicles', userId);
+    logger.debug('🔥 Creating new Supabase listener for user vehicles', userId);
     set({loading: true, error: null});
 
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
-    const q = query(vehiclesRef, where('sellerId', '==', userId));
-
-    const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const vehicleList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
+    const unsubscribe = subscribeVehicles(
+        () => fetchMyVehicles(userId),
+        (vehicleList) => {
           logger.debug(`✅ Received ${vehicleList.length} user vehicles`);
-
-          set({
-            vehicles: vehicleList,
-            loading: false,
-            error: null,
-          });
-
-          // Update cache
+          set({vehicles: vehicleList, loading: false, error: null});
           get().setCacheData(cacheKey, vehicleList);
         },
-        (error) => {
-          logger.error('❌ Error fetching user vehicles:', error);
-          set({
-            loading: false,
-            error: error,
-          });
-        },
+        {channelKey: 'store-user'},
     );
 
     set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
@@ -270,38 +225,17 @@ const useVehicleStore = create((set, get) => ({
       return;
     }
 
-    logger.debug('🔥 Creating new Firestore listener for all vehicles');
+    logger.debug('🔥 Creating new Supabase listener for all vehicles');
     set({loading: true, error: null});
 
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
-
-    const unsubscribe = onSnapshot(
-        vehiclesRef,
-        (snapshot) => {
-          const vehicleList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
+    const unsubscribe = subscribeVehicles(
+        () => fetchAllVehicles(),
+        (vehicleList) => {
           logger.debug(`✅ Received ${vehicleList.length} vehicles`);
-
-          set({
-            vehicles: vehicleList,
-            loading: false,
-            error: null,
-          });
-
-          // Update cache
+          set({vehicles: vehicleList, loading: false, error: null});
           get().setCacheData(cacheKey, vehicleList);
         },
-        (error) => {
-          logger.error('❌ Error fetching all vehicles:', error);
-          set({
-            loading: false,
-            error: error,
-          });
-        },
+        {channelKey: 'store-all'},
     );
 
     set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));

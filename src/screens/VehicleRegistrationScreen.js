@@ -23,16 +23,15 @@ const LOOKUP_MESSAGES = [
 const VEHICLE_TYPE_OPTIONS = ['승용차', '택시', '렌터카', '화물차', '군용차', '외교차'];
 // 영업 권리 거래 가치가 있는 차종(시안: 화물차·택시·렌터카)
 const BIZ_RIGHTS_TYPES = ['화물차', '택시', '렌터카'];
-import { getFirestore, collection, doc, writeBatch, serverTimestamp } from '@react-native-firebase/firestore';
-import { getAuth } from '@react-native-firebase/auth';
-import { getApp } from '@react-native-firebase/app';
-import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
+import { supabase } from '../lib/supabase';
+import { insertVehicle } from '../services/vehicle/supabaseVehicleService';
+import { uploadImage } from '../services/storage/imageService';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { isValidVehicleType, DEAL_STAGE } from '../constants';
 import useVehicleStore from '../stores/vehicleStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
-import { prepareImageForUpload, prepareImagesForUpload, pickMultipleFromGallery, uploadImageWithProgress } from '../utils/imageHelpers';
+import { prepareImageForUpload, prepareImagesForUpload, pickMultipleFromGallery } from '../utils/imageHelpers';
 
 const MAX_IMAGES = 8;
 
@@ -165,22 +164,20 @@ const VehicleRegistrationScreen = ({ navigation }) => {
     lookup.start(); // 추정형 진행 오버레이 시작
 
     try {
-      // Task #72: Use Firebase Function proxy for secure API key storage
-      // Function deployed in asia-northeast3 (Seoul) for lower latency
-      // 리전 지정은 getFunctions(app, region) 모듈러 API 사용 (RN Firebase v22)
-      const fns = getFunctions(getApp(), 'asia-northeast3');
-      const getVehicleInfo = httpsCallable(fns, 'getVehicleInfo');
-      const result = await getVehicleInfo({ regiNumber, ownerName });
+      // Phase 2b: Supabase Edge Function 프록시 (API 키는 Supabase Secrets)
+      const { data: result, error: fnError } = await supabase.functions.invoke('get-vehicle-info', {
+        body: { regiNumber, ownerName },
+      });
 
-      logger.debug('API 응답:', result.data);
+      logger.debug('API 응답:', result);
 
-      if (!result.data.success) {
+      if (fnError || !result?.success) {
         lookup.cancel();
-        toast.showError('조회 실패', '차량 정보를 찾을 수 없습니다.');
+        toast.showError('조회 실패', result?.message || '차량 정보를 찾을 수 없습니다.');
         return;
       }
 
-      setVehicleData(result.data.data);
+      setVehicleData(result.data);
       lookup.finish(); // 응답 도착 → 100%로 마무리
 
     } catch (error) {
@@ -225,9 +222,6 @@ const VehicleRegistrationScreen = ({ navigation }) => {
 
     setSaving(true);
     try {
-      // Task 62.4: Use modular currentUser
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
       // Default to the CarZen catalog image when the user adds no photos.
       let imageUrls = [`https://www.cartory.net/cars/${vehicleData.CARURL}`];
 
@@ -239,16 +233,11 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         try {
           const uploaded = [];
           for (let i = 0; i < images.length; i++) {
-            const filename = `vehicle_${Date.now()}_${tempId}_${i}.jpg`;
-            const url = await uploadImageWithProgress(
-              images[i].uri,
-              `vehicles/${filename}`,
-              (progress) => {
-                // Combine per-image progress into an overall 0-100 value.
-                setUploadProgress(((i + progress / 100) / images.length) * 100);
-              }
-            );
+            // Supabase Storage 업로드(파일명은 서비스에서 충돌 없는 이름 생성).
+            // 장별 세부 진행률은 없어 장 수 기준으로 표시.
+            const url = await uploadImage(images[i].uri);
             uploaded.push(url);
+            setUploadProgress(((i + 1) / images.length) * 100);
           }
           imageUrls = uploaded;
           logger.debug(`✅ Uploaded ${uploaded.length} images`);
@@ -264,40 +253,39 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         }
       }
 
-      // Prepare vehicle data
+      const toInt = (v) => {
+        const n = parseInt(v, 10);
+        return Number.isNaN(n) ? null : n;
+      };
+      const toText = (v) => (v == null ? null : String(v));
+
+      // Prepare vehicle data (DB 스키마: price 컬럼 없음 — 가격은 관리자가
+      // vehicle_pricing에 별도 설정. CarZen PRICE는 저장하지 않는다.)
       const vehicleDataToSave = {
+        vehicleNo: regiNumber, // DB vehicle_no (Firestore 시절 vehicleId)
         vehicleName: vehicleData.CARNAME,
         subModel: vehicleData.SUBMODEL,
         manufacturer: vehicleData.CARVENDER,
-        year: vehicleData.CARYEAR,
+        year: toInt(vehicleData.CARYEAR),
         driveType: vehicleData.DRIVE,
         fuelType: vehicleData.FUEL,
-        price: vehicleData.PRICE,
-        cc: vehicleData.CC,
+        cc: toInt(vehicleData.CC),
         transmission: vehicleData.MISSION,
-        imageUrls, // Task 127: full gallery
-        imageUrl: imageUrls[0], // backward-compat single image (list/legacy reads)
-        vin: vehicleData.VIN,
-        frontTire: vehicleData.FRONTTIRE,
-        rearTire: vehicleData.REARTIRE,
-        engineOilLiter: vehicleData.EOILLITER,
-        wiperInfo: vehicleData.WIPER,
-        seats: vehicleData.SEATS,
+        imageUrls, // Task 127: full gallery (단일 imageUrl은 매퍼가 파생)
+        frontTire: toText(vehicleData.FRONTTIRE),
+        rearTire: toText(vehicleData.REARTIRE),
+        engineOilLiter: toText(vehicleData.EOILLITER),
+        wiperInfo: toText(vehicleData.WIPER),
+        seats: toText(vehicleData.SEATS),
         battery: Array.isArray(vehicleData.BATTERYLIST) && vehicleData.BATTERYLIST.length > 0 ? vehicleData.BATTERYLIST[0].MODEL : 'Unknown',
-        fuelEco: vehicleData.FUELECO,
-        fuelTank: vehicleData.FUELTANK,
-        regiNumber,
-        ownerName,
+        fuelEco: toText(vehicleData.FUELECO),
+        fuelTank: toText(vehicleData.FUELTANK),
         vehicleType,
         businessRightsIncluded: bizApplicable ? bizRights : false,
         licenseInfo: (bizApplicable && bizRights) ? licenseInfo.trim() : '',
-        createdAt: new Date(), // Use local time for optimistic data
         sellerId: user.uid,
         currentOwnerId: user.uid, // 소유 축 정본: 등록 시 판매자 = 현재 소유자
         isAdminOwned: false,
-        sellerName: sellerName || 'Unknown',
-        sellerPhone: sellerPhone || 'Unknown',
-        sellerEmail: sellerEmail || 'Unknown',
         // 자동노출 정책: 등록 즉시 구매자 목록에 노출(사전승인 없음).
         // 품질 문제는 관리자가 사후에 hidden 처리로 내림(post-moderation).
         status: 'approved',
@@ -305,8 +293,23 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         hidden: false,
       };
 
-      // Optimistic update: Add immediately to store
-      addOptimisticVehicle(vehicleDataToSave, tempId);
+      // 판매자 PII — 비공개 테이블(vehicle_private_contact) 전용
+      const privateContactData = {
+        sellerName: sellerName || 'Unknown',
+        sellerPhone: sellerPhone || 'Unknown',
+        sellerEmail: sellerEmail || 'Unknown',
+        ownerName,
+        regiNumber,
+        vin: vehicleData.VIN || null,
+      };
+
+      // Optimistic update: Add immediately to store (화면 표시용 별칭 포함)
+      addOptimisticVehicle({
+        ...vehicleDataToSave,
+        vehicleId: regiNumber,
+        imageUrl: imageUrls[0],
+        createdAt: Date.now(),
+      }, tempId);
 
       // Clear cache to show new vehicle immediately
       invalidateUserVehiclesCache(user.uid);
@@ -315,52 +318,13 @@ const VehicleRegistrationScreen = ({ navigation }) => {
       setDoneName(vehicleData.CARNAME);
       setShowSuccess(true);
 
-      // Firestore write (non-blocking)
-      const db = getFirestore();
-      const vehiclesRef = collection(db, 'vehicles');
-      const newVehicleRef = doc(vehiclesRef);
-
-      // Task 125: keep seller PII OUT of the public vehicle doc. Split into a
-      // public doc (listing data) and a private contact subdoc readable only by
-      // the owner/admin. The private doc carries sellerId so its security rule
-      // needs no parent get() (avoids a race during the batched create).
-      const {
-        sellerName: _piiName,
-        sellerPhone: _piiPhone,
-        sellerEmail: _piiEmail,
-        ownerName: _piiOwner,
-        regiNumber: _piiRegi,
-        vin: _piiVin,
-        ...publicVehicleData
-      } = vehicleDataToSave;
-
-      const privateContactData = {
-        sellerId: user.uid,
-        sellerName: vehicleDataToSave.sellerName,
-        sellerPhone: vehicleDataToSave.sellerPhone,
-        sellerEmail: vehicleDataToSave.sellerEmail,
-        ownerName: vehicleDataToSave.ownerName,
-        regiNumber: vehicleDataToSave.regiNumber,
-        vin: vehicleDataToSave.vin,
-      };
-
-      // Execute write without awaiting (using executeOptimisticUpdate helper)
+      // Supabase write (non-blocking) — 공개 행 + PII 행. PII 실패 시 공개 행 롤백은
+      // insertVehicle 내부에서 처리(고아 방지, Task 125 정책 유지).
       executeOptimisticUpdate({
         optimisticFn: null, // Already done above
         serverFn: async () => {
-          const batch = writeBatch(db);
-          batch.set(newVehicleRef, {
-            ...publicVehicleData,
-            vehicleId: newVehicleRef.id,
-            createdAt: serverTimestamp(), // Use server timestamp for real data
-          });
-          const contactRef = doc(db, 'vehicles', newVehicleRef.id, 'private', 'contact');
-          batch.set(contactRef, {
-            ...privateContactData,
-            createdAt: serverTimestamp(),
-          });
-          await batch.commit();
-          return newVehicleRef.id;
+          const { id } = await insertVehicle(vehicleDataToSave, privateContactData);
+          return id;
         },
         onSuccess: (realId) => {
           logger.debug(`✅ Vehicle saved successfully with ID: ${realId}`);

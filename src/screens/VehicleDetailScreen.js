@@ -2,8 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { getFirestore, doc, onSnapshot } from '@react-native-firebase/firestore';
-import { getAuth } from '@react-native-firebase/auth';
+import { fetchVehicleById, fetchVehiclePricing, subscribeVehicles } from '../services/vehicle/supabaseVehicleService';
 import { logger } from '../utils/logger';
 import { AuthContext } from '../context/AuthContext';
 import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
@@ -22,32 +21,38 @@ const VehicleDetailScreen = ({ route, navigation }) => {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { role } = useContext(AuthContext);
+  const { user, role } = useContext(AuthContext);
   const { vehicleId } = route.params;
   const [vehicle, setVehicle] = useState(null);
   const [isOwnVehicle, setIsOwnVehicle] = useState(false);
   const [isSold, setIsSold] = useState(false);
 
   useEffect(() => {
-    const db = getFirestore();
-    const vehicleDocRef = doc(db, 'vehicles', vehicleId);
-    const currentUser = getAuth().currentUser;
-
-    const unsubscribe = onSnapshot(
-      vehicleDocRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
+    // Phase 2b: Supabase 실시간 구독(변경 시 재조회). 보는 중 sold 반영 유지.
+    const unsubscribe = subscribeVehicles(
+      async () => {
+        const data = await fetchVehicleById(vehicleId);
+        // 가격은 별도 테이블(admin 전용 RLS) — 관리자에게만 값이 온다
+        if (data && role === 'admin') {
+          try {
+            const pricing = await fetchVehiclePricing(vehicleId);
+            data.price = pricing?.price ?? null;
+          } catch (e) { logger.error('가격 조회 오류:', e); }
+        }
+        return data;
+      },
+      (data) => {
+        if (data) {
           setVehicle(data);
           setIsSold(data.status === 'sold');
           const ownerId = data.currentOwnerId || data.sellerId;
-          setIsOwnVehicle(!!currentUser && currentUser.uid === ownerId);
+          setIsOwnVehicle(!!user && user.uid === ownerId);
         }
       },
-      (error) => { logger.error('차량 상세정보 구독 오류:', error); },
+      { channelKey: `vehicle-${vehicleId}` },
     );
     return () => unsubscribe();
-  }, [vehicleId]);
+  }, [vehicleId, role, user]);
 
   const handleConsultationRequest = () => {
     navigation.navigate('ConsultationRequest', { vehicle, isSell: isOwnVehicle });
