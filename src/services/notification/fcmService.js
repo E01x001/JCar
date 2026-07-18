@@ -11,7 +11,6 @@
 
 import { getMessaging, getToken, requestPermission } from '@react-native-firebase/messaging';
 import { logger } from '../../utils/logger';
-import { getFirestore, doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
 
 /**
@@ -100,12 +99,10 @@ export const requestNotificationPermission = async () => {
 export const saveFcmToken = async (userId) => {
   try {
     const token = await getFCMToken();
-    const db = getFirestore();
-    const userDocRef = doc(db, 'users', userId);
-    await setDoc(userDocRef, {
-      fcmToken: token,
-      fcmTokenUpdatedAt: serverTimestamp(),
-    }, { merge: true });
+    // Supabase 이전(Phase 2a): 토큰은 profiles.fcm_token에 저장.
+    // FCM 발급 자체는 Firebase Messaging 유지(하이브리드).
+    const { saveMyFcmToken } = require('../auth/supabaseAuthService');
+    await saveMyFcmToken(userId, token);
 
     logger.debug('FCM 토큰 저장 완료:', token);
   } catch (error) {

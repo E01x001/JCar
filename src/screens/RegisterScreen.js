@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { firebaseFunctions } from '../firebase/firebaseConfig';
+import { signUp, resendConfirmationEmail, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
@@ -44,21 +44,26 @@ const RegisterScreen = ({ navigation }) => {
     setErrors({});
     setLoading(true);
     try {
-      const registerUser = firebaseFunctions.httpsCallable('registerUser');
-      await registerUser({ email, password, name, phoneNumber });
+      // Supabase 가입 — profiles는 DB 트리거 생성, 전화번호 중복은 UNIQUE 제약으로 거부,
+      // 확인 메일은 Supabase가 실제 발송(기존 UI-only였던 2단계가 실동작으로 전환)
+      await signUp({ email, password, name, phoneNumber });
       setStep(2);
     } catch (error) {
-      logger.error('registerUser 오류:', error);
-      const msg = error?.message || '회원가입 중 오류가 발생했습니다.';
-      toast.showError('회원가입 실패', msg);
+      logger.error('signUp 오류:', error);
+      toast.showError('회원가입 실패', mapAuthError(error));
     } finally {
       setLoading(false);
     }
   };
 
-  const onResend = () => {
-    // UI 플로우(이메일 인증 강제·발송은 백엔드 이관 후 별도). 안내만 노출.
-    toast.showInfo('안내', '인증 메일 발송은 추후 지원됩니다. 지금 바로 로그인할 수 있어요.');
+  const onResend = async () => {
+    try {
+      await resendConfirmationEmail(email);
+      toast.showSuccess('재전송 완료', '인증 메일을 다시 보냈습니다. 받은편지함을 확인해주세요.');
+    } catch (error) {
+      logger.error('인증 메일 재전송 오류:', error);
+      toast.showError('재전송 실패', mapAuthError(error));
+    }
   };
 
   return (

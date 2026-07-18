@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
+import { sendPasswordReset, mapAuthError } from '../services/auth/supabaseAuthService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
@@ -25,28 +25,17 @@ const ForgotPasswordScreen = ({ navigation }) => {
     setEmailError('');
     setIsSubmitting(true);
     try {
-      await sendPasswordResetEmail(getAuth(), email);
+      // Supabase는 미등록 이메일이어도 성공으로 응답(존재 여부 비노출) — 분기 불필요
+      await sendPasswordReset(email);
       toast.showSuccess('비밀번호 재설정', '등록된 이메일인 경우 재설정 링크가 발송되었습니다.');
+      // 성공 시에는 곧 Login으로 이동하므로 버튼을 계속 잠가 중복 발송을 막는다
       setTimeout(() => navigation.navigate('Login'), 1500);
     } catch (error) {
       reportCrashlyticsError(error);
       logCrashlyticsMessage(`ForgotPasswordScreen: Password reset failed - ${error.code}`);
-      if (error.code === 'auth/user-not-found') {
-        // 이메일 존재 여부 노출 방지: 성공과 동일하게 응답 (버튼은 잠근 채 이동)
-        toast.showSuccess('비밀번호 재설정', '등록된 이메일인 경우 재설정 링크가 발송되었습니다.');
-        setTimeout(() => navigation.navigate('Login'), 1500);
-      } else {
-        if (error.code === 'auth/too-many-requests') {
-          toast.showError('오류 발생', '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
-        } else if (error.code === 'auth/network-request-failed') {
-          toast.showError('오류 발생', '네트워크 연결을 확인해주세요.');
-        } else {
-          toast.showError('오류 발생', '이메일 발송 중 오류가 발생했습니다. 다시 시도해주세요.');
-        }
-        // 실패 시 즉시 재시도 가능해야 한다(과거: 모든 경로 30초 잠금 버그).
-        // 성공 경로는 1.5초 뒤 Login으로 떠나므로 잠금 유지가 중복 발송을 막는다.
-        setIsSubmitting(false);
-      }
+      toast.showError('오류 발생', mapAuthError(error));
+      // 실패 시 즉시 재시도 가능해야 한다
+      setIsSubmitting(false);
     }
   };
 

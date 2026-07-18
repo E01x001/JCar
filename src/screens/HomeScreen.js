@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import { getAuth, signOut } from '@react-native-firebase/auth';
+import { signOutUser } from '../services/auth/supabaseAuthService';
 import { AuthContext } from '../context/AuthContext';
 
 
@@ -8,10 +8,8 @@ const HomeScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext); // 현재 로그인한 사용자 정보
 
   // 로그아웃 처리
-  // Task 62.4: Use modular signOut
   const handleLogout = () => {
-    const auth = getAuth();
-    signOut(auth)
+    signOutUser()
       .then(() => {
         navigation.replace('Login'); // 로그아웃 후 로그인 화면으로 이동
       });

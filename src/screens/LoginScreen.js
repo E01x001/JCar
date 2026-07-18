@@ -4,8 +4,7 @@ import {
   StyleSheet, Image, StatusBar, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAuth, signInWithEmailAndPassword } from '@react-native-firebase/auth';
-import { handleFirebaseError } from '../utils/errorHandler';
+import { signIn, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -29,9 +28,10 @@ const LoginScreen = ({ navigation }) => {
     setEmailError('');
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(getAuth(), email, password);
+      await signIn(email, password);
+      // 이후 화면 전환은 AuthContext의 onAuthStateChange가 처리
     } catch (error) {
-      toast.showError('로그인 실패', handleFirebaseError(error, { operation: 'login', email }));
+      toast.showError('로그인 실패', mapAuthError(error));
     } finally {
       setLoading(false);
     }

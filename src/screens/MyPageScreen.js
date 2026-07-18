@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Alert, Dimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView } from 'react-native-tab-view';
-import { getAuth, signOut } from '@react-native-firebase/auth';
+import { signOutUser } from '../services/auth/supabaseAuthService';
 import functions from '@react-native-firebase/functions';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
@@ -111,8 +111,7 @@ const MyPageScreen = ({ navigation }) => {
       unsubscribeFromConsultations();
       useVehicleStore.getState().reset();
       useConsultationStore.getState().reset();
-      const auth = getAuth();
-      await signOut(auth);
+      await signOutUser();
       toast.showSuccess('로그아웃', '정상적으로 로그아웃되었습니다.');
     } catch (error) {
       reportCrashlyticsError(error);

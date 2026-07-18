@@ -49,6 +49,11 @@ jest.mock('@react-native-firebase/messaging', () => ({
 jest.mock('@react-native-firebase/crashlytics');
 jest.mock('@react-native-firebase/functions');
 
+// Phase 2a: FCM 토큰 저장이 Supabase 경유로 변경됨
+jest.mock('../../src/services/auth/supabaseAuthService', () => ({
+  saveMyFcmToken: jest.fn().mockResolvedValue(),
+}));
+
 // Mock Firestore Modular API
 jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: jest.fn(),
@@ -149,6 +154,9 @@ describe('firebaseService', () => {
   });
 
   describe('saveFcmToken', () => {
+    // Phase 2a: 토큰 저장이 Supabase profiles.fcm_token으로 이동
+    const { saveMyFcmToken } = require('../../src/services/auth/supabaseAuthService');
+
     it('should successfully save FCM token', async () => {
       const mockToken = 'mock-fcm-token-12345';
 
@@ -156,29 +164,15 @@ describe('firebaseService', () => {
       getMessaging.mockReturnValue({});
       getToken.mockResolvedValue(mockToken);
 
-      // Mock modular Firestore API
-      getFirestore.mockReturnValue({});
-      doc.mockReturnValue({ id: 'user-123' });
-      setDoc.mockResolvedValue();
-
       await saveFcmToken('user-123');
 
-      expect(setDoc).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ fcmToken: mockToken }),
-        { merge: true }
-      );
+      expect(saveMyFcmToken).toHaveBeenCalledWith('user-123', mockToken);
     });
 
     it('should handle case when token is null', async () => {
       // Mock modular messaging API
       getMessaging.mockReturnValue({});
       getToken.mockResolvedValue(null);
-
-      // Mock modular Firestore API
-      getFirestore.mockReturnValue({});
-      doc.mockReturnValue({ id: 'user-123' });
-      setDoc.mockResolvedValue();
 
       await expect(saveFcmToken('user-123')).resolves.not.toThrow();
     });
