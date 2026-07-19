@@ -1,44 +1,74 @@
 /**
- * Ownership Transfer Service
+ * Ownership Transfer Service (Phase 2 — Firestore 트랜잭션 → Supabase 순차 업데이트)
  *
- * Handles atomic vehicle ownership transfers using Firestore transactions.
- * This service ensures data consistency across vehicles, ownership_transfers,
- * and consultation_requests collections.
- *
- * Task 60: Enhanced with Analytics and Performance monitoring
- * Migrated to React Native Firebase Modular API (v22+)
- *
- * @see src/types/FIRESTORE_SCHEMA.md for schema documentation
+ * 관리자 전용 코드. RLS(admin 정책)가 vehicles/consultation_requests 업데이트와
+ * ownership_transfers/ownership_transfer_audit_logs insert를 허용한다.
+ * Firestore 시절의 원자 트랜잭션은 클라이언트에서 재현 불가하므로
+ * 검증 → 이전기록 insert → 차량 update → 상담 archive 순으로 진행하고,
+ * 성공/실패를 audit log에 남긴다. (Analytics/Perf 트레이스는 제거)
  */
 
-import { getFirestore, collection, doc, runTransaction, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, arrayUnion } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { rowToApp } from '../lib/mappers';
 import { logger } from '../utils/logger';
 import { DEAL_STAGE } from '../constants/vehicle';
 import { reportCrashlyticsError, logCrashlyticsMessage } from './notification/notificationService';
-import analytics from '@react-native-firebase/analytics';
-import perf from '@react-native-firebase/perf';
+
+/** audit log insert — 실패는 무시(best-effort) */
+const writeAuditLog = async ({ transferType, vehicleId, consultationId, status, durationMs, detail }) => {
+  try {
+    const { error } = await supabase.from('ownership_transfer_audit_logs').insert({
+      transfer_type: transferType,
+      vehicle_id: vehicleId,
+      consultation_id: consultationId,
+      status,
+      duration_ms: durationMs,
+      detail: detail || null,
+    });
+    if (error) { throw error; }
+  } catch (auditError) {
+    logger.error('Failed to create audit log:', auditError);
+  }
+};
+
+/** 이전 대상 차량/상담 공통 검증 — 통과 시 {vehicle, consultation} 반환 */
+const loadAndValidate = async (vehicleId, consultationRequestId) => {
+  const { data: vehicle, error: vehicleError } = await supabase
+    .from('vehicles')
+    .select('id, seller_id, current_owner_id, is_admin_owned, deal_stage, status')
+    .eq('id', vehicleId)
+    .maybeSingle();
+  if (vehicleError) { throw vehicleError; }
+  if (!vehicle) {
+    throw new Error(`차량을 찾을 수 없습니다 (ID: ${vehicleId})`);
+  }
+
+  const { data: consultation, error: consultationError } = await supabase
+    .from('consultation_requests')
+    .select('id, consultation_status, deal_amount')
+    .eq('id', consultationRequestId)
+    .maybeSingle();
+  if (consultationError) { throw consultationError; }
+  if (!consultation) {
+    throw new Error(`상담 요청을 찾을 수 없습니다 (ID: ${consultationRequestId})`);
+  }
+
+  if (['archived', 'completed'].includes(consultation.consultation_status)) {
+    throw new Error(`이미 처리된 상담입니다 (상태: ${consultation.consultation_status})`);
+  }
+
+  return { vehicle, consultation };
+};
 
 /**
- * Transfer vehicle ownership from seller to admin
+ * Transfer vehicle ownership from seller to admin (매입)
  *
- * This transaction performs the following atomic operations:
- * 1. Validates vehicle and consultation documents exist
- * 2. Verifies seller owns the vehicle
- * 3. Creates ownership_transfers record
- * 4. Updates vehicle: currentOwnerId → admin, isAdminOwned → true
- * 5. Archives consultation request
- *
- * @param {string} vehicleId - Vehicle document ID
+ * @param {string} vehicleId - vehicles.id (uuid)
  * @param {string} sellerId - Current owner's UID (for validation)
- * @param {string} consultationRequestId - Consultation document ID
+ * @param {string} consultationRequestId - consultation_requests.id (uuid)
  * @param {string} adminId - Admin user's UID
  * @param {number} price - Transfer price in KRW
- * @returns {Promise<{success: boolean, transferId?: string, error?: Error}>}
- *
- * @throws {Error} If vehicle doesn't exist
- * @throws {Error} If seller is not the current owner
- * @throws {Error} If consultation is already archived/completed
- * @throws {Error} If transaction fails
+ * @returns {Promise<{success: boolean, transferId?: string, error?: Object}>}
  */
 export const transferVehicleToAdmin = async (
   vehicleId,
@@ -47,230 +77,113 @@ export const transferVehicleToAdmin = async (
   adminId,
   price
 ) => {
-  // Task 60: Start Performance monitoring trace
-  const trace = await perf().startTrace('transfer_vehicle_to_admin');
   const startTime = Date.now();
 
   try {
-    logger.debug('🔄 Starting transferVehicleToAdmin transaction', {
-      vehicleId,
-      sellerId,
-      consultationRequestId,
-      adminId,
-      price,
+    logger.debug('🔄 Starting transferVehicleToAdmin', {
+      vehicleId, sellerId, consultationRequestId, adminId, price,
     });
 
-    // Task 60: Log Analytics event - transfer initiated
-    await analytics().logEvent('ownership_transfer_initiated', {
-      transfer_type: 'sell_to_admin',
-      vehicle_id: vehicleId,
-      consultation_id: consultationRequestId,
-      price: price || 0,
-      seller_id: sellerId,
-      admin_id: adminId,
-    });
+    const { vehicle, consultation } = await loadAndValidate(vehicleId, consultationRequestId);
 
-    // Generate transfer ID before transaction
-    const db = getFirestore();
-    const transfersCol = collection(db, 'ownership_transfers');
-    const transferRef = doc(transfersCol);
-    const transferId = transferRef.id;
+    // Validation: Seller is current owner
+    const currentOwner = vehicle.current_owner_id || vehicle.seller_id;
+    if (currentOwner !== sellerId) {
+      throw new Error(
+        `소유권 검증 실패: 현재 소유자(${currentOwner})가 판매자(${sellerId})와 일치하지 않습니다`
+      );
+    }
 
-    await runTransaction(db, async (transaction) => {
-      // Document references
-      const vehicleRef = doc(db, 'vehicles', vehicleId);
-      const consultationRef = doc(db, 'consultation_requests', consultationRequestId);
+    const transferPrice = price || consultation.deal_amount || 0;
 
-      // Read phase: Get current document states
-      const vehicleDoc = await transaction.get(vehicleRef);
-      const consultationDoc = await transaction.get(consultationRef);
-
-      // Validation: Vehicle exists
-      if (!vehicleDoc.exists()) {
-        throw new Error(`차량을 찾을 수 없습니다 (ID: ${vehicleId})`);
-      }
-
-      // Validation: Consultation exists
-      if (!consultationDoc.exists()) {
-        throw new Error(
-          `상담 요청을 찾을 수 없습니다 (ID: ${consultationRequestId})`
-        );
-      }
-
-      const vehicleData = vehicleDoc.data();
-      const consultationData = consultationDoc.data();
-
-      // Validation: Seller is current owner
-      // Check both currentOwnerId (new field) and sellerId (legacy field)
-      const currentOwner = vehicleData.currentOwnerId || vehicleData.sellerId;
-      if (currentOwner !== sellerId) {
-        throw new Error(
-          `소유권 검증 실패: 현재 소유자(${currentOwner})가 판매자(${sellerId})와 일치하지 않습니다`
-        );
-      }
-
-      // Validation: Consultation not already archived/completed
-      if (
-        consultationData.consultationStatus === 'archived' ||
-        consultationData.consultationStatus === 'completed'
-      ) {
-        throw new Error(
-          `이미 처리된 상담입니다 (상태: ${consultationData.consultationStatus})`
-        );
-      }
-
-      // Write phase: Create ownership transfer record
-      const ownershipTransferData = {
-        transferId,
-        vehicleId,
-        consultationId: consultationRequestId,
-        fromUserId: sellerId,
-        toUserId: null, // null indicates transfer to admin
-        transferType: 'sell_to_admin',
-        transferredAt: serverTimestamp(),
-        price: price || consultationData.dealAmount || 0,
+    // 1) 이전 기록 생성
+    const { data: transfer, error: transferError } = await supabase
+      .from('ownership_transfers')
+      .insert({
+        vehicle_id: vehicleId,
+        consultation_id: consultationRequestId,
+        from_user_id: sellerId,
+        to_user_id: null, // null = admin
+        transfer_type: 'sell_to_admin',
+        price: transferPrice,
         notes: `Transferred via consultation ${consultationRequestId}`,
-      };
+      })
+      .select('id')
+      .single();
+    if (transferError) { throw transferError; }
+    const transferId = transfer.id;
 
-      transaction.set(transferRef, ownershipTransferData);
+    // 2) 차량 소유권 이전 (매입 완료 → 재고, 노출 유지)
+    const { error: vehicleUpdateError } = await supabase
+      .from('vehicles')
+      .update({
+        current_owner_id: adminId,
+        is_admin_owned: true,
+        deal_stage: DEAL_STAGE.IN_STOCK,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', vehicleId);
+    if (vehicleUpdateError) { throw vehicleUpdateError; }
 
-      // Write phase: Update vehicle ownership
-      const ownershipHistoryEntry = {
-        transferId,
-        transferredAt: serverTimestamp(),
-        fromUserId: sellerId,
-        toUserId: null,
-        transferType: 'sell_to_admin',
-        price: ownershipTransferData.price,
-      };
+    // 3) 상담 archive + 이전 표시
+    const { error: consultationUpdateError } = await supabase
+      .from('consultation_requests')
+      .update({
+        consultation_status: 'archived',
+        is_ownership_transferred: true,
+        transfer_id: transferId,
+      })
+      .eq('id', consultationRequestId);
+    if (consultationUpdateError) { throw consultationUpdateError; }
 
-      transaction.update(vehicleRef, {
-        currentOwnerId: adminId,
-        isAdminOwned: true,
-        dealStage: DEAL_STAGE.IN_STOCK, // 매입 완료 → 재고(노출 유지)
-        availableForPurchase: true,
-        ownershipHistory: arrayUnion(ownershipHistoryEntry),
-        updatedAt: serverTimestamp(),
-      });
-
-      // Write phase: Archive consultation and mark as transferred
-      transaction.update(consultationRef, {
-        consultationStatus: 'archived',
-        isOwnershipTransferred: true,
-        transferId,
-        archivedAt: serverTimestamp(),
-      });
-
-      logger.debug('✅ transferVehicleToAdmin transaction completed', {
-        transferId,
-        vehicleId,
-        consultationRequestId,
-      });
-    });
-
-    // Task 60: Create audit log entry
     const duration = Date.now() - startTime;
-    const auditLogsRef = collection(db, 'ownership_transfer_audit_logs');
-    await addDoc(auditLogsRef, {
-      transferId,
+    await writeAuditLog({
       transferType: 'sell_to_admin',
       vehicleId,
       consultationId: consultationRequestId,
-      fromUserId: sellerId,
-      toUserId: null,
-      adminId,
-      price: price || 0,
       status: 'completed',
-      duration,
-      timestamp: serverTimestamp(),
-      metadata: {
+      durationMs: duration,
+      detail: {
+        transferId,
+        fromUserId: sellerId,
+        toUserId: null,
+        adminId,
+        price: transferPrice,
         initiatedBy: adminId,
         completedAt: new Date().toISOString(),
       },
     });
 
-    // Task 60: Log Analytics event - transfer completed
-    await analytics().logEvent('ownership_transfer_completed', {
-      transfer_type: 'sell_to_admin',
-      vehicle_id: vehicleId,
-      consultation_id: consultationRequestId,
-      transfer_id: transferId,
-      price: price || 0,
-      duration_ms: duration,
-      success: true,
-    });
-
-    // Task 60: Stop Performance trace
-    trace.putMetric('duration_ms', duration);
-    trace.putAttribute('transfer_type', 'sell_to_admin');
-    trace.putAttribute('vehicle_id', vehicleId);
-    await trace.stop();
-
-    return {
-      success: true,
-      transferId,
-    };
+    logger.debug('✅ transferVehicleToAdmin completed', { transferId, vehicleId, consultationRequestId });
+    return { success: true, transferId };
   } catch (error) {
     logger.error('❌ transferVehicleToAdmin failed:', error);
 
-    // Task 60: Create audit log entry for failure
-    const duration = Date.now() - startTime;
-    try {
-      const errorDb = getFirestore();
-      const auditLogsRef = collection(errorDb, 'ownership_transfer_audit_logs');
-      await addDoc(auditLogsRef, {
-        transferType: 'sell_to_admin',
-        vehicleId,
-        consultationId: consultationRequestId,
+    await writeAuditLog({
+      transferType: 'sell_to_admin',
+      vehicleId,
+      consultationId: consultationRequestId,
+      status: 'failed',
+      durationMs: Date.now() - startTime,
+      detail: {
         fromUserId: sellerId,
         toUserId: null,
         adminId,
         price: price || 0,
-        status: 'failed',
-        duration,
-        error: {
-          message: error.message,
-          code: error.code,
-        },
-        timestamp: serverTimestamp(),
-        metadata: {
-          initiatedBy: adminId,
-          failedAt: new Date().toISOString(),
-        },
-      });
-    } catch (auditError) {
-      logger.error('Failed to create audit log:', auditError);
-    }
-
-    // Task 60: Log Analytics event - transfer failed
-    await analytics().logEvent('ownership_transfer_failed', {
-      transfer_type: 'sell_to_admin',
-      vehicle_id: vehicleId,
-      consultation_id: consultationRequestId,
-      error_code: error.code || 'unknown',
-      error_message: error.message,
-      duration_ms: duration,
+        error: { message: error.message, code: error.code },
+        failedAt: new Date().toISOString(),
+      },
     });
 
-    // Task 60: Stop Performance trace with error
-    trace.putMetric('duration_ms', duration);
-    trace.putAttribute('transfer_type', 'sell_to_admin');
-    trace.putAttribute('error', 'true');
-    trace.putAttribute('error_code', error.code || 'unknown');
-    await trace.stop();
-
-    // Log to Crashlytics
     reportCrashlyticsError(error);
     logCrashlyticsMessage(
       `transferVehicleToAdmin failed for vehicle ${vehicleId}, consultation ${consultationRequestId}`
     );
 
-    // Return user-friendly error
     return {
       success: false,
       error: {
-        message:
-          error.message || '차량 소유권 이전 중 오류가 발생했습니다. 다시 시도해 주세요.',
+        message: error.message || '차량 소유권 이전 중 오류가 발생했습니다. 다시 시도해 주세요.',
         code: error.code,
         details: error,
       },
@@ -279,26 +192,14 @@ export const transferVehicleToAdmin = async (
 };
 
 /**
- * Transfer vehicle ownership from admin to buyer
+ * Transfer vehicle ownership from admin to buyer (판매)
  *
- * This transaction performs the following atomic operations:
- * 1. Validates vehicle and consultation documents exist
- * 2. Verifies admin owns the vehicle (isAdminOwned = true)
- * 3. Creates ownership_transfers record
- * 4. Updates vehicle: currentOwnerId → buyer, isAdminOwned → false, status → sold
- * 5. Archives consultation request
- *
- * @param {string} vehicleId - Vehicle document ID
+ * @param {string} vehicleId - vehicles.id (uuid)
  * @param {string} adminId - Admin user's UID (for validation)
  * @param {string} buyerId - Buyer's UID
- * @param {string} consultationRequestId - Consultation document ID
+ * @param {string} consultationRequestId - consultation_requests.id (uuid)
  * @param {number} soldPrice - Sale price in KRW
- * @returns {Promise<{success: boolean, transferId?: string, error?: Error}>}
- *
- * @throws {Error} If vehicle doesn't exist
- * @throws {Error} If vehicle is not admin-owned
- * @throws {Error} If consultation is already archived/completed
- * @throws {Error} If transaction fails
+ * @returns {Promise<{success: boolean, transferId?: string, error?: Object}>}
  */
 export const transferVehicleToBuyer = async (
   vehicleId,
@@ -307,244 +208,118 @@ export const transferVehicleToBuyer = async (
   consultationRequestId,
   soldPrice
 ) => {
-  // Task 60: Start Performance monitoring trace
-  const trace = await perf().startTrace('transfer_vehicle_to_buyer');
   const startTime = Date.now();
 
   try {
-    logger.debug('🔄 Starting transferVehicleToBuyer transaction', {
-      vehicleId,
-      adminId,
-      buyerId,
-      consultationRequestId,
-      soldPrice,
+    logger.debug('🔄 Starting transferVehicleToBuyer', {
+      vehicleId, adminId, buyerId, consultationRequestId, soldPrice,
     });
 
-    // Validate soldPrice
     if (!soldPrice || soldPrice < 0) {
       throw new Error('판매 가격이 유효하지 않습니다');
     }
 
-    // Task 60: Log Analytics event - transfer initiated
-    await analytics().logEvent('ownership_transfer_initiated', {
-      transfer_type: 'admin_to_buyer',
-      vehicle_id: vehicleId,
-      consultation_id: consultationRequestId,
-      price: soldPrice,
-      buyer_id: buyerId,
-      admin_id: adminId,
-    });
+    const { vehicle } = await loadAndValidate(vehicleId, consultationRequestId);
 
-    // Generate transfer ID before transaction
-    const db = getFirestore();
-    const transfersCol = collection(db, 'ownership_transfers');
-    const transferRef = doc(transfersCol);
-    const transferId = transferRef.id;
+    if (!vehicle.is_admin_owned) {
+      throw new Error(`관리자 소유 차량이 아닙니다 (isAdminOwned: ${vehicle.is_admin_owned})`);
+    }
+    if (vehicle.current_owner_id !== adminId) {
+      throw new Error(`현재 소유자가 관리자가 아닙니다 (currentOwnerId: ${vehicle.current_owner_id})`);
+    }
 
-    await runTransaction(db, async (transaction) => {
-      // Document references
-      const vehicleRef = doc(db, 'vehicles', vehicleId);
-      const consultationRef = doc(db, 'consultation_requests', consultationRequestId);
-
-      // Read phase: Get current document states
-      const vehicleDoc = await transaction.get(vehicleRef);
-      const consultationDoc = await transaction.get(consultationRef);
-
-      // Validation: Vehicle exists
-      if (!vehicleDoc.exists()) {
-        throw new Error(`차량을 찾을 수 없습니다 (ID: ${vehicleId})`);
-      }
-
-      // Validation: Consultation exists
-      if (!consultationDoc.exists()) {
-        throw new Error(
-          `상담 요청을 찾을 수 없습니다 (ID: ${consultationRequestId})`
-        );
-      }
-
-      const vehicleData = vehicleDoc.data();
-      const consultationData = consultationDoc.data();
-
-      // Validation: Vehicle is admin-owned
-      if (!vehicleData.isAdminOwned) {
-        throw new Error(
-          `관리자 소유 차량이 아닙니다 (isAdminOwned: ${vehicleData.isAdminOwned})`
-        );
-      }
-
-      // Validation: Current owner is admin
-      if (vehicleData.currentOwnerId !== adminId) {
-        throw new Error(
-          `현재 소유자가 관리자가 아닙니다 (currentOwnerId: ${vehicleData.currentOwnerId})`
-        );
-      }
-
-      // Validation: Consultation not already archived/completed
-      if (
-        consultationData.consultationStatus === 'archived' ||
-        consultationData.consultationStatus === 'completed'
-      ) {
-        throw new Error(
-          `이미 처리된 상담입니다 (상태: ${consultationData.consultationStatus})`
-        );
-      }
-
-      // Write phase: Create ownership transfer record
-      const ownershipTransferData = {
-        transferId,
-        vehicleId,
-        consultationId: consultationRequestId,
-        fromUserId: null, // null indicates transfer from admin
-        toUserId: buyerId,
-        transferType: 'admin_to_buyer',
-        transferredAt: serverTimestamp(),
+    // 1) 이전 기록 생성
+    const { data: transfer, error: transferError } = await supabase
+      .from('ownership_transfers')
+      .insert({
+        vehicle_id: vehicleId,
+        consultation_id: consultationRequestId,
+        from_user_id: null, // null = admin
+        to_user_id: buyerId,
+        transfer_type: 'admin_to_buyer',
         price: soldPrice,
         notes: `Sold to buyer via consultation ${consultationRequestId}`,
-      };
+      })
+      .select('id')
+      .single();
+    if (transferError) { throw transferError; }
+    const transferId = transfer.id;
 
-      transaction.set(transferRef, ownershipTransferData);
-
-      // Write phase: Update vehicle ownership and mark as sold
-      const ownershipHistoryEntry = {
-        transferId,
-        transferredAt: serverTimestamp(),
-        fromUserId: null,
-        toUserId: buyerId,
-        transferType: 'admin_to_buyer',
-        price: soldPrice,
-      };
-
-      transaction.update(vehicleRef, {
-        currentOwnerId: buyerId,
-        isAdminOwned: false,
+    // 2) 차량 판매 처리 (노출 목록에서 제외)
+    const { error: vehicleUpdateError } = await supabase
+      .from('vehicles')
+      .update({
+        current_owner_id: buyerId,
+        is_admin_owned: false,
         status: 'sold',
-        dealStage: DEAL_STAGE.SOLD, // 거래 축 정본도 닫음 → 노출 목록에서 제외
-        availableForPurchase: false,
-        ownershipHistory: arrayUnion(ownershipHistoryEntry),
-        soldAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+        deal_stage: DEAL_STAGE.SOLD,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', vehicleId);
+    if (vehicleUpdateError) { throw vehicleUpdateError; }
 
-      // Write phase: Archive consultation and mark as transferred
-      transaction.update(consultationRef, {
-        consultationStatus: 'archived',
-        isOwnershipTransferred: true,
-        transferId,
-        dealAmount: soldPrice,
-        archivedAt: serverTimestamp(),
-      });
+    // 3) 상담 archive + 거래액 기록
+    const { error: consultationUpdateError } = await supabase
+      .from('consultation_requests')
+      .update({
+        consultation_status: 'archived',
+        is_ownership_transferred: true,
+        transfer_id: transferId,
+        deal_amount: soldPrice,
+      })
+      .eq('id', consultationRequestId);
+    if (consultationUpdateError) { throw consultationUpdateError; }
 
-      logger.debug('✅ transferVehicleToBuyer transaction completed', {
-        transferId,
-        vehicleId,
-        buyerId,
-        consultationRequestId,
-      });
-    });
-
-    // Task 60: Create audit log entry
     const duration = Date.now() - startTime;
-    const auditLogsRef = collection(db, 'ownership_transfer_audit_logs');
-    await addDoc(auditLogsRef, {
-      transferId,
+    await writeAuditLog({
       transferType: 'admin_to_buyer',
       vehicleId,
       consultationId: consultationRequestId,
-      fromUserId: null,
-      toUserId: buyerId,
-      adminId,
-      price: soldPrice,
       status: 'completed',
-      duration,
-      timestamp: serverTimestamp(),
-      metadata: {
+      durationMs: duration,
+      detail: {
+        transferId,
+        fromUserId: null,
+        toUserId: buyerId,
+        adminId,
+        price: soldPrice,
         initiatedBy: adminId,
         completedAt: new Date().toISOString(),
       },
     });
 
-    // Task 60: Log Analytics event - transfer completed
-    await analytics().logEvent('ownership_transfer_completed', {
-      transfer_type: 'admin_to_buyer',
-      vehicle_id: vehicleId,
-      consultation_id: consultationRequestId,
-      transfer_id: transferId,
-      price: soldPrice,
-      duration_ms: duration,
-      success: true,
+    logger.debug('✅ transferVehicleToBuyer completed', {
+      transferId, vehicleId, buyerId, consultationRequestId,
     });
-
-    // Task 60: Stop Performance trace
-    trace.putMetric('duration_ms', duration);
-    trace.putAttribute('transfer_type', 'admin_to_buyer');
-    trace.putAttribute('vehicle_id', vehicleId);
-    await trace.stop();
-
-    return {
-      success: true,
-      transferId,
-    };
+    return { success: true, transferId };
   } catch (error) {
     logger.error('❌ transferVehicleToBuyer failed:', error);
 
-    // Task 60: Create audit log entry for failure
-    const duration = Date.now() - startTime;
-    try {
-      const errorDb = getFirestore();
-      const auditLogsRef = collection(errorDb, 'ownership_transfer_audit_logs');
-      await addDoc(auditLogsRef, {
-        transferType: 'admin_to_buyer',
-        vehicleId,
-        consultationId: consultationRequestId,
+    await writeAuditLog({
+      transferType: 'admin_to_buyer',
+      vehicleId,
+      consultationId: consultationRequestId,
+      status: 'failed',
+      durationMs: Date.now() - startTime,
+      detail: {
         fromUserId: null,
         toUserId: buyerId,
         adminId,
         price: soldPrice || 0,
-        status: 'failed',
-        duration,
-        error: {
-          message: error.message,
-          code: error.code,
-        },
-        timestamp: serverTimestamp(),
-        metadata: {
-          initiatedBy: adminId,
-          failedAt: new Date().toISOString(),
-        },
-      });
-    } catch (auditError) {
-      logger.error('Failed to create audit log:', auditError);
-    }
-
-    // Task 60: Log Analytics event - transfer failed
-    await analytics().logEvent('ownership_transfer_failed', {
-      transfer_type: 'admin_to_buyer',
-      vehicle_id: vehicleId,
-      consultation_id: consultationRequestId,
-      error_code: error.code || 'unknown',
-      error_message: error.message,
-      duration_ms: duration,
+        error: { message: error.message, code: error.code },
+        failedAt: new Date().toISOString(),
+      },
     });
 
-    // Task 60: Stop Performance trace with error
-    trace.putMetric('duration_ms', duration);
-    trace.putAttribute('transfer_type', 'admin_to_buyer');
-    trace.putAttribute('error', 'true');
-    trace.putAttribute('error_code', error.code || 'unknown');
-    await trace.stop();
-
-    // Log to Crashlytics
     reportCrashlyticsError(error);
     logCrashlyticsMessage(
       `transferVehicleToBuyer failed for vehicle ${vehicleId}, consultation ${consultationRequestId}, buyer ${buyerId}`
     );
 
-    // Return user-friendly error
     return {
       success: false,
       error: {
-        message:
-          error.message || '차량 판매 처리 중 오류가 발생했습니다. 다시 시도해 주세요.',
+        message: error.message || '차량 판매 처리 중 오류가 발생했습니다. 다시 시도해 주세요.',
         code: error.code,
         details: error,
       },
@@ -554,25 +329,18 @@ export const transferVehicleToBuyer = async (
 
 /**
  * Get ownership transfer history for a vehicle
- *
- * @param {string} vehicleId - Vehicle document ID
- * @returns {Promise<Array>} Array of ownership transfer records
+ * @param {string} vehicleId - vehicles.id (uuid)
+ * @returns {Promise<Array>} camelCase transfer records (transferId 별칭 포함)
  */
 export const getVehicleOwnershipHistory = async (vehicleId) => {
   try {
-    const db = getFirestore();
-    const transfersRef = collection(db, 'ownership_transfers');
-    const q = query(
-      transfersRef,
-      where('vehicleId', '==', vehicleId),
-      orderBy('transferredAt', 'desc')
-    );
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const { data, error } = await supabase
+      .from('ownership_transfers')
+      .select('*')
+      .eq('vehicle_id', vehicleId)
+      .order('transferred_at', { ascending: false });
+    if (error) { throw error; }
+    return data.map((row) => ({ ...rowToApp(row), transferId: row.id }));
   } catch (error) {
     logger.error('Failed to get ownership history:', error);
     reportCrashlyticsError(error);
@@ -582,25 +350,18 @@ export const getVehicleOwnershipHistory = async (vehicleId) => {
 
 /**
  * Get all ownership transfers (admin only)
- *
- * @param {number} limit - Maximum number of records to return
- * @returns {Promise<Array>} Array of ownership transfer records
+ * @param {number} limitCount - Maximum number of records to return
+ * @returns {Promise<Array>} camelCase transfer records
  */
 export const getAllOwnershipTransfers = async (limitCount = 50) => {
   try {
-    const db = getFirestore();
-    const transfersRef = collection(db, 'ownership_transfers');
-    const q = query(
-      transfersRef,
-      orderBy('transferredAt', 'desc'),
-      limit(limitCount)
-    );
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const { data, error } = await supabase
+      .from('ownership_transfers')
+      .select('*')
+      .order('transferred_at', { ascending: false })
+      .limit(limitCount);
+    if (error) { throw error; }
+    return data.map((row) => ({ ...rowToApp(row), transferId: row.id }));
   } catch (error) {
     logger.error('Failed to get ownership transfers:', error);
     reportCrashlyticsError(error);

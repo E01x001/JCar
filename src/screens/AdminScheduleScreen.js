@@ -2,7 +2,9 @@ import React, { useEffect, useState, useContext } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, FlatList, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFirestore, collection, onSnapshot, doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { consultationRowToApp } from '../lib/mappers';
+import { updateConsultationStatus } from '../services/consultation/consultationService';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -31,49 +33,66 @@ const AdminScheduleScreen = () => {
   useEffect(() => {
     if (!user) {return () => {};}
 
-    const db = getFirestore();
-    const consultationCollection = collection(db, 'consultation_requests');
-    const unsubscribe = onSnapshot(consultationCollection, snapshot => {
-      const all = [];
-      const marks = {};
+    let disposed = false;
+    let timer = null;
 
-      snapshot.docs.forEach(d => {
-        const data = d.data();
-        const date = data.preferredDate;
-        const color =
-          data.consultationStatus === 'approved' ? theme.colors.success.main
-            : data.consultationStatus === 'rejected' ? theme.colors.danger.main
-              : theme.colors.text.tertiary;
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('consultation_requests')
+          .select('*')
+          .limit(1000);
+        if (error) { throw error; }
+        if (disposed) { return; }
 
-        all.push({ id: d.id, ...data });
+        const all = [];
+        const marks = {};
+        data.map(consultationRowToApp).forEach((item) => {
+          const date = item.preferredDate;
+          const color =
+            item.consultationStatus === 'approved' ? theme.colors.success.main
+              : item.consultationStatus === 'rejected' ? theme.colors.danger.main
+                : theme.colors.text.tertiary;
 
-        if (!marks[date]) {
-          marks[date] = { marked: true, dots: [{ color }] };
-        } else {
-          marks[date].dots.push({ color });
-        }
-      });
+          all.push(item);
 
-      setConsultations(all);
-      setMarkedDates(marks);
-    });
+          if (!marks[date]) {
+            marks[date] = { marked: true, dots: [{ color }] };
+          } else {
+            marks[date].dots.push({ color });
+          }
+        });
 
-    return () => unsubscribe();
+        setConsultations(all);
+        setMarkedDates(marks);
+      } catch (error) {
+        logger.error('AdminScheduleScreen: 상담 조회 실패', error);
+      }
+    };
+
+    const scheduleReload = () => {
+      if (timer) { clearTimeout(timer); }
+      timer = setTimeout(load, 300);
+    };
+
+    load();
+
+    const channel = supabase
+      .channel(`admin-schedule-${Math.random().toString(36).slice(2, 8)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'consultation_requests' }, scheduleReload)
+      .subscribe();
+
+    return () => {
+      disposed = true;
+      if (timer) { clearTimeout(timer); }
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const updateStatus = async (id, status) => {
     try {
-      const db = getFirestore();
-      const docRef = doc(db, 'consultation_requests', id);
-
-      // Check if document exists before updating
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        Alert.alert('오류', '상담 요청을 찾을 수 없습니다.');
-        return;
-      }
-
-      await updateDoc(docRef, { consultationStatus: status });
+      await updateConsultationStatus(id, status);
 
       // Provide user feedback
       const statusText = status === 'approved' ? '승인' : status === 'rejected' ? '거절' : status;

@@ -8,7 +8,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
-import { getFirestore, collection, query, where, orderBy, onSnapshot } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { rowToApp } from '../lib/mappers';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -35,32 +36,50 @@ const OwnedVehiclesList = ({ onVehiclePress }) => {
       setLoading(false);
       return () => {};
     }
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'admin_owned_vehicles');
-    const q = query(
-      vehiclesRef,
-      where('status', '==', 'owned'),
-      orderBy('purchaseDate', 'desc')
-    );
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const vehicleList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
+    let disposed = false;
+    let timer = null;
+
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('admin_owned_vehicles')
+          .select('*')
+          .eq('status', 'owned')
+          .order('acquired_at', { ascending: false });
+        if (error) { throw error; }
+        if (disposed) { return; }
+        // 기존 화면 호환 별칭: purchaseDate = acquiredAt
+        setVehicles(data.map((row) => {
+          const record = rowToApp(row);
+          return { ...record, purchaseDate: record.acquiredAt };
         }));
-        setVehicles(vehicleList);
         setLoading(false);
-      },
-      (error) => {
+      } catch (error) {
+        if (disposed) { return; }
         logger.error('OwnedVehiclesList: Failed to fetch vehicles', error);
         reportCrashlyticsError(error);
-        logCrashlyticsMessage('OwnedVehiclesList: Firestore query failed');
+        logCrashlyticsMessage('OwnedVehiclesList: Supabase query failed');
         setLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    const scheduleReload = () => {
+      if (timer) { clearTimeout(timer); }
+      timer = setTimeout(load, 300);
+    };
+
+    load();
+
+    const channel = supabase
+      .channel(`owned-vehicles-${Math.random().toString(36).slice(2, 8)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_owned_vehicles' }, scheduleReload)
+      .subscribe();
+
+    return () => {
+      disposed = true;
+      if (timer) { clearTimeout(timer); }
+      supabase.removeChannel(channel);
+    };
   }, [user, role]);
 
   const formatDate = (timestamp) => {

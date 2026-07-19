@@ -1,25 +1,22 @@
 /**
- * Account Service
+ * Account Service (Phase 2 — Firestore users → Supabase profiles)
  * Handles user account management operations
  */
 
-import auth from '@react-native-firebase/auth';
+import { supabase } from '../../lib/supabase';
+import { rowToApp, appToRow } from '../../lib/mappers';
 import { logger } from '../../utils/logger';
-import firestore from '@react-native-firebase/firestore';
 
 /**
  * Update user profile
  */
 export const updateUserProfile = async (uid, updates) => {
   try {
-    await firestore()
-      .collection('users')
-      .doc(uid)
-      .update({
-        ...updates,
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-      });
-
+    const { error } = await supabase
+      .from('profiles')
+      .update(appToRow({ ...updates, updatedAt: new Date().toISOString() }))
+      .eq('id', uid);
+    if (error) { throw error; }
     return { success: true };
   } catch (error) {
     logger.error('Error updating user profile:', error);
@@ -28,24 +25,20 @@ export const updateUserProfile = async (uid, updates) => {
 };
 
 /**
- * Delete user account
+ * Delete user account (Edge Function이 auth + 데이터 cascade 삭제)
  */
 export const deleteUserAccount = async (uid) => {
   try {
-    const currentUser = auth().currentUser;
-    if (!currentUser || currentUser.uid !== uid) {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) { throw authError; }
+    if (!authData?.user || authData.user.id !== uid) {
       throw new Error('Unauthorized: Cannot delete account');
     }
 
-    // Delete user document from Firestore
-    await firestore()
-      .collection('users')
-      .doc(uid)
-      .delete();
+    const { error } = await supabase.functions.invoke('delete-account');
+    if (error) { throw error; }
 
-    // Delete Firebase Auth user
-    await currentUser.delete();
-
+    await supabase.auth.signOut();
     return { success: true };
   } catch (error) {
     logger.error('Error deleting user account:', error);
@@ -58,16 +51,16 @@ export const deleteUserAccount = async (uid) => {
  */
 export const getUserProfile = async (uid) => {
   try {
-    const userDoc = await firestore()
-      .collection('users')
-      .doc(uid)
-      .get();
-
-    if (!userDoc.exists) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', uid)
+      .maybeSingle();
+    if (error) { throw error; }
+    if (!data) {
       throw new Error('User profile not found');
     }
-
-    return userDoc.data();
+    return rowToApp(data);
   } catch (error) {
     logger.error('Error getting user profile:', error);
     throw error;
@@ -79,21 +72,20 @@ export const getUserProfile = async (uid) => {
  */
 export const updateEmail = async (newEmail) => {
   try {
-    const currentUser = auth().currentUser;
-    if (!currentUser) {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) { throw authError; }
+    if (!authData?.user) {
       throw new Error('No user logged in');
     }
 
-    await currentUser.updateEmail(newEmail);
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    if (error) { throw error; }
 
-    // Update in Firestore
-    await firestore()
-      .collection('users')
-      .doc(currentUser.uid)
-      .update({
-        email: newEmail,
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-      });
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ email: newEmail, updated_at: new Date().toISOString() })
+      .eq('id', authData.user.id);
+    if (profileError) { throw profileError; }
 
     return { success: true };
   } catch (error) {
@@ -107,13 +99,8 @@ export const updateEmail = async (newEmail) => {
  */
 export const updatePassword = async (newPassword) => {
   try {
-    const currentUser = auth().currentUser;
-    if (!currentUser) {
-      throw new Error('No user logged in');
-    }
-
-    await currentUser.updatePassword(newPassword);
-
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) { throw error; }
     return { success: true };
   } catch (error) {
     logger.error('Error updating password:', error);

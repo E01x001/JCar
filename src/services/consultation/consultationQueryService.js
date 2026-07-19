@@ -1,304 +1,147 @@
 /**
- * Consultation Query Service
+ * Consultation Query Service (Phase 2c — Firestore → Supabase)
  *
- * Handles consultation read operations including:
- * - Real-time subscriptions to consultations
- * - Fetching consultation data with pagination
- * - Querying admin-owned vehicles
- *
- * Task #88: Modular service refactoring
+ * 관리자 상담 탭용 조회/구독. RLS상 이 쿼리들은 관리자에게만 전체가 반환된다.
+ * 구독은 postgres_changes 수신 → 디바운스 재조회(coarse refetch) 방식.
  */
-
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  getDocs,
-  startAfter,
-  limit,
-} from '@react-native-firebase/firestore';
-import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/notificationService';
+import { supabase } from '../../lib/supabase';
+import { consultationRowToApp, rowToApp } from '../../lib/mappers';
 import { CONSULTATION_STATUS } from '../../constants';
+import { reportCrashlyticsError, logCrashlyticsMessage } from '../notification/notificationService';
 import { logger } from '../../utils/logger';
 
-/**
- * Subscribe to buy consultations in real-time
- * Task 86: Server-side type filtering instead of client-side
- * @param {Function} callback - Callback function with consultation array
- * @returns {Function} Unsubscribe function
- */
-export const subscribeToBuyConsultations = (callback) => {
-  try {
-    const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
-    const q = query(
-      consultationsRef,
-      where('type', '==', 'buy'),
-      where('consultationStatus', 'in', [
-        CONSULTATION_STATUS.PENDING,
-        CONSULTATION_STATUS.CONFIRMED,
-        CONSULTATION_STATUS.ON_HOLD,
-        CONSULTATION_STATUS.REJECTED,
-      ]),
-      orderBy('createdAt', 'desc')
-    );
+const ACTIVE_STATUSES = ['pending', 'approved', 'confirmed', 'on-hold', 'rejected'];
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const consultations = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }));
-        callback(consultations);
-      },
-      (error) => {
-        logger.error('구매상담 구독 오류:', error);
-        reportCrashlyticsError(error);
-        logCrashlyticsMessage('subscribeToBuyConsultations failed');
-        callback([]);
-      }
-    );
-
-    return unsubscribe;
-  } catch (error) {
-    logger.error('구매상담 구독 설정 오류:', error);
-    reportCrashlyticsError(error);
-    logCrashlyticsMessage('subscribeToBuyConsultations setup failed');
-    return () => {};
-  }
+const makeSubscription = (refetchFn, callback, channelKey) => {
+  let disposed = false;
+  let timer = null;
+  const load = async () => {
+    try {
+      const list = await refetchFn();
+      if (!disposed) { callback(list); }
+    } catch (error) {
+      logger.error(`상담 조회 오류(${channelKey}):`, error);
+    }
+  };
+  const scheduleReload = () => {
+    if (timer) { clearTimeout(timer); }
+    timer = setTimeout(load, 300);
+  };
+  load();
+  const channel = supabase
+    .channel(`${channelKey}-${Math.random().toString(36).slice(2, 8)}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'consultation_requests' }, scheduleReload)
+    .subscribe();
+  return () => {
+    disposed = true;
+    if (timer) { clearTimeout(timer); }
+    supabase.removeChannel(channel);
+  };
 };
 
-/**
- * Subscribe to sell consultations in real-time
- * Task 86: Server-side type filtering instead of client-side
- * @param {Function} callback - Callback function with consultation array
- * @returns {Function} Unsubscribe function
- */
-export const subscribeToSellConsultations = (callback) => {
-  try {
-    const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
-    const q = query(
-      consultationsRef,
-      where('type', '==', 'sell'),
-      where('consultationStatus', 'in', [
-        CONSULTATION_STATUS.PENDING,
-        CONSULTATION_STATUS.CONFIRMED,
-        CONSULTATION_STATUS.ON_HOLD,
-        CONSULTATION_STATUS.REJECTED,
-      ]),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const consultations = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        callback(consultations);
-      },
-      (error) => {
-        logger.error('판매상담 구독 오류:', error);
-        reportCrashlyticsError(error);
-        logCrashlyticsMessage('subscribeToSellConsultations failed');
-        callback([]);
-      }
-    );
-
-    return unsubscribe;
-  } catch (error) {
-    logger.error('판매상담 구독 설정 오류:', error);
-    reportCrashlyticsError(error);
-    logCrashlyticsMessage('subscribeToSellConsultations setup failed');
-    return () => {};
-  }
+const fetchByType = async (type) => {
+  const { data, error } = await supabase
+    .from('consultation_requests')
+    .select('*')
+    .eq('type', type)
+    .in('consultation_status', ACTIVE_STATUSES)
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (error) { throw error; }
+  return data.map(consultationRowToApp);
 };
 
-/**
- * Subscribe to completed and archived consultations in real-time
- *
- * Performance Optimization (Task 56):
- * - Server-side orderBy removed to avoid redundant sorting
- * - Uses client-side sorting by archivedAt || completedAt for correct chronological order
- * - Client-side sorting is acceptable because:
- *   1. Small dataset: completed/archived consultations are typically limited
- *   2. Custom logic: sorting by archivedAt OR completedAt requires client-side processing
- *   3. Composite index: firestore.indexes.json includes consultationStatus + createdAt for efficient filtering
- *
- * Note: If dataset grows significantly (>1000 items), consider implementing server-side pagination
- *
- * Task 50: includes both 'completed' and 'archived' statuses
- *
- * @param {Function} callback - Function to call with consultation array
- * @returns {Function} Unsubscribe function
- */
-export const subscribeToCompletedConsultations = (callback) => {
-  try {
-    const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
-    const q = query(
-      consultationsRef,
-      where('consultationStatus', 'in', [CONSULTATION_STATUS.COMPLETED, CONSULTATION_STATUS.ARCHIVED])
-      // No orderBy here - client-side sorting handles chronological order
-    );
+/** 구매 상담 실시간 구독 (관리자) — @returns unsubscribe */
+export const subscribeToBuyConsultations = (callback) =>
+  makeSubscription(() => fetchByType('buy'), callback, 'admin-buy');
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const consultations = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+/** 판매 상담 실시간 구독 (관리자) — @returns unsubscribe */
+export const subscribeToSellConsultations = (callback) =>
+  makeSubscription(() => fetchByType('sell'), callback, 'admin-sell');
 
-        // Client-side sort by archivedAt or completedAt (most recent first)
-        // This is necessary because consultations can have either field set
-        consultations.sort((a, b) => {
-          const aDate = a.archivedAt || a.completedAt;
-          const bDate = b.archivedAt || b.completedAt;
-          if (!aDate) {return 1;}  // Items without dates go to end
-          if (!bDate) {return -1;} // Items without dates go to end
-          return bDate.toMillis() - aDate.toMillis(); // Descending order
-        });
-
-        callback(consultations);
-      },
-      (error) => {
-        logger.error('거래완료 상담 구독 오류:', error);
-        reportCrashlyticsError(error);
-        logCrashlyticsMessage('subscribeToCompletedConsultations failed');
-        callback([]);
-      }
-    );
-
-    return unsubscribe;
-  } catch (error) {
-    logger.error('거래완료 상담 구독 설정 오류:', error);
-    reportCrashlyticsError(error);
-    logCrashlyticsMessage('subscribeToCompletedConsultations setup failed');
-    return () => {};
-  }
-};
+/** 완료 상담 실시간 구독 (관리자) — @returns unsubscribe */
+export const subscribeToCompletedConsultations = (callback) =>
+  makeSubscription(async () => {
+    const { data, error } = await supabase
+      .from('consultation_requests')
+      .select('*')
+      .in('consultation_status', [CONSULTATION_STATUS.COMPLETED, CONSULTATION_STATUS.ARCHIVED])
+      .order('completed_at', { ascending: false, nullsFirst: false })
+      .limit(300);
+    if (error) { throw error; }
+    return data.map(consultationRowToApp);
+  }, callback, 'admin-completed');
 
 /**
- * Fetch completed/archived consultations with pagination support
- *
- * Task 86: Migrated client-side filtering to server-side Firestore compound queries
- *
- * @param {Object} options - Query options
- * @param {number} options.limit - Number of items per page (default: 50)
- * @param {Object} options.startAfterDoc - Firestore DocumentSnapshot for pagination cursor
- * @param {string} options.monthFilter - Month filter in 'YYYY-MM' format (optional)
- * @param {string} options.typeFilter - Consultation type filter: 'buy', 'sell', or 'all' (default: 'all')
- * @returns {Promise<{consultations: Array, lastVisibleDoc: Object, hasMore: boolean}>}
+ * 완료 상담 페이지네이션 조회.
+ * 기존 시그니처 유지 — Firestore 커서(startAfterDoc/lastVisibleDoc) 자리는
+ * 이제 숫자 오프셋으로 사용한다(호출부는 반환값을 그대로 되돌려주므로 무수정 호환).
+ * @returns {Promise<{consultations: Array, lastVisibleDoc: number|null, hasMore: boolean}>}
  */
 export const fetchCompletedConsultationsPaginated = async ({
   limit: pageLimit = 50,
   startAfterDoc = null,
   monthFilter = 'all',
   typeFilter = 'all',
-}) => {
+} = {}) => {
   try {
-    const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
+    const offset = typeof startAfterDoc === 'number' ? startAfterDoc : 0;
 
-    const constraints = [
-      where('consultationStatus', 'in', [CONSULTATION_STATUS.COMPLETED, CONSULTATION_STATUS.ARCHIVED]),
-    ];
+    let query = supabase
+      .from('consultation_requests')
+      .select('*')
+      .in('consultation_status', [CONSULTATION_STATUS.COMPLETED, CONSULTATION_STATUS.ARCHIVED]);
 
-    // Task 86: Server-side type filtering
     if (typeFilter !== 'all') {
-      constraints.push(where('type', '==', typeFilter));
+      query = query.eq('type', typeFilter);
     }
 
-    // Task 86: Server-side month filtering using date range
     if (monthFilter !== 'all') {
       const [year, month] = monthFilter.split('-').map(Number);
-      const startOfMonth = new Date(year, month - 1, 1);
-      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
-      // Query using completedAt field (assuming consultations are completed before archived)
-      // Note: This requires a composite index in Firestore
-      constraints.push(where('completedAt', '>=', startOfMonth));
-      constraints.push(where('completedAt', '<=', endOfMonth));
+      const start = new Date(year, month - 1, 1).toISOString();
+      const end = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
+      query = query.gte('completed_at', start).lte('completed_at', end);
     }
 
-    // Task 86: Server-side sorting by completedAt (most recent first)
-    // Note: orderBy must come after where clauses
-    constraints.push(orderBy('completedAt', 'desc'));
+    const { data, error } = await query
+      .order('completed_at', { ascending: false, nullsFirst: false })
+      .range(offset, offset + pageLimit); // +1건으로 hasMore 판정
 
-    // Apply pagination cursor
-    if (startAfterDoc) {
-      constraints.push(startAfter(startAfterDoc));
-    }
+    if (error) { throw error; }
 
-    // Apply limit + 1 to check if there are more results
-    constraints.push(limit(pageLimit + 1));
-
-    const q = query(consultationsRef, ...constraints);
-    const snapshot = await getDocs(q);
-    const docs = snapshot.docs;
-
-    // Check if there are more results
-    const hasMore = docs.length > pageLimit;
-
-    // Remove the extra document if exists
-    const consultationDocs = hasMore ? docs.slice(0, pageLimit) : docs;
-
-    const consultations = consultationDocs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      _doc: doc, // Store document reference for pagination
-    }));
-
-    // Get last visible document for next page
-    const lastVisibleDoc = consultationDocs.length > 0
-      ? consultationDocs[consultationDocs.length - 1]
-      : null;
+    const hasMore = data.length > pageLimit;
+    const pageRows = hasMore ? data.slice(0, pageLimit) : data;
 
     return {
-      consultations,
-      lastVisibleDoc,
+      consultations: pageRows.map(consultationRowToApp),
+      lastVisibleDoc: pageRows.length > 0 ? offset + pageRows.length : null,
       hasMore,
     };
   } catch (error) {
     logger.error('거래완료 상담 페이지네이션 조회 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('fetchCompletedConsultationsPaginated failed');
-    return {
-      consultations: [],
-      lastVisibleDoc: null,
-      hasMore: false,
-    };
+    return { consultations: [], lastVisibleDoc: null, hasMore: false };
   }
 };
 
 /**
- * Get admin-owned vehicles
- * @param {string} statusFilter - Status filter ('owned', 'sold', or null for all)
+ * 관리자 매입 보유 차량 목록
+ * @param {string|null} statusFilter - 'owned' | 'sold' | null(전체)
  * @returns {Promise<{success: boolean, vehicles: Array, error?: Error}>}
  */
 export const getAdminOwnedVehicles = async (statusFilter = null) => {
   try {
-    const db = getFirestore();
-    const ownedVehiclesRef = collection(db, 'admin_owned_vehicles');
+    let query = supabase
+      .from('admin_owned_vehicles')
+      .select('*')
+      .order('acquired_at', { ascending: false })
+      .limit(300);
+    if (statusFilter) { query = query.eq('status', statusFilter); }
 
-    const constraints = [orderBy('purchaseDate', 'desc')];
-    if (statusFilter) {
-      constraints.push(where('status', '==', statusFilter));
-    }
-
-    const q = query(ownedVehiclesRef, ...constraints);
-    const snapshot = await getDocs(q);
-    const vehicles = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    return { success: true, vehicles };
+    const { data, error } = await query;
+    if (error) { throw error; }
+    return { success: true, vehicles: data.map(rowToApp) };
   } catch (error) {
     logger.error('관리자 소유 차량 조회 오류:', error);
     reportCrashlyticsError(error);

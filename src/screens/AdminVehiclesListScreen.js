@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropTypes from 'prop-types';
-import functions from '@react-native-firebase/functions';
+import { deleteVehicleAdmin } from '../services/vehicle/vehicleService';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
@@ -92,29 +92,11 @@ const AdminVehiclesListScreen = ({ navigation }) => {
           onPress: async () => {
             setDeletingVehicleId(vehicleId);
             try {
-              // Firebase Function 호출
-              const emergencyDeleteVehicleFunction = functions().httpsCallable('emergencyDeleteVehicle');
-              const result = await emergencyDeleteVehicleFunction({ vehicleId });
-
-              // Note: UI will auto-update via Firestore listener
-
-              Alert.alert(
-                '삭제 완료',
-                result.data.message + `\n삭제된 이미지: ${result.data.deletedImages}개`
-              );
+              // Supabase 직접 삭제 (관리자 RLS) + 이미지 best-effort 정리
+              // 성공/실패 Alert는 서비스가 표시하고, UI는 realtime 구독으로 갱신된다.
+              await deleteVehicleAdmin(vehicleId);
             } catch (error) {
               logger.error('차량 삭제 오류:', error);
-
-              let errorMessage = '차량 삭제 중 문제가 발생했습니다.';
-              if (error.code === 'permission-denied') {
-                errorMessage = '관리자 권한이 필요합니다.';
-              } else if (error.code === 'not-found') {
-                errorMessage = '차량을 찾을 수 없습니다.';
-              } else if (error.message) {
-                errorMessage = error.message;
-              }
-
-              Alert.alert('삭제 실패', errorMessage);
             } finally {
               setDeletingVehicleId(null);
             }

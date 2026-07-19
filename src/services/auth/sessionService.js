@@ -1,9 +1,9 @@
 /**
- * Session Service
+ * Session Service (Phase 2a — Firebase Auth → Supabase Auth)
  * Handles user session management and token operations
  */
 
-import auth from '@react-native-firebase/auth';
+import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 
 /**
@@ -11,16 +11,17 @@ import { logger } from '../../utils/logger';
  */
 export const getCurrentSession = async () => {
   try {
-    const currentUser = auth().currentUser;
-    if (!currentUser) {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) { throw error; }
+    const user = data?.session?.user;
+    if (!user) {
       return null;
     }
-
     return {
-      uid: currentUser.uid,
-      email: currentUser.email,
-      phoneNumber: currentUser.phoneNumber,
-      emailVerified: currentUser.emailVerified,
+      uid: user.id,
+      email: user.email ?? null,
+      phoneNumber: user.phone ?? null,
+      emailVerified: !!user.email_confirmed_at,
     };
   } catch (error) {
     logger.error('Error getting current session:', error);
@@ -33,13 +34,12 @@ export const getCurrentSession = async () => {
  */
 export const refreshToken = async () => {
   try {
-    const currentUser = auth().currentUser;
-    if (!currentUser) {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) { throw error; }
+    if (!data?.session) {
       throw new Error('No user logged in');
     }
-
-    const token = await currentUser.getIdToken(true);
-    return token;
+    return data.session.access_token;
   } catch (error) {
     logger.error('Error refreshing token:', error);
     throw error;
@@ -49,10 +49,11 @@ export const refreshToken = async () => {
 /**
  * Check if session is valid
  */
-export const isSessionValid = () => {
+export const isSessionValid = async () => {
   try {
-    const currentUser = auth().currentUser;
-    return currentUser !== null;
+    const { data, error } = await supabase.auth.getSession();
+    if (error) { throw error; }
+    return !!data?.session;
   } catch (error) {
     logger.error('Error checking session validity:', error);
     return false;
@@ -64,13 +65,12 @@ export const isSessionValid = () => {
  */
 export const getUserToken = async () => {
   try {
-    const currentUser = auth().currentUser;
-    if (!currentUser) {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) { throw error; }
+    if (!data?.session) {
       throw new Error('No user logged in');
     }
-
-    const token = await currentUser.getIdToken();
-    return token;
+    return data.session.access_token;
   } catch (error) {
     logger.error('Error getting user token:', error);
     throw error;

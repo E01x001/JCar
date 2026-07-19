@@ -11,7 +11,6 @@
 
 import ImagePicker from 'react-native-image-crop-picker';
 import { Image } from 'react-native-compressor';
-import storage from '@react-native-firebase/storage';
 import { logger } from './logger';
 
 // Configuration constants
@@ -187,42 +186,6 @@ export const validateFileSize = (sizeInBytes) => {
     );
   }
   return true;
-};
-
-/**
- * Upload image to Firebase Storage with progress tracking
- * @param {string} imageUri - Local file path
- * @param {string} storagePath - Firebase storage path (e.g., 'vehicles/image.jpg')
- * @param {Function} onProgress - Callback for progress updates (0-100)
- * @returns {Promise<string>} Download URL of uploaded image
- */
-export const uploadImageWithProgress = async (imageUri, storagePath, onProgress) => {
-  try {
-    const reference = storage().ref(storagePath);
-    const uploadTask = reference.putFile(imageUri);
-
-    // Track upload progress
-    uploadTask.on('state_changed', (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      logger.debug(`📤 Upload progress: ${progress.toFixed(0)}%`);
-
-      if (onProgress) {
-        onProgress(progress);
-      }
-    });
-
-    // Wait for upload to complete
-    await uploadTask;
-
-    // Get download URL
-    const downloadURL = await reference.getDownloadURL();
-    logger.debug('✅ Image uploaded successfully:', downloadURL);
-
-    return downloadURL;
-  } catch (error) {
-    logger.error('❌ Image upload failed:', error);
-    throw new Error('이미지 업로드 중 오류가 발생했습니다.');
-  }
 };
 
 /**

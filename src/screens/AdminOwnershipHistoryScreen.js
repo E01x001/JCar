@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
-import { getFirestore, collection, query, orderBy, getDocs } from '@react-native-firebase/firestore';
+import { getAllOwnershipTransfers } from '../services/ownershipTransferService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import Card from '../components/Card';
 import InputField from '../components/InputField';
@@ -73,18 +73,7 @@ const AdminOwnershipHistoryScreen = ({ navigation }) => {
     try {
       logger.debug('📥 Fetching ownership transfers');
 
-      // Get Firestore instance
-      const db = getFirestore();
-      const transfersRef = collection(db, 'ownership_transfers');
-
-      // Build and execute query
-      const q = query(transfersRef, orderBy('transferredAt', 'desc'));
-      const snapshot = await getDocs(q);
-
-      const transfersData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const transfersData = await getAllOwnershipTransfers(300);
 
       setTransfers(transfersData);
       setError(null);
@@ -120,7 +109,8 @@ const AdminOwnershipHistoryScreen = ({ navigation }) => {
     if (dateFilter !== 'all' && startDate) {
       filtered = filtered.filter((transfer) => {
         if (!transfer.transferredAt) {return false;}
-        const transferDate = transfer.transferredAt.toDate();
+        // 매퍼가 epoch ms 숫자로 변환해 줌
+        const transferDate = new Date(transfer.transferredAt);
         return transferDate >= startDate;
       });
     }

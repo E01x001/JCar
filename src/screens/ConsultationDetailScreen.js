@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { consultationRowToApp } from '../lib/mappers';
 
 const ConsultationDetailScreen = ({ route }) => {
   const { id } = route.params; // 상담 ID
@@ -11,11 +12,14 @@ const ConsultationDetailScreen = ({ route }) => {
   useEffect(() => {
     const fetchConsultation = async () => {
       try {
-        const db = getFirestore();
-        const docRef = doc(db, 'consultation_requests', id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setConsultation(docSnap.data());
+        const { data, error } = await supabase
+          .from('consultation_requests')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (error) { throw error; }
+        if (data) {
+          setConsultation(consultationRowToApp(data));
         }
       } catch (error) {
         logger.error('상담 데이터 가져오기 실패:', error);

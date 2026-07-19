@@ -1,25 +1,19 @@
 /**
- * useOwnershipStats Hook
+ * useOwnershipStats Hook (Phase 2 — Firestore → Supabase)
  *
- * Custom hook for fetching and calculating ownership transfer statistics.
- * Provides total transfer count and total transaction amount for a given date range.
+ * 기간별 소유권 이전 건수/총 거래액 통계.
  */
 
 import { useState, useEffect } from 'react';
 import { logger } from '../utils/logger';
-import firestore from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 
 /**
  * Hook to fetch ownership transfer statistics
- *
  * @param {Date|null} startDate - Start date for filtering (inclusive)
  * @param {Date|null} endDate - End date for filtering (inclusive)
- * @returns {Object} Statistics object
- * @returns {number} return.totalTransfers - Total number of transfers
- * @returns {number} return.totalAmount - Total transaction amount (KRW)
- * @returns {boolean} return.loading - Loading state
- * @returns {Error|null} return.error - Error object if fetch failed
+ * @returns {{totalTransfers: number, totalAmount: number, loading: boolean, error: Error|null}}
  */
 const useOwnershipStats = (startDate = null, endDate = null) => {
   const [stats, setStats] = useState({
@@ -30,6 +24,8 @@ const useOwnershipStats = (startDate = null, endDate = null) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let disposed = false;
+
     const fetchStats = async () => {
       setLoading(true);
       setError(null);
@@ -37,55 +33,42 @@ const useOwnershipStats = (startDate = null, endDate = null) => {
       try {
         logger.debug('📊 Fetching ownership transfer stats', { startDate, endDate });
 
-        // Build query
-        let transfersQuery = firestore()
-          .collection('ownership_transfers')
-          .orderBy('transferredAt', 'desc');
+        let query = supabase
+          .from('ownership_transfers')
+          .select('price')
+          .order('transferred_at', { ascending: false });
 
-        // Apply date filters if provided
         if (startDate) {
-          const startTimestamp = firestore.Timestamp.fromDate(startDate);
-          transfersQuery = transfersQuery.where('transferredAt', '>=', startTimestamp);
+          query = query.gte('transferred_at', startDate.toISOString());
         }
-
         if (endDate) {
-          // Set end date to end of day (23:59:59)
           const endOfDay = new Date(endDate);
           endOfDay.setHours(23, 59, 59, 999);
-          const endTimestamp = firestore.Timestamp.fromDate(endOfDay);
-          transfersQuery = transfersQuery.where('transferredAt', '<=', endTimestamp);
+          query = query.lte('transferred_at', endOfDay.toISOString());
         }
 
-        // Execute query
-        const snapshot = await transfersQuery.get();
+        const { data, error: fetchError } = await query;
+        if (fetchError) { throw fetchError; }
 
-        // Calculate statistics
-        let totalTransfers = 0;
-        let totalAmount = 0;
+        const totalTransfers = data.length;
+        const totalAmount = data.reduce((sum, row) => sum + (Number(row.price) || 0), 0);
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          totalTransfers++;
-          totalAmount += data.price || 0;
-        });
-
-        setStats({
-          totalTransfers,
-          totalAmount,
-        });
-
+        if (!disposed) {
+          setStats({ totalTransfers, totalAmount });
+        }
         logger.debug('✅ Ownership stats fetched', { totalTransfers, totalAmount });
       } catch (err) {
         logger.error('❌ Failed to fetch ownership stats:', err);
         reportCrashlyticsError(err);
         logCrashlyticsMessage('useOwnershipStats failed');
-        setError(err);
+        if (!disposed) { setError(err); }
       } finally {
-        setLoading(false);
+        if (!disposed) { setLoading(false); }
       }
     };
 
     fetchStats();
+    return () => { disposed = true; };
   }, [startDate, endDate]);
 
   return { ...stats, loading, error };

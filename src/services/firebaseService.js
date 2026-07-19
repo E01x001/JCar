@@ -4,7 +4,7 @@
  *
  * - Auth functions → src/services/auth/authService.js, sessionService.js, accountService.js
  * - Vehicle functions → src/services/vehicle/vehicleService.js, vehicleApprovalService.js, vehicleQueryService.js
- * - Consultation functions → src/services/consultation/consultationService.js, consultationQueryService.js, consultationValidation.js
+ * - Consultation functions → src/services/consultation/consultationService.js, consultationQueryService.js
  * - Notification functions → src/services/notification/fcmService.js, notificationService.js
  * - Storage functions → src/services/storage/imageService.js
  *
@@ -27,7 +27,6 @@ export { getApprovedVehicles, getVehicleById, getVehiclesBySellerId, getVehicles
 // Consultation services
 export { saveConsultationRequest, deleteConsultationAdmin, updateConsultationStatus, updateAdminMemo, updateSuggestedSlots, completeConsultation, cancelConsultation, resubmitConsultation, createAdminOwnedVehicle, updateAdminOwnedVehicle } from './consultation/consultationService';
 export { subscribeToBuyConsultations, subscribeToSellConsultations, subscribeToCompletedConsultations, fetchCompletedConsultationsPaginated, getAdminOwnedVehicles } from './consultation/consultationQueryService';
-export { checkDuplicateConsultation, checkTimeSlotConflict, validateConsultationRequest, canModifyConsultation, canCancelConsultation } from './consultation/consultationValidation';
 
 // Notification services
 export { getFCMToken, requestFCMNotificationPermission, requestNotificationPermission, saveFcmToken } from './notification/fcmService';

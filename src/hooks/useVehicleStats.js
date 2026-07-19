@@ -1,95 +1,80 @@
 /**
- * useVehicleStats Hook
+ * useVehicleStats Hook (Phase 2 — Firestore → Supabase)
  *
- * Fetches vehicle data from Firestore in real-time and calculates aggregate statistics
- * for total count and status breakdowns.
+ * 차량 통계(전체/상태별)를 조회하고, realtime 변경 시 재조회한다.
  */
 
 import { useState, useEffect, useContext } from 'react';
 import { logger } from '../utils/logger';
-import firestore from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 
+const EMPTY = { total: 0, pending: 0, approved: 0, rejected: 0 };
+
 /**
  * Custom hook to fetch and calculate vehicle statistics in real-time
- *
- * @returns {Object} stats - Vehicle statistics object
- * @returns {number} stats.total - Total number of vehicles
- * @returns {number} stats.pending - Number of pending vehicles
- * @returns {number} stats.approved - Number of approved vehicles
- * @returns {number} stats.rejected - Number of rejected vehicles
- * @returns {boolean} stats.loading - Loading state
+ * @returns {{total: number, pending: number, approved: number, rejected: number, loading: boolean}}
  */
 const useVehicleStats = () => {
   const { user, role } = useContext(AuthContext);
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-    loading: true,
-  });
+  const [stats, setStats] = useState({ ...EMPTY, loading: true });
 
   useEffect(() => {
-    // Don't fetch stats if user is not authenticated or not admin
     if (!user || role !== 'admin') {
-      setStats({
-        total: 0,
-        pending: 0,
-        approved: 0,
-        rejected: 0,
-        loading: false,
-      });
+      setStats({ ...EMPTY, loading: false });
       return () => {};
     }
 
-    const unsubscribe = firestore()
-      .collection('vehicles')
-      .onSnapshot(
-        (snapshot) => {
-          // Calculate statistics from snapshot
-          let total = 0;
-          let pending = 0;
-          let approved = 0;
-          let rejected = 0;
+    let disposed = false;
+    let timer = null;
 
-          snapshot.forEach((doc) => {
-            total++;
-            const data = doc.data();
-            const status = data.status;
+    const countByStatus = async (status) => {
+      let query = supabase.from('vehicles').select('id', { count: 'exact', head: true });
+      if (status) { query = query.eq('status', status); }
+      const { count, error } = await query;
+      if (error) { throw error; }
+      return count ?? 0;
+    };
 
-            if (status === 'pending') {
-              pending++;
-            } else if (status === 'approved') {
-              approved++;
-            } else if (status === 'rejected') {
-              rejected++;
-            }
-          });
-
-          setStats({
-            total,
-            pending,
-            approved,
-            rejected,
-            loading: false,
-          });
-        },
-        (error) => {
-          logger.error('useVehicleStats: Failed to fetch vehicle statistics', error);
-          reportCrashlyticsError(error);
-          logCrashlyticsMessage('useVehicleStats: Firestore query failed');
-
-          // Set loading to false even on error
-          setStats((prev) => ({
-            ...prev,
-            loading: false,
-          }));
+    const load = async () => {
+      try {
+        const [total, pending, approved, rejected] = await Promise.all([
+          countByStatus(null),
+          countByStatus('pending'),
+          countByStatus('approved'),
+          countByStatus('rejected'),
+        ]);
+        if (!disposed) {
+          setStats({ total, pending, approved, rejected, loading: false });
         }
-      );
+      } catch (error) {
+        logger.error('useVehicleStats: Failed to fetch vehicle statistics', error);
+        reportCrashlyticsError(error);
+        logCrashlyticsMessage('useVehicleStats: Supabase query failed');
+        if (!disposed) {
+          setStats((prev) => ({ ...prev, loading: false }));
+        }
+      }
+    };
 
-    return () => unsubscribe();
+    const scheduleReload = () => {
+      if (timer) { clearTimeout(timer); }
+      timer = setTimeout(load, 300);
+    };
+
+    load();
+
+    const channel = supabase
+      .channel(`vehicle-stats-${Math.random().toString(36).slice(2, 8)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, scheduleReload)
+      .subscribe();
+
+    return () => {
+      disposed = true;
+      if (timer) { clearTimeout(timer); }
+      supabase.removeChannel(channel);
+    };
   }, [user, role]);
 
   return stats;

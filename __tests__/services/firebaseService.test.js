@@ -93,22 +93,18 @@ describe('firebaseService', () => {
   });
 
   describe('saveConsultationRequest', () => {
+    // Phase 2c: Supabase insert + (구매 상담 시) mark_vehicle_acquiring RPC
+    const { supabase } = require('../../__mocks__/supabaseClientMock');
+
+    // resetMocks/restoreMocks 설정이 목 구현을 초기화하므로 매 테스트 재설정
+    beforeEach(() => {
+      supabase.from.mockImplementation(() => ({
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      }));
+      supabase.rpc.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+    });
+
     it('should successfully save consultation request', async () => {
-      // Mock Firebase Functions for rate limit check
-      const mockHttpsCallable = jest.fn().mockResolvedValue({
-        data: { allowed: true, remainingRequests: 5 },
-      });
-      functions.mockReturnValue({
-        httpsCallable: jest.fn().mockReturnValue(mockHttpsCallable),
-      });
-
-      // Mock modular Firestore API (슬롯 선점 배치 쓰기)
-      getFirestore.mockReturnValue({});
-      collection.mockReturnValue({ _collectionPath: 'consultation_requests' });
-      doc.mockReturnValue({ id: 'consultation-123' });
-      const mockBatch = { set: jest.fn(), update: jest.fn(), commit: jest.fn().mockResolvedValue() };
-      writeBatch.mockReturnValue(mockBatch);
-
       const consultationData = {
         userId: 'user-123',
         userName: 'Test User',
@@ -124,32 +120,20 @@ describe('firebaseService', () => {
       const result = await saveConsultationRequest(consultationData);
 
       expect(result.success).toBe(true);
-      // 상담 문서 + 슬롯 문서 배치 커밋 확인
-      expect(mockBatch.set).toHaveBeenCalledTimes(2);
-      expect(mockBatch.commit).toHaveBeenCalled();
+      expect(supabase.from).toHaveBeenCalledWith('consultation_requests');
+      // 구매 상담이므로 차량 acquiring 전환 RPC 호출
+      expect(supabase.rpc).toHaveBeenCalledWith('mark_vehicle_acquiring', {
+        p_vehicle_id: 'vehicle-123',
+      });
     });
 
     it('should handle missing fields with defaults', async () => {
-      // Mock Firebase Functions for rate limit check
-      const mockHttpsCallable = jest.fn().mockResolvedValue({
-        data: { allowed: true, remainingRequests: 5 },
-      });
-      functions.mockReturnValue({
-        httpsCallable: jest.fn().mockReturnValue(mockHttpsCallable),
-      });
-
-      // Mock modular Firestore API (필드 없음 → 슬롯 없이 상담 문서만)
-      getFirestore.mockReturnValue({});
-      collection.mockReturnValue({ _collectionPath: 'consultation_requests' });
-      doc.mockReturnValue({ id: 'consultation-123' });
-      const mockBatch = { set: jest.fn(), update: jest.fn(), commit: jest.fn().mockResolvedValue() };
-      writeBatch.mockReturnValue(mockBatch);
-
       const result = await saveConsultationRequest({});
 
       expect(result.success).toBe(true);
-      expect(mockBatch.set).toHaveBeenCalledTimes(1); // 슬롯 정보 없으니 상담 문서만
-      expect(mockBatch.commit).toHaveBeenCalled();
+      expect(supabase.from).toHaveBeenCalledWith('consultation_requests');
+      // vehicleId 없으면 RPC 미호출
+      expect(supabase.rpc).not.toHaveBeenCalled();
     });
   });
 

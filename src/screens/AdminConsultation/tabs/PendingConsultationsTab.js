@@ -7,7 +7,7 @@ import Card from '../../../components/Card';
 import Tag from '../../../components/Tag';
 import Button from '../../../components/Button';
 import StateScreen from '../../../components/StateScreen';
-import { getFirestore, doc, updateDoc, getDoc } from '@react-native-firebase/firestore';
+import { updateConsultationStatus } from '../../../services/consultation/consultationService';
 
 const PendingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
   const theme = useTheme();
@@ -17,17 +17,7 @@ const PendingConsultationsTab = ({ consultations, onNavigateToVehicle }) => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const db = getFirestore();
-      const docRef = doc(db, 'consultation_requests', id);
-
-      // Check if document exists before updating
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        Alert.alert('오류', '상담 요청을 찾을 수 없습니다.');
-        return;
-      }
-
-      await updateDoc(docRef, { consultationStatus: newStatus });
+      await updateConsultationStatus(id, newStatus);
 
       // Provide user feedback with Korean status text
       const statusText = newStatus === 'approved' ? '승인' : newStatus === 'rejected' ? '거절' : newStatus;

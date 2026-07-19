@@ -4,10 +4,8 @@ import {
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
-import { getFirestore, collection, query, where, getDocs } from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
-import { saveConsultationRequest, resubmitConsultation, checkConsultationRateLimit } from '../services/consultation/consultationService';
-import { isSlotTaken } from '../services/consultation/consultationSlotService';
+import { saveConsultationRequest, resubmitConsultation, checkConsultationRateLimit, isSlotTaken, hasActiveConsultation } from '../services/consultation/consultationService';
 import useConsultationStore from '../stores/consultationStore';
 import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelpers';
 import { logger } from '../utils/logger';
@@ -49,20 +47,9 @@ const ConsultationRequestScreen = ({ route }) => {
     }
   }, [isResubmitMode, existingDate, existingTime]);
 
-  const checkDuplicateConsultation = async (userId, vehicleId) => {
-    const db = getFirestore();
-    const q = query(
-      collection(db, 'consultation_requests'),
-      where('userId', '==', userId),
-      where('vehicleId', '==', vehicleId)
-    );
-    const snapshot = await getDocs(q);
-    const active = snapshot.docs.filter(doc => {
-      const s = doc.data().consultationStatus || doc.data().status;
-      return s !== 'cancelled';
-    });
-    return active.length > 0;
-  };
+  // 차량 DB PK(uuid). Supabase 이전 후 vehicle.vehicleId는 차량번호 별칭이므로
+  // 데이터 작업에는 반드시 id를 쓴다.
+  const vehicleDbId = vehicle?.id;
 
   const handleSubmit = async () => {
     if (submitting) { return; }
@@ -72,8 +59,8 @@ const ConsultationRequestScreen = ({ route }) => {
 
     setSubmitting(true);
 
-    // 이미 다른 상담이 점유한 시간인지 사전 확인(빠른 피드백 — 최종 방어는 배치 create)
-    if (await isSlotTaken(vehicle.vehicleId, selectedDate, selectedTime)) {
+    // 이미 다른 상담이 점유한 시간인지 사전 확인(빠른 피드백 — 최종 방어는 DB UNIQUE)
+    if (await isSlotTaken(vehicleDbId, selectedDate, selectedTime)) {
       toast.showWarning('예약 불가', '이미 예약된 시간입니다. 다른 시간을 선택해주세요.');
       setSubmitting(false);
       return;
@@ -93,7 +80,7 @@ const ConsultationRequestScreen = ({ route }) => {
       return;
     }
 
-    const isDuplicate = await checkDuplicateConsultation(user.uid, vehicle.vehicleId);
+    const isDuplicate = await hasActiveConsultation(user.uid, vehicleDbId);
     if (isDuplicate) {
       toast.showWarning('중복 요청', '이미 이 차량에 대한 상담을 신청하셨습니다.');
       setSubmitting(false);
@@ -112,7 +99,7 @@ const ConsultationRequestScreen = ({ route }) => {
       userId: user.uid,
       userName: sellerName || '익명',
       userPhone: sellerPhone || '미등록',
-      vehicleId: vehicle.vehicleId,
+      vehicleId: vehicleDbId,
       vehicleName: vehicle.vehicleName,
       preferredDate: selectedDate,
       preferredTime: selectedTime,

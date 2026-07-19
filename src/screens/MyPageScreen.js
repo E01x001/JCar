@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Alert, Dimensions, Pressable } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView } from 'react-native-tab-view';
 import { signOutUser } from '../services/auth/supabaseAuthService';
-import functions from '@react-native-firebase/functions';
+import { supabase } from '../lib/supabase';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -132,8 +132,11 @@ const MyPageScreen = ({ navigation }) => {
           onPress: async () => {
             if (!user) {return;}
             try {
-              const cascadeDelete = functions().httpsCallable('cascadeDeleteUser');
-              const result = await cascadeDelete({ userId: user.uid });
+              const { data, error } = await supabase.functions.invoke('cascade-delete-user', {
+                body: { userId: user.uid },
+              });
+              if (error) { throw error; }
+              const result = { data };
               if (result.data.success) {
                 const permanentDate = new Date(result.data.permanentDeleteDate);
                 const dateStr = permanentDate.toLocaleDateString('ko-KR');

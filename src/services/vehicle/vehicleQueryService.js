@@ -1,27 +1,28 @@
 /**
- * Vehicle Query Service
- * Handles vehicle data retrieval and filtering operations
+ * Vehicle Query Service (Phase 2 — Firestore → Supabase)
+ * Handles vehicle data retrieval and filtering operations.
+ * 식별자: vehicles PK는 id(uuid). 화면 별칭(vehicleId=차량번호)은 매퍼가 부여.
  */
 
-import firestore from '@react-native-firebase/firestore';
+import { supabase } from '../../lib/supabase';
+import { vehicleRowToApp } from '../../lib/mappers';
 import { logger } from '../../utils/logger';
 
+const VEHICLE_SELECT = '*';
+
 /**
- * Get vehicles exposed to buyers (status 'approved' = listed/acquiring/in_stock)
+ * Get vehicles exposed to buyers (status 'approved')
  */
 export const getApprovedVehicles = async (limit = 20) => {
   try {
-    const snapshot = await firestore()
-      .collection('vehicles')
-      .where('status', '==', 'approved')
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get();
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(VEHICLE_SELECT)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) { throw error; }
+    return data.map(vehicleRowToApp);
   } catch (error) {
     logger.error('Error getting approved vehicles:', error);
     throw error;
@@ -29,23 +30,20 @@ export const getApprovedVehicles = async (limit = 20) => {
 };
 
 /**
- * Get vehicle by ID
+ * Get vehicle by ID (uuid)
  */
 export const getVehicleById = async (vehicleId) => {
   try {
-    const doc = await firestore()
-      .collection('vehicles')
-      .doc(vehicleId)
-      .get();
-
-    if (!doc.exists) {
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(VEHICLE_SELECT)
+      .eq('id', vehicleId)
+      .maybeSingle();
+    if (error) { throw error; }
+    if (!data) {
       throw new Error('Vehicle not found');
     }
-
-    return {
-      id: doc.id,
-      ...doc.data(),
-    };
+    return vehicleRowToApp(data);
   } catch (error) {
     logger.error('Error getting vehicle by ID:', error);
     throw error;
@@ -53,20 +51,17 @@ export const getVehicleById = async (vehicleId) => {
 };
 
 /**
- * Get vehicles by seller ID
+ * Get vehicles by seller ID (판매자 또는 현소유자)
  */
 export const getVehiclesBySellerId = async (sellerId) => {
   try {
-    const snapshot = await firestore()
-      .collection('vehicles')
-      .where('sellerId', '==', sellerId)
-      .orderBy('createdAt', 'desc')
-      .get();
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(VEHICLE_SELECT)
+      .or(`seller_id.eq.${sellerId},current_owner_id.eq.${sellerId}`)
+      .order('created_at', { ascending: false });
+    if (error) { throw error; }
+    return data.map(vehicleRowToApp);
   } catch (error) {
     logger.error('Error getting vehicles by seller ID:', error);
     throw error;
@@ -78,16 +73,13 @@ export const getVehiclesBySellerId = async (sellerId) => {
  */
 export const getVehiclesByStatus = async (status) => {
   try {
-    const snapshot = await firestore()
-      .collection('vehicles')
-      .where('status', '==', status)
-      .orderBy('createdAt', 'desc')
-      .get();
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(VEHICLE_SELECT)
+      .eq('status', status)
+      .order('created_at', { ascending: false });
+    if (error) { throw error; }
+    return data.map(vehicleRowToApp);
   } catch (error) {
     logger.error('Error getting vehicles by status:', error);
     throw error;
@@ -99,38 +91,30 @@ export const getVehiclesByStatus = async (status) => {
  */
 export const searchVehicles = async (filters = {}) => {
   try {
-    let query = firestore().collection('vehicles');
+    let query = supabase
+      .from('vehicles')
+      .select(VEHICLE_SELECT)
+      .eq('status', filters.status || 'approved');
 
-    // 노출 대상 = status 'approved' (default). 특정 status 지정 시 override 가능.
-    query = query.where('status', '==', filters.status || 'approved');
-
-    // Apply manufacturer filter
     if (filters.manufacturer) {
-      query = query.where('manufacturer', '==', filters.manufacturer);
+      query = query.eq('manufacturer', filters.manufacturer);
     }
-
-    // Apply year range filter
     if (filters.minYear) {
-      query = query.where('year', '>=', filters.minYear);
+      query = query.gte('year', filters.minYear);
     }
     if (filters.maxYear) {
-      query = query.where('year', '<=', filters.maxYear);
+      query = query.lte('year', filters.maxYear);
     }
 
-    // Order by creation date
-    query = query.orderBy('createdAt', 'desc');
+    query = query.order('created_at', { ascending: false });
 
-    // Apply limit
     if (filters.limit) {
       query = query.limit(filters.limit);
     }
 
-    const snapshot = await query.get();
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const { data, error } = await query;
+    if (error) { throw error; }
+    return data.map(vehicleRowToApp);
   } catch (error) {
     logger.error('Error searching vehicles:', error);
     throw error;
@@ -142,12 +126,12 @@ export const searchVehicles = async (filters = {}) => {
  */
 export const getVehicleCountByStatus = async (status) => {
   try {
-    const snapshot = await firestore()
-      .collection('vehicles')
-      .where('status', '==', status)
-      .get();
-
-    return snapshot.size;
+    const { count, error } = await supabase
+      .from('vehicles')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', status);
+    if (error) { throw error; }
+    return count ?? 0;
   } catch (error) {
     logger.error('Error getting vehicle count:', error);
     throw error;

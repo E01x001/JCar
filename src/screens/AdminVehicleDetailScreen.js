@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, ScrollView, StyleSheet, Dimensions, Alert } from 'react-native';
-import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { rowToApp } from '../lib/mappers';
+import { fetchVehicleById, fetchVehiclePricing } from '../services/vehicle/supabaseVehicleService';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatPrice, formatPhone } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
@@ -25,17 +27,27 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
   useEffect(() => {
     const fetchVehicleDetails = async () => {
       try {
-        const db = getFirestore();
-        const vehicleDocRef = doc(db, 'vehicles', vehicleId);
-        const vehicleDoc = await getDoc(vehicleDocRef);
-        if (vehicleDoc.exists()) {
-          setVehicle(vehicleDoc.data());
+        const vehicleData = await fetchVehicleById(vehicleId);
+        if (vehicleData) {
+          // 가격은 admin 전용 vehicle_pricing 테이블에서 별도 조회
+          let pricing = null;
+          try {
+            pricing = await fetchVehiclePricing(vehicleId);
+          } catch (pricingError) {
+            logger.error('가격 조회 오류:', pricingError);
+          }
+          setVehicle({ ...vehicleData, price: pricing?.price ?? null });
         }
 
-        // Task 125: seller PII now lives in a private subdoc (owner/admin only).
-        const contactDoc = await getDoc(doc(db, 'vehicles', vehicleId, 'private', 'contact'));
-        if (contactDoc.exists()) {
-          setContact(contactDoc.data());
+        // 판매자 PII는 vehicle_private_contact (owner/admin 전용 RLS)
+        const { data: contactRow, error: contactError } = await supabase
+          .from('vehicle_private_contact')
+          .select('*')
+          .eq('vehicle_id', vehicleId)
+          .maybeSingle();
+        if (contactError) { throw contactError; }
+        if (contactRow) {
+          setContact(rowToApp(contactRow));
         }
       } catch (error) {
         logger.error('차량 상세정보 불러오기 오류:', error);

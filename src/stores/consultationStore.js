@@ -16,13 +16,59 @@
 
 import {create} from 'zustand';
 import {logger} from '../utils/logger';
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  onSnapshot,
-} from '@react-native-firebase/firestore';
+// Phase 2c: Firestore → Supabase
+import {supabase} from '../lib/supabase';
+import {consultationRowToApp} from '../lib/mappers';
+
+// consultation_requests 재조회 헬퍼 (RLS: 본인/판매자/관리자 범위만 반환)
+const fetchUserConsultations = async (userId) => {
+  const {data, error} = await supabase
+      .from('consultation_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', {ascending: false})
+      .limit(200);
+  if (error) { throw error; }
+  return data.map(consultationRowToApp);
+};
+
+const fetchAllConsultations = async () => {
+  const {data, error} = await supabase
+      .from('consultation_requests')
+      .select('*')
+      .order('created_at', {ascending: false})
+      .limit(500);
+  if (error) { throw error; }
+  return data.map(consultationRowToApp);
+};
+
+// consultation_requests 테이블용 realtime refetch 구독
+const subscribeConsultations = (refetchFn, callback, channelKey) => {
+  let disposed = false;
+  let timer = null;
+  const load = async () => {
+    try {
+      const list = await refetchFn();
+      if (!disposed) { callback(list); }
+    } catch (error) {
+      logger.error('상담 조회 오류:', error);
+    }
+  };
+  const scheduleReload = () => {
+    if (timer) { clearTimeout(timer); }
+    timer = setTimeout(load, 300);
+  };
+  load();
+  const channel = supabase
+      .channel(`${channelKey}-${Math.random().toString(36).slice(2, 8)}`)
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'consultation_requests'}, scheduleReload)
+      .subscribe();
+  return () => {
+    disposed = true;
+    if (timer) { clearTimeout(timer); }
+    supabase.removeChannel(channel);
+  };
+};
 
 /**
  * Cache entry structure
@@ -142,39 +188,17 @@ const useConsultationStore = create((set, get) => ({
       return;
     }
 
-    logger.debug(`🔥 Creating new Firestore listener for user ${userId} consultations`);
+    logger.debug(`🔥 Creating new Supabase listener for user ${userId} consultations`);
     set({loading: true, error: null});
 
-    const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
-    const q = query(consultationsRef, where('userId', '==', userId));
-
-    const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const consultationList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
+    const unsubscribe = subscribeConsultations(
+        () => fetchUserConsultations(userId),
+        (consultationList) => {
           logger.debug(`✅ Received ${consultationList.length} user consultations`);
-
-          set({
-            userConsultations: consultationList,
-            loading: false,
-            error: null,
-          });
-
-          // Update cache
+          set({userConsultations: consultationList, loading: false, error: null});
           get().setCacheData(cacheKey, consultationList);
         },
-        (error) => {
-          logger.error('❌ Error fetching user consultations:', error);
-          set({
-            loading: false,
-            error: error,
-          });
-        },
+        'store-user-consultations',
     );
 
     set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));
@@ -204,38 +228,17 @@ const useConsultationStore = create((set, get) => ({
       return;
     }
 
-    logger.debug('🔥 Creating new Firestore listener for all consultations');
+    logger.debug('🔥 Creating new Supabase listener for all consultations');
     set({loading: true, error: null});
 
-    const db = getFirestore();
-    const consultationsRef = collection(db, 'consultation_requests');
-
-    const unsubscribe = onSnapshot(
-        consultationsRef,
-        (snapshot) => {
-          const consultationList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
+    const unsubscribe = subscribeConsultations(
+        fetchAllConsultations,
+        (consultationList) => {
           logger.debug(`✅ Received ${consultationList.length} consultations`);
-
-          set({
-            allConsultations: consultationList,
-            loading: false,
-            error: null,
-          });
-
-          // Update cache
+          set({allConsultations: consultationList, loading: false, error: null});
           get().setCacheData(cacheKey, consultationList);
         },
-        (error) => {
-          logger.error('❌ Error fetching all consultations:', error);
-          set({
-            loading: false,
-            error: error,
-          });
-        },
+        'store-all-consultations',
     );
 
     set((state) => ({unsubscribers: {...state.unsubscribers, [cacheKey]: unsubscribe}}));

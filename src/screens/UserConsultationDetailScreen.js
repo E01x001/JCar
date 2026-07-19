@@ -15,7 +15,9 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { getFirestore, collection, doc, onSnapshot, getDoc } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { consultationRowToApp } from '../lib/mappers';
+import { fetchVehicleById } from '../services/vehicle/supabaseVehicleService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -52,52 +54,74 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
       return;
     }
 
-    // Real-time listener for consultation data
-    const db = getFirestore();
-    const consultationDocRef = doc(db, 'consultation_requests', consultationId);
-    const unsubscribe = onSnapshot(
-      consultationDocRef,
-        async (snapshot) => {
-          if (snapshot.exists) {
-            const data = snapshot.data();
+    // Realtime: consultation_requests 변경 시 재조회 (RLS로 본인 상담만 조회됨)
+    let disposed = false;
+    let timer = null;
 
-            // Verify user owns this consultation
-            if (data.userId !== user.uid) {
-              logger.error('UserConsultationDetailScreen: User does not own this consultation');
-              setConsultation(null);
-              setLoading(false);
-              return;
-            }
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('consultation_requests')
+          .select('*')
+          .eq('id', consultationId)
+          .maybeSingle();
+        if (error) { throw error; }
+        if (disposed) { return; }
 
-            setConsultation({ id: snapshot.id, ...data });
+        if (data) {
+          const item = consultationRowToApp(data);
 
-            // Fetch vehicle details
-            if (data.vehicleId) {
-              try {
-                const vehicleDocRef = doc(db, 'vehicles', data.vehicleId);
-                const vehicleDoc = await getDoc(vehicleDocRef);
-
-                if (vehicleDoc.exists) {
-                  setVehicle({ id: vehicleDoc.id, ...vehicleDoc.data() });
-                }
-              } catch (error) {
-                logger.error('UserConsultationDetailScreen: Failed to fetch vehicle', error);
-                reportCrashlyticsError(error);
-              }
-            }
-          } else {
+          // Verify user owns this consultation
+          if (item.userId !== user.uid) {
+            logger.error('UserConsultationDetailScreen: User does not own this consultation');
             setConsultation(null);
+            setLoading(false);
+            return;
           }
-          setLoading(false);
-        },
-        (error) => {
-          logger.error('UserConsultationDetailScreen: Failed to fetch consultation', error);
-          reportCrashlyticsError(error);
-          setLoading(false);
-        }
-      );
 
-    return () => unsubscribe();
+          setConsultation(item);
+
+          // Fetch vehicle details (vehicleId = vehicles.id uuid)
+          if (item.vehicleId) {
+            try {
+              const vehicleData = await fetchVehicleById(item.vehicleId);
+              if (!disposed && vehicleData) {
+                setVehicle(vehicleData);
+              }
+            } catch (error) {
+              logger.error('UserConsultationDetailScreen: Failed to fetch vehicle', error);
+              reportCrashlyticsError(error);
+            }
+          }
+        } else {
+          setConsultation(null);
+        }
+        setLoading(false);
+      } catch (error) {
+        if (disposed) { return; }
+        logger.error('UserConsultationDetailScreen: Failed to fetch consultation', error);
+        reportCrashlyticsError(error);
+        setLoading(false);
+      }
+    };
+
+    const scheduleReload = () => {
+      if (timer) { clearTimeout(timer); }
+      timer = setTimeout(load, 300);
+    };
+
+    load();
+
+    const channel = supabase
+      .channel(`user-consultation-${Math.random().toString(36).slice(2, 8)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'consultation_requests' }, scheduleReload)
+      .subscribe();
+
+    return () => {
+      disposed = true;
+      if (timer) { clearTimeout(timer); }
+      supabase.removeChannel(channel);
+    };
   }, [consultationId, user]);
 
   /**

@@ -10,7 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { rowToApp } from '../lib/mappers';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPhone } from '../utils/format';
@@ -41,13 +42,12 @@ const AdminUserManagementScreen = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const db = getFirestore();
-      const usersRef = collection(db, 'users');
-      const snapshot = await getDocs(usersRef);
-      const usersData = snapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-      }));
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { throw error; }
+      const usersData = data.map(rowToApp);
       setUsers(usersData);
       setFilteredUsers(usersData);
     } catch (error) {
@@ -99,25 +99,30 @@ const AdminUserManagementScreen = () => {
           onPress: async () => {
             setUpdatingUserId(userId);
             try {
-              const db = getFirestore();
-              // Firestore 업데이트
-              const userDocRef = doc(db, 'users', userId);
-              await updateDoc(userDocRef, {
-                status: newStatus,
-                statusUpdatedAt: serverTimestamp(),
-              });
+              // profiles 상태 업데이트 (admin RLS)
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({
+                  status: newStatus,
+                  status_updated_at: new Date().toISOString(),
+                })
+                .eq('id', userId);
+              if (updateError) { throw updateError; }
 
-              // admin_activity_log에 기록
-              const activityLogRef = collection(db, 'admin_activity_log');
-              await addDoc(activityLogRef, {
-                adminUid: currentUser?.uid,
-                action: newStatus === 'suspended' ? 'suspend_user' : 'activate_user',
-                targetUserId: userId,
-                targetUserName: userName,
-                previousStatus: currentStatus || 'active',
-                newStatus: newStatus,
-                timestamp: serverTimestamp(),
-              });
+              // admin_activity_log에 기록 (실패해도 상태 변경은 유지)
+              const { error: logError } = await supabase
+                .from('admin_activity_log')
+                .insert({
+                  admin_id: currentUser?.uid,
+                  action: newStatus === 'suspended' ? 'suspend_user' : 'activate_user',
+                  target_user_id: userId,
+                  target_user_name: userName,
+                  previous_status: currentStatus || 'active',
+                  new_status: newStatus,
+                });
+              if (logError) {
+                logger.error('관리자 활동 로그 기록 실패:', logError);
+              }
 
               // UI 업데이트
               setUsers(prevUsers =>

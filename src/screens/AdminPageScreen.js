@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { signOutUser } from '../services/auth/supabaseAuthService';
-import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDocs, writeBatch } from '@react-native-firebase/firestore';
+import { fetchMyVehicles, subscribeVehicles, deleteVehicle } from '../services/vehicle/supabaseVehicleService';
+import { deleteUserAccount } from '../services/auth/accountService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { getCrashlytics, setAttribute } from '@react-native-firebase/crashlytics';
 import { AuthContext } from '../context/AuthContext';
@@ -16,8 +17,6 @@ import Tag from '../components/Tag';
 import Button from '../components/Button';
 import StateScreen from '../components/StateScreen';
 import OwnedVehiclesList from '../components/OwnedVehiclesList';
-import { migrateConsultationStatusField } from '../scripts/migrateConsultationStatus';
-import { migrateVehicleDealStage } from '../scripts/migrateVehicleDealStage';
 import useVehicleStore from '../stores/vehicleStore';
 import useConsultationStore from '../stores/consultationStore';
 
@@ -36,24 +35,18 @@ const AdminPageScreen = ({ navigation }) => {
   useEffect(() => {
     if (!user) {return () => {};}
 
-    const db = getFirestore();
-    const vehiclesRef = collection(db, 'vehicles');
-    const q = query(vehiclesRef, where('sellerId', '==', user.uid));
-    const unsubscribe = onSnapshot(q, snapshot => {
-      const vehicleList = snapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-      }));
-      setVehicles(vehicleList);
-    });
+    const unsubscribe = subscribeVehicles(
+      () => fetchMyVehicles(user.uid),
+      setVehicles,
+      { channelKey: 'admin-my-vehicles' }
+    );
 
     return () => unsubscribe();
   }, [user]);
 
   const handleDeleteVehicle = async (vehicleId) => {
     try {
-      const db = getFirestore();
-      await deleteDoc(doc(db, 'vehicles', vehicleId));
+      await deleteVehicle(vehicleId);
       setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
       toast.showSuccess('삭제 완료', '차량이 삭제되었습니다.');
     } catch (error) {
@@ -87,18 +80,8 @@ const AdminPageScreen = ({ navigation }) => {
         text: '탈퇴', style: 'destructive', onPress: async () => {
           if (!user) {return;}
           try {
-            const db = getFirestore();
-            const vehiclesRef = collection(db, 'vehicles');
-            const q = query(vehiclesRef, where('sellerId', '==', user.uid));
-            const querySnapshot = await getDocs(q);
-
-            const batch = writeBatch(db);
-            querySnapshot.forEach(documentSnapshot => {
-              batch.delete(documentSnapshot.ref);
-            });
-            await batch.commit();
-
-            await user.delete();
+            // Edge Function(delete-account)이 데이터 cascade + auth 삭제를 처리
+            await deleteUserAccount(user.uid);
             toast.showSuccess('탈퇴 완료', '계정이 삭제되었습니다.');
           } catch (error) {
             reportCrashlyticsError(error);
@@ -119,76 +102,6 @@ const AdminPageScreen = ({ navigation }) => {
     reportCrashlyticsError(testError);
 
     toast.showInfo('테스트 완료', 'Crashlytics에 에러가 기록되었습니다. Firebase Console에서 확인하세요.');
-  };
-
-  const handleMigration = () => {
-    Alert.alert(
-      '데이터 마이그레이션',
-      '모든 상담 요청의 status 필드를 consultationStatus로 마이그레이션합니다.\n\n⚠️ 이 작업은 한 번만 실행하면 됩니다.\n\n계속하시겠습니까?',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '실행',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              toast.showInfo('마이그레이션 시작', '데이터를 마이그레이션하는 중...');
-              const result = await migrateConsultationStatusField();
-
-              if (result.success) {
-                Alert.alert(
-                  '마이그레이션 완료',
-                  `✅ 성공적으로 완료되었습니다!\n\n마이그레이션: ${result.migrated}건\n스킵: ${result.skipped}건`,
-                  [{ text: '확인' }]
-                );
-                toast.showSuccess('완료', `${result.migrated}건 마이그레이션 완료`);
-              }
-            } catch (error) {
-              logger.error('Migration error:', error);
-              reportCrashlyticsError(error);
-              logCrashlyticsMessage('AdminPageScreen: Migration failed');
-              Alert.alert('오류', '마이그레이션 중 오류가 발생했습니다.\n\n' + error.message);
-              toast.showError('마이그레이션 실패', error.message);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleDealStageBackfill = () => {
-    Alert.alert(
-      '차량 거래단계(dealStage) 백필',
-      '기존 차량에 거래 단계 필드를 채웁니다.\n(sold→sold, 매입재고→in_stock, 승인→listed)\n\n⚠️ 한 번만 실행하면 됩니다. 백필 전에는 목록이 비어 보일 수 있습니다.\n\n계속하시겠습니까?',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '실행',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              toast.showInfo('백필 시작', '차량 거래단계를 채우는 중...');
-              const result = await migrateVehicleDealStage();
-
-              if (result.success) {
-                Alert.alert(
-                  '백필 완료',
-                  `✅ 완료!\n\n처리: ${result.migrated}건\n스킵: ${result.skipped}건`,
-                  [{ text: '확인' }]
-                );
-                toast.showSuccess('완료', `${result.migrated}건 백필 완료`);
-              }
-            } catch (error) {
-              logger.error('DealStage backfill error:', error);
-              reportCrashlyticsError(error);
-              logCrashlyticsMessage('AdminPageScreen: DealStage backfill failed');
-              Alert.alert('오류', '백필 중 오류가 발생했습니다.\n\n' + error.message);
-              toast.showError('백필 실패', error.message);
-            }
-          },
-        },
-      ]
-    );
   };
 
   const handleOwnedVehiclePress = (vehicleId) => {
@@ -335,40 +248,15 @@ const AdminPageScreen = ({ navigation }) => {
 
           {/* Dev-only Test Buttons */}
           {__DEV__ && (
-            <>
-              {/* ⚠️ IMPORTANT: Remove or disable migration button before production release
-                  Migration should only be run ONCE to convert 'status' field to 'consultationStatus'
-                  After migration is complete, this button should be removed */}
-              {true && ( // Set to true if you need to run migration
-                <Button
-                  variant="primary"
-                  title="DB 마이그레이션 (status → consultationStatus)"
-                  onPress={handleMigration}
-                  style={{
-                    marginTop: theme.spacing.sm,
-                    backgroundColor: theme.colors.info.main,
-                  }}
-                />
-              )}
-              <Button
-                variant="primary"
-                title="차량 거래단계 백필 (dealStage)"
-                onPress={handleDealStageBackfill}
-                style={{
-                  marginTop: theme.spacing.sm,
-                  backgroundColor: theme.colors.success.main,
-                }}
-              />
-              <Button
-                variant="primary"
-                title="Test Crashlytics"
-                onPress={handleTestCrash}
-                style={{
-                  marginTop: theme.spacing.sm,
-                  backgroundColor: theme.colors.warning.main,
-                }}
-              />
-            </>
+            <Button
+              variant="primary"
+              title="Test Crashlytics"
+              onPress={handleTestCrash}
+              style={{
+                marginTop: theme.spacing.sm,
+                backgroundColor: theme.colors.warning.main,
+              }}
+            />
           )}
         </View>
       </View>

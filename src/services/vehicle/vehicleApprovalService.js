@@ -1,9 +1,11 @@
 /**
- * Vehicle Approval Service
- * Handles vehicle approval and rejection operations for admin users
+ * Vehicle Approval Service (Phase 2 — Firestore → Supabase)
+ * Handles vehicle approval and rejection operations for admin users.
+ * 관리자는 RLS 정책으로 vehicles 직접 update 가능.
  */
 
-import firestore from '@react-native-firebase/firestore';
+import { supabase } from '../../lib/supabase';
+import { vehicleRowToApp, appToRow } from '../../lib/mappers';
 import { logger } from '../../utils/logger';
 import { DEAL_STAGE } from '../../constants/vehicle';
 
@@ -12,17 +14,16 @@ import { DEAL_STAGE } from '../../constants/vehicle';
  */
 export const approveVehicle = async (vehicleId) => {
   try {
-    await firestore()
-      .collection('vehicles')
-      .doc(vehicleId)
+    const { error } = await supabase
+      .from('vehicles')
       .update({
         status: 'approved',
         // 검수 통과 시 거래 단계 진입(아직 미매입 = 판매자 소유 노출)
-        dealStage: DEAL_STAGE.LISTED,
-        approvedAt: firestore.FieldValue.serverTimestamp(),
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-      });
-
+        deal_stage: DEAL_STAGE.LISTED,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', vehicleId);
+    if (error) { throw error; }
     return { success: true, message: 'Vehicle approved successfully' };
   } catch (error) {
     logger.error('Error approving vehicle:', error);
@@ -33,18 +34,17 @@ export const approveVehicle = async (vehicleId) => {
 /**
  * Reject a vehicle
  */
-export const rejectVehicle = async (vehicleId, reason = '') => {
+// 참고: vehicles 테이블에는 rejection_reason/rejected_at 컬럼이 없어 status만 갱신한다.
+export const rejectVehicle = async (vehicleId, _reason = '') => {
   try {
-    await firestore()
-      .collection('vehicles')
-      .doc(vehicleId)
+    const { error } = await supabase
+      .from('vehicles')
       .update({
         status: 'rejected',
-        rejectionReason: reason,
-        rejectedAt: firestore.FieldValue.serverTimestamp(),
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-      });
-
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', vehicleId);
+    if (error) { throw error; }
     return { success: true, message: 'Vehicle rejected successfully' };
   } catch (error) {
     logger.error('Error rejecting vehicle:', error);
@@ -57,16 +57,13 @@ export const rejectVehicle = async (vehicleId, reason = '') => {
  */
 export const getPendingVehicles = async () => {
   try {
-    const snapshot = await firestore()
-      .collection('vehicles')
-      .where('status', '==', 'pending')
-      .orderBy('createdAt', 'desc')
-      .get();
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (error) { throw error; }
+    return data.map(vehicleRowToApp);
   } catch (error) {
     logger.error('Error getting pending vehicles:', error);
     throw error;
@@ -78,24 +75,22 @@ export const getPendingVehicles = async () => {
  */
 export const updateApprovalStatus = async (vehicleId, status, additionalData = {}) => {
   try {
+    const now = new Date().toISOString();
     const updateData = {
+      ...appToRow(additionalData),
       status,
-      updatedAt: firestore.FieldValue.serverTimestamp(),
-      ...additionalData,
+      updated_at: now,
     };
 
     if (status === 'approved') {
-      updateData.approvedAt = firestore.FieldValue.serverTimestamp();
-      updateData.dealStage = DEAL_STAGE.LISTED;
-    } else if (status === 'rejected') {
-      updateData.rejectedAt = firestore.FieldValue.serverTimestamp();
+      updateData.deal_stage = DEAL_STAGE.LISTED;
     }
 
-    await firestore()
-      .collection('vehicles')
-      .doc(vehicleId)
-      .update(updateData);
-
+    const { error } = await supabase
+      .from('vehicles')
+      .update(updateData)
+      .eq('id', vehicleId);
+    if (error) { throw error; }
     return { success: true };
   } catch (error) {
     logger.error('Error updating approval status:', error);
@@ -105,20 +100,15 @@ export const updateApprovalStatus = async (vehicleId, status, additionalData = {
 
 /**
  * Set a vehicle's hidden flag (post-moderation).
- *
- * 자동노출 정책에서 관리자가 부적절한 매물을 사후에 내리거나 다시 노출할 때 사용.
- * hidden=true면 구매자 목록에서 제외(vehicleFilterService의 !v.hidden 필터).
+ * hidden=true면 구매자 목록에서 제외.
  */
 export const setVehicleHidden = async (vehicleId, hidden) => {
   try {
-    await firestore()
-      .collection('vehicles')
-      .doc(vehicleId)
-      .update({
-        hidden,
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-      });
-
+    const { error } = await supabase
+      .from('vehicles')
+      .update({ hidden, updated_at: new Date().toISOString() })
+      .eq('id', vehicleId);
+    if (error) { throw error; }
     return { success: true };
   } catch (error) {
     logger.error('Error updating vehicle hidden flag:', error);

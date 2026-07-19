@@ -8,7 +8,8 @@ import React, { useState, useEffect } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
+import { rowToApp } from '../lib/mappers';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
@@ -29,28 +30,53 @@ const AdminOwnedVehicleDetailScreen = ({ route, navigation }) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    const db = getFirestore();
-    const vehicleDocRef = doc(db, 'admin_owned_vehicles', vehicleId);
-    const unsubscribe = onSnapshot(
-      vehicleDocRef,
-        (doc) => {
-          if (doc.exists) {
-            setVehicle({ id: doc.id, ...doc.data() });
-          } else {
-            setVehicle(null);
-          }
-          setLoading(false);
-        },
-        (error) => {
-          logger.error('AdminOwnedVehicleDetailScreen: Failed to fetch vehicle', error);
-          reportCrashlyticsError(error);
-          logCrashlyticsMessage('AdminOwnedVehicleDetailScreen: Firestore query failed');
-          toast.showError('차량 정보를 불러오는데 실패했습니다.');
-          setLoading(false);
-        }
-      );
+    let disposed = false;
+    let timer = null;
 
-    return () => unsubscribe();
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('admin_owned_vehicles')
+          .select('*')
+          .eq('id', vehicleId)
+          .maybeSingle();
+        if (error) { throw error; }
+        if (disposed) { return; }
+        if (data) {
+          const record = rowToApp(data);
+          // 기존 화면 호환 별칭: purchaseDate=acquiredAt, soldDate=soldAt
+          setVehicle({ ...record, purchaseDate: record.acquiredAt, soldDate: record.soldAt });
+        } else {
+          setVehicle(null);
+        }
+        setLoading(false);
+      } catch (error) {
+        if (disposed) { return; }
+        logger.error('AdminOwnedVehicleDetailScreen: Failed to fetch vehicle', error);
+        reportCrashlyticsError(error);
+        logCrashlyticsMessage('AdminOwnedVehicleDetailScreen: Supabase query failed');
+        toast.showError('차량 정보를 불러오는데 실패했습니다.');
+        setLoading(false);
+      }
+    };
+
+    const scheduleReload = () => {
+      if (timer) { clearTimeout(timer); }
+      timer = setTimeout(load, 300);
+    };
+
+    load();
+
+    const channel = supabase
+      .channel(`admin-owned-detail-${Math.random().toString(36).slice(2, 8)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_owned_vehicles' }, scheduleReload)
+      .subscribe();
+
+    return () => {
+      disposed = true;
+      if (timer) { clearTimeout(timer); }
+      supabase.removeChannel(channel);
+    };
   }, [vehicleId, toast]);
 
   const formatDate = (timestamp) => {
@@ -62,13 +88,15 @@ const AdminOwnedVehicleDetailScreen = ({ route, navigation }) => {
   const handleMarkAsSold = async (soldPrice) => {
     setIsUpdating(true);
     try {
-      const db = getFirestore();
-      const vehicleDocRef = doc(db, 'admin_owned_vehicles', vehicleId);
-      await updateDoc(vehicleDocRef, {
-        status: 'sold',
-        soldPrice: soldPrice,
-        soldDate: serverTimestamp(),
-      });
+      const { error } = await supabase
+        .from('admin_owned_vehicles')
+        .update({
+          status: 'sold',
+          sold_price: soldPrice,
+          sold_at: new Date().toISOString(),
+        })
+        .eq('id', vehicleId);
+      if (error) { throw error; }
 
       toast.showSuccess('차량이 판매완료 처리되었습니다.');
       setIsModalVisible(false);

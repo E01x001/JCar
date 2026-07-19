@@ -44,6 +44,7 @@ export const supabase = {
   functions: {
     invoke: jest.fn(() => Promise.resolve({ data: null, error: null })),
   },
+  rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
   channel: jest.fn(() => channelStub),
   removeChannel: jest.fn(),
 };
