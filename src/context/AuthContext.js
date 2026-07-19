@@ -36,13 +36,16 @@ export const AuthProvider = ({ children }) => {
       try {
         const profile = await getMyProfile(authUser.id);
 
-        // 계정 정지 체크 (기존 Firestore status === 'suspended' 대응)
-        if (profile?.status === 'suspended') {
+        // 계정 정지/삭제대기 체크 — 30일 유예 중 계정도 로그인 차단(리뷰 반영)
+        if (profile?.status === 'suspended' || profile?.account_status === 'pending_deletion') {
+          const isPendingDeletion = profile?.account_status === 'pending_deletion';
           await signOutUser();
           Toast.show({
             type: 'error',
-            text1: '계정 정지',
-            text2: '귀하의 계정이 정지되었습니다. 관리자에게 문의하세요.',
+            text1: isPendingDeletion ? '삭제 대기 중인 계정' : '계정 정지',
+            text2: isPendingDeletion
+              ? '탈퇴 처리된 계정입니다. 복구를 원하시면 고객센터로 문의해주세요.'
+              : '귀하의 계정이 정지되었습니다. 관리자에게 문의하세요.',
             position: 'top',
             visibilityTime: 5000,
           });

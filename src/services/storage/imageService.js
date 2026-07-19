@@ -31,12 +31,15 @@ const pathFromPublicUrl = (url) => {
 export const uploadImage = async (uri) => {
   try {
     const response = await fetch(uri);
+    // RN에서 Blob 직접 업로드는 0바이트 업로드 사례가 알려져 있어(supabase-js#RN)
+    // ArrayBuffer를 우선 사용하고, 미지원 환경에서만 Blob으로 폴백한다.
     const blob = await response.blob();
+    const body = typeof blob.arrayBuffer === 'function' ? await blob.arrayBuffer() : blob;
     const path = randomName(uri);
 
     const { error } = await supabase.storage
       .from(BUCKET)
-      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
+      .upload(path, body, { contentType: blob.type || 'image/jpeg', upsert: false });
     if (error) { throw error; }
 
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);

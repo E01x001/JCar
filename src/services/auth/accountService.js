@@ -14,7 +14,7 @@ export const updateUserProfile = async (uid, updates) => {
   try {
     const { error } = await supabase
       .from('profiles')
-      .update(appToRow({ ...updates, updatedAt: new Date().toISOString() }))
+      .update(appToRow(updates)) // profiles에는 updated_at 컬럼이 없다
       .eq('id', uid);
     if (error) { throw error; }
     return { success: true };
@@ -83,7 +83,7 @@ export const updateEmail = async (newEmail) => {
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ email: newEmail, updated_at: new Date().toISOString() })
+      .update({ email: newEmail })
       .eq('id', authData.user.id);
     if (profileError) { throw profileError; }
 

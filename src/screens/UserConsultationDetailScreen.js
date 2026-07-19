@@ -240,7 +240,7 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
         />
         <InfoRow
           label="신청 일시"
-          value={consultation.createdAt ? formatDate(consultation.createdAt.toDate()) : '-'}
+          value={consultation.createdAt ? formatDate(new Date(consultation.createdAt)) : '-'}
           theme={theme}
         />
         <InfoRow

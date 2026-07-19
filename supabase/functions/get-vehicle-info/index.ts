@@ -28,27 +28,21 @@ Deno.serve(async (req) => {
 
     if (!regiNumber || !ownerName) {
       return json(
-        { success: false, message: "차량번호와 소유자명은 필수 입력값입니다." },
-        400,
-      );
+        { success: false, message: "차량번호와 소유자명은 필수 입력값입니다." });
     }
 
     const regiNumberRegex =
       /^([가-힣]{0,2})?(\d{2,3})([가-힣A-Z외임])\s?(\d{3,4})$/;
     if (!regiNumberRegex.test(String(regiNumber).replace(/\s+/g, ""))) {
       return json(
-        { success: false, message: "올바른 차량번호 형식이 아닙니다." },
-        400,
-      );
+        { success: false, message: "올바른 차량번호 형식이 아닙니다." });
     }
 
     const apiKey = Deno.env.get("CARZEN_API_KEY");
     if (!apiKey) {
       console.error("CARZEN_API_KEY secret not set");
       return json(
-        { success: false, message: "서버 설정 오류입니다. 관리자에게 문의하세요." },
-        500,
-      );
+        { success: false, message: "서버 설정 오류입니다. 관리자에게 문의하세요." });
     }
 
     const response = await fetch(CARZEN_URL, {
@@ -81,17 +75,13 @@ Deno.serve(async (req) => {
         {
           success: false,
           message: jsonResponse.errMsg || "차량 정보를 찾을 수 없습니다.",
-        },
-        404,
-      );
+        });
     }
 
     return json({ success: true, data: jsonResponse.data });
   } catch (error) {
     console.error("CarZen API request failed:", error);
     return json(
-      { success: false, message: "차량 정보를 조회하는 중 오류가 발생했습니다." },
-      500,
-    );
+      { success: false, message: "차량 정보를 조회하는 중 오류가 발생했습니다." });
   }
 });
