@@ -28,6 +28,8 @@ firebase-debug.log*
 # Firebase Admin SDK
 serviceAccountKey.json
 serviceAccount*.json
+# Firebase 콘솔이 발급하는 서비스 계정 키 (예: jcar-xxxx-firebase-adminsdk-xxx.json)
+*-firebase-adminsdk-*.json
 
 # React Native & Android
 android/.gradle/
