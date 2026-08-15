@@ -163,3 +163,5 @@ google-services.json
 UI_redesign/
 package.json.rn-backup
 dist-verify/
+
+.vercel

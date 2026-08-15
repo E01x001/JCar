@@ -7,22 +7,10 @@
  * - 이메일 인증: Supabase 기본 확인 메일 발송(기존 UI-only였던 2단계가 실제 동작).
  * - 에러 메시지는 여기서 한글로 매핑해 화면은 문자열만 노출한다.
  */
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { supabase } from '../../lib/supabase';
+// 구글 로그인은 네이티브/웹 구현이 완전히 달라 플랫폼별 모듈로 분리했다
+import { signInWithGoogle, signOutGoogle, googleErrorMessage } from './googleAuth';
 import { logger } from '../../utils/logger';
-
-// 웹 클라이언트 ID — 네이티브 SDK가 받아오는 ID 토큰의 발급 대상(aud)이며
-// Supabase Google provider에 등록된 값과 일치해야 한다.
-// 비밀이 아니다(android/app/google-services.json에도 들어 있다).
-const GOOGLE_WEB_CLIENT_ID =
-  '135120379076-e5bqh6jab60hrriviusduk66m8iq76u5.apps.googleusercontent.com';
-
-let googleConfigured = false;
-const ensureGoogleConfigured = () => {
-  if (googleConfigured) { return; }
-  GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
-  googleConfigured = true;
-};
 
 /** Supabase Auth 에러 → 사용자용 한글 메시지 */
 export const mapAuthError = (error) => {
@@ -50,12 +38,8 @@ export const mapAuthError = (error) => {
   if (/network|fetch/i.test(msg)) {
     return '네트워크 연결을 확인해주세요.';
   }
-  if (code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-    return 'Google Play 서비스를 사용할 수 없습니다. 업데이트 후 다시 시도해주세요.';
-  }
-  if (code === statusCodes.IN_PROGRESS) {
-    return '이미 로그인을 진행 중입니다.';
-  }
+  const googleMsg = googleErrorMessage(code);
+  if (googleMsg) { return googleMsg; }
   return '요청 처리 중 오류가 발생했습니다. 다시 시도해주세요.';
 };
 
@@ -94,43 +78,7 @@ export const signUp = async ({ email, password, name, phoneNumber }) => {
  *
  * @returns {Promise<{cancelled: boolean}>} 사용자가 창을 닫으면 cancelled=true
  */
-export const signInWithGoogle = async () => {
-  ensureGoogleConfigured();
-  try {
-    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-    const result = await GoogleSignin.signIn();
-
-    // v13+는 { type, data } 형태, 구버전은 결과를 그대로 반환한다
-    if (result?.type === 'cancelled') { return { cancelled: true }; }
-    const idToken = result?.data?.idToken ?? result?.idToken;
-    if (!idToken) {
-      throw new Error('구글 인증 토큰을 받지 못했습니다');
-    }
-
-    const { error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
-      token: idToken,
-    });
-    if (error) { throw error; }
-
-    return { cancelled: false };
-  } catch (error) {
-    if (error?.code === statusCodes.SIGN_IN_CANCELLED) { return { cancelled: true }; }
-    logger.error('구글 로그인 오류:', error);
-    throw error;
-  }
-};
-
-/** 구글 세션 정리 — 로그아웃 시 다음 로그인에서 계정 선택창이 다시 뜨도록 */
-export const signOutGoogle = async () => {
-  try {
-    ensureGoogleConfigured();
-    await GoogleSignin.signOut();
-  } catch (error) {
-    // 구글로 로그인한 적 없으면 실패하는 게 정상 — 로그아웃 흐름을 막지 않는다
-    logger.debug('구글 세션 정리 건너뜀:', error?.message);
-  }
-};
+export { signInWithGoogle, signOutGoogle };
 
 /** 가입 확인 메일 재전송 */
 export const resendConfirmationEmail = async (email) => {
