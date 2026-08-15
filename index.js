@@ -1,50 +1,33 @@
 /**
- * @format
+ * 앱 진입점 (Expo).
+ *
+ * registerRootComponent가 AppRegistry 등록을 대신하므로 app.json의 name에
+ * 의존하지 않는다. GestureHandlerRootView 래핑과 백그라운드 메시지 핸들러는
+ * 기존과 동일하게 유지한다.
  */
-
+import { registerRootComponent } from 'expo';
 import React from 'react';
-import {AppRegistry} from 'react-native';
-import messaging from '@react-native-firebase/messaging';
-import firestore from '@react-native-firebase/firestore';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import { setBackgroundMessageHandler, getMessaging } from './src/services/notification/firebaseNative';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import App from './src/App';
-import {name as appName} from './app.json';
-import {applyPretendard} from './src/theme/applyPretendard';
+import { applyPretendard } from './src/theme/applyPretendard';
 
 // 시안 정합: 앱 전역 폰트를 Pretendard로 (weight별 매핑)
 applyPretendard();
 
-/**
- * Task 106.1: Enable Firestore Offline Persistence
- *
- * Configure Firestore to enable offline data persistence with unlimited cache size.
- * This allows the app to function during network outages by caching data locally.
- *
- * IMPORTANT: This must be called before any Firestore operations.
- *
- * References:
- * - https://rnfirebase.io/reference/firestore/settings
- * - https://firebase.google.com/docs/firestore/manage-data/enable-offline
- */
-firestore().settings({
-  cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED,
-});
-
 // 백그라운드 메시지 핸들러 (앱이 백그라운드 또는 종료 상태일 때)
-messaging().setBackgroundMessageHandler(async remoteMessage => {
+// FCM은 Supabase 이전 후에도 Firebase에 남긴다(하이브리드).
+setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
   // eslint-disable-next-line no-console
   console.log('📨 백그라운드 메시지 수신:', remoteMessage);
 
-  // 백그라운드에서는 시스템이 자동으로 알림을 표시하므로
-  // 여기서는 데이터 처리만 수행 (필요시)
   if (remoteMessage.data) {
     // eslint-disable-next-line no-console
     console.log('📦 메시지 데이터:', remoteMessage.data);
-    // 추가 처리 로직 (예: 로컬 데이터베이스 업데이트)
   }
 });
 
-const rootStyle = {flex: 1};
+const rootStyle = { flex: 1 };
 
 const Root = () => (
   <GestureHandlerRootView style={rootStyle}>
@@ -52,4 +35,4 @@ const Root = () => (
   </GestureHandlerRootView>
 );
 
-AppRegistry.registerComponent(appName, () => Root);
+registerRootComponent(Root);

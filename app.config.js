@@ -1,0 +1,109 @@
+/**
+ * Expo 앱 설정 (RN CLI android/ios 폴더를 대체).
+ *
+ * android/ ios/ 는 `npx expo prebuild`가 이 파일로부터 생성한다(CNG).
+ * 따라서 네이티브 폴더를 직접 수정하지 말 것 — prebuild 시 덮어써진다.
+ * 네이티브 변경이 필요하면 config plugin이나 아래 설정으로 표현한다.
+ *
+ * 릴리즈 서명 키스토어는 .native-secrets/ 에 보관하며 EAS Build에 등록해 쓴다.
+ */
+
+const IS_DEV = process.env.APP_VARIANT === 'development';
+
+export default {
+  expo: {
+    name: 'J-Car',
+    slug: 'jcar',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './src/assets/icon.png',
+    userInterfaceStyle: 'light',
+    // 딥링크 스킴 — 이메일 인증/비밀번호 재설정 후 앱으로 복귀하는 경로
+    scheme: 'jcar',
+    newArchEnabled: true,
+
+    splash: {
+      image: './src/assets/logo.png',
+      resizeMode: 'contain',
+      backgroundColor: '#1A2B5C', // theme.colors.primary.dark
+    },
+
+    assetBundlePatterns: ['**/*'],
+
+    android: {
+      package: IS_DEV ? 'com.jcarnew.dev' : 'com.jcarnew',
+      versionCode: 1,
+      googleServicesFile: './google-services.json',
+      adaptiveIcon: {
+        foregroundImage: './src/assets/icon.png',
+        backgroundColor: '#1A2B5C',
+      },
+      permissions: [
+        'android.permission.POST_NOTIFICATIONS', // FCM (Android 13+)
+        'android.permission.CAMERA',
+        'android.permission.READ_MEDIA_IMAGES',
+      ],
+    },
+
+    ios: {
+      bundleIdentifier: 'com.jcarnew',
+      supportsTablet: false,
+      infoPlist: {
+        NSCameraUsageDescription: '차량 사진을 촬영하기 위해 카메라를 사용합니다.',
+        NSPhotoLibraryUsageDescription: '차량 사진을 선택하기 위해 사진 보관함에 접근합니다.',
+      },
+    },
+
+    // Vercel 배포 대상.
+    // output: 'static'(정적 사전렌더)은 expo-router 전용이라 react-navigation을
+    // 쓰는 이 앱에서는 'single'(SPA)이 맞다.
+    web: {
+      bundler: 'metro',
+      output: 'single',
+      favicon: './src/assets/icon.png',
+    },
+
+    plugins: [
+      // Pretendard 번들 — 기존 react-native.config.js의 에셋 링크를 대체
+      [
+        'expo-font',
+        {
+          fonts: [
+            './src/assets/fonts/Pretendard-Regular.ttf',
+            './src/assets/fonts/Pretendard-Medium.ttf',
+            './src/assets/fonts/Pretendard-SemiBold.ttf',
+            './src/assets/fonts/Pretendard-Bold.ttf',
+            './src/assets/fonts/Pretendard-ExtraBold.ttf',
+          ],
+        },
+      ],
+      'expo-splash-screen',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: '차량 사진을 선택하기 위해 사진 보관함에 접근합니다.',
+          cameraPermission: '차량 사진을 촬영하기 위해 카메라를 사용합니다.',
+        },
+      ],
+      // FCM·Crashlytics·Analytics는 Firebase 유지(하이브리드) — config plugin으로 네이티브 배선
+      '@react-native-firebase/app',
+      '@react-native-firebase/messaging',
+      '@react-native-firebase/crashlytics',
+      '@react-native-firebase/analytics',
+      '@react-native-google-signin/google-signin',
+      // RNFirebase는 iOS에서 use_frameworks(static)를 요구한다
+      [
+        'expo-build-properties',
+        {
+          ios: { useFrameworks: 'static' },
+        },
+      ],
+    ],
+
+    extra: {
+      eas: {
+        // eas init 실행 시 프로젝트 ID가 채워진다
+      },
+    },
+  },
+};

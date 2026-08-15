@@ -1,11 +1,4 @@
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+// Expo 기본 Metro 설정 (웹 번들링 포함)
+const { getDefaultConfig } = require('expo/metro-config');
 
-/**
- * Metro configuration
- * https://reactnative.dev/docs/metro
- *
- * @type {import('@react-native/metro-config').MetroConfig}
- */
-const config = {};
-
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = getDefaultConfig(__dirname);

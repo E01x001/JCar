@@ -8,7 +8,7 @@
  * Task #88: Modular service refactoring
  */
 
-import { getCrashlytics, recordError, log } from '@react-native-firebase/crashlytics';
+import { getCrashlytics, recordError, log } from './firebaseNative';
 
 /**
  * Get crashlytics instance helper

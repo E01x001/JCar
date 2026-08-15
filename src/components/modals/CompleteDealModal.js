@@ -16,8 +16,8 @@ import {
   ScrollView,
 } from 'react-native';
 import PropTypes from 'prop-types';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import analytics from '@react-native-firebase/analytics';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { analytics } from '../../services/notification/firebaseNative';
 import { useTheme } from '../../theme/ThemeProvider';
 import InputField from '../InputField';
 import Button from '../Button';

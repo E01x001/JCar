@@ -1,7 +1,7 @@
 // Task 63.2: Migrated Crashlytics to v22 Modular API
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { getCrashlytics, recordError, log, setAttribute } from '@react-native-firebase/crashlytics';
+import { getCrashlytics, recordError, log, setAttribute } from '../services/notification/firebaseNative';
 
 class ErrorBoundary extends Component {
   constructor(props) {

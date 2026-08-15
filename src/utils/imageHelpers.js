@@ -1,172 +1,183 @@
-
 /**
  * Image Upload Optimization Utilities
  *
- * Task 107: Utilities for optimized image handling
- * - Image selection (gallery/camera)
- * - Client-side compression
- * - File size validation
- * - Upload progress tracking
+ * Expo 전환: react-native-image-crop-picker + react-native-compressor →
+ *            expo-image-picker + expo-image-manipulator
+ *
+ * 외부에 노출하는 함수 시그니처와 반환 형태({ uri, size })는 그대로 유지해
+ * 호출부(VehicleRegistrationScreen)는 수정이 필요 없다.
+ *
+ * 크로퍼 차이: 기존 라이브러리는 전용 크롭 UI를 제공했으나 expo-image-picker는
+ * allowsEditing(단일 선택 시 기본 크롭)만 제공한다. 다중 선택에서는 양쪽 모두
+ * 크롭을 지원하지 않으므로 동작이 동일하다.
  */
 
-import ImagePicker from 'react-native-image-crop-picker';
-import { Image } from 'react-native-compressor';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
 import { logger } from './logger';
 
 // Configuration constants
 const MAX_IMAGE_WIDTH = 1920;
-const MAX_IMAGE_HEIGHT = 1080;
 const COMPRESSION_QUALITY = 0.8; // 80% quality
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
+/** 권한 요청 — 거부되면 명확한 한글 메시지로 던진다 */
+const ensureLibraryPermission = async () => {
+  const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!granted) {
+    throw new Error('사진 보관함 접근 권한이 필요합니다. 설정에서 허용해주세요.');
+  }
+};
+
+const ensureCameraPermission = async () => {
+  const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+  if (!granted) {
+    throw new Error('카메라 권한이 필요합니다. 설정에서 허용해주세요.');
+  }
+};
+
+/** 선택 결과(asset) → 기존 코드가 기대하던 { path, size, width, height } 형태로 정규화 */
+const toLegacyShape = (asset) => ({
+  path: asset.uri,
+  size: asset.fileSize ?? 0,
+  width: asset.width,
+  height: asset.height,
+});
+
 /**
  * Pick image from gallery with crop option
- * @param {Object} options - Configuration options
- * @param {boolean} options.cropping - Enable cropping (default: true)
- * @param {number} options.width - Crop width (default: MAX_IMAGE_WIDTH)
- * @param {number} options.height - Crop height (default: MAX_IMAGE_HEIGHT)
- * @returns {Promise<Object>} Selected image info
+ * @param {Object} options
+ * @param {boolean} options.cropping - 크롭 UI 사용 여부 (default: true)
+ * @returns {Promise<Object|null>} 선택 결과(취소 시 null)
  */
 export const pickImageFromGallery = async (options = {}) => {
-  const {
-    cropping = true,
-    width = MAX_IMAGE_WIDTH,
-    height = MAX_IMAGE_HEIGHT,
-  } = options;
+  const { cropping = true } = options;
+  await ensureLibraryPermission();
 
-  try {
-    const image = await ImagePicker.openPicker({
-      width,
-      height,
-      cropping,
-      compressImageQuality: COMPRESSION_QUALITY,
-      mediaType: 'photo',
-      includeBase64: false,
-    });
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: cropping,
+    quality: COMPRESSION_QUALITY,
+  });
 
-    logger.debug('📷 Image selected from gallery:', {
-      path: image.path,
-      size: (image.size / 1024).toFixed(2) + ' KB',
-      dimensions: `${image.width}x${image.height}`,
-    });
-
-    return image;
-  } catch (error) {
-    if (error.code === 'E_PICKER_CANCELLED') {
-      logger.debug('ℹ️ User cancelled image picker');
-      return null;
-    }
-    throw error;
+  if (result.canceled) {
+    logger.debug('ℹ️ User cancelled image picker');
+    return null;
   }
+
+  const asset = result.assets[0];
+  logger.debug('📷 Image selected from gallery:', {
+    size: ((asset.fileSize ?? 0) / 1024).toFixed(2) + ' KB',
+    dimensions: `${asset.width}x${asset.height}`,
+  });
+  return toLegacyShape(asset);
 };
 
 /**
  * Pick image from camera with crop option
- * @param {Object} options - Configuration options
- * @param {boolean} options.cropping - Enable cropping (default: true)
- * @param {number} options.width - Crop width (default: MAX_IMAGE_WIDTH)
- * @param {number} options.height - Crop height (default: MAX_IMAGE_HEIGHT)
- * @returns {Promise<Object>} Captured image info
+ * @param {Object} options
+ * @param {boolean} options.cropping - 크롭 UI 사용 여부 (default: true)
+ * @returns {Promise<Object|null>} 촬영 결과(취소 시 null)
  */
 export const pickImageFromCamera = async (options = {}) => {
-  const {
-    cropping = true,
-    width = MAX_IMAGE_WIDTH,
-    height = MAX_IMAGE_HEIGHT,
-  } = options;
+  const { cropping = true } = options;
+  await ensureCameraPermission();
 
-  try {
-    const image = await ImagePicker.openCamera({
-      width,
-      height,
-      cropping,
-      compressImageQuality: COMPRESSION_QUALITY,
-      mediaType: 'photo',
-      includeBase64: false,
-    });
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: cropping,
+    quality: COMPRESSION_QUALITY,
+  });
 
-    logger.debug('📸 Image captured from camera:', {
-      path: image.path,
-      size: (image.size / 1024).toFixed(2) + ' KB',
-      dimensions: `${image.width}x${image.height}`,
-    });
-
-    return image;
-  } catch (error) {
-    if (error.code === 'E_PICKER_CANCELLED') {
-      logger.debug('ℹ️ User cancelled camera');
-      return null;
-    }
-    throw error;
+  if (result.canceled) {
+    logger.debug('ℹ️ User cancelled camera');
+    return null;
   }
+
+  const asset = result.assets[0];
+  logger.debug('📸 Image captured from camera:', {
+    size: ((asset.fileSize ?? 0) / 1024).toFixed(2) + ' KB',
+    dimensions: `${asset.width}x${asset.height}`,
+  });
+  return toLegacyShape(asset);
 };
 
 /**
  * Pick multiple images from gallery (Task 127)
- * Cropping is disabled for multi-select (the cropper is single-image only).
+ * 다중 선택에서는 크롭을 쓸 수 없다(크로퍼는 단일 이미지 전용).
  * @param {Object} options
- * @param {number} options.maxFiles - Maximum number of images to select
- * @returns {Promise<Array>} Array of selected image objects (empty if cancelled)
+ * @param {number} options.maxFiles - 최대 선택 장수
+ * @returns {Promise<Array>} 선택 결과 배열(취소 시 빈 배열)
  */
 export const pickMultipleFromGallery = async (options = {}) => {
   const { maxFiles = 8 } = options;
+  await ensureLibraryPermission();
 
-  try {
-    const images = await ImagePicker.openPicker({
-      multiple: true,
-      maxFiles,
-      mediaType: 'photo',
-      compressImageQuality: COMPRESSION_QUALITY,
-      includeBase64: false,
-    });
-    return Array.isArray(images) ? images : [images];
-  } catch (error) {
-    if (error.code === 'E_PICKER_CANCELLED') {
-      logger.debug('ℹ️ User cancelled multi image picker');
-      return [];
-    }
-    throw error;
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsMultipleSelection: true,
+    selectionLimit: maxFiles,
+    quality: COMPRESSION_QUALITY,
+  });
+
+  if (result.canceled) {
+    logger.debug('ℹ️ User cancelled multi image picker');
+    return [];
   }
+  return result.assets.map(toLegacyShape);
 };
 
 /**
  * Compress + validate a batch of picked images for upload (Task 127).
- * @param {Array} images - Picker image objects (with .path and .size)
- * @returns {Promise<Array>} Array of { uri, size } prepared images
+ * @param {Array} images - 선택 결과 배열(.path/.size)
+ * @returns {Promise<Array>} { uri, originalUri, size } 배열
  */
 export const prepareImagesForUpload = async (images = []) => {
   const prepared = [];
   for (const image of images) {
-    const compressedUri = await compressImage(image.path);
-    const estimatedSize = image.size * COMPRESSION_QUALITY;
-    validateFileSize(estimatedSize);
-    prepared.push({ uri: compressedUri, originalUri: image.path, size: estimatedSize });
+    const { uri, size } = await compressImage(image.path);
+    validateFileSize(size || image.size * COMPRESSION_QUALITY);
+    prepared.push({
+      uri,
+      originalUri: image.path,
+      size: size || image.size * COMPRESSION_QUALITY,
+    });
   }
   return prepared;
 };
 
 /**
- * Compress image to reduce file size
- * @param {string} imageUri - Local file path of image
- * @returns {Promise<string>} Compressed image path
+ * 이미지 리사이즈·압축.
+ * expo-image-manipulator는 압축 후 실제 파일 크기를 돌려주지 않으므로
+ * expo-file-system으로 크기를 직접 조회한다(기존 구현은 추정값만 썼다).
+ *
+ * @param {string} imageUri
+ * @returns {Promise<{uri: string, size: number}>}
  */
 export const compressImage = async (imageUri) => {
   try {
     logger.debug('🗜️ Starting image compression...');
     const startTime = Date.now();
 
-    const compressedUri = await Image.compress(imageUri, {
-      maxWidth: MAX_IMAGE_WIDTH,
-      maxHeight: MAX_IMAGE_HEIGHT,
-      quality: COMPRESSION_QUALITY,
+    const context = ImageManipulator.ImageManipulator.manipulate(imageUri);
+    context.resize({ width: MAX_IMAGE_WIDTH });
+    const image = await context.renderAsync();
+    const result = await image.saveAsync({
+      compress: COMPRESSION_QUALITY,
+      format: ImageManipulator.SaveFormat.JPEG,
     });
 
-    const duration = Date.now() - startTime;
-    logger.debug(`✅ Image compressed in ${duration}ms`);
-    logger.debug('   Output:', compressedUri);
+    let size = 0;
+    try {
+      const info = await FileSystem.getInfoAsync(result.uri);
+      size = info.exists ? info.size ?? 0 : 0;
+    } catch (e) {
+      logger.debug('압축 파일 크기 조회 실패(추정값 사용):', e?.message);
+    }
 
-    return compressedUri;
+    logger.debug(`✅ Image compressed in ${Date.now() - startTime}ms`);
+    return { uri: result.uri, size };
   } catch (error) {
     logger.error('❌ Image compression failed:', error);
     throw new Error('이미지 압축 중 오류가 발생했습니다.');
@@ -175,8 +186,8 @@ export const compressImage = async (imageUri) => {
 
 /**
  * Validate file size is within limit
- * @param {number} sizeInBytes - File size in bytes
- * @returns {boolean} True if valid, throws error if too large
+ * @param {number} sizeInBytes
+ * @returns {boolean} 초과 시 throw
  */
 export const validateFileSize = (sizeInBytes) => {
   if (sizeInBytes > MAX_FILE_SIZE_BYTES) {
@@ -190,46 +201,24 @@ export const validateFileSize = (sizeInBytes) => {
 
 /**
  * Complete workflow: Pick, compress, validate, and prepare for upload
- * @param {string} source - 'gallery' or 'camera'
- * @param {Object} options - Additional options
- * @returns {Promise<Object>} { uri, size, isValid } - Prepared image info
+ * @param {string} source - 'gallery' | 'camera'
+ * @param {Object} options
+ * @returns {Promise<Object|null>} { uri, originalUri, size, isValid }
  */
 export const prepareImageForUpload = async (source = 'gallery', options = {}) => {
   try {
-    // Step 1: Pick image
-    let image;
-    if (source === 'camera') {
-      image = await pickImageFromCamera(options);
-    } else {
-      image = await pickImageFromGallery(options);
-    }
+    const image = source === 'camera'
+      ? await pickImageFromCamera(options)
+      : await pickImageFromGallery(options);
 
-    if (!image) {
-      return null; // User cancelled
-    }
+    if (!image) { return null; } // 사용자 취소
 
-    // Step 2: Compress image
-    const compressedUri = await compressImage(image.path);
-
-    // Step 3: Get file info for compressed image
-    // Note: react-native-compressor doesn't return size, so we use original size estimate
-    const estimatedSize = image.size * COMPRESSION_QUALITY;
-
-    // Step 4: Validate file size
-    try {
-      validateFileSize(estimatedSize);
-    } catch (error) {
-      logger.warn('⚠️ File size validation failed:', error.message);
-      throw error;
-    }
+    const { uri, size } = await compressImage(image.path);
+    const finalSize = size || image.size * COMPRESSION_QUALITY;
+    validateFileSize(finalSize);
 
     logger.debug('✅ Image prepared for upload');
-    return {
-      uri: compressedUri,
-      originalUri: image.path,
-      size: estimatedSize,
-      isValid: true,
-    };
+    return { uri, originalUri: image.path, size: finalSize, isValid: true };
   } catch (error) {
     logger.error('❌ Image preparation failed:', error);
     throw error;
@@ -237,22 +226,23 @@ export const prepareImageForUpload = async (source = 'gallery', options = {}) =>
 };
 
 /**
- * Cleanup function to remove temporary image files
- * @param {string} imageUri - Local file path to clean up
+ * 임시 이미지 파일 정리.
+ * expo-image-picker는 캐시 정리 API를 제공하지 않으므로 파일을 직접 지운다.
+ * @param {string} imageUri
  */
 export const cleanupImageCache = async (imageUri) => {
   try {
-    await ImagePicker.cleanSingle(imageUri);
+    await FileSystem.deleteAsync(imageUri, { idempotent: true });
     logger.debug('🗑️ Cleaned up temporary image:', imageUri);
   } catch (error) {
-    logger.warn('⚠️ Failed to clean up image cache:', error);
+    logger.warn('⚠️ Failed to clean up image cache:', error?.message);
   }
 };
 
 /**
  * Format file size for display
- * @param {number} bytes - File size in bytes
- * @returns {string} Formatted size string
+ * @param {number} bytes
+ * @returns {string}
  */
 export const formatFileSize = (bytes) => {
   if (bytes < 1024) {

@@ -4,7 +4,7 @@ import {
   StyleSheet, Image, StatusBar, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FAIcon from 'react-native-vector-icons/FontAwesome';
+import FAIcon from '@expo/vector-icons/FontAwesome';
 import { signIn, signInWithGoogle, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';

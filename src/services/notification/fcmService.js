@@ -9,7 +9,7 @@
  * Task #88: Modular service refactoring
  */
 
-import { getMessaging, getToken, requestPermission } from '@react-native-firebase/messaging';
+import { getMessaging, getToken, requestPermission, isSupported } from './firebaseNative';
 import { logger } from '../../utils/logger';
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
 

@@ -8,7 +8,7 @@ import React from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { useConnection } from '../context/ConnectionContext';
 import NetInfo from '@react-native-community/netinfo';

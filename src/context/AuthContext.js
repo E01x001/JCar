@@ -10,7 +10,7 @@ import { supabase } from '../lib/supabase';
 import { getMyProfile, signOutUser, saveMyFcmToken } from '../services/auth/supabaseAuthService';
 import { saveFcmToken } from '../services/notification/fcmService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
-import { getMessaging, onTokenRefresh } from '@react-native-firebase/messaging';
+import { getMessaging, onTokenRefresh } from '../services/notification/firebaseNative';
 
 export const AuthContext = createContext(null);
 

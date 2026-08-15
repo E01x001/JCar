@@ -154,3 +154,12 @@ NUL
 # 리디자인 참고용 스크린샷 (커밋 제외)
 UI_inapp/
 .supabase-db-password.txt
+
+# Expo 전환: 릴리즈 키스토어 보관(레포에 커밋 금지)
+.native-secrets/
+google-services.json
+
+# 시안 참고용 스크린샷 (커밋 제외)
+UI_redesign/
+package.json.rn-backup
+dist-verify/

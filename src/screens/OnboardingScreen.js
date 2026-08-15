@@ -3,9 +3,9 @@
  * 시안: 화이트 카드 · 일러스트(블루 라운드 뱃지+아이콘) · 타이틀 · 설명 · 점 인디케이터 · 다음/건너뛰기.
  */
 import React, { useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from '../components/Button';
@@ -18,12 +18,14 @@ const PAGES = [
   { icon: 'directions-car', title: '안전한 거래의 시작', desc: '차량 등록부터 상담 예약까지\n한 곳에서 간편하게' },
 ];
 
-const { width } = Dimensions.get('window');
+// 웹에서는 모듈 스코프의 window 폭이 실제 페이저 폭과 어긋나므로 onLayout으로 측정한다
+const INITIAL_WIDTH = Dimensions.get('window').width;
 
 const OnboardingScreen = ({ navigation }) => {
   const { colors } = useTheme();
   const scrollRef = useRef(null);
   const [index, setIndex] = useState(0);
+  const [width, setWidth] = useState(INITIAL_WIDTH);
   const isLast = index === PAGES.length - 1;
 
   const finish = async () => {
@@ -33,7 +35,8 @@ const OnboardingScreen = ({ navigation }) => {
 
   const onNext = () => {
     if (isLast) { finish(); return; }
-    scrollRef.current?.scrollTo({ x: width * (index + 1), animated: true });
+    // 웹은 smooth 스크롤이 scroll-snap(mandatory)과 충돌해 중간에 멈춘다 → 즉시 이동
+    scrollRef.current?.scrollTo({ x: width * (index + 1), animated: Platform.OS !== 'web' });
     setIndex(index + 1);
   };
 
@@ -56,7 +59,9 @@ const OnboardingScreen = ({ navigation }) => {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onScroll}
+        onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
         style={styles.pager}
+        contentContainerStyle={styles.pagerContent}
       >
         {PAGES.map((p) => (
           <View key={p.title} style={[styles.page, { width }]}>
@@ -94,7 +99,8 @@ const styles = StyleSheet.create({
   skipRow: { alignItems: 'flex-end', paddingHorizontal: 22, paddingTop: 8, height: 36, justifyContent: 'center' },
   skip: { fontSize: 14, fontWeight: '600' },
   pager: { flex: 1 },
-  page: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
+  pagerContent: { alignItems: 'stretch' },
+  page: { flexGrow: 1, flexShrink: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
   illust: { width: 180, height: 180, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 42 },
   title: { fontSize: 23, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
   desc: { fontSize: 14, lineHeight: 23, textAlign: 'center', marginTop: 14 },

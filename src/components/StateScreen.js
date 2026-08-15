@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import Button from './Button';
 

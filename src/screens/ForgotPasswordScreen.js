@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { sendPasswordReset, mapAuthError } from '../services/auth/supabaseAuthService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { useToast } from '../hooks/useToast';

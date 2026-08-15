@@ -6,10 +6,9 @@
  */
 
 import React, { useState } from 'react';
-import { View, Image, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Image, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import PropTypes from 'prop-types';
-import PagerView from 'react-native-pager-view';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 
 const { width } = Dimensions.get('window');
@@ -37,6 +36,9 @@ CarouselImage.propTypes = { uri: PropTypes.string };
 const ImageCarousel = ({ images = [], height = DEFAULT_HEIGHT, style }) => {
   const theme = useTheme();
   const [page, setPage] = useState(0);
+  // 실제 렌더 폭을 측정해 페이지 계산에 쓴다.
+  // Dimensions(창 전체)로 가정하면 카드 안에 들어갈 때 어긋난다.
+  const [pageWidth, setPageWidth] = useState(width);
 
   const list = (images || []).filter(Boolean);
 
@@ -50,18 +52,28 @@ const ImageCarousel = ({ images = [], height = DEFAULT_HEIGHT, style }) => {
   }
 
   return (
-    <View style={[{ height }, style]}>
-      <PagerView
+    <View
+      style={[{ height }, style]}
+      onLayout={(e) => setPageWidth(e.nativeEvent.layout.width)}
+    >
+      {/* PagerView 대신 ScrollView — 네이티브·웹 모두에서 동작한다
+          (react-native-pager-view는 웹 미지원) */}
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(e) => {
+          const i = Math.round(e.nativeEvent.contentOffset.x / (pageWidth || 1));
+          if (i !== page) { setPage(i); }
+        }}
         style={styles.pager}
-        initialPage={0}
-        onPageSelected={(e) => setPage(e.nativeEvent.position)}
       >
         {list.map((uri, i) => (
-          <View key={`${i}-${uri}`} style={styles.page}>
+          <View key={`${i}-${uri}`} style={[styles.page, { width: pageWidth }]}>
             <CarouselImage uri={uri} />
           </View>
         ))}
-      </PagerView>
+      </ScrollView>
 
       {list.length > 1 && (
         <View style={styles.dots}>

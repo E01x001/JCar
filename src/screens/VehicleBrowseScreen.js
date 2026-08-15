@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, Pressable, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { subscribeToFilteredVehicles, getActiveFilterCount } from '../services/vehicleFilterService';
 import { useTheme } from '../theme/ThemeProvider';
 import { AuthContext } from '../context/AuthContext';

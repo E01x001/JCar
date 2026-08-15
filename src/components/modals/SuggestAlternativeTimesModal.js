@@ -17,8 +17,8 @@ import {
   Platform,
 } from 'react-native';
 import PropTypes from 'prop-types';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import DatePicker from 'react-native-date-picker';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../theme/ThemeProvider';
 import Card from '../Card';
 import Button from '../Button';
@@ -68,11 +68,36 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
     }
   }, [isVisible]);
 
-  const handleAddTimeSlot = (date) => {
-    setIsDatePickerVisible(false);
-    if (date) {
-      setSuggestedSlots([...suggestedSlots, date]);
+  // @react-native-community/datetimepicker는 날짜와 시간을 각각 띄운다.
+  // 기존 datetime 한 번에 고르던 UX를 유지하려고 date → time 2단계로 잇는다.
+  const [pickerMode, setPickerMode] = useState('date');
+  const [pendingDate, setPendingDate] = useState(null);
+
+  const handlePickerChange = (event, picked) => {
+    // 안드로이드는 취소 시 dismissed 이벤트를 준다
+    if (event?.type === 'dismissed' || !picked) {
+      setIsDatePickerVisible(false);
+      setPickerMode('date');
+      setPendingDate(null);
+      return;
     }
+
+    if (pickerMode === 'date') {
+      // 날짜만 고른 상태 — 이어서 시간 선택을 띄운다
+      setPendingDate(picked);
+      setPickerMode('time');
+      return;
+    }
+
+    const base = pendingDate ?? picked;
+    const combined = new Date(
+      base.getFullYear(), base.getMonth(), base.getDate(),
+      picked.getHours(), picked.getMinutes(), 0, 0,
+    );
+    setSuggestedSlots([...suggestedSlots, combined]);
+    setIsDatePickerVisible(false);
+    setPickerMode('date');
+    setPendingDate(null);
   };
 
   const handleRemoveTimeSlot = (index) => {
@@ -306,20 +331,15 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
             </Card>
 
             {/* Date Time Picker */}
-            <DatePicker
-              modal
-              open={isDatePickerVisible}
-              date={selectedDate}
-              mode="datetime"
-              onConfirm={handleAddTimeSlot}
-              onCancel={() => setIsDatePickerVisible(false)}
-              minimumDate={new Date()}
-              minuteInterval={10}
-              locale="ko"
-              title="대체 시간 선택"
-              confirmText="확인"
-              cancelText="취소"
-            />
+            {isDatePickerVisible && (
+              <DateTimePicker
+                value={pendingDate ?? selectedDate}
+                mode={pickerMode}
+                minimumDate={pickerMode === 'date' ? new Date() : undefined}
+                minuteInterval={10}
+                onChange={handlePickerChange}
+              />
+            )}
           </View>
         </KeyboardAvoidingView>
       </View>

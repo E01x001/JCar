@@ -9,7 +9,7 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // 가격 비공개 정책(일반 사용자): 가격 필터/정렬 자체를 노출하지 않는다.
 // 가격대 좁히기(이진탐색)로 실가격을 유추할 수 있기 때문 — utils/vehiclePrice.js 참고.

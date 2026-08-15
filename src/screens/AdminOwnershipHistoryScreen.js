@@ -20,7 +20,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { getAllOwnershipTransfers } from '../services/ownershipTransferService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';

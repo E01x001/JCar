@@ -12,7 +12,7 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { logger } from '../utils/logger';
 import { AuthContext } from '../context/AuthContext';
 import { completeProfile } from '../services/auth/supabaseAuthService';

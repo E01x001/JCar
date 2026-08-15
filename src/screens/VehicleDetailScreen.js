@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { fetchVehicleById, fetchVehiclePricing, subscribeVehicles } from '../services/vehicle/supabaseVehicleService';
 import { logger } from '../utils/logger';
 import { AuthContext } from '../context/AuthContext';
