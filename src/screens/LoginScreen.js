@@ -4,7 +4,8 @@ import {
   StyleSheet, Image, StatusBar, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { signIn, mapAuthError } from '../services/auth/supabaseAuthService';
+import FAIcon from 'react-native-vector-icons/FontAwesome';
+import { signIn, signInWithGoogle, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -17,6 +18,7 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading]   = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused]   = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -34,6 +36,21 @@ const LoginScreen = ({ navigation }) => {
       toast.showError('로그인 실패', mapAuthError(error));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (googleLoading || loading) { return; }
+    setGoogleLoading(true);
+    try {
+      const { cancelled } = await signInWithGoogle();
+      if (cancelled) { return; }
+      // 화면 전환은 AuthContext의 onAuthStateChange가 처리한다.
+      // 전화번호가 없는 신규 사용자는 AppNavigator가 프로필 완성 화면으로 보낸다.
+    } catch (error) {
+      toast.showError('구글 로그인 실패', mapAuthError(error));
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -95,6 +112,25 @@ const LoginScreen = ({ navigation }) => {
               activeOpacity={0.85}
             >
               <Text style={[styles.loginBtnText, { color: theme.colors.primary.main }]}>{loading ? '로그인 중...' : '로그인'}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>또는</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.googleBtn, googleLoading && styles.loginBtnDisabled]}
+              onPress={handleGoogleLogin}
+              disabled={googleLoading || loading}
+              activeOpacity={0.85}
+            >
+              {/* TODO(출시 전): 구글 브랜딩 가이드라인상 공식 4색 'G' 에셋으로 교체 필요 */}
+              <FAIcon name="google" size={18} color="#4285F4" />
+              <Text style={styles.googleBtnText}>
+                {googleLoading ? '연결 중...' : 'Google로 계속하기'}
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.links}>
@@ -206,6 +242,36 @@ const styles = StyleSheet.create({
     // color는 theme.colors.primary.main으로 인라인 지정(토큰화)
     fontSize: 16,
     fontWeight: '800',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 18,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  dividerText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 15,
+    marginTop: 14,
+    gap: 10,
+  },
+  googleBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1F1F1F',
   },
   links: {
     flexDirection: 'row',

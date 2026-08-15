@@ -31,6 +31,11 @@ serviceAccount*.json
 # Firebase 콘솔이 발급하는 서비스 계정 키 (예: jcar-xxxx-firebase-adminsdk-xxx.json)
 *-firebase-adminsdk-*.json
 
+# Supabase 로컬 크레덴셜
+# supabase login이 만드는 토큰은 만료되므로, 대시보드에서 발급한 PAT를 여기에 저장해 쓴다
+# (사용법: export SUPABASE_ACCESS_TOKEN=$(cat .supabase-access-token))
+.supabase-access-token
+
 # React Native & Android
 android/.gradle/
 .gradle/

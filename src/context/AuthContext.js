@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [sellerName, setSellerName] = useState(null);
   const [sellerPhone, setSellerPhone] = useState(null);
   const [sellerEmail, setSellerEmail] = useState(null);
+  const [profileCompleted, setProfileCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children }) => {
       if (!authUser) {
         setUser(null);
         setRole(null);
+        setProfileCompleted(false);
         setLoading(false);
         return;
       }
@@ -61,6 +63,7 @@ export const AuthProvider = ({ children }) => {
         setSellerName(profile?.name || authUser.user_metadata?.name || 'Unknown');
         setSellerPhone(profile?.phone_number || 'Unknown');
         setSellerEmail(profile?.email || authUser.email || 'Unknown');
+        setProfileCompleted(!!profile?.profile_completed);
 
         // FCM 토큰 저장 (실패해도 로그인 흐름은 막지 않음)
         saveFcmToken(authUser.id).catch(() => {});
@@ -88,6 +91,20 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.subscription.unsubscribe();
   }, []);
 
+  // 프로필 완성 등으로 변경된 프로필을 다시 읽어 컨텍스트에 반영
+  const refreshProfile = async () => {
+    if (!user?.uid) { return; }
+    try {
+      const profile = await getMyProfile(user.uid);
+      setRole(profile?.role || 'user');
+      setSellerName(profile?.name || 'Unknown');
+      setSellerPhone(profile?.phone_number || 'Unknown');
+      setProfileCompleted(!!profile?.profile_completed);
+    } catch (error) {
+      logger.error('AuthContext: 프로필 갱신 실패:', error);
+    }
+  };
+
   // FCM 토큰 갱신 리스너 (FCM 발급은 Firebase 유지 — 하이브리드)
   useEffect(() => {
     const messagingInstance = getMessaging();
@@ -110,7 +127,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, sellerName, sellerPhone, sellerEmail, loading }}>
+    <AuthContext.Provider
+      value={{ user, role, sellerName, sellerPhone, sellerEmail, profileCompleted, refreshProfile, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
