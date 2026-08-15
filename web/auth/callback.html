@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>이메일 인증 완료 — J-Car</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <!-- 이 페이지에 도달했다는 건 Supabase가 이미 토큰 검증을 마쳤다는 뜻이다.
+           여기서 따로 확인 처리를 할 필요는 없고 결과만 알리면 된다. -->
+      <div class="badge ok" id="badge">✓</div>
+      <h1 id="title">이메일 인증이 완료되었습니다</h1>
+      <p class="lead" id="desc">앱으로 돌아가 로그인해주세요.</p>
+      <button id="openApp">앱 열기</button>
+      <p class="muted">
+        버튼이 동작하지 않으면 J-Car 앱을 직접 실행해주세요.
+      </p>
+    </div>
+    <footer class="foot">© J-Car</footer>
+  </main>
+
+  <script>
+    // 오류로 리디렉트된 경우(만료된 링크 등) 안내를 바꾼다
+    const params = new URLSearchParams(
+      location.hash.startsWith('#') ? location.hash.slice(1) : location.search
+    );
+    const err = params.get('error_description') || params.get('error');
+    if (err) {
+      document.getElementById('badge').className = 'badge fail';
+      document.getElementById('badge').textContent = '!';
+      document.getElementById('title').textContent = '인증 링크가 유효하지 않습니다';
+      document.getElementById('desc').textContent =
+        '링크가 만료되었거나 이미 사용되었습니다. 앱에서 다시 요청해주세요.';
+    }
+
+    document.getElementById('openApp').addEventListener('click', () => {
+      // 앱이 설치돼 있으면 스킴으로 열리고, 아니면 아무 일도 일어나지 않는다
+      window.location.href = 'jcar://auth/callback';
+    });
+  </script>
+</body>
+</html>
