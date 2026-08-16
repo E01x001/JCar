@@ -4,34 +4,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-JCarNew is a React Native vehicle marketplace application with Firebase backend integration. The app features role-based authentication with separate interfaces for regular users and administrators, supporting vehicle listings, consultation requests, and administrative management.
+JCar is an **Expo (SDK 57)** vehicle marketplace app targeting **Android and web** from one codebase.
+Role-based auth separates regular users from administrators; features cover vehicle listings,
+consultation booking, and admin management.
+
+**Backend is Supabase** (Postgres + RLS, Auth, Storage, Edge Functions).
+Firebase remains only for **FCM push, Crashlytics, and Analytics** — a deliberate hybrid.
+
+**Hard rule — prices are admin-only.** Vehicle prices live in the `vehicle_pricing` table,
+which RLS exposes to admins alone. Non-admin users must never see a price anywhere in the UI;
+they see "상담 후 안내". This is enforced at the database level, not just in components.
 
 ## Development Commands
 
 ### Start Development Server
 ```bash
-npm start          # Start Metro bundler
+npm start          # expo start
+npm run web        # expo start --web
 ```
 
 ### Build and Run
 ```bash
-npm run android    # Build and run
-
- Android app
-npm run ios        # Build and run iOS app (requires pod install)
+npm run android    # expo run:android (native dev build)
+npm run prebuild   # expo prebuild — regenerate native projects (CNG)
 ```
 
-### iOS Setup (First time or after native dependency updates)
-```bash
-bundle install                # Install Ruby bundler
-bundle exec pod install      # Install CocoaPods dependencies
-```
+Native projects are **generated** from `app.config.js`. Edit the config, not `android/` by hand —
+`prebuild` will overwrite manual changes. `ios/` is intentionally absent (Android-first).
 
 ### Testing and Quality
 ```bash
-npm test          # Run Jest tests
-npm run lint      # Run ESLint
+npm test          # Jest (jest-expo preset)
+npm run lint      # ESLint
 ```
+
+A husky pre-commit hook runs `eslint --fix` plus related Jest tests via lint-staged.
+
+### Web build / deploy
+```bash
+npx expo export --platform web   # outputs to dist/
+npx vercel deploy --prod         # or push to main — GitHub integration auto-deploys
+```
+Production: <https://jcar-platform.vercel.app>
 
 ## Architecture Overview
 
@@ -179,8 +193,10 @@ claude mcp remove youtube-mcp
 - **Entry Point**: `index.js` → `src/App.js`
 - **Navigation**: React Navigation with role-based routing (Stack + Bottom Tabs)
 - **State Management**: Context API (AuthContext, LoadingContext)
-- **Backend**: Firebase (Auth, Firestore, Storage, Messaging)
-- **UI Framework**: React Native with Vector Icons and gesture handling
+- **Backend**: Supabase (Postgres/RLS, Auth, Storage, Edge Functions)
+- **Push/telemetry**: Firebase FCM + Crashlytics + Analytics (native only)
+- **Client state**: zustand stores (`src/stores/`) alongside Context
+- **UI Framework**: React Native + `@expo/vector-icons`
 
 ### Key Directories
 ```
@@ -189,26 +205,43 @@ src/
 ├── context/        # Global state management (Auth, Loading)
 ├── navigation/     # App navigation structure and role-based routing
 ├── screens/        # All application screens (User + Admin)
-├── services/       # Firebase integration and business logic
+├── services/       # Business logic, split by domain (auth, vehicle, consultation, ...)
+├── stores/         # zustand stores (vehicle, consultation)
+├── lib/            # supabase client, snake_case <-> camelCase mappers
+├── theme/          # design tokens + ThemeProvider
 └── utils/          # Utility functions (formatting, validation)
 ```
 
 ### Authentication Flow
-The app uses Firebase Authentication with role-based access control:
-- **AuthContext**: Manages user state, role (user/admin), and profile data
-- **Role Detection**: Firestore users collection stores role and profile information
-- **Navigation**: Conditional rendering based on authentication state and user role
+Supabase Auth with role-based access control:
+- **AuthContext**: user state, role (user/admin), profile; driven by `onAuthStateChange`
+- **Role Detection**: `profiles` table holds role and profile fields
+- **Sign-in**: email/password, plus Google. Google is **platform-split** —
+  `services/auth/googleAuth.js` (native ID-token exchange) vs `.web.js` (redirect OAuth).
+- **Profile gating**: incomplete profiles (`profile_completed`) are routed to a completion step
+- **Navigation**: conditional rendering on auth state and role
 
 ### Navigation Architecture
 - **Unauthenticated**: Login → Register → ForgotPassword
 - **User Role**: Bottom tabs (Vehicles, Register, MyPage) + Stack screens
 - **Admin Role**: Bottom tabs (Vehicle Management, Consultations, Schedule, Admin Info) + Stack screens
 
-### Firebase Integration
-- **Authentication**: User login/logout, role-based access
-- **Firestore**: Vehicle data, consultation requests, user profiles
-- **Storage**: Image uploads for vehicles
-- **Messaging**: FCM integration (currently disabled in firebaseService.js)
+### Supabase Integration
+- **Auth**: login/logout, Google OAuth, role-based access
+- **Postgres + RLS**: vehicles, consultation requests, profiles, `vehicle_pricing` (admin-only)
+- **Storage**: vehicle image uploads
+- **Edge Functions**: push dispatch, account deletion cascade, CarZen proxy
+- **Realtime**: `postgres_changes` subscriptions behind `subscribe*` helpers in services
+
+Migrations live in `supabase/migrations/`. Never hand-edit applied migrations —
+add a new one. Secrets (service_role, API keys) belong in Vault or function env,
+never in migrations or client code.
+
+### Firebase (hybrid remainder)
+FCM, Crashlytics, and Analytics only. **All Firebase imports must go through
+`src/services/notification/firebaseNative.js`** — RNFirebase has no web build and
+crashes the web bundle on import. The sibling `firebaseNative.web.js` is a no-op stub
+that Metro substitutes automatically.
 
 ### Screen Organization
 - **User Screens**: Vehicle browsing, registration, consultation requests, profile management
@@ -224,27 +257,30 @@ The app uses Firebase Authentication with role-based access control:
 - Services: Descriptive names for business logic modules
 
 ### State Management Patterns
-- Use Context API for global state (authentication, loading)
-- Local state with useState for component-specific data
-- Firebase real-time listeners in useEffect with proper cleanup
+- Context for auth/loading/theme; zustand stores for vehicle & consultation lists
+- Local `useState` for component-scoped data
+- Realtime subscriptions in `useEffect` with proper cleanup (unsubscribe on unmount)
 
-### Firebase Best Practices
-- Always validate Firestore document existence before accessing data
-- Use serverTimestamp() for consistent timestamps
-- Handle authentication state changes with proper loading states
-- Implement proper error handling for Firebase operations
+### Supabase Best Practices
+- Let RLS be the boundary — never rely on client-side filtering for authorization
+- Prefer RPCs (SECURITY DEFINER) over multi-step client writes that must be atomic
+- Map snake_case to camelCase at the service layer (`src/lib/mappers.js`), not in screens
+- Handle auth state changes with proper loading states
+
+### Platform-split modules
+When a module cannot work on web, add a `.web.js` sibling and let Metro pick it.
+Existing examples: `firebaseNative`, `googleAuth`. Do not scatter `Platform.OS` checks
+through call sites for this.
 
 ### Development Environment Requirements
 - Node.js >= 18
-- React Native CLI
-- Android Studio (for Android development)
-- Xcode (for iOS development)
-- CocoaPods (for iOS dependencies)
+- Expo CLI (via npx)
+- Android Studio (for Android dev builds)
 
 ## Testing Strategy
-- Jest configuration in `jest.config.js`
-- Test files in `__tests__/` directory
-- Focus on component rendering, navigation logic, and Firebase integration
+- Jest config in `jest.config.js` (jest-expo preset)
+- Test files in `__tests__/`
+- Focus on component rendering, navigation logic, and service-layer behavior
 
 
 프로젝트 개요
@@ -253,9 +289,10 @@ The app uses Firebase Authentication with role-based access control:
 
 유형: 중고차 거래 및 실시간 상담 플랫폼
 
-기반: React Native CLI (Android 우선 개발)
+기반: Expo SDK 57 (Android 우선 + 웹 동시 지원)
 
-Backend: Firebase (Authentication, Firestore, Storage, Functions)
+Backend: Supabase (Auth, Postgres/RLS, Storage, Edge Functions)
+푸시/텔레메트리만 Firebase 유지 (FCM, Crashlytics, Analytics)
 
 개발 목적
 
@@ -267,7 +304,7 @@ Backend: Firebase (Authentication, Firestore, Storage, Functions)
 
 개발 환경
 
-React Native CLI (v0.79.x)
+Expo SDK 57 (React Native 0.86, React 19)
 
 Android Studio + Emulator 또는 실제 Android 디바이스
 
@@ -277,25 +314,27 @@ Java 17 이상
 
 Gradle wrapper 사용 (project-level gradle에서 관리)
 
-Firebase 프로젝트 연동: google-services.json 설정 완료
+Firebase 프로젝트 연동: google-services.json (FCM 전용, gitignore 대상)
 
-패키지명: com.jcarplatform.jcar
+패키지명: com.jcarnew (dev 빌드는 com.jcarnew.dev)
+
+네이티브 프로젝트는 app.config.js로부터 expo prebuild가 생성한다 —
+android/를 직접 수정하면 다음 prebuild에서 덮어써진다.
 
 주요 기능 정리
 
 1. 사용자 인증
 
-전화번호 인증 (Firebase Phone Auth)
+이메일/비밀번호 로그인 (Supabase Auth)
 
-Android에서는 SafetyNet 자동 활성화
+구글 로그인 — 네이티브는 ID 토큰 교환, 웹은 리다이렉트 OAuth (googleAuth.js / .web.js)
 
-중복 가입 방지를 위한 Firebase Functions (checkPhoneNumber) 호출
+필수 프로필(이름·전화번호) 미입력 시 완성 화면으로 게이팅 (profile_completed)
 
-이메일/비밀번호 로그인 및 재설정
+전화번호: 형식 검증 + UNIQUE 중복 방지만 있고 실제 소유 인증은 없다
+(docs/KNOWN_ISSUES.md ISSUE-03)
 
-signInWithEmailAndPassword
-
-sendPasswordResetEmail
+이메일 인증: 현재 비활성 (ISSUE-02) · 비밀번호 재설정: 미구현 (ISSUE-01)
 
 2. 차량 등록 (VehicleRegistrationScreen.js)
 
@@ -305,11 +344,11 @@ sendPasswordResetEmail
 
 이미지 선택 시 Firebase Storage 업로드 후 URL 저장
 
-Firestore vehicles 컬렉션에 저장 (status: 'pending')
+vehicles 테이블에 저장 (status: 'pending')
 
 3. 차량 목록 및 상세 조회
 
-차량 목록은 Firestore에서 status가 'approved'인 문서만 조회
+차량 목록은 status가 'approved'인 행만 조회 (RLS로도 강제)
 
 상세 페이지에서는 차량 상세 스펙 + 사진 표시
 
@@ -325,7 +364,7 @@ Firestore vehicles 컬렉션에 저장 (status: 'pending')
 
 동일 시간 충돌 방지: vehicleId + preferredDate + preferredTime 쿼리
 
-Firestore consultation_requests 컬렉션에 저장 (status: 'pending')
+consultation_requests 테이블에 저장 (status: 'pending')
 
 5. 마이페이지 (MyPageScreen.js)
 
@@ -343,7 +382,7 @@ Firestore consultation_requests 컬렉션에 저장 (status: 'pending')
 
 전체 차량 목록 조회
 
-승인/거절 처리 (Firestore status 업데이트)
+승인/거절 처리 (status 업데이트 — 상태 전이는 트리거가 검증)
 
 상담 요청 관리 (AdminConsultationScreen.js)
 
@@ -365,25 +404,41 @@ formatPhone(phone: string): 전화번호 01012345678 -> 010-1234-5678
 
 formatPrice(price: number): 가격을 억/만원 단위로 포맷팅
 
-Firestore 주요 컬렉션
+주요 테이블 (Postgres · snake_case)
 
-users
+정확한 스키마는 supabase/migrations/를 기준으로 삼는다. 아래는 개요다.
 
-uid, name, email, phoneNumber, role (user | admin), createdAt
+profiles
+  id(auth.users 참조), name, email, phone_number(UNIQUE), role(user|admin),
+  profile_completed, fcm_token, created_at
 
 vehicles
+  id, model, manufacturer, year, image_url, seller_id, status, created_at 등
 
-vehicleId, vehicleName, manufacturer, year, imageUrl, sellerId, status, createdAt 등
+vehicle_pricing
+  vehicle_id, price — 관리자 전용. RLS로 일반 사용자 접근이 차단된다.
+  가격을 vehicles에 두지 않은 이유가 이것이다.
 
 consultation_requests
+  user_id, vehicle_id, preferred_date, preferred_time, type(buy|sell),
+  status(pending|approved|rejected)
+  같은 차량·같은 시간 중복 예약은 partial UNIQUE 인덱스로 DB가 막는다.
 
-userId, vehicleId, preferredDate, preferredTime, type (buy | sell), status (pending | approved | rejected)
+notifications
+  알림 허브. 상태 전이 트리거가 행을 넣고, pg_net 디스패치가 FCM으로 내보낸다
+  (push_status/push_attempts/pushed_at/push_error — transactional outbox).
 
 현재 완료된 항목
 
-Firebase Auth 연동
+Supabase 이전 (Auth · DB/RLS · Storage · Edge Functions)
 
-전화번호 중복 검사용 Firebase Functions
+Expo SDK 57 이전 + 웹 빌드 · Vercel 배포
+
+구글 로그인 (네이티브) + 필수 프로필 게이팅
+
+가격 관리자 전용화 (vehicle_pricing + RLS)
+
+알림 허브 재구축 (notifications + pg_net 디스패치 + FCM v1)
 
 차량 등록 및 이미지 업로드
 
@@ -395,19 +450,25 @@ Firebase Auth 연동
 
 사용자/관리자 탭 분리 라우팅
 
-향후 확장 예정 기능 (SuperClaude 대상)
+향후 확장 예정 기능
 
-FCM 푸시 알림: 상담 승인/거절 시 사용자 알림
+웹 구글 로그인 — Google OAuth client secret 필요 (ISSUE-04)
+
+비밀번호 재설정 화면 재구현 (ISSUE-01)
+
+이메일 인증 재활성화 (ISSUE-02) · 전화번호 소유 인증 (ISSUE-03)
+
+안드로이드 dev build 검증 (Expo 이전 후 미검증)
+
+알림 후속: Edge Function 결과 기록, pg_cron 재시도, 잔여 Firebase 트리거 정리
 
 관리자용 긴급 삭제 기능 (차량/상담)
 
 다국어 지원 구조 설계 (i18n)
 
-Firestore 보안 규칙 강화 및 관리
+RLS 정책 점검 및 관리
 
 이메일 알림 시스템 연동 (Functions + SMTP)
-
-React Native CLI에서의 iOS 대응 (Info.plist 설정 포함)
 
 테스트 코드 및 CI/CD 설정
 
@@ -415,9 +476,16 @@ React Native CLI에서의 iOS 대응 (Info.plist 설정 포함)
 
 Android 중심으로 작업 중이므로 AndroidManifest 설정 우선
 
-Firebase 관련 네이티브 설정 (google-services.json, SHA 키 등록 등) 사전 확인 필수
+google-services.json · key.jks · .supabase-access-token 등 자격증명은 전부 gitignore 대상.
+저장소에 커밋하지 않는다.
 
-expo 라이브러리 사용하지 않음 (CLI 기준 구성)
+미해결 이슈는 docs/KNOWN_ISSUES.md에서 관리한다 — 작업 전에 확인할 것.
+
+Expo 기반이다. 네이티브 모듈 추가 시 expo 호환 패키지를 우선 검토하고,
+config plugin이 필요한지 확인한다.
+
+가격 노출 금지: 차량 가격은 관리자에게만 보인다(vehicle_pricing 테이블 + RLS).
+일반 사용자 화면에 가격을 절대 렌더링하지 않는다.
 
 필요시 Android 릴리즈 빌드 및 key 설정 작업 병행 예정
 

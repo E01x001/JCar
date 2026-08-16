@@ -46,9 +46,20 @@ cd web && python -m http.server 4321
 - 그래도 실패하면 `detectSessionInUrl: true`로 두고 supabase-js가 자체 처리하도록 변경 검토
 
 ### 참고
-- 파일: `web/auth/reset-password.html`
 - **Supabase 리디렉트 허용목록**: `uri_allow_list`에 없는 주소는 조용히 `site_url`로 대체된다.
-  현재 `http://localhost:4321/**,jcar://**` 등록됨. 배포 시 Vercel 도메인 추가 필요.
+  현재 등록: `https://jcar-platform.vercel.app/**`, preview 와일드카드,
+  `jcar://**`, `http://localhost:8081/**`, `http://localhost:4173/**`.
+
+### 2026-08-16 갱신 — 전제가 바뀌었다
+Expo 이전 + 웹앱 전환으로 **정적 사이트 `web/`을 삭제**했다.
+따라서 위 재현 절차의 `web/auth/reset-password.html`은 더 이상 존재하지 않으며,
+이 이슈는 "그 파일을 고치는 문제"가 아니라 **재설정 화면을 앱 안에 다시 만드는 문제**가 됐다.
+
+한편 원인 후보 2번(`detectSessionInUrl: false`)은 웹에서 이미 `true`로 바뀌었다
+(`src/lib/supabase.js`, 구글 OAuth 복귀 처리를 위해). 인증 콜백은 이 경로로
+SPA 루트에서 자동 처리되므로, 재설정도 같은 방식으로 세션을 회수한 뒤
+새 비밀번호 입력 화면만 띄우면 될 가능성이 높다. 즉 `setSession` 수동 호출 자체가
+불필요해질 수 있어, 재구현 시 원래 증상이 재현되지 않을 수도 있다.
 
 ---
 
@@ -59,8 +70,13 @@ cd web && python -m http.server 4321
 `mailer_autoconfirm=true`로 꺼둔 상태다. SMTP 미설정 + `site_url`이 `localhost:3000`이라
 인증을 켜면 아무도 로그인할 수 없어 부득이하게 껐다(2026-08-15).
 
-**해제 조건**: Vercel 배포 후 → `site_url`을 실제 도메인으로 변경 → 인증 재활성화.
+**해제 조건**: ~~Vercel 배포 후 → `site_url`을 실제 도메인으로 변경~~ → 인증 재활성화.
 SMTP는 초기엔 기본 메일러로도 가능(시간당 제한 있음).
+
+2026-08-16 갱신: 배포와 `site_url` 설정은 끝났다(`https://jcar-platform.vercel.app`).
+남은 건 `mailer_autoconfirm=false`로 되돌리는 것뿐이다. 되돌리기 전에 실제 계정으로
+가입 → 메일 수신 → 링크 클릭까지 한 번 통과시켜야 한다. 이전에 인프라 없이 켰다가
+전원 로그인 불가 상태를 만든 적이 있다.
 
 ---
 
@@ -71,3 +87,38 @@ CLAUDE.md에 "Firebase Phone Auth" 서술이 남아 있으나 사실과 다르�
 
 선택지: (A) 현행 유지 (B) SMS OTP(건당 과금) (C) 카카오싱크로 검증된 번호 수신(사업자등록 보유).
 형제 프로젝트도 OTP 화면까지 만들어두고 **비용 때문에 비활성**한 상태다.
+
+---
+
+## [ISSUE-04] 웹 구글 로그인 — OAuth secret 미설정 🟡
+
+**발견**: 2026-08-16 · **상태**: 보류(사용자 조치 대기) · **영향**: 웹에서 구글 로그인 불가
+
+### 증상
+배포된 웹에서 "Google로 계속하기"를 누르면 Supabase authorize 엔드포인트가 400을 반환한다.
+
+```json
+{"code":400,"error_code":"validation_failed","msg":"Unsupported provider: missing OAuth secret"}
+```
+
+### 원인
+네이티브는 Play 서비스 SDK가 받은 ID 토큰을 교환하므로(`signInWithIdToken`)
+**client ID만** 있으면 된다. 웹은 리다이렉트 기반 OAuth(`signInWithOAuth`)라
+Supabase가 구글과 직접 토큰 교환을 하며 **client secret이 필수**다.
+현재 Supabase Google provider에는 client ID만 등록돼 있다.
+
+### 확인된 사실
+- 리다이렉트 자체는 정상 — `redirect_to=https://jcar-platform.vercel.app`가 그대로 전달된다
+  (allow list 등록이 유효하다는 뜻)
+- 플랫폼 분리(`googleAuth.js` / `.web.js`)는 정상 동작 — 웹이 네이티브 SDK 경로를 타지 않는다
+- **네이티브 구글 로그인은 이 이슈와 무관하다**
+
+### 해제 절차
+1. Google Cloud Console → API 및 서비스 → 사용자 인증 정보
+2. 웹 애플리케이션 클라이언트(`135120379076-e5bqh6...`)의 **클라이언트 보안 비밀번호** 확인
+   (없으면 생성)
+3. 같은 클라이언트의 **승인된 리디렉션 URI**에 추가:
+   `https://thorgkxpbhsttgskhepu.supabase.co/auth/v1/callback`
+4. Supabase 대시보드 → Authentication → Providers → Google에 secret 입력
+
+secret은 자격증명이므로 저장소·마이그레이션·클라이언트 코드에 두지 않는다. 대시보드에서만 입력한다.
