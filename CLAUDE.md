@@ -201,7 +201,7 @@ claude mcp remove youtube-mcp
 ### Key Directories
 ```
 src/
-├── components/     # Reusable UI components (LoadingOverlay, UpdateChecker)
+├── components/     # Reusable UI components
 ├── context/        # Global state management (Auth, Loading)
 ├── navigation/     # App navigation structure and role-based routing
 ├── screens/        # All application screens (User + Admin)

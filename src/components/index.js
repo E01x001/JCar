@@ -27,4 +27,3 @@ export { default as StateScreen } from './StateScreen';
 export { default as ErrorBoundary } from './ErrorBoundary';
 
 // Update Checker
-export { default as UpdateChecker } from './UpdateChecker';
