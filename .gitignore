@@ -31,6 +31,12 @@ serviceAccount*.json
 # Firebase 콘솔이 발급하는 서비스 계정 키 (예: jcar-xxxx-firebase-adminsdk-xxx.json)
 *-firebase-adminsdk-*.json
 
+# Google Play Developer API 서비스 계정 키 (AAB 자동 업로드용)
+play-service-account*.json
+.play-secrets/
+# 업로드 키 인증서 — 비밀은 아니지만 키스토어에서 언제든 다시 뽑는 산출물이다
+upload_certificate.pem
+
 # Supabase 로컬 크레덴셜
 # supabase login이 만드는 토큰은 만료되므로, 대시보드에서 발급한 PAT를 여기에 저장해 쓴다
 # (사용법: export SUPABASE_ACCESS_TOKEN=$(cat .supabase-access-token))

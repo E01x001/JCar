@@ -70,7 +70,40 @@ Firebase Analytics가 광고 관련 권한을 끌고 온다. 광고를 쓰지 �
 매니페스트에 남는 `<uses-library android:name="android.ext.adservices" required="false"/>`는
 권한이 아니라 선택적 라이브러리 선언이라 판정에 영향이 없다.
 
-## Play Console 내부 테스트 업로드
+## 자동 업로드 (Play Developer API)
+
+```bash
+node scripts/publish-internal.mjs --notes "출시 노트"
+node scripts/publish-internal.mjs --dry-run     # 인증·권한만 검증, 업로드 안 함
+```
+
+의존성 없이 Node 내장 모듈만 쓴다. 흐름은
+`edits.insert → bundles.upload → tracks.update(internal) → edits.commit`이며,
+commit 전에는 아무것도 반영되지 않으므로 중간 실패는 트랙에 영향을 주지 않는다.
+
+인증: `play-service-account.json` (gitignore 대상).
+서비스 계정 `play-publisher@jcar-3e090.iam.gserviceaccount.com`에는
+**Jcar 앱의 테스트 트랙 출시 권한만** 부여돼 있다 — 이 키로 프로덕션 게시는 불가능하다.
+
+versionCode는 업로드 때마다 `app.config.js`에서 올려야 한다. Play는 같은 값을 두 번 받지 않는다.
+
+### 업로드 키 이력 (중요)
+Play 앱 서명이 켜져 있어 **앱 서명 키는 Google이 보관**한다. 우리가 관리하는 건 업로드 키뿐이다.
+
+2026-08-17 시점에 등록된 업로드 키(SHA-1 `02:4E:35:...`, 2025-05 이전 생성)를
+**분실한 상태로 확인**했다. 보유 중인 키스토어 3개(`.native-secrets/key.jks`,
+`~/.android/key.jks`, `~/.android/release.keystore`)는 전부 2025-11 생성으로 지문이 다르다.
+업로드 시 다음 오류가 난다:
+
+```
+The Android App Bundle was signed with the wrong key.
+Found: SHA1: 07:DD:37:...  expected: SHA1: 02:4E:35:...
+```
+
+→ `.native-secrets/key.jks`(SHA-1 `07:DD:37:...`)를 새 업로드 키로 등록하는
+**업로드 키 재설정을 요청**해야 한다. 승인 후에는 위 스크립트가 그대로 동작한다.
+
+## Play Console 내부 테스트 업로드 (수동)
 
 1. Play Console → 해당 앱 → 테스트 → **내부 테스트**
 2. 새 버전 만들기 → `app-release.aab` 업로드
