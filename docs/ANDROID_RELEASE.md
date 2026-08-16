@@ -56,16 +56,19 @@ grep uses-permission android/app/build/intermediates/merged_manifests/release/**
 (오디오 녹음·오버레이를 쓰지 않는데 Play가 용도 소명을 요구하는 권한들).
 제거 확인됨 — 최종 병합 매니페스트에 나타나지 않는다.
 
-### 광고 ID 주의
-Firebase Analytics가 `ACCESS_ADSERVICES_AD_ID`를 끌고 온다. 이게 있으면
-Play Console **데이터 보안** 양식에서 광고 ID 수집을 선언해야 하고,
-선언과 실제가 다르면 심사에서 반려된다. 선택지는 둘이다:
+### 광고 ID — 제거됨
+Firebase Analytics가 광고 관련 권한을 끌고 온다. 광고를 쓰지 않으므로 전부 차단했다.
+이름이 비슷한 **별개의 권한 두 종류**라 하나만 막으면 나머지가 남는다:
 
-- Analytics를 쓰되 광고 ID 수집을 정직하게 선언한다
-- 광고 ID가 필요 없다면 `blockedPermissions`에
-  `com.google.android.gms.permission.AD_ID`를 추가해 제거한다
+- `com.google.android.gms.permission.AD_ID` — Play 데이터 보안의 광고 ID 판정 기준
+- `android.permission.ACCESS_ADSERVICES_AD_ID` / `..._ATTRIBUTION` — Privacy Sandbox 계열
 
-현재는 제거하지 않은 상태다 — 결정 후 반영할 것.
+셋 다 `blockedPermissions`에 있고, 최종 병합 매니페스트에서 사라진 것을 확인했다.
+따라서 **데이터 보안 양식에서 광고 ID 수집을 "아니오"로 답할 수 있다.**
+`analytics().logEvent` 이벤트 로깅은 이 권한들 없이도 정상 동작한다.
+
+매니페스트에 남는 `<uses-library android:name="android.ext.adservices" required="false"/>`는
+권한이 아니라 선택적 라이브러리 선언이라 판정에 영향이 없다.
 
 ## Play Console 내부 테스트 업로드
 

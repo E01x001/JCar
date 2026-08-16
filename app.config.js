@@ -39,6 +39,12 @@ export default {
       blockedPermissions: [
         'android.permission.RECORD_AUDIO',
         'android.permission.SYSTEM_ALERT_WINDOW',
+        // Firebase Analytics가 끌고 오는 광고 관련 권한. 광고를 쓰지 않으므로 전부 제거한다 —
+        // 남겨두면 Play 데이터 보안 양식에 광고 ID 수집을 선언해야 한다.
+        // 이벤트 로깅(analytics().logEvent)은 이것들 없이도 동작한다.
+        'com.google.android.gms.permission.AD_ID',        // Play 데이터 보안 판정 기준
+        'android.permission.ACCESS_ADSERVICES_AD_ID',      // Privacy Sandbox — 별개 권한
+        'android.permission.ACCESS_ADSERVICES_ATTRIBUTION',
       ],
       adaptiveIcon: {
         foregroundImage: './src/assets/icon.png',
