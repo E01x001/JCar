@@ -34,6 +34,12 @@ export default {
       package: IS_DEV ? 'com.jcarnew.dev' : 'com.jcarnew',
       versionCode: 1,
       googleServicesFile: './google-services.json',
+      // 의존성이 끌고 온 미사용 권한 — Play 심사에서 용도 소명을 요구하므로 제거한다.
+      // 앱에 오디오 녹음도, 다른 앱 위에 그리는 오버레이도 없다(화면 내 모달만 쓴다).
+      blockedPermissions: [
+        'android.permission.RECORD_AUDIO',
+        'android.permission.SYSTEM_ALERT_WINDOW',
+      ],
       adaptiveIcon: {
         foregroundImage: './src/assets/icon.png',
         backgroundColor: '#1A2B5C',
@@ -91,6 +97,8 @@ export default {
       '@react-native-firebase/crashlytics',
       '@react-native-firebase/analytics',
       '@react-native-google-signin/google-signin',
+      // release 서명 — prebuild가 build.gradle을 덮어써도 유지되도록 플러그인으로 배선
+      './plugins/withReleaseSigning',
       // RNFirebase는 iOS에서 use_frameworks(static)를 요구한다
       [
         'expo-build-properties',
