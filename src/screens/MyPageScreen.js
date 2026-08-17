@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Alert, Dimensions, Pressable } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView } from 'react-native-tab-view';
 import { signOutUser } from '../services/auth/supabaseAuthService';
+import { deleteUserAccount } from '../services/auth/accountService';
 import { supabase } from '../lib/supabase';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
@@ -123,7 +124,7 @@ const MyPageScreen = ({ navigation }) => {
   const handleDeleteAccount = async () => {
     Alert.alert(
       '회원탈퇴',
-      '정말로 회원탈퇴 하시겠습니까?\n\n✓ 탈퇴 즉시 다른 사용자에게 숨김 처리\n✓ 30일 이내 복구 시 차량·상담 등 데이터 그대로 복원\n✓ 30일 후 모든 데이터 영구 삭제 (복구 불가)',
+      '정말로 회원탈퇴 하시겠습니까?\n\n· 탈퇴 즉시 등록 차량이 다른 사용자에게 숨겨집니다\n· 30일 이내 고객센터로 문의하시면 그대로 복구됩니다\n· 30일 후 이름·연락처 등 개인정보는 파기됩니다\n· 차량 거래 및 소유권 이전 기록은 관련 법령에 따라 보관됩니다',
       [
         { text: '취소', style: 'cancel' },
         {
@@ -132,18 +133,9 @@ const MyPageScreen = ({ navigation }) => {
           onPress: async () => {
             if (!user) {return;}
             try {
-              const { data, error } = await supabase.functions.invoke('cascade-delete-user', {
-                body: { userId: user.uid },
-              });
-              if (error) { throw error; }
-              const result = { data };
-              if (result.data.success) {
-                const permanentDate = new Date(result.data.permanentDeleteDate);
-                const dateStr = permanentDate.toLocaleDateString('ko-KR');
-                toast.showSuccess('탈퇴 완료', `계정이 ${dateStr}에 영구 삭제됩니다.\n복구를 원하시면 고객센터로 문의해주세요.`);
-              } else {
-                toast.showError('탈퇴 실패', result.data.message || '알 수 없는 오류가 발생했습니다.');
-              }
+              const { permanentDeleteDate } = await deleteUserAccount(user.uid);
+              const dateStr = new Date(permanentDeleteDate).toLocaleDateString('ko-KR');
+              toast.showSuccess('탈퇴 완료', `${dateStr}까지 복구할 수 있습니다.\n복구를 원하시면 고객센터로 문의해주세요.`);
             } catch (error) {
               reportCrashlyticsError(error);
               logCrashlyticsMessage('MyPageScreen: Delete account failed');

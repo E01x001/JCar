@@ -80,7 +80,7 @@ const AdminPageScreen = ({ navigation }) => {
         text: '탈퇴', style: 'destructive', onPress: async () => {
           if (!user) {return;}
           try {
-            // Edge Function(delete-account)이 데이터 cascade + auth 삭제를 처리
+            // 30일 유예 소프트삭제 — 차량·거래 기록은 보존되고 개인정보만 나중에 익명화된다
             await deleteUserAccount(user.uid);
             toast.showSuccess('탈퇴 완료', '계정이 삭제되었습니다.');
           } catch (error) {

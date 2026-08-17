@@ -16,7 +16,7 @@
 | Storage (차량 이미지) | ✅ 완료 | `vehicles` 버킷 |
 | 차량/상담/관리자/계정 화면 | ✅ 완료 | src에 firestore/auth/functions/storage import **0건** |
 | CarZen 프록시 | ✅ Edge Function | `get-vehicle-info` |
-| 계정 삭제 | ✅ Edge Function | `cascade-delete-user`, `delete-account` |
+| 계정 삭제 | ✅ Edge Function | `cascade-delete-user`(30일 유예 소프트삭제), `purge-deleted-accounts`(만료 시 익명화) |
 | **푸시 알림 (FCM 트리거 6종)** | ❌ **죽어 있음** | 아래 상세 |
 | **상담 레이트리밋** | ⚠️ **스텁** | 항상 통과 |
 | **계정 복구 (30일 내)** | ❌ 미구현 | 안내 문구와 불일치 |
@@ -103,7 +103,7 @@
 
 **마이그레이션 5개**: 초기 스키마 · realtime publication · 관리자 정책/RPC · 거래완료 RPC · 리뷰 하드닝
 **RPC 3종**: `is_slot_taken`, `mark_vehicle_acquiring`, `complete_sell_consultation`(멱등)
-**Edge Function 3종**: `get-vehicle-info`, `cascade-delete-user`, `delete-account`
+**Edge Function**: `get-vehicle-info`, `cascade-delete-user`, `purge-deleted-accounts`, `send-push-notification`
 
 배포점검(2026-07-07)의 🔴 7건 중 **C1(가격 DB 노출)이 이전으로 근본 해결**됨 — 가격은 `vehicle_pricing` 테이블의 admin 전용 RLS로 보호.
 

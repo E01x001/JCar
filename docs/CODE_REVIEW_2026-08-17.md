@@ -59,6 +59,12 @@ POST /functions/v1/send-push-notification
 
 ## 🟠 S2. 이미지 삭제 정책이 없어 롤백 경로가 죽어 있다
 
+> **정정(2026-08-18)**: 최초 작성 시 "기록 보존(의도된 정책)"과 "업로드 실패 롤백(버그)"을
+> 뭉뚱그렸다. 차량·거래 기록을 남기는 것은 회사 정책이며 문제가 아니다.
+> 여기서 다루는 것은 **레코드가 되지도 못한 업로드 조각**으로, 보존 대상이 아니다.
+> 정리는 클라이언트가 아니라 서버 측에서 "레코드에 연결되지 않은 파일만" 수행해야 한다.
+> 계정 탈퇴·보존 정책은 `docs/ACCOUNT_DELETION.md` 참고.
+
 **파일**: `supabase/migrations/20260708161043_initial_schema.sql`, `src/services/storage/`
 
 `vehicles` 버킷에 insert 정책만 있고 update/delete 정책이 없다. 의도적으로

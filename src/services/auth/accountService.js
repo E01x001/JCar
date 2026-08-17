@@ -25,7 +25,16 @@ export const updateUserProfile = async (uid, updates) => {
 };
 
 /**
- * Delete user account (Edge Function이 auth + 데이터 cascade 삭제)
+ * 회원탈퇴 — 30일 유예 소프트삭제.
+ *
+ * 데이터를 즉시 파기하지 않는다. 차량·상담·소유권 이전 기록은 회사가 보존해야 하는
+ * 자산이라 남기고, 유예가 끝나면 개인 식별정보만 익명화된다
+ * (pg_cron → purge-deleted-accounts → app_private.anonymize_account).
+ *
+ * 예전에는 즉시 hard delete하는 delete-account 경로가 따로 있었으나,
+ * 보존 정책과 정면으로 충돌해 제거했다. 탈퇴 경로는 이 하나뿐이다.
+ *
+ * @returns {Promise<{ success: boolean, permanentDeleteDate?: string }>}
  */
 export const deleteUserAccount = async (uid) => {
   try {
@@ -35,11 +44,14 @@ export const deleteUserAccount = async (uid) => {
       throw new Error('Unauthorized: Cannot delete account');
     }
 
-    const { error } = await supabase.functions.invoke('delete-account');
+    const { data, error } = await supabase.functions.invoke('cascade-delete-user');
     if (error) { throw error; }
+    if (!data?.success) {
+      throw new Error(data?.message || '계정 삭제 처리에 실패했습니다.');
+    }
 
     await supabase.auth.signOut();
-    return { success: true };
+    return { success: true, permanentDeleteDate: data.permanentDeleteDate };
   } catch (error) {
     logger.error('Error deleting user account:', error);
     throw error;
