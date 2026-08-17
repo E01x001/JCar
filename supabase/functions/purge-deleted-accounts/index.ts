@@ -12,6 +12,7 @@
 // 그것만 믿으면 일반 사용자가 타인의 계정 파기를 호출할 수 있다.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { isServiceRole } from "../_shared/serviceRole.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,31 +25,6 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-
-/** JWT payload의 role이 service_role인지 확인 (서명 검증은 플랫폼의 verify_jwt가 이미 수행) */
-const isServiceRole = (authHeader: string): boolean => {
-  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (!token) { return false; }
-
-  // service_role 키를 그대로 보낸 경우 상수 시간 비교로 먼저 확인
-  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (expected && token.length === expected.length) {
-    let diff = 0;
-    for (let i = 0; i < token.length; i++) {
-      diff |= token.charCodeAt(i) ^ expected.charCodeAt(i);
-    }
-    if (diff === 0) { return true; }
-  }
-
-  try {
-    const payload = JSON.parse(
-      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
-    );
-    return payload?.role === "service_role";
-  } catch {
-    return false;
-  }
-};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

@@ -25,7 +25,7 @@
 
 ---
 
-## 🔴 S1. 푸시 알림 발송 함수에 호출자 인가 검사가 없다
+## ~~🔴 S1. 푸시 알림 발송 함수에 호출자 인가 검사가 없다~~ ✅ 해결
 
 **파일**: `supabase/functions/send-push-notification/index.ts`
 
@@ -54,6 +54,12 @@ POST /functions/v1/send-push-notification
 2. `token` 직접 지정 경로는 제거하거나 `Deno.env.get("ALLOW_DIRECT_TOKEN")` 가드를 건다.
    진단은 스테이징에서만 필요하다.
 3. 실패 시 401로 끊고, 시도 자체를 로깅해 남긴다.
+
+> **해결(2026-08-18)**: `_shared/serviceRole.ts`의 `isServiceRole()`로 호출자 역할을
+> 검증하고, `token` 직접 지정은 `ALLOW_DIRECT_TOKEN=1`일 때만 허용하도록 막았다.
+> 배포 후 확인: anon 키 사칭 호출 **403**, 무인증 **401**,
+> 트리거와 동일한 service_role 경로(pg_net)는 **200**으로 정상 동작.
+> 같은 헬퍼를 `purge-deleted-accounts`도 공유한다.
 
 ---
 
@@ -195,7 +201,7 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
 
 ## 권장 처리 순서
 
-1. **S1** — 유일하게 악용 시 사용자 피해로 직결된다. 다른 것보다 먼저.
+1. ~~**S1**~~ ✅ 완료 — 유일하게 악용 시 사용자 피해로 직결되던 항목.
 2. **S3, S2** — 남용·비용 경로. 배포 후 트래픽이 붙기 전에 닫는 게 싸다.
 3. **S5, S7** — 각각 30분 내외. 지뢰 제거.
 4. **S4, S6** — 시간이 드는 대신 이후 모든 작업 속도에 복리로 작용한다.

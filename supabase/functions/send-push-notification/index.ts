@@ -9,8 +9,12 @@
 // 토큰 수명은 1시간이며 인스턴스 메모리에 캐싱한다(§설계: DB 공유 캐시는 경합 대비 이득 없음).
 //
 // 필요 시크릿: FCM_SERVICE_ACCOUNT = 서비스 계정 JSON 전체
+//
+// 인가: service_role 호출만 허용한다. verify_jwt는 "로그인한 누군가"만 증명하므로
+// 그것만 믿으면 일반 사용자가 임의 대상에게 관리자를 사칭한 푸시를 보낼 수 있다.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { isServiceRole } from "../_shared/serviceRole.ts";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
@@ -138,10 +142,24 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  if (!isServiceRole(req.headers.get("Authorization") ?? "")) {
+    console.warn("send-push-notification: 비인가 호출 차단");
+    return json({ success: false, message: "Forbidden" }, 403);
+  }
+
   try {
     // token은 진단용 직접 지정 경로(기기 없이 발송 경로를 점검할 때).
     // 평상시 트리거는 항상 userId를 보낸다.
+    // 임의 FCM 토큰으로 발송할 수 있는 경로이므로 기본은 차단하고,
+    // 필요할 때만 ALLOW_DIRECT_TOKEN=1로 열어 쓴다(스테이징 전용).
     const { userId, token, title, body, data } = await req.json();
+
+    if (token && Deno.env.get("ALLOW_DIRECT_TOKEN") !== "1") {
+      return json(
+        { success: false, message: "token 직접 지정은 비활성 상태입니다." },
+        400,
+      );
+    }
 
     if ((!userId && !token) || !title || !body) {
       return json(
