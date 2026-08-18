@@ -4,6 +4,8 @@
  * 개선(배포점검 반영):
  *  - 파일명은 타임스탬프+난수로 생성 → 동일 원본명 충돌/덮어쓰기 방지
  *  - 다중 업로드 부분 실패 시 이미 올라간 파일 정리(고아 파일 방지)
+ *  - 경로를 {uid}/ 아래로 묶는다. 스토리지 정책이 본인 폴더만 쓰기/삭제를 허용하므로
+ *    이 접두사가 없으면 업로드 자체가 거부된다.
  */
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
@@ -17,6 +19,13 @@ const extFromUri = (uri) => {
 
 const randomName = (uri) =>
   `vehicle_${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${extFromUri(uri)}`;
+
+/** 업로드 경로 — 스토리지 정책이 요구하는 {uid}/ 접두사를 붙인다 */
+const buildPath = async (uri) => {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) { throw new Error('로그인이 필요합니다.'); }
+  return `${data.user.id}/${randomName(uri)}`;
+};
 
 /** 공개 URL에서 버킷 내 경로 추출 */
 const pathFromPublicUrl = (url) => {
@@ -35,7 +44,7 @@ export const uploadImage = async (uri) => {
     // ArrayBuffer를 우선 사용하고, 미지원 환경에서만 Blob으로 폴백한다.
     const blob = await response.blob();
     const body = typeof blob.arrayBuffer === 'function' ? await blob.arrayBuffer() : blob;
-    const path = randomName(uri);
+    const path = await buildPath(uri);
 
     const { error } = await supabase.storage
       .from(BUCKET)

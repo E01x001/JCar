@@ -21,13 +21,38 @@ const isSlotConflict = (error) =>
 const isDuplicateRequest = (error) =>
   isUniqueViolation(error) && /user_vehicle/.test(error?.message || '');
 
+/** 레이트리밋 트리거가 올린 예외인지 판별 */
+const isRateLimited = (error) =>
+  /rate_limit_(hour|day)/.test(error?.message || '');
+
 /**
- * 상담 요청 레이트리밋 체크.
- * TODO(Phase 4): Edge Function으로 서버 강제 이전. 현재는 DB UNIQUE 제약이
- * 슬롯/중복 남용을 1차 차단하므로 임시로 통과 처리.
+ * 상담 요청 레이트리밋 사전 안내.
+ *
+ * 실제 강제는 DB 트리거(app_private.consultation_rate_limit)가 한다 —
+ * 여기서 막는 것은 사용자에게 미리 알려주기 위한 것이지 방어가 아니다.
+ * 클라이언트가 우회할 수 있는 위치이므로 이 함수를 신뢰해서는 안 된다.
+ *
+ * 조회에 실패하면 통과시킨다. 안내를 못 했을 뿐이고, 실제 초과라면 insert가 거부된다.
  */
 export const checkConsultationRateLimit = async () => {
-  return { allowed: true };
+  try {
+    const { data, error } = await supabase.rpc('consultation_quota');
+    if (error) { throw error; }
+
+    const quota = Array.isArray(data) ? data[0] : data;
+    if (!quota) { return { allowed: true }; }
+
+    if (quota.remaining_hour <= 0) {
+      return { allowed: false, message: '1시간에 최대 5건까지 신청할 수 있습니다. 잠시 후 다시 시도해주세요.' };
+    }
+    if (quota.remaining_day <= 0) {
+      return { allowed: false, message: '하루에 최대 20건까지 신청할 수 있습니다. 내일 다시 시도해주세요.' };
+    }
+    return { allowed: true, remainingHour: quota.remaining_hour, remainingDay: quota.remaining_day };
+  } catch (error) {
+    logger.error('레이트리밋 조회 실패(통과 처리):', error);
+    return { allowed: true };
+  }
 };
 
 /**
@@ -76,6 +101,7 @@ export const saveConsultationRequest = async (data) => {
       error,
       slotConflict: isSlotConflict(error),
       duplicate: isDuplicateRequest(error),
+      rateLimited: isRateLimited(error),
     };
   }
 };

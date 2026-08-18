@@ -120,6 +120,7 @@ const ConsultationRequestScreen = ({ route }) => {
         if (!result.success) {
           const err = result.error || new Error('Failed to save');
           err.slotConflict = result.slotConflict;
+          err.rateLimited = result.rateLimited;
           throw err;
         }
         return result;
@@ -130,6 +131,9 @@ const ConsultationRequestScreen = ({ route }) => {
         removeOptimisticConsultation(tempId);
         if (error?.slotConflict) {
           toast.showWarning('예약 불가', '방금 다른 사용자가 해당 시간을 예약했습니다. 다른 시간을 선택해주세요.');
+        } else if (error?.rateLimited) {
+          // 사전 안내(checkConsultationRateLimit)를 지나쳐 온 경우 — DB 트리거가 최종 거부한다
+          toast.showWarning('요청 제한', '단시간에 너무 많이 신청하셨습니다. 잠시 후 다시 시도해주세요.');
         } else {
           toast.showError('오류', '상담 요청 저장 중 문제가 발생했습니다.');
         }
