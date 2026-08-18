@@ -28,6 +28,7 @@ import StateScreen from '../components/StateScreen';
 import Button from '../components/Button';
 import { formatDate, formatTime } from '../utils/format';
 import { cancelConsultation } from '../services/consultation/consultationService';
+import { canUserCancel } from '../constants/consultation';
 
 /**
  * UserConsultationDetailScreen Component
@@ -321,8 +322,10 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
 
     return (
       <View style={{ marginBottom: theme.spacing.xl }}>
-        {/* Cancel button for pending or approved consultations */}
-        {(consultationStatus === 'pending' || consultationStatus === 'approved' || consultationStatus === 'meeting') && (
+        {/* 취소 가능 상태는 DB 가드와 한 곳(constants)에서 맞춘다.
+            직접 나열하던 시절 'meeting'(존재하지 않는 상태)이 섞이고
+            approved는 DB가 거부하는데 버튼이 노출되는 문제가 있었다. */}
+        {canUserCancel(consultationStatus) && (
           <Button
             variant="secondary"
             title={cancelling ? '취소 중...' : '상담 취소'}

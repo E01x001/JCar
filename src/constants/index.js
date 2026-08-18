@@ -19,6 +19,8 @@ export {
   CONSULTATION_STATUS_COLORS,
   VALID_STATUS_TRANSITIONS,
   isValidStatusTransition,
+  USER_CANCELLABLE_STATUSES,
+  canUserCancel,
 } from './consultation';
 
 // Vehicle constants

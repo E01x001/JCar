@@ -132,6 +132,26 @@ export const VALID_STATUS_TRANSITIONS = {
 };
 
 /**
+ * 사용자가 직접 취소할 수 있는 상태.
+ *
+ * DB 가드(app_private.guard_consultation_user_update)가 허용하는 목록과 **일치해야 한다.**
+ * 화면이 이 목록보다 넓게 취소 버튼을 노출하면 사용자는 원인 불명 실패를 겪는다
+ * (실제로 approved에서 그런 일이 있었다 — 20260818140000 마이그레이션 참고).
+ * 좁게 노출하면 취소할 수 있는데 못 하게 된다.
+ *
+ * 변경 시 반드시 DB 가드도 함께 바꾸고, __tests__/constants/consultation.test.js를 갱신한다.
+ */
+export const USER_CANCELLABLE_STATUSES = [
+  CONSULTATION_STATUS.PENDING,
+  CONSULTATION_STATUS.APPROVED,
+  CONSULTATION_STATUS.CONFIRMED,
+  CONSULTATION_STATUS.ON_HOLD,
+];
+
+/** 사용자가 이 상담을 지금 취소할 수 있는가 */
+export const canUserCancel = (status) => USER_CANCELLABLE_STATUSES.includes(status);
+
+/**
  * Check if a status transition is valid
  *
  * @param {string} fromStatus - Current consultation status

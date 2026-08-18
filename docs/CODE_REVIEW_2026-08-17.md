@@ -126,7 +126,7 @@ SECURITY DEFINER RPC를 만들고 insert 전에 호출한다. 클라이언트 �
 
 ---
 
-## 🟡 S4. 업무 로직 서비스에 테스트가 0건이다
+## ~~🟡 S4. 업무 로직 서비스에 테스트가 0건이다~~ ✅ 대부분 해결
 
 테스트 57개가 모두 통과하지만 대상이 편중돼 있다.
 
@@ -143,6 +143,20 @@ SECURITY DEFINER RPC를 만들고 insert 전에 호출한다. 클라이언트 �
 
 **우선순위**: `canViewVehiclePrice`(비즈니스 규칙 중 가장 치명적), 상담 상태 전이,
 `mappers.js`의 snake_case↔camelCase 변환. 이 셋만 덮어도 회귀 위험이 크게 준다.
+
+> **해결(2026-08-18)**: 지목한 세 곳을 모두 덮었다. 57 → 98건.
+> - `vehiclePrice` 8건 — fail-closed 포함
+> - `mappers` 21건 — 왕복 비대칭을 "알고 쓰라"고 명시적으로 고정
+> - `constants/consultation` 10건 — DB 가드와 짝을 이루는 취소 가능 목록
+> - `consultationService` / `fcmService` — 실제 모듈로 이관 + 레이트리밋·슬롯충돌 구분
+>
+> **테스트를 쓰다가 실제 버그를 찾았다**: 화면이 approved 상담에 취소 버튼을 노출하는데
+> DB 가드가 거부했다(confirmed·on-hold는 허용하면서 approved만 누락).
+> 반대로 confirmed·on-hold는 DB가 허용하는데 버튼이 없었고, 조건에 존재하지도 않는
+> 상태 `'meeting'`이 섞여 있었다. DB 가드에 approved를 추가하고, 화면은
+> `USER_CANCELLABLE_STATUSES` 한 곳을 보도록 바꿨다.
+>
+> 남은 것: auth / vehicle / storage 서비스는 여전히 0건.
 
 ---
 

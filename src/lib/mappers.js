@@ -4,6 +4,11 @@
  * 원칙: 화면/스토어는 기존 Firestore 시절 필드명(camelCase)을 그대로 쓴다.
  * 변환은 서비스 레이어의 이 매퍼 한 곳에서만 일어난다.
  * 스키마 정본: supabase/migrations/20260708161043_initial_schema.sql
+ *
+ * ⚠ 왕복(round-trip) 안전하지 않다. rowToApp 결과를 그대로 appToRow에 넣지 말 것:
+ *   - 타임스탬프는 epoch ms로 변환되며 ISO로 되돌아가지 않는다(timestamptz에 숫자를 쓰게 됨)
+ *   - vehicleRowToApp의 vehicleId는 DB 컬럼이 아니라 vehicle_no의 별칭이다
+ *   쓰기는 항상 새 객체를 만들어 넘긴다. 이 계약은 __tests__/lib/mappers.test.js가 고정한다.
  */
 
 const snakeToCamelKey = (k) => k.replace(/_([a-z0-9])/g, (m, c) => c.toUpperCase());
