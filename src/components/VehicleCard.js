@@ -28,10 +28,12 @@ const resolveImage = (imageUrl) => {
  * @param {Object} props.vehicle - 차량 객체(vehicleName, manufacturer, year, price, imageUrl, carType)
  * @param {Function} [props.onPress] - 카드 클릭 핸들러
  * @param {string} [props.statusDot] - 우측 상단 상태 점 색(예: 승인 매물 표시). 없으면 미표시
- * @param {boolean} [props.hidePrice] - 가격을 숨기고 "상담 후 안내"로 표시(구매자 노출용)
+ * @param {boolean} [props.hidePrice=true] - 가격을 숨기고 "상담 후 안내"로 표시.
+ *   **기본값이 숨김이다.** 가격은 관리자 전용이며, 넘기는 것을 잊었을 때
+ *   가격이 노출되는 쪽으로 기울면 안 된다. 관리자 화면만 hidePrice={false}를 명시한다.
  * @param {Object} [props.style] - Additional styles
  */
-const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
+const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice = true, style }) => {
   const theme = useTheme();
   const { vehicleName, manufacturer, year, price, imageUrl, carType, dealStage } = vehicle || {};
   const image = resolveImage(imageUrl);

@@ -51,9 +51,11 @@ jest.mock('@react-native-firebase/crashlytics', () => ({
   })),
 }));
 
-jest.mock('@react-native-firebase/messaging', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
+// 앱은 모듈러 API(getMessaging(m), getToken(m) ...)만 쓴다.
+// 예전 네임스페이스 형태(default())만 있던 목은 named export가 없어
+// 실제 코드 경로를 검증할 수 없었다 — 둘 다 제공한다.
+jest.mock('@react-native-firebase/messaging', () => {
+  const instance = {
     requestPermission: jest.fn(() => Promise.resolve(1)),
     getToken: jest.fn(() => Promise.resolve('mock-fcm-token')),
     onMessage: jest.fn(),
@@ -61,14 +63,27 @@ jest.mock('@react-native-firebase/messaging', () => ({
     setBackgroundMessageHandler: jest.fn(),
     onNotificationOpenedApp: jest.fn(),
     getInitialNotification: jest.fn(() => Promise.resolve(null)),
-  })),
-  AuthorizationStatus: {
-    AUTHORIZED: 1,
-    DENIED: 0,
-    NOT_DETERMINED: -1,
-    PROVISIONAL: 2,
-  },
-}));
+  };
+  return {
+    __esModule: true,
+    default: jest.fn(() => instance),
+    getMessaging: jest.fn(() => instance),
+    getToken: jest.fn(() => Promise.resolve('mock-fcm-token')),
+    requestPermission: jest.fn(() => Promise.resolve(1)),
+    onTokenRefresh: jest.fn(() => jest.fn()),
+    onMessage: jest.fn(() => jest.fn()),
+    getInitialNotification: jest.fn(() => Promise.resolve(null)),
+    onNotificationOpenedApp: jest.fn(() => jest.fn()),
+    setBackgroundMessageHandler: jest.fn(),
+    deleteToken: jest.fn(() => Promise.resolve()),
+    AuthorizationStatus: {
+      AUTHORIZED: 1,
+      DENIED: 0,
+      NOT_DETERMINED: -1,
+      PROVISIONAL: 2,
+    },
+  };
+});
 
 jest.mock('@react-native-firebase/functions', () => ({
   __esModule: true,

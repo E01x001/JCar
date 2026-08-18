@@ -134,8 +134,9 @@ SECURITY DEFINER RPC를 만들고 insert 전에 호출한다. 클라이언트 �
 |---|---|
 | 컴포넌트(Button/Card/Badge/InputField) | 있음 |
 | theme | 있음 |
-| **auth / vehicle / consultation / notification / storage 서비스** | **0건** |
-| `firebaseService` (사용처 없는 죽은 코드) | 있음 |
+| **auth / vehicle / storage 서비스** | **0건** |
+| consultation / notification(fcm) 서비스 | 있음 (2026-08-18 실제 모듈로 이관) |
+| `vehiclePrice`(가격 가시성 규칙) | 있음 (2026-08-18 추가) |
 
 즉 **테스트가 가장 필요한 곳에 없고, 지워야 할 코드에는 있다.** 상담 상태 전이,
 가격 가시성 판정, 소유권 이전 같은 규칙이 회귀해도 CI가 잡지 못한다.
@@ -145,7 +146,7 @@ SECURITY DEFINER RPC를 만들고 insert 전에 호출한다. 클라이언트 �
 
 ---
 
-## 🟡 S5. 죽은 Firebase 잔재가 남아 있다
+## ~~🟡 S5. 죽은 Firebase 잔재가 남아 있다~~ ✅ 해결
 
 - `src/services/firebaseService.js` — import하는 곳이 없다
 - `__tests__/services/firebaseService.test.js` — 죽은 코드를 테스트한다
@@ -157,6 +158,17 @@ Supabase 이전이 끝났는데 남아 있어, 새로 합류한 사람(또는 �
 
 **고치는 법**: 삭제. `FIRESTORE_SCHEMA.md`에 남길 내용이 있으면
 `supabase/migrations/`를 가리키는 한 줄로 대체한다.
+
+> **해결(2026-08-18) — 다만 진단이 일부 틀렸다.**
+> `firebaseService.test.js`를 "죽은 코드를 테스트한다"고 적었지만, 열어보니
+> 테스트 자체는 **Supabase 이전에 맞춰 갱신된 살아 있는 테스트**였고
+> import만 죽은 배럴을 경유하고 있었다. 그래서 삭제하지 않고 실제 모듈을 가리키는
+> `consultationService.test.js` / `fcmService.test.js`로 분리했다.
+> 배럴(`firebaseService.js`)과 Firestore 스키마 문서 2종은 삭제했다.
+>
+> 옮기는 과정에서 `jest.setup.js`의 messaging 목이 **구형 네임스페이스 API 형태**라
+> 모듈러 named export가 없다는 것도 드러났다. 앱은 전부 모듈러 API를 쓰므로
+> 목을 현행화했다 — 그전까지 실제 호출 경로를 검증하지 못하고 있었다.
 
 ---
 
@@ -173,7 +185,7 @@ Supabase 이전이 끝났는데 남아 있어, 새로 합류한 사람(또는 �
 
 ---
 
-## 🟡 S7. `VehicleCard`의 가격 기본값이 열려 있다
+## ~~🟡 S7. `VehicleCard`의 가격 기본값이 열려 있다~~ ✅ 해결
 
 ```js
 const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
@@ -185,6 +197,11 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
 
 **고치는 법**: 기본값을 `hidePrice = true`로 뒤집고, 관리자 화면에서만 명시적으로
 `hidePrice={false}`를 넘긴다. 실수했을 때 "가격이 안 보인다"로 끝나게 만든다.
+
+> **해결(2026-08-18)**: 기본값을 뒤집었다. 기존 호출부 2곳(`VehiclesListScreen`,
+> `VehicleBrowseScreen`)은 이미 `hidePrice`를 명시하고 있어 동작 변화가 없다.
+> 함께 `__tests__/utils/vehiclePrice.test.js`를 추가해 판정 규칙을 고정했다 —
+> 소유자여도 못 본다, role이 없거나 예상 밖 값이면 fail-closed 등 8건.
 
 ---
 
@@ -214,7 +231,7 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
 
 1. ~~**S1**~~ ✅ 완료 — 유일하게 악용 시 사용자 피해로 직결되던 항목.
 2. ~~**S3, S2**~~ ✅ 완료 — 남용·비용 경로.
-3. **S5, S7** — 각각 30분 내외. 지뢰 제거.
+3. ~~**S5, S7**~~ ✅ 완료 — 지뢰 제거.
 4. **S4, S6** — 시간이 드는 대신 이후 모든 작업 속도에 복리로 작용한다.
 
 기능 아이디어는 그다음이며, 그중 **알림 센터(2번)**가 이미 있는 인프라 대비
