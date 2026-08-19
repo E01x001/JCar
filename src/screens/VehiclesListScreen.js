@@ -16,6 +16,7 @@ import CategoryChip from '../components/CategoryChip';
 import VehicleCard from '../components/VehicleCard';
 import Avatar from '../components/Avatar';
 import SectionHeader from '../components/SectionHeader';
+import NotificationBell from '../components/NotificationBell';
 import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 
 const ALL_CATEGORY = '전체';
@@ -144,7 +145,10 @@ const VehiclesListScreen = ({ navigation }) => {
             {sellerName ? `${sellerName}님 👋` : '반가워요 👋'}
           </Text>
         </View>
-        <Avatar name={sellerName || 'J'} size={40} />
+        <View style={styles.greetingActions}>
+          <NotificationBell />
+          <Avatar name={sellerName || 'J'} size={40} />
+        </View>
       </View>
 
       <View style={styles.searchRow}>
@@ -262,6 +266,7 @@ const styles = StyleSheet.create({
   categoryRow: { paddingHorizontal: 20, paddingVertical: 14, gap: 8 },
   categoryChipSpacing: { marginRight: 8 },
   sectionHeader: { paddingHorizontal: 20, paddingTop: 2, paddingBottom: 12 },
+  greetingActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   // 새로 등록된 차량(가로)
   recentRow: { paddingHorizontal: 20, paddingTop: 2, paddingBottom: 10, gap: 14 },
   recentCardWrap: {},

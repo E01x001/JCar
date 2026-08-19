@@ -50,3 +50,36 @@ export const formatTime = (date) => {
 
   return `${hours}:${minutes}`;
 };
+
+/**
+ * 상대 시간 표기 ("방금", "3분 전", "어제", "3일 전", 그 이상은 날짜).
+ *
+ * 알림센터처럼 "언제 왔는지"가 중요한 목록용이다. 7일이 넘으면 상대 표기가
+ * 오히려 읽기 어려워지므로 절대 날짜로 넘긴다.
+ *
+ * @param {Date|number|string} date - Date, epoch ms, 또는 파싱 가능한 문자열
+ * @param {Date|number} [now=Date.now()] - 기준 시각(테스트에서 고정하기 위해 주입 가능)
+ * @returns {string}
+ */
+export const formatRelativeTime = (date, now = Date.now()) => {
+  if (!date) {return '-';}
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) {return '-';}
+
+  const diffMs = (now instanceof Date ? now.getTime() : now) - d.getTime();
+
+  // 미래 시각(기기 시계 어긋남 등)은 "방금"으로 흡수한다
+  if (diffMs < 60 * 1000) {return '방금';}
+
+  const minutes = Math.floor(diffMs / (60 * 1000));
+  if (minutes < 60) {return `${minutes}분 전`;}
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {return `${hours}시간 전`;}
+
+  const days = Math.floor(hours / 24);
+  if (days === 1) {return '어제';}
+  if (days < 7) {return `${days}일 전`;}
+
+  return formatDate(d);
+};

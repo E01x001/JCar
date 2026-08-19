@@ -22,6 +22,7 @@ import VehicleDetailScreen from '../screens/VehicleDetailScreen';
 import ConsultationRequestScreen from '../screens/ConsultationRequestScreen';
 import MyVehiclesScreen from '../screens/MyVehiclesScreen'; // ✅ 추가
 import UserConsultationDetailScreen from '../screens/UserConsultationDetailScreen';
+import NotificationCenterScreen from '../screens/NotificationCenterScreen';
 
 import AdminVehiclesListScreen from '../screens/AdminVehiclesListScreen';
 import AdminPageScreen from '../screens/AdminPageScreen';
@@ -182,6 +183,11 @@ const AppNavigator = ({ navigationRef }) => {
               options={{ headerShown: true, title: '소유 차량 상세' }}
             />
             <Stack.Screen
+              name="NotificationCenter"
+              component={NotificationCenterScreen}
+              options={{ headerShown: true, title: '알림' }}
+            />
+            <Stack.Screen
               name="AdminOwnershipHistory"
               component={AdminOwnershipHistoryScreen}
               options={{ headerShown: true, title: '소유권 이전 기록' }}
@@ -210,6 +216,11 @@ const AppNavigator = ({ navigationRef }) => {
               name="UserConsultationDetail"
               component={UserConsultationDetailScreen}
               options={{ headerShown: true, title: '상담 상세' }}
+            />
+            <Stack.Screen
+              name="NotificationCenter"
+              component={NotificationCenterScreen}
+              options={{ headerShown: true, title: '알림' }}
             />
           </>
         )}

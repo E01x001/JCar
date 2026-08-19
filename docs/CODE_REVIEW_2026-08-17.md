@@ -227,9 +227,9 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice, style }) => {
 1. **상담 취소·변경을 사용자에게 열기** — 상태 전이 트리거와 알림 허브가 이미 있어
    상태 하나와 알림 타입 하나만 추가하면 된다. 현재는 사용자가 잘못 예약하면
    관리자에게 연락하는 수밖에 없다.
-2. **알림 센터 화면** — `notifications` 테이블이 이미 허브로 동작하는데 앱에는
-   목록 화면이 없다. 푸시를 놓치면 확인할 방법이 없다. 읽음 처리(`read` 컬럼)와
-   `grant update (read)`까지 이미 있어 화면만 붙이면 된다.
+2. ~~**알림 센터 화면**~~ ✅ 구현(2026-08-19) — `NotificationCenterScreen` +
+   홈 헤더의 `NotificationBell`(안읽음 배지). 탭 시 트리거가 실어 보낸
+   `data.screen`/id로 이동하며, 이는 푸시 딥링크와 같은 규약이다.
 3. **차량 등록 임시저장** — `VehicleRegistrationScreen`이 664줄에 다단계 입력인데
    중간 이탈 시 전부 날아간다. 외부 API 조회까지 다시 해야 해서 체감이 나쁘다.
 4. **관리자용 상담 일정 충돌 사전 표시** — 이중 예약은 DB가 막지만, 사용자는
