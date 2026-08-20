@@ -14,7 +14,7 @@ export default {
   expo: {
     name: 'J-Car',
     slug: 'jcar',
-    version: '1.0.3',
+    version: '1.0.4',
     orientation: 'portrait',
     icon: './src/assets/icon.png',
     userInterfaceStyle: 'light',
@@ -34,7 +34,7 @@ export default {
       package: IS_DEV ? 'com.jcarnew.dev' : 'com.jcarnew',
       // 사이드로드(GitHub Releases APK)로 배포된 마지막 빌드가 1.0.1/101이었다.
       // 버전이 뒤로 가지 않도록 그 위에서 이어간다. Play 업로드마다 1씩 올릴 것.
-      versionCode: 103,
+      versionCode: 104,
       googleServicesFile: './google-services.json',
       // 의존성이 끌고 온 미사용 권한 — Play 심사에서 용도 소명을 요구하므로 제거한다.
       // 앱에 오디오 녹음도, 다른 앱 위에 그리는 오버레이도 없다(화면 내 모달만 쓴다).
@@ -49,8 +49,15 @@ export default {
         'android.permission.ACCESS_ADSERVICES_ATTRIBUTION',
       ],
       adaptiveIcon: {
-        foregroundImage: './src/assets/icon.png',
-        backgroundColor: '#1A2B5C',
+        // 전경은 icon.png와 **다른 파일**이어야 한다.
+        // 어댑티브 아이콘은 108dp 캔버스 중 가운데 72dp만 보이고 안전영역은 66dp다.
+        // 꽉 찬 이미지를 전경으로 주면 108dp에 그린 뒤 72dp로 잘려 로고가 ~1.5배 커 보인다.
+        // adaptive-icon.png는 icon.png를 66.7%로 축소해 투명 여백을 둔 것으로,
+        // Expo 이전 전(RN CLI)의 ic_launcher_adaptive_fore.png와 같은 비율이다.
+        foregroundImage: './src/assets/adaptive-icon.png',
+        // icon.png의 실제 배경색. 이전 값 #1A2B5C는 아이콘 색과 달라
+        // 전경에 투명 여백이 생기는 순간 이음매로 드러난다.
+        backgroundColor: '#194399',
       },
       permissions: [
         'android.permission.POST_NOTIFICATIONS', // FCM (Android 13+)

@@ -125,6 +125,35 @@ Found: SHA1: 07:DD:37:...  expected: SHA1: 02:4E:35:...
 → `.native-secrets/key.jks`(SHA-1 `07:DD:37:...`)를 새 업로드 키로 등록하는
 **업로드 키 재설정을 요청**해야 한다. 승인 후에는 위 스크립트가 그대로 동작한다.
 
+## 앱 아이콘 (어댑티브 아이콘 주의)
+
+안드로이드 어댑티브 아이콘은 **108dp 캔버스를 그린 뒤 런처가 가운데 72dp만 잘라서**
+보여준다(안전 영역은 66dp). 따라서 `adaptiveIcon.foregroundImage`에는
+**여백이 있는 별도 파일**을 줘야 한다.
+
+```js
+icon: './src/assets/icon.png',              // 꽉 찬 1080x1080 (일반/웹용)
+adaptiveIcon: {
+  foregroundImage: './src/assets/adaptive-icon.png',  // 66.7%로 축소 + 투명 여백
+  backgroundColor: '#194399',                          // icon.png의 실제 배경색
+}
+```
+
+두 값을 같은 파일로 두면 로고가 **108/72 = 약 1.5배 확대**돼 보인다.
+Expo 이전 직후 실제로 이 상태였다(RN CLI 시절에는 `ic_launcher.png` 192x192와
+`ic_launcher_adaptive_fore.png` 432x432가 별도 파일이었다).
+
+전경 파일 생성은 `icon.png`를 66.7%로 축소해 투명 캔버스 가운데 배치하면 된다.
+검증: prebuild 후 생성물의 알파 bbox가 캔버스의 약 66.7%인지 확인한다.
+
+```bash
+python -c "from PIL import Image; im=Image.open('android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp').convert('RGBA'); bb=im.getchannel('A').getbbox(); print(bb, im.size)"
+# 기대: (72, 72, 360, 360) (432, 432)
+```
+
+배경색도 아이콘의 실제 색과 맞춰야 한다. 다르면 전경에 투명 여백이 생기는 순간
+이음매로 드러난다.
+
 ## Play Console 내부 테스트 업로드 (수동)
 
 1. Play Console → 해당 앱 → 테스트 → **내부 테스트**
