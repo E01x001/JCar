@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, TabBar } from 'react-native-tab-view';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
+import ScreenHeader from '../components/ScreenHeader';
 import BuyConsultationsTab from './MyPage/tabs/BuyConsultationsTab';
 import SellConsultationsTab from './MyPage/tabs/SellConsultationsTab';
 import useConsultationStore from '../stores/consultationStore';
@@ -89,12 +90,7 @@ const UserConsultationsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['top', 'bottom']}>
-      <View style={[styles.titleBar, {
-        backgroundColor: theme.colors.background.card,
-        borderBottomColor: theme.colors.border.light,
-      }]}>
-        <Text style={[styles.titleText, { color: theme.colors.text.primary }]}>상담 내역</Text>
-      </View>
+      <ScreenHeader title="상담 내역" />
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -109,18 +105,6 @@ const UserConsultationsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  // 다른 화면(마이페이지·차량 목록)의 헤더와 동일 규격 — 이 화면만 왼쪽 정렬에
-  // 폰트가 커서 탭 간 이동 시 제목이 튀어 보였다
-  titleBar: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-  },
-  titleText: {
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: -0.2,
   },
 });
 

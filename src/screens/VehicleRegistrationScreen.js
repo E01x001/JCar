@@ -1,9 +1,11 @@
 import React, { useState, useContext } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Switch, Modal, Pressable, Alert } from 'react-native';
+import { typography } from '../theme/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import Card from '../components/Card';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
@@ -599,9 +601,9 @@ const styles = StyleSheet.create({
   // 헤더
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1 },
   backBtn: { width: 40, height: 32, justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700' },
+  headerTitle: { fontSize: typography.fontSize.screenTitle, fontWeight: '700' },
   // 진행 바
-  progressWrap: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 4 },
+  progressWrap: { paddingHorizontal: spacing.screenX, paddingTop: 16, paddingBottom: 4 },
   progressTrack: { flexDirection: 'row', gap: 6 },
   progressSeg: { flex: 1, height: 5, borderRadius: 3 },
   progressLabel: { fontSize: 12, marginTop: 9 },

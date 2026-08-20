@@ -9,10 +9,12 @@ import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 import { DEAL_STAGE_LABELS, DEAL_STAGE_BADGE_STATUS } from '../constants/vehicle';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
 import Tag from '../components/Tag';
 import ImageCarousel from '../components/ImageCarousel';
+import { typography } from '../theme/typography';
 
 // 빈 값/Unknown 행은 표시하지 않는다(데이터 없는 항목 깔끔히 숨김).
 const cleanRows = (rows) => rows.filter(([, v]) => v != null && v !== '' && v !== '-' && v !== 'Unknown');
@@ -209,7 +211,7 @@ const styles = StyleSheet.create({
   // 시트
   sheet: {
     marginTop: -24, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingHorizontal: 22, paddingTop: 24, paddingBottom: 8,
+    paddingHorizontal: spacing.screenX, paddingTop: 24, paddingBottom: 8,
   },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   title: { flex: 1, fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
@@ -225,14 +227,14 @@ const styles = StyleSheet.create({
   priceBannerTitle: { fontSize: 14, fontWeight: '700' },
   priceBannerSub: { fontSize: 12, marginTop: 2 },
   // 섹션
-  sectionTitle: { fontSize: 17, fontWeight: '800', letterSpacing: -0.2, marginTop: 24, marginBottom: 10 },
+  sectionTitle: { fontSize: typography.fontSize.bodyLarge, fontWeight: '800', letterSpacing: -0.2, marginTop: 24, marginBottom: 10 },
   infoGroup: { borderRadius: 14, paddingHorizontal: 16 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 13 },
   infoRowBorder: { borderBottomWidth: 1, borderBottomColor: '#ECEEF1' },
   infoLabel: { fontSize: 14, flex: 1 },
   infoValue: { fontSize: 14, fontWeight: '700', textAlign: 'right', flex: 1, marginLeft: 12 },
   // 하단 바
-  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1 },
+  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.screenX, paddingTop: 12, borderTopWidth: 1 },
   soldMsg: { fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 8 },
   bottomRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   bottomLeft: { width: 64 },

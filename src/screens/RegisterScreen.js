@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import { typography } from '../theme/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { signUp, resendConfirmationEmail, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
 import { useToast } from '../hooks/useToast';
@@ -181,8 +183,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 10,
   },
   backBtn: { width: 40, height: 32, justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700' },
-  progressWrap: { paddingHorizontal: 22, paddingTop: 6, paddingBottom: 4 },
+  headerTitle: { fontSize: typography.fontSize.screenTitle, fontWeight: '700' },
+  progressWrap: { paddingHorizontal: spacing.screenX, paddingTop: 6, paddingBottom: 4 },
   progressTrack: { flexDirection: 'row', gap: 6 },
   progressSeg: { flex: 1, height: 5, borderRadius: 3 },
   progressLabel: { fontSize: 12, marginTop: 9 },
@@ -190,7 +192,7 @@ const styles = StyleSheet.create({
   intro: { fontSize: 14, lineHeight: 21, marginBottom: 18 },
   cta: { marginTop: 20 },
   // Step 2
-  verifyBody: { flex: 1, paddingHorizontal: 22, paddingBottom: 8 },
+  verifyBody: { flex: 1, paddingHorizontal: spacing.screenX, paddingBottom: 8 },
   verifyCenter: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   mailBadge: { width: 80, height: 80, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   verifyTitle: { fontSize: 20, fontWeight: '800', marginTop: 24 },

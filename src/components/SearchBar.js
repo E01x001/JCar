@@ -10,6 +10,7 @@ import { View, TextInput, Text, Pressable, StyleSheet } from 'react-native';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import PropTypes from 'prop-types';
 import { useTheme } from '../theme/ThemeProvider';
+import { typography } from '../theme/typography';
 
 /**
  * SearchBar Component
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontSize: typography.fontSize.label,
     padding: 0,
   },
   placeholder: {

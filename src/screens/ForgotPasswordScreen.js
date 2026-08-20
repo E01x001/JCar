@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { typography } from '../theme/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { sendPasswordReset, mapAuthError } from '../services/auth/supabaseAuthService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 
@@ -90,9 +92,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 10,
   },
   backBtn: { width: 40, height: 32, justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700' },
+  headerTitle: { fontSize: typography.fontSize.screenTitle, fontWeight: '700' },
   kav: { flex: 1 },
-  body: { flex: 1, justifyContent: 'center', paddingHorizontal: 26, paddingBottom: 60 },
+  body: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.screenX, paddingBottom: 60 },
   logo: { width: 150, height: 48, alignSelf: 'center', marginBottom: 24 },
   title: { fontSize: 22, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
   desc: { fontSize: 14, lineHeight: 22, textAlign: 'center', marginTop: 12, marginBottom: 28 },

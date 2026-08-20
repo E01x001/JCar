@@ -8,6 +8,7 @@ import FAIcon from '@expo/vector-icons/FontAwesome';
 import { signIn, signInWithGoogle, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
+import { typography } from '../theme/typography';
 
 const LoginScreen = ({ navigation }) => {
   const toast = useToast();
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    fontSize: 15,
+    fontSize: typography.fontSize.label,
     color: '#fff',
   },
   inputFocused: {

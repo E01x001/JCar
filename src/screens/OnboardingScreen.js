@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import Button from '../components/Button';
 
 export const ONBOARDED_KEY = '@jcar/onboarded';
@@ -96,7 +97,7 @@ const OnboardingScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  skipRow: { alignItems: 'flex-end', paddingHorizontal: 22, paddingTop: 8, height: 36, justifyContent: 'center' },
+  skipRow: { alignItems: 'flex-end', paddingHorizontal: spacing.screenX, paddingTop: 8, height: 36, justifyContent: 'center' },
   skip: { fontSize: 14, fontWeight: '600' },
   pager: { flex: 1 },
   pagerContent: { alignItems: 'stretch' },
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 7, marginBottom: 24 },
   dot: { width: 7, height: 7, borderRadius: 4 },
   dotActive: { width: 20 },
-  footer: { paddingHorizontal: 26, paddingBottom: 30 },
+  footer: { paddingHorizontal: spacing.screenX, paddingBottom: 30 },
 });
 
 export default OnboardingScreen;

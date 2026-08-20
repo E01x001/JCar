@@ -6,6 +6,7 @@ import { subscribeToFilteredVehicles, getActiveFilterCount } from '../services/v
 import { useTheme } from '../theme/ThemeProvider';
 import { AuthContext } from '../context/AuthContext';
 import SkeletonLoader from '../components/SkeletonLoader';
+import ScreenHeader from '../components/ScreenHeader';
 import StateScreen from '../components/StateScreen';
 import SearchBar from '../components/SearchBar';
 import CategoryChip from '../components/CategoryChip';
@@ -117,9 +118,7 @@ const VehicleBrowseScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['top', 'bottom']}>
-      <View style={[styles.titleBar, { backgroundColor: theme.colors.background.card, borderBottomColor: theme.colors.border.light }]}>
-        <Text style={[styles.titleText, { color: theme.colors.text.primary }]}>차량 목록</Text>
-      </View>
+      <ScreenHeader title="차량 목록" />
 
       {loading ? (
         <SkeletonLoader count={5} style={styles.skeletonPad} />
@@ -167,8 +166,6 @@ const VehicleBrowseScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  titleBar: { paddingVertical: 14, alignItems: 'center', borderBottomWidth: 1 },
-  titleText: { fontSize: 17, fontWeight: '800' },
   listContent: { paddingBottom: 90, flexGrow: 1 },
   skeletonPad: { paddingTop: 8 },
   emptyState: { flex: 1 },

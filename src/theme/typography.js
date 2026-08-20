@@ -17,6 +17,13 @@ export const typography = {
     bodySmall: 12,
     caption: 12, // 별칭(정합성 복구): 다수 코드가 fontSize.caption 참조하나 키 없어 깨져 있었음
     button: 16,
+
+    // 시안이 실제로 쓰는 중간 단계. 토큰에 없어서 화면마다 인라인 숫자(13/15/17)를
+    // 쓰게 됐고, 그 결과 같은 역할의 글자가 화면마다 1~2px씩 달라졌다.
+    // 값을 바꾸는 게 아니라 쓰이는 값에 이름을 준다.
+    screenTitle: 17,  // 탭 화면 상단 제목
+    label: 15,        // 목록 항목 제목
+    detail: 13,       // 보조 설명·메타 정보
   },
 
   // Font Weights

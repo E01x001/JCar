@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import { useToast } from '../hooks/useToast';
 import StateScreen from '../components/StateScreen';
 import { formatRelativeTime } from '../utils/format';
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.screenX,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
   headerAction: { fontSize: 13, fontWeight: '700' },
   row: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.screenX,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },

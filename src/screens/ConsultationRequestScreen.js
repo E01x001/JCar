@@ -11,7 +11,9 @@ import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelp
 import { logger } from '../utils/logger';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
+import { typography } from '../theme/typography';
 
 // Generate time slots 09:00–18:00 in 10-min steps
 const TIME_SLOTS = (() => {
@@ -283,14 +285,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#fff',
-    paddingHorizontal: 18,
+    paddingHorizontal: spacing.screenX,
     paddingTop: 50,
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F3F5',
   },
   headerBack:  { fontSize: 24, fontWeight: '700', lineHeight: 30 },
-  headerTitle: { fontSize: 17, fontWeight: '800', color: '#212529' },
+  headerTitle: { fontSize: typography.fontSize.screenTitle, fontWeight: '800', color: '#212529' },
 
   // Vehicle card
   vehicleCard: {
@@ -318,7 +320,7 @@ const styles = StyleSheet.create({
   vehicleBadgeText: { fontSize: 12, fontWeight: '700' },
 
   sectionTitle: {
-    fontSize: 16,
+    fontSize: typography.fontSize.bodyLarge,
     fontWeight: '800',
     color: '#212529',
     marginHorizontal: 22,

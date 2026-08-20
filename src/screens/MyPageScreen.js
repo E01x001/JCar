@@ -8,9 +8,11 @@ import { supabase } from '../lib/supabase';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
+import { spacing } from '../theme/spacing';
 import { useToast } from '../hooks/useToast';
 import { formatPhone } from '../utils/format';
 import Avatar from '../components/Avatar';
+import ScreenHeader from '../components/ScreenHeader';
 import BuyConsultationsTab from './MyPage/tabs/BuyConsultationsTab';
 import SellConsultationsTab from './MyPage/tabs/SellConsultationsTab';
 import MyVehiclesTab from './MyPage/tabs/MyVehiclesTab';
@@ -150,9 +152,7 @@ const MyPageScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background.secondary }]} edges={['top', 'bottom']}>
       {/* 타이틀 */}
-      <View style={[styles.titleBar, { backgroundColor: theme.colors.background.card, borderBottomColor: theme.colors.border.light }]}>
-        <Text style={[styles.titleText, { color: theme.colors.text.primary }]}>마이페이지</Text>
-      </View>
+      <ScreenHeader title="마이페이지" />
 
       <View style={styles.body}>
         {/* 프로필 카드 */}
@@ -223,12 +223,6 @@ const MyPageScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   body: { flex: 1 },
-  titleBar: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-  },
-  titleText: { fontSize: 17, fontWeight: '800' },
   card: {
     marginHorizontal: 22,
     borderRadius: 18,
@@ -255,7 +249,7 @@ const styles = StyleSheet.create({
   segBar: {
     flexDirection: 'row',
     gap: 18,
-    paddingHorizontal: 22,
+    paddingHorizontal: spacing.screenX,
     paddingTop: 18,
     marginTop: 14,
     borderBottomWidth: 1,
@@ -268,7 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   tabViewWrap: { flex: 1 },
-  actions: { paddingHorizontal: 22, paddingTop: 12, paddingBottom: 6 },
+  actions: { paddingHorizontal: spacing.screenX, paddingTop: 12, paddingBottom: 6 },
   logoutBtn: {
     borderWidth: 1.5,
     borderRadius: 13,
