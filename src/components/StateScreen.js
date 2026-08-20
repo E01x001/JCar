@@ -1,8 +1,10 @@
 /**
- * StateScreen Component
+ * StateScreen — 풀스크린 빈/에러 상태.
  *
- * A generic component for displaying empty or error states.
- * Provides consistent layout with icon, title, message, and optional retry button.
+ * 아이콘 표현은 `EmptyState`(섹션 내 인라인 빈 상태)와 **같은 파란 뱃지**를 쓴다.
+ * 예전에는 여기만 회색 민아이콘이라, 같은 앱 안에서 탭마다 빈 화면 생김새가
+ * 달라 보였다. 레이아웃(풀스크린 중앙정렬 + 재시도 버튼)만 다르고
+ * 시각 언어는 하나로 맞춘다.
  */
 
 import React from 'react';
@@ -35,12 +37,17 @@ const StateScreen = ({
 
   return (
     <View style={[styles.container, style]}>
-      <Icon
-        name={icon}
-        size={80}
-        color={theme.colors.text.tertiary}
-        style={{ marginBottom: theme.spacing.lg }}
-      />
+      <View
+        style={[
+          styles.iconBadge,
+          {
+            backgroundColor: theme.colors.statusChip.completed.bg,
+            marginBottom: theme.spacing.lg,
+          },
+        ]}
+      >
+        <Icon name={icon} size={40} color={theme.colors.primary.light} />
+      </View>
 
       <Text
         style={[
@@ -87,6 +94,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+  // EmptyState의 뱃지(72x72 / radius 22)와 같은 비율을 풀스크린 크기로 확대
+  iconBadge: {
+    width: 88,
+    height: 88,
+    borderRadius: 27,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     textAlign: 'center',
