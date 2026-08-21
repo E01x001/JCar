@@ -1,7 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, ScrollView,
+  View, Text, TouchableOpacity, StyleSheet, ScrollView, Image,
 } from 'react-native';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { Calendar } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -11,7 +12,6 @@ import { generateTempId, executeOptimisticUpdate } from '../utils/optimisticHelp
 import { logger } from '../utils/logger';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../theme/ThemeProvider';
-import { spacing } from '../theme/spacing';
 import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 import { typography } from '../theme/typography';
 
@@ -41,6 +41,14 @@ const ConsultationRequestScreen = ({ route }) => {
 
   const { vehicle, isSell, consultationId, existingDate, existingTime } = route.params;
   const isResubmitMode = !!consultationId;
+
+  // 화면 제목은 네비게이션 헤더 하나만 쓴다.
+  // 예전에는 자체 헤더를 따로 그려 제목과 뒤로가기가 둘씩 보였다.
+  useEffect(() => {
+    navigation.setOptions({
+      title: isResubmitMode ? '일정 재선택' : isSell ? '판매 상담 일정 선택' : '구매 상담 일정 선택',
+    });
+  }, [navigation, isResubmitMode, isSell]);
 
   useEffect(() => {
     if (isResubmitMode && existingDate && existingTime) {
@@ -154,17 +162,6 @@ const ConsultationRequestScreen = ({ route }) => {
 
   return (
     <View style={styles.screen}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Text style={[styles.headerBack, { color: PRIMARY }]}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isResubmitMode ? '일정 재선택' : isSell ? '판매 상담 일정 선택' : '구매 상담 일정 선택'}
-        </Text>
-        <View style={{ width: 32 }} />
-      </View>
-
       <ScrollView
         style={{ flex: 1, backgroundColor: BG }}
         contentContainerStyle={{ paddingBottom: 120, paddingTop: 16 }}
@@ -172,7 +169,13 @@ const ConsultationRequestScreen = ({ route }) => {
       >
         {/* Vehicle mini-card */}
         <View style={styles.vehicleCard}>
-          <View style={styles.vehicleImg} />
+          {vehicle?.imageUrl ? (
+            <Image source={{ uri: vehicle.imageUrl }} style={styles.vehicleImg} resizeMode="cover" />
+          ) : (
+            <View style={[styles.vehicleImg, styles.vehicleImgEmpty]}>
+              <Icon name="directions-car" size={26} color="#A9B4C7" />
+            </View>
+          )}
           <View style={{ flex: 1 }}>
             <Text style={styles.vehicleName}>{vehicle?.vehicleName}</Text>
             <Text style={[styles.vehiclePrice, { color: PRIMARY }]}>
@@ -280,20 +283,6 @@ const ConsultationRequestScreen = ({ route }) => {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F8F9FA' },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    paddingHorizontal: spacing.screenX,
-    paddingTop: 50,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F3F5',
-  },
-  headerBack:  { fontSize: 24, fontWeight: '700', lineHeight: 30 },
-  headerTitle: { fontSize: typography.fontSize.screenTitle, fontWeight: '800', color: '#212529' },
-
   // Vehicle card
   vehicleCard: {
     marginHorizontal: 22,
@@ -314,6 +303,7 @@ const styles = StyleSheet.create({
     width: 54, height: 54, borderRadius: 12,
     backgroundColor: '#E8ECF3',
   },
+  vehicleImgEmpty: { alignItems: 'center', justifyContent: 'center' },
   vehicleName:  { fontSize: 16, fontWeight: '800', color: '#212529', marginBottom: 4 },
   vehiclePrice: { fontSize: 14, fontWeight: '800' },
   vehicleBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
