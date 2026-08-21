@@ -9,6 +9,7 @@ import Toast from 'react-native-toast-message';
 import { supabase } from '../lib/supabase';
 import { getMyProfile, signOutUser, saveMyFcmToken } from '../services/auth/supabaseAuthService';
 import { saveFcmToken } from '../services/notification/fcmService';
+import { recordInstallSignal } from '../services/notification/installSignalService';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
 import { getMessaging, onTokenRefresh } from '../services/notification/firebaseNative';
 
@@ -67,6 +68,10 @@ export const AuthProvider = ({ children }) => {
 
         // FCM 토큰 저장 (실패해도 로그인 흐름은 막지 않음)
         saveFcmToken(authUser.id).catch(() => {});
+
+        // 설치 출처 기록(기록 전용, 아무것도 차단하지 않음).
+        // 사용자·앱버전당 1회만 쌓이며 실패는 내부에서 삼킨다.
+        recordInstallSignal(authUser.id);
       } catch (error) {
         logger.error('AuthContext: 프로필 로드 오류:', error);
         reportCrashlyticsError(error);
