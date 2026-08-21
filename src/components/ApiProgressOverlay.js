@@ -9,6 +9,7 @@ import React from 'react';
 import { Modal, View, Text, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 import { useTheme } from '../theme/ThemeProvider';
+import { typography } from '../theme/typography';
 
 /**
  * @param {Object} props
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 13,
+    fontSize: typography.fontSize.detail,
     fontWeight: '700',
     letterSpacing: 0.2,
   },
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   message: {
-    fontSize: 14,
+    fontSize: typography.fontSize.body,
     lineHeight: 20,
     textAlign: 'center',
     marginTop: 16,

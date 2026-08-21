@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   kav: { flex: 1 },
   body: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.screenX, paddingBottom: 60 },
   logo: { width: 150, height: 48, alignSelf: 'center', marginBottom: 24 },
-  title: { fontSize: 22, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
+  title: { fontSize: typography.fontSize.heroTitle, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
   desc: { fontSize: 14, lineHeight: 22, textAlign: 'center', marginTop: 12, marginBottom: 28 },
   input: { marginBottom: 4 },
   cta: { marginTop: 12 },

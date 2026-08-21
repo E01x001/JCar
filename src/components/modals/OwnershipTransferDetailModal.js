@@ -6,14 +6,13 @@
 
 import React from 'react';
 import {
-  Modal,
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   ScrollView,
 } from 'react-native';
 import PropTypes from 'prop-types';
+import BaseModal from './BaseModal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../../theme/ThemeProvider';
 import Card from '../Card';
@@ -83,52 +82,151 @@ const OwnershipTransferDetailModal = ({ isVisible, onClose, transferData }) => {
   };
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
-          activeOpacity={1}
-          onPress={onClose}
-        />
-        <View style={styles.modalContainer}>
-          <Card
-            style={[
-              styles.modalCard,
-              {
-                backgroundColor: theme.colors.background.paper,
-                borderRadius: theme.borderRadius.lg,
-              },
-            ]}
-          >
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Header */}
-              <View style={[styles.header, { marginBottom: theme.spacing.lg }]}>
-                <MaterialIcons
-                  name="description"
-                  size={32}
-                  color={theme.colors.primary.main}
-                />
-                <Text
-                  style={[
-                    styles.title,
-                    {
-                      fontSize: theme.typography.fontSize.h3,
-                      fontWeight: theme.typography.fontWeight.bold,
-                      color: theme.colors.text.primary,
-                      marginLeft: theme.spacing.sm,
-                    },
-                  ]}
-                >
-                  소유권 이전 상세
-                </Text>
-              </View>
+    <BaseModal variant="center" visible={isVisible} onClose={onClose} avoidKeyboard={false}>
+      <View style={styles.modalContainer}>
+        <Card
+          style={[
+            styles.modalCard,
+            {
+              backgroundColor: theme.colors.background.paper,
+              borderRadius: theme.borderRadius.lg,
+            },
+          ]}
+        >
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Header */}
+            <View style={[styles.header, { marginBottom: theme.spacing.lg }]}>
+              <MaterialIcons
+                name="description"
+                size={32}
+                color={theme.colors.primary.main}
+              />
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    fontSize: theme.typography.fontSize.h3,
+                    fontWeight: theme.typography.fontWeight.bold,
+                    color: theme.colors.text.primary,
+                    marginLeft: theme.spacing.sm,
+                  },
+                ]}
+              >
+                소유권 이전 상세
+              </Text>
+            </View>
 
-              {/* Transfer ID */}
+            {/* Transfer ID */}
+            <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+              <Text
+                style={[
+                  styles.sectionLabel,
+                  {
+                    fontSize: theme.typography.fontSize.caption,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                이전 ID
+              </Text>
+              <Text
+                style={[
+                  styles.sectionValue,
+                  {
+                    fontSize: theme.typography.fontSize.body,
+                    color: theme.colors.text.primary,
+                  },
+                ]}
+              >
+                {transferData.transferId || 'N/A'}
+              </Text>
+            </View>
+
+            {/* Transfer Type */}
+            <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+              <Text
+                style={[
+                  styles.sectionLabel,
+                  {
+                    fontSize: theme.typography.fontSize.caption,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                이전 유형
+              </Text>
+              <Text
+                style={[
+                  styles.sectionValue,
+                  {
+                    fontSize: theme.typography.fontSize.h4,
+                    fontWeight: theme.typography.fontWeight.semiBold,
+                    color: getTransferTypeColor(transferData.transferType),
+                  },
+                ]}
+              >
+                {getTransferTypeText(transferData.transferType)}
+              </Text>
+            </View>
+
+            {/* Transfer Date */}
+            <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+              <Text
+                style={[
+                  styles.sectionLabel,
+                  {
+                    fontSize: theme.typography.fontSize.caption,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                이전 날짜
+              </Text>
+              <Text
+                style={[
+                  styles.sectionValue,
+                  {
+                    fontSize: theme.typography.fontSize.body,
+                    color: theme.colors.text.primary,
+                  },
+                ]}
+              >
+                {formatDate(transferData.transferredAt)}
+              </Text>
+            </View>
+
+            {/* Vehicle ID */}
+            <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+              <Text
+                style={[
+                  styles.sectionLabel,
+                  {
+                    fontSize: theme.typography.fontSize.caption,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                차량 ID
+              </Text>
+              <Text
+                style={[
+                  styles.sectionValue,
+                  {
+                    fontSize: theme.typography.fontSize.body,
+                    color: theme.colors.text.primary,
+                  },
+                ]}
+              >
+                {transferData.vehicleId || 'N/A'}
+              </Text>
+            </View>
+
+            {/* Consultation ID */}
+            {transferData.consultationId && (
               <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
                 <Text
                   style={[
@@ -140,7 +238,7 @@ const OwnershipTransferDetailModal = ({ isVisible, onClose, transferData }) => {
                     },
                   ]}
                 >
-                  이전 ID
+                  상담 ID
                 </Text>
                 <Text
                   style={[
@@ -151,12 +249,96 @@ const OwnershipTransferDetailModal = ({ isVisible, onClose, transferData }) => {
                     },
                   ]}
                 >
-                  {transferData.transferId || 'N/A'}
+                  {transferData.consultationId}
                 </Text>
               </View>
+            )}
 
-              {/* Transfer Type */}
-              <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+            {/* From User */}
+            <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+              <Text
+                style={[
+                  styles.sectionLabel,
+                  {
+                    fontSize: theme.typography.fontSize.caption,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                판매자
+              </Text>
+              <Text
+                style={[
+                  styles.sectionValue,
+                  {
+                    fontSize: theme.typography.fontSize.body,
+                    color: theme.colors.text.primary,
+                  },
+                ]}
+              >
+                {transferData.fromUserId || '관리자'}
+              </Text>
+            </View>
+
+            {/* To User */}
+            <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+              <Text
+                style={[
+                  styles.sectionLabel,
+                  {
+                    fontSize: theme.typography.fontSize.caption,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                구매자
+              </Text>
+              <Text
+                style={[
+                  styles.sectionValue,
+                  {
+                    fontSize: theme.typography.fontSize.body,
+                    color: theme.colors.text.primary,
+                  },
+                ]}
+              >
+                {transferData.toUserId || '관리자'}
+              </Text>
+            </View>
+
+            {/* Price */}
+            <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
+              <Text
+                style={[
+                  styles.sectionLabel,
+                  {
+                    fontSize: theme.typography.fontSize.caption,
+                    color: theme.colors.text.secondary,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                거래 금액
+              </Text>
+              <Text
+                style={[
+                  styles.sectionValue,
+                  {
+                    fontSize: theme.typography.fontSize.h4,
+                    fontWeight: theme.typography.fontWeight.bold,
+                    color: theme.colors.text.primary,
+                  },
+                ]}
+              >
+                {formatPrice(transferData.price)}
+              </Text>
+            </View>
+
+            {/* Notes */}
+            {transferData.notes && (
+              <View style={[styles.section, { marginBottom: theme.spacing.lg }]}>
                 <Text
                   style={[
                     styles.sectionLabel,
@@ -167,244 +349,44 @@ const OwnershipTransferDetailModal = ({ isVisible, onClose, transferData }) => {
                     },
                   ]}
                 >
-                  이전 유형
+                  메모
                 </Text>
-                <Text
+                <View
                   style={[
-                    styles.sectionValue,
+                    styles.notesBox,
                     {
-                      fontSize: theme.typography.fontSize.h4,
-                      fontWeight: theme.typography.fontWeight.semiBold,
-                      color: getTransferTypeColor(transferData.transferType),
+                      backgroundColor: theme.colors.background.secondary,
+                      borderRadius: theme.borderRadius.md,
+                      padding: theme.spacing.md,
                     },
                   ]}
                 >
-                  {getTransferTypeText(transferData.transferType)}
-                </Text>
-              </View>
-
-              {/* Transfer Date */}
-              <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    {
-                      fontSize: theme.typography.fontSize.caption,
-                      color: theme.colors.text.secondary,
-                      marginBottom: theme.spacing.xs,
-                    },
-                  ]}
-                >
-                  이전 날짜
-                </Text>
-                <Text
-                  style={[
-                    styles.sectionValue,
-                    {
-                      fontSize: theme.typography.fontSize.body,
-                      color: theme.colors.text.primary,
-                    },
-                  ]}
-                >
-                  {formatDate(transferData.transferredAt)}
-                </Text>
-              </View>
-
-              {/* Vehicle ID */}
-              <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    {
-                      fontSize: theme.typography.fontSize.caption,
-                      color: theme.colors.text.secondary,
-                      marginBottom: theme.spacing.xs,
-                    },
-                  ]}
-                >
-                  차량 ID
-                </Text>
-                <Text
-                  style={[
-                    styles.sectionValue,
-                    {
-                      fontSize: theme.typography.fontSize.body,
-                      color: theme.colors.text.primary,
-                    },
-                  ]}
-                >
-                  {transferData.vehicleId || 'N/A'}
-                </Text>
-              </View>
-
-              {/* Consultation ID */}
-              {transferData.consultationId && (
-                <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
                   <Text
                     style={[
-                      styles.sectionLabel,
-                      {
-                        fontSize: theme.typography.fontSize.caption,
-                        color: theme.colors.text.secondary,
-                        marginBottom: theme.spacing.xs,
-                      },
-                    ]}
-                  >
-                    상담 ID
-                  </Text>
-                  <Text
-                    style={[
-                      styles.sectionValue,
+                      styles.notesText,
                       {
                         fontSize: theme.typography.fontSize.body,
                         color: theme.colors.text.primary,
+                        lineHeight: 20,
                       },
                     ]}
                   >
-                    {transferData.consultationId}
+                    {transferData.notes}
                   </Text>
                 </View>
-              )}
-
-              {/* From User */}
-              <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    {
-                      fontSize: theme.typography.fontSize.caption,
-                      color: theme.colors.text.secondary,
-                      marginBottom: theme.spacing.xs,
-                    },
-                  ]}
-                >
-                  판매자
-                </Text>
-                <Text
-                  style={[
-                    styles.sectionValue,
-                    {
-                      fontSize: theme.typography.fontSize.body,
-                      color: theme.colors.text.primary,
-                    },
-                  ]}
-                >
-                  {transferData.fromUserId || '관리자'}
-                </Text>
               </View>
+            )}
 
-              {/* To User */}
-              <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    {
-                      fontSize: theme.typography.fontSize.caption,
-                      color: theme.colors.text.secondary,
-                      marginBottom: theme.spacing.xs,
-                    },
-                  ]}
-                >
-                  구매자
-                </Text>
-                <Text
-                  style={[
-                    styles.sectionValue,
-                    {
-                      fontSize: theme.typography.fontSize.body,
-                      color: theme.colors.text.primary,
-                    },
-                  ]}
-                >
-                  {transferData.toUserId || '관리자'}
-                </Text>
-              </View>
-
-              {/* Price */}
-              <View style={[styles.section, { marginBottom: theme.spacing.md }]}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    {
-                      fontSize: theme.typography.fontSize.caption,
-                      color: theme.colors.text.secondary,
-                      marginBottom: theme.spacing.xs,
-                    },
-                  ]}
-                >
-                  거래 금액
-                </Text>
-                <Text
-                  style={[
-                    styles.sectionValue,
-                    {
-                      fontSize: theme.typography.fontSize.h4,
-                      fontWeight: theme.typography.fontWeight.bold,
-                      color: theme.colors.text.primary,
-                    },
-                  ]}
-                >
-                  {formatPrice(transferData.price)}
-                </Text>
-              </View>
-
-              {/* Notes */}
-              {transferData.notes && (
-                <View style={[styles.section, { marginBottom: theme.spacing.lg }]}>
-                  <Text
-                    style={[
-                      styles.sectionLabel,
-                      {
-                        fontSize: theme.typography.fontSize.caption,
-                        color: theme.colors.text.secondary,
-                        marginBottom: theme.spacing.xs,
-                      },
-                    ]}
-                  >
-                    메모
-                  </Text>
-                  <View
-                    style={[
-                      styles.notesBox,
-                      {
-                        backgroundColor: theme.colors.background.secondary,
-                        borderRadius: theme.borderRadius.md,
-                        padding: theme.spacing.md,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.notesText,
-                        {
-                          fontSize: theme.typography.fontSize.body,
-                          color: theme.colors.text.primary,
-                          lineHeight: 20,
-                        },
-                      ]}
-                    >
-                      {transferData.notes}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Close Button */}
-              <Button variant="secondary" title="닫기" onPress={onClose} />
-            </ScrollView>
-          </Card>
-        </View>
+            {/* Close Button */}
+            <Button variant="secondary" title="닫기" onPress={onClose} />
+          </ScrollView>
+        </Card>
       </View>
-    </Modal>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   modalContainer: {
     width: '90%',
     maxWidth: 500,

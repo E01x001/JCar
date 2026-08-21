@@ -6,16 +6,13 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from 'react-native';
 import PropTypes from 'prop-types';
+import BaseModal from './BaseModal';
 import { useTheme } from '../../theme/ThemeProvider';
 import Card from '../Card';
 import InputField from '../InputField';
@@ -69,120 +66,93 @@ const AdminMemoModal = ({ isVisible, onClose, onSubmit, initialMemo = '', consul
   };
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleCancel}
-    >
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
-          activeOpacity={1}
-          onPress={handleCancel}
-        />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
+    <BaseModal variant="center" visible={isVisible} onClose={handleCancel}>
+      <View style={styles.modalContainer}>
+        <Card
+          style={[
+            styles.modalCard,
+            {
+              backgroundColor: '#FFFFFF',
+              borderRadius: theme.borderRadius.lg,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+              elevation: 8,
+            },
+          ]}
         >
-          <View style={styles.modalContainer}>
-            <Card
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Header */}
+            <Text
               style={[
-                styles.modalCard,
+                styles.title,
                 {
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: theme.borderRadius.lg,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 12,
-                  elevation: 8,
+                  fontSize: theme.typography.fontSize.h3,
+                  fontWeight: theme.typography.fontWeight.bold,
+                  color: theme.colors.primary.main,
+                  marginBottom: theme.spacing.xs,
                 },
               ]}
             >
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-              >
-                {/* Header */}
-                <Text
-                  style={[
-                    styles.title,
-                    {
-                      fontSize: theme.typography.fontSize.h3,
-                      fontWeight: theme.typography.fontWeight.bold,
-                      color: theme.colors.primary.main,
-                      marginBottom: theme.spacing.xs,
-                    },
-                  ]}
-                >
-                  관리자 메모
-                </Text>
+              관리자 메모
+            </Text>
 
-                {/* Info Text */}
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      fontSize: theme.typography.fontSize.bodySmall,
-                      color: theme.colors.text.primary,
-                      marginBottom: theme.spacing.md,
-                    },
-                  ]}
-                >
-                  이 메모는 관리자만 볼 수 있습니다.
-                </Text>
+            {/* Info Text */}
+            <Text
+              style={[
+                styles.infoText,
+                {
+                  fontSize: theme.typography.fontSize.bodySmall,
+                  color: theme.colors.text.primary,
+                  marginBottom: theme.spacing.md,
+                },
+              ]}
+            >
+              이 메모는 관리자만 볼 수 있습니다.
+            </Text>
 
-                {/* Memo Input */}
-                <InputField
-                  label="메모"
-                  value={memo}
-                  onChangeText={setMemo}
-                  placeholder="상담 관련 메모를 입력하세요"
-                  multiline
-                  numberOfLines={6}
-                  style={{ marginBottom: theme.spacing.lg }}
-                  editable={!isSubmitting}
-                />
+            {/* Memo Input */}
+            <InputField
+              label="메모"
+              value={memo}
+              onChangeText={setMemo}
+              placeholder="상담 관련 메모를 입력하세요"
+              multiline
+              numberOfLines={6}
+              style={{ marginBottom: theme.spacing.lg }}
+              editable={!isSubmitting}
+            />
 
-                {/* Action Buttons */}
-                <View style={styles.buttonRow}>
-                  <Button
-                    variant="secondary"
-                    title="취소"
-                    onPress={handleCancel}
-                    disabled={isSubmitting}
-                    style={{ flex: 1, marginRight: theme.spacing.sm }}
-                  />
-                  <Button
-                    variant="primary"
-                    title={isSubmitting ? '저장 중...' : '저장'}
-                    onPress={handleSubmit}
-                    disabled={isSubmitting}
-                    loading={isSubmitting}
-                    style={{ flex: 1, marginLeft: theme.spacing.sm }}
-                  />
-                </View>
-              </ScrollView>
-            </Card>
-          </View>
-        </KeyboardAvoidingView>
+            {/* Action Buttons */}
+            <View style={styles.buttonRow}>
+              <Button
+                variant="secondary"
+                title="취소"
+                onPress={handleCancel}
+                disabled={isSubmitting}
+                style={{ flex: 1, marginRight: theme.spacing.sm }}
+              />
+              <Button
+                variant="primary"
+                title={isSubmitting ? '저장 중...' : '저장'}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                style={{ flex: 1, marginLeft: theme.spacing.sm }}
+              />
+            </View>
+          </ScrollView>
+        </Card>
       </View>
-    </Modal>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  keyboardAvoidingView: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
   modalContainer: {
     width: '100%',
     maxWidth: 400,

@@ -6,13 +6,10 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from 'react-native';
 import PropTypes from 'prop-types';
@@ -21,6 +18,7 @@ import { analytics } from '../../services/notification/firebaseNative';
 import { useTheme } from '../../theme/ThemeProvider';
 import InputField from '../InputField';
 import Button from '../Button';
+import BaseModal from './BaseModal';
 import OwnershipTransferConfirmModal from './OwnershipTransferConfirmModal';
 
 /**
@@ -256,22 +254,7 @@ const CompleteDealModal = ({
       ];
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleCancel}
-    >
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, styles.dim]}
-          activeOpacity={1}
-          onPress={handleCancel}
-        />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
-        >
+    <BaseModal variant="sheet" visible={isVisible} onClose={handleCancel}>
           <View
             style={[
               styles.sheet,
@@ -470,8 +453,6 @@ const CompleteDealModal = ({
                 </View>
               </ScrollView>
           </View>
-        </KeyboardAvoidingView>
-      </View>
 
       {/* Ownership Transfer Confirmation Modal */}
       <OwnershipTransferConfirmModal
@@ -487,21 +468,11 @@ const CompleteDealModal = ({
         showSuccess={transferSuccess}
         error={transferError}
       />
-    </Modal>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  dim: {
-    backgroundColor: 'rgba(15, 22, 38, 0.55)',
-  },
-  keyboardAvoidingView: {
-    width: '100%',
-  },
   sheet: {
     width: '100%',
     maxHeight: '90%',

@@ -27,6 +27,7 @@ import {
   deleteNotification,
 } from '../services/notification/notificationCenterService';
 import { reportCrashlyticsError } from '../services/notification/notificationService';
+import { typography } from '../theme/typography';
 
 const NotificationCenterScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -259,9 +260,9 @@ const styles = StyleSheet.create({
   },
   body: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
-  title: { fontSize: 15, flexShrink: 1 },
+  title: { fontSize: typography.fontSize.label, flexShrink: 1 },
   dot: { width: 7, height: 7, borderRadius: 4, marginLeft: 6 },
-  message: { fontSize: 13, lineHeight: 19, marginTop: 3 },
+  message: { fontSize: typography.fontSize.detail, lineHeight: 19, marginTop: 3 },
   time: { fontSize: 12, marginTop: 6 },
   emptyWrap: { flexGrow: 1, justifyContent: 'center' },
 });

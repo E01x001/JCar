@@ -20,6 +20,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
+import { typography } from '../theme/typography';
 
 const ProfileCompletionScreen = () => {
   const theme = useTheme();
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
   kav: { flex: 1 },
   body: { padding: 22, paddingTop: 40 },
   badge: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
-  title: { fontSize: 22, fontWeight: '800', textAlign: 'center', marginTop: 20, letterSpacing: -0.3 },
+  title: { fontSize: typography.fontSize.heroTitle, fontWeight: '800', textAlign: 'center', marginTop: 20, letterSpacing: -0.3 },
   intro: { fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 10, marginBottom: 24 },
   cta: { marginTop: 20 },
 });

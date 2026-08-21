@@ -6,17 +6,15 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import PropTypes from 'prop-types';
+import BaseModal from './BaseModal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -176,188 +174,161 @@ const SuggestAlternativeTimesModal = ({ isVisible, onClose, onSubmit, initialSlo
   );
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleCancel}
-    >
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
-          activeOpacity={1}
-          onPress={handleCancel}
-        />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
+    <BaseModal variant="center" visible={isVisible} onClose={handleCancel}>
+      <View style={styles.modalContainer}>
+        <Card
+          style={[
+            styles.modalCard,
+            {
+              backgroundColor: '#FFFFFF',
+              borderRadius: theme.borderRadius.lg,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+              elevation: 8,
+            },
+          ]}
         >
-          <View style={styles.modalContainer}>
-            <Card
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Header */}
+            <Text
               style={[
-                styles.modalCard,
+                styles.title,
                 {
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: theme.borderRadius.lg,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 12,
-                  elevation: 8,
+                  fontSize: theme.typography.fontSize.h3,
+                  fontWeight: theme.typography.fontWeight.bold,
+                  color: theme.colors.primary.main,
+                  marginBottom: theme.spacing.xs,
                 },
               ]}
             >
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-              >
-                {/* Header */}
+              대체 시간 제안
+            </Text>
+
+            {/* Info Text */}
+            <Text
+              style={[
+                styles.infoText,
+                {
+                  fontSize: theme.typography.fontSize.bodySmall,
+                  color: theme.colors.text.primary,
+                  marginBottom: theme.spacing.md,
+                },
+              ]}
+            >
+              고객에게 제안할 대체 상담 시간을 추가하세요.
+            </Text>
+
+            {/* Add Time Slot Button */}
+            <Button
+              variant="secondary"
+              title="시간 추가"
+              onPress={() => setIsDatePickerVisible(true)}
+              disabled={isSubmitting}
+              icon="add"
+              style={{ marginBottom: theme.spacing.md }}
+            />
+
+            {/* Suggested Slots List */}
+            {suggestedSlots.length > 0 ? (
+              <View style={{ marginBottom: theme.spacing.md }}>
                 <Text
                   style={[
-                    styles.title,
+                    styles.listTitle,
                     {
-                      fontSize: theme.typography.fontSize.h3,
-                      fontWeight: theme.typography.fontWeight.bold,
+                      fontSize: theme.typography.fontSize.bodySmall,
+                      fontWeight: theme.typography.fontWeight.semiBold,
                       color: theme.colors.primary.main,
                       marginBottom: theme.spacing.xs,
                     },
                   ]}
                 >
-                  대체 시간 제안
+                  제안된 시간 ({suggestedSlots.length})
                 </Text>
-
-                {/* Info Text */}
+                <FlatList
+                  data={suggestedSlots}
+                  renderItem={renderTimeSlot}
+                  keyExtractor={(item, index) => `slot-${index}`}
+                  scrollEnabled={false}
+                />
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.emptyState,
+                  {
+                    backgroundColor: theme.colors.background.secondary,
+                    borderRadius: theme.borderRadius.md,
+                    borderWidth: 1,
+                    borderStyle: 'dashed',
+                    borderColor: theme.colors.border.light,
+                    padding: theme.spacing.lg,
+                    marginBottom: theme.spacing.md,
+                    alignItems: 'center',
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name="schedule"
+                  size={48}
+                  color={theme.colors.primary.light}
+                />
                 <Text
                   style={[
-                    styles.infoText,
+                    styles.emptyText,
                     {
                       fontSize: theme.typography.fontSize.bodySmall,
-                      color: theme.colors.text.primary,
-                      marginBottom: theme.spacing.md,
+                      color: theme.colors.text.secondary,
+                      marginTop: theme.spacing.sm,
                     },
                   ]}
                 >
-                  고객에게 제안할 대체 상담 시간을 추가하세요.
+                  제안된 시간이 없습니다
                 </Text>
-
-                {/* Add Time Slot Button */}
-                <Button
-                  variant="secondary"
-                  title="시간 추가"
-                  onPress={() => setIsDatePickerVisible(true)}
-                  disabled={isSubmitting}
-                  icon="add"
-                  style={{ marginBottom: theme.spacing.md }}
-                />
-
-                {/* Suggested Slots List */}
-                {suggestedSlots.length > 0 ? (
-                  <View style={{ marginBottom: theme.spacing.md }}>
-                    <Text
-                      style={[
-                        styles.listTitle,
-                        {
-                          fontSize: theme.typography.fontSize.bodySmall,
-                          fontWeight: theme.typography.fontWeight.semiBold,
-                          color: theme.colors.primary.main,
-                          marginBottom: theme.spacing.xs,
-                        },
-                      ]}
-                    >
-                      제안된 시간 ({suggestedSlots.length})
-                    </Text>
-                    <FlatList
-                      data={suggestedSlots}
-                      renderItem={renderTimeSlot}
-                      keyExtractor={(item, index) => `slot-${index}`}
-                      scrollEnabled={false}
-                    />
-                  </View>
-                ) : (
-                  <View
-                    style={[
-                      styles.emptyState,
-                      {
-                        backgroundColor: theme.colors.background.secondary,
-                        borderRadius: theme.borderRadius.md,
-                        borderWidth: 1,
-                        borderStyle: 'dashed',
-                        borderColor: theme.colors.border.light,
-                        padding: theme.spacing.lg,
-                        marginBottom: theme.spacing.md,
-                        alignItems: 'center',
-                      },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name="schedule"
-                      size={48}
-                      color={theme.colors.primary.light}
-                    />
-                    <Text
-                      style={[
-                        styles.emptyText,
-                        {
-                          fontSize: theme.typography.fontSize.bodySmall,
-                          color: theme.colors.text.secondary,
-                          marginTop: theme.spacing.sm,
-                        },
-                      ]}
-                    >
-                      제안된 시간이 없습니다
-                    </Text>
-                  </View>
-                )}
-
-                {/* Action Buttons */}
-                <View style={styles.buttonRow}>
-                  <Button
-                    variant="secondary"
-                    title="취소"
-                    onPress={handleCancel}
-                    disabled={isSubmitting}
-                    style={{ flex: 1, marginRight: theme.spacing.sm }}
-                  />
-                  <Button
-                    variant="primary"
-                    title={isSubmitting ? '저장 중...' : '저장'}
-                    onPress={handleSubmit}
-                    disabled={isSubmitting}
-                    loading={isSubmitting}
-                    style={{ flex: 1, marginLeft: theme.spacing.sm }}
-                  />
-                </View>
-              </ScrollView>
-            </Card>
-
-            {/* Date Time Picker */}
-            {isDatePickerVisible && (
-              <DateTimePicker
-                value={pendingDate ?? selectedDate}
-                mode={pickerMode}
-                minimumDate={pickerMode === 'date' ? new Date() : undefined}
-                minuteInterval={10}
-                onChange={handlePickerChange}
-              />
+              </View>
             )}
-          </View>
-        </KeyboardAvoidingView>
+
+            {/* Action Buttons */}
+            <View style={styles.buttonRow}>
+              <Button
+                variant="secondary"
+                title="취소"
+                onPress={handleCancel}
+                disabled={isSubmitting}
+                style={{ flex: 1, marginRight: theme.spacing.sm }}
+              />
+              <Button
+                variant="primary"
+                title={isSubmitting ? '저장 중...' : '저장'}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                style={{ flex: 1, marginLeft: theme.spacing.sm }}
+              />
+            </View>
+          </ScrollView>
+        </Card>
+
+        {/* Date Time Picker */}
+        {isDatePickerVisible && (
+          <DateTimePicker
+            value={pendingDate ?? selectedDate}
+            mode={pickerMode}
+            minimumDate={pickerMode === 'date' ? new Date() : undefined}
+            minuteInterval={10}
+            onChange={handlePickerChange}
+          />
+        )}
       </View>
-    </Modal>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  keyboardAvoidingView: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
   modalContainer: {
     width: '100%',
     maxWidth: 400,

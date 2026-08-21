@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenX, paddingTop: 24, paddingBottom: 8,
   },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
-  title: { flex: 1, fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { flex: 1, fontSize: typography.fontSize.h2, fontWeight: '800', letterSpacing: -0.3 },
   statusChip: { marginTop: 4 },
   subModel: { fontSize: 14, marginTop: 6 },
   meta: { fontSize: 13, marginTop: 4 },

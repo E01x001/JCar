@@ -6,16 +6,13 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from 'react-native';
 import PropTypes from 'prop-types';
+import BaseModal from './BaseModal';
 import { useTheme } from '../../theme/ThemeProvider';
 import Card from '../Card';
 import InputField from '../InputField';
@@ -78,105 +75,78 @@ const RejectConsultationModal = ({ isVisible, onClose, onSubmit, consultationId 
   };
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleCancel}
-    >
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}
-          activeOpacity={1}
-          onPress={handleCancel}
-        />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
+    <BaseModal variant="center" visible={isVisible} onClose={handleCancel}>
+      <View style={styles.modalContainer}>
+        <Card
+          style={[
+            styles.modalCard,
+            {
+              backgroundColor: theme.colors.background.paper,
+              borderRadius: theme.borderRadius.lg,
+            },
+          ]}
         >
-          <View style={styles.modalContainer}>
-            <Card
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Header */}
+            <Text
               style={[
-                styles.modalCard,
+                styles.title,
                 {
-                  backgroundColor: theme.colors.background.paper,
-                  borderRadius: theme.borderRadius.lg,
+                  fontSize: theme.typography.fontSize.h3,
+                  fontWeight: theme.typography.fontWeight.bold,
+                  color: theme.colors.text.primary,
+                  marginBottom: theme.spacing.md,
                 },
               ]}
             >
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-              >
-                {/* Header */}
-                <Text
-                  style={[
-                    styles.title,
-                    {
-                      fontSize: theme.typography.fontSize.h3,
-                      fontWeight: theme.typography.fontWeight.bold,
-                      color: theme.colors.text.primary,
-                      marginBottom: theme.spacing.md,
-                    },
-                  ]}
-                >
-                  상담 거절
-                </Text>
+              상담 거절
+            </Text>
 
-                {/* Rejection Reason Input */}
-                <InputField
-                  label="거절 사유 *"
-                  value={rejectionReason}
-                  onChangeText={(text) => {
-                    setRejectionReason(text);
-                    setError('');
-                  }}
-                  placeholder="거절 사유를 입력하세요"
-                  multiline
-                  numberOfLines={4}
-                  error={error}
-                  style={{ marginBottom: theme.spacing.lg }}
-                  editable={!isSubmitting}
-                />
+            {/* Rejection Reason Input */}
+            <InputField
+              label="거절 사유 *"
+              value={rejectionReason}
+              onChangeText={(text) => {
+                setRejectionReason(text);
+                setError('');
+              }}
+              placeholder="거절 사유를 입력하세요"
+              multiline
+              numberOfLines={4}
+              error={error}
+              style={{ marginBottom: theme.spacing.lg }}
+              editable={!isSubmitting}
+            />
 
-                {/* Action Buttons */}
-                <View style={styles.buttonRow}>
-                  <Button
-                    variant="secondary"
-                    title="취소"
-                    onPress={handleCancel}
-                    disabled={isSubmitting}
-                    style={{ flex: 1, marginRight: theme.spacing.sm }}
-                  />
-                  <Button
-                    variant="danger"
-                    title={isSubmitting ? '처리 중...' : '거절'}
-                    onPress={handleSubmit}
-                    disabled={isSubmitting}
-                    loading={isSubmitting}
-                    style={{ flex: 1, marginLeft: theme.spacing.sm }}
-                  />
-                </View>
-              </ScrollView>
-            </Card>
-          </View>
-        </KeyboardAvoidingView>
+            {/* Action Buttons */}
+            <View style={styles.buttonRow}>
+              <Button
+                variant="secondary"
+                title="취소"
+                onPress={handleCancel}
+                disabled={isSubmitting}
+                style={{ flex: 1, marginRight: theme.spacing.sm }}
+              />
+              <Button
+                variant="danger"
+                title={isSubmitting ? '처리 중...' : '거절'}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                style={{ flex: 1, marginLeft: theme.spacing.sm }}
+              />
+            </View>
+          </ScrollView>
+        </Card>
       </View>
-    </Modal>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  keyboardAvoidingView: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
   modalContainer: {
     width: '100%',
     maxWidth: 400,

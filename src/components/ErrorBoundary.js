@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { getCrashlytics, recordError, log, setAttribute } from '../services/notification/firebaseNative';
+import { typography } from '../theme/typography';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -81,14 +82,14 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   title: {
-    fontSize: 24,
+    fontSize: typography.fontSize.h2,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 16,
     textAlign: 'center',
   },
   message: {
-    fontSize: 16,
+    fontSize: typography.fontSize.bodyLarge,
     color: '#666',
     textAlign: 'center',
     marginBottom: 32,

@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeProvider';
 import { spacing } from '../theme/spacing';
 import Button from '../components/Button';
+import { typography } from '../theme/typography';
 
 export const ONBOARDED_KEY = '@jcar/onboarded';
 
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
   pagerContent: { alignItems: 'stretch' },
   page: { flexGrow: 1, flexShrink: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
   illust: { width: 180, height: 180, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 42 },
-  title: { fontSize: 23, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
+  title: { fontSize: typography.fontSize.heroTitle, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
   desc: { fontSize: 14, lineHeight: 23, textAlign: 'center', marginTop: 14 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 7, marginBottom: 24 },
   dot: { width: 7, height: 7, borderRadius: 4 },

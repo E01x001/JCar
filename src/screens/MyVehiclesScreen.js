@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { fetchMyVehicles, subscribeVehicles } from '../services/vehicle/supabaseVehicleService';
 import { AuthContext } from '../context/AuthContext';
+import { typography } from '../theme/typography';
 
 const MyVehiclesScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -43,7 +44,7 @@ const MyVehiclesScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
+  title: { fontSize: typography.fontSize.heroTitle, fontWeight: 'bold', marginBottom: 10 },
   item: { padding: 12, borderBottomWidth: 1, borderColor: '#ccc' },
   name: { fontSize: 18, fontWeight: 'bold' },
 });

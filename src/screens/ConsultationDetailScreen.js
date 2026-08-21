@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { consultationRowToApp } from '../lib/mappers';
+import { typography } from '../theme/typography';
 
 const ConsultationDetailScreen = ({ route }) => {
   const { id } = route.params; // 상담 ID
@@ -61,7 +62,7 @@ const ConsultationDetailScreen = ({ route }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  title: { fontSize: typography.fontSize.h3, fontWeight: 'bold', marginBottom: 10 },
 });
 
 export default ConsultationDetailScreen;

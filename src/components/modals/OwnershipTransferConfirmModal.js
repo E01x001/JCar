@@ -6,7 +6,6 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
   View,
   Text,
   TouchableOpacity,
@@ -18,6 +17,7 @@ import PropTypes from 'prop-types';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../../theme/ThemeProvider';
 import Button from '../Button';
+import BaseModal from './BaseModal';
 
 /**
  * OwnershipTransferConfirmModal Component
@@ -88,19 +88,13 @@ const OwnershipTransferConfirmModal = ({
   };
 
   return (
-    <Modal
+    <BaseModal
+      variant="sheet"
       visible={isVisible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleCancel}
+      onClose={handleCancel}
+      avoidKeyboard={false}
+      backdropDisabled={isLoading}
     >
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, styles.dim]}
-          activeOpacity={1}
-          onPress={handleCancel}
-          disabled={isLoading}
-        />
         <View
           style={[
             styles.sheet,
@@ -423,19 +417,11 @@ const OwnershipTransferConfirmModal = ({
               </View>
           </ScrollView>
         </View>
-      </View>
-    </Modal>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  dim: {
-    backgroundColor: 'rgba(15, 22, 38, 0.55)',
-  },
   sheet: {
     width: '100%',
     maxHeight: '90%',
