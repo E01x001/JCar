@@ -122,3 +122,43 @@ Supabase가 구글과 직접 토큰 교환을 하며 **client secret이 필수**
 4. Supabase 대시보드 → Authentication → Providers → Google에 secret 입력
 
 secret은 자격증명이므로 저장소·마이그레이션·클라이언트 코드에 두지 않는다. 대시보드에서만 입력한다.
+
+---
+
+## [ISSUE-05] 가입 승인 시 사용자에게 알릴 방법이 없다 🟢
+
+**발견**: 2026-08-23 · **상태**: 보류(테스터 수 증가 시 처리) · **영향**: 승인 대기자의 재로그인 시점
+
+### 증상
+관리자가 사용자 관리 화면에서 `pending` 계정을 승인해도 **당사자에게 아무 통지가 가지 않는다.**
+사용자는 직접 다시 로그인해봐야 승인된 것을 안다.
+
+### 원인
+`AuthContext.applySession`이 차단 상태를 감지하면 **FCM 토큰을 저장하기 전에** 로그아웃시킨다.
+
+```js
+const isBlocked = profile?.status === 'suspended'
+  || profile?.status === 'pending'
+  || profile?.account_status === 'pending_deletion';
+if (isBlocked) { await signOutUser(); ... return; }   // ← 여기서 반환
+...
+saveFcmToken(authUser.id).catch(() => {});             // ← 여기까지 오지 못한다
+```
+
+즉 `pending` 계정에는 **저장된 FCM 토큰이 존재하지 않아** 승인 푸시를 보낼 대상이 없다.
+
+### 현재 완화
+로그아웃 시 안내를 정지와 구분해 띄운다 — "관리자 승인 후 이용할 수 있습니다.
+승인되면 다시 로그인해주세요." 테스터가 소수인 단계에서는 별도 연락으로 대체 가능하다.
+
+### 해제 절차 (미결정 사항 포함)
+1. `pending`에 한해 로그아웃 **직전에** 토큰을 저장한다.
+   - 판단 필요: 정지(`suspended`)·삭제대기와 같은 취급을 할 것인가?
+     정지 계정에 토큰을 남기는 것은 바람직하지 않으므로 `pending`만 예외로 두는 편이 맞다.
+2. `profiles.status`가 `pending → active`로 바뀔 때 `notifications`에 행을 넣는 트리거 추가.
+   (알림 허브에 넣으면 푸시 디스패치는 기존 경로가 처리한다)
+3. 알림 종류 `signup_approved`를 `src/constants/notification.js`에 등록.
+
+### 관련
+- 가입 승인제 도입: `supabase/migrations/20260822140000_signup_approval_gate.sql`
+- 승인 UI: `src/screens/AdminUserManagementScreen.js`
