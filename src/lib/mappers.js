@@ -73,5 +73,10 @@ export const consultationRowToApp = (row) => {
     ...c,
     // 기존 화면은 preferredTime을 'HH:MM' 문자열로 기대 — time 타입은 'HH:MM:SS'로 옴
     preferredTime: typeof c.preferredTime === 'string' ? c.preferredTime.slice(0, 5) : c.preferredTime,
+    // jsonb 컬럼은 값이 없으면 null로 온다. 화면들은 배열로 기대하고
+    // `alternativeSlots = []` 같은 구조분해 기본값을 쓰는데, 기본값은 undefined에만
+    // 적용되므로 null이 그대로 통과해 `.length`에서 터진다(관리자 상담관리 화면 크래시).
+    // 경계에서 한 번 정규화해 모든 소비자가 배열을 보장받게 한다.
+    alternativeSlots: Array.isArray(c.alternativeSlots) ? c.alternativeSlots : [],
   };
 };

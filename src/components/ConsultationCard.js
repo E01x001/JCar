@@ -70,8 +70,13 @@ const ConsultationCard = ({
     preferredTime,
     type,
     adminMemo = '',
-    alternativeSlots = [],
   } = consultation;
+
+  // null 방어: 매퍼가 정규화하지만, 매퍼를 거치지 않고 들어오는 경로도 있다.
+  // 구조분해 기본값은 undefined에만 적용돼 null을 막지 못한다.
+  const alternativeSlots = Array.isArray(consultation.alternativeSlots)
+    ? consultation.alternativeSlots
+    : [];
 
   // Task 61: Use optimistic status if available, otherwise use actual status
   const displayStatus = optimisticStatus || consultationStatus;
