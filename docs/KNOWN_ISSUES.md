@@ -162,3 +162,75 @@ saveFcmToken(authUser.id).catch(() => {});             // ← 여기까지 오�
 ### 관련
 - 가입 승인제 도입: `supabase/migrations/20260822140000_signup_approval_gate.sql`
 - 승인 UI: `src/screens/AdminUserManagementScreen.js`
+
+---
+
+## [ISSUE-06] 관리자가 앱에 들어가지 못하면 승인 경로가 통째로 막힌다 🟡
+
+**발견**: 2026-08-23 · **상태**: 운영 절차로 완화(코드 변경 없음) · **영향**: 가입 승인 전체
+
+### 무슨 일이 있었나
+가입 승인제 도입 직후 "관리자 계정이 하나도 없다"는 상황이 발생했다.
+실제로는 `jinyong04@naver.com`이 `role=admin`·`status=active`로 멀쩡히 존재했으나
+**`profile_completed = false`** 라 로그인하면 `AppNavigator`가 관리자 탭 대신
+프로필 완성 화면으로 보낸다. 관리자에게도 예외를 두지 않기 때문이다.
+
+```js
+if (user && !profileCompleted) {          // ← 관리자도 여기서 걸린다
+  return <Stack.Screen name="ProfileCompletion" ... />;
+}
+```
+
+승인은 관리자 화면에서만 할 수 있으므로 **관리자가 앱에 못 들어가면 아무도
+승인할 수 없다.** 승인제 도입으로 이 의존이 처음으로 치명적이 됐다.
+
+### SQL 편집기에서 RPC가 막히는 것은 정상이다
+```
+ERROR: P0001: forbidden
+HINT: 관리자만 사용할 수 있습니다.
+CONTEXT: PL/pgSQL function public.allow_signup_email(text,text)
+```
+`allow_signup_email`은 `app_private.is_admin()`으로 호출자를 확인하는데,
+SQL 편집기에는 `auth.uid()`가 없어 **판정 대상 자체가 없다.** 이 RPC는
+앱의 관리자 세션 전용이다. 편집기용으로 완화해서는 안 된다.
+
+### 비상 경로 (break-glass)
+편집기는 이미 DB 전권을 가지므로 RPC를 거칠 이유가 없다.
+`guard_profile_update`도 `auth.uid()`가 null이면 그대로 통과시킨다.
+
+```sql
+-- 대기 계정 승인
+update public.profiles
+   set status = 'active', status_updated_at = now()
+ where email = '<주소>';
+
+-- 봇 차단 (되돌릴 수 있다)
+update public.profiles
+   set status = 'suspended', status_updated_at = now()
+ where email = '<주소>';
+
+-- 관리자 지정
+update public.profiles
+   set role = 'admin', status_updated_at = now()
+ where email = '<주소>';
+
+-- 가입 전에 미리 허용 (가입 즉시 active로 들어온다)
+insert into app_private.signup_allowlist (email, note)
+values (lower('<주소>'), '<메모>')
+on conflict (email) do nothing;
+```
+
+> 관리자로 지정해도 `profile_completed`가 false면 여전히 프로필 완성 화면에
+> 걸린다. 앱에서 이름·전화번호를 입력해야 관리자 탭이 열린다.
+> 전화번호는 UNIQUE라 DB에서 임의 값으로 채우면 나중에 실제 번호와 충돌한다.
+
+### 근본 해결 (미결정)
+관리자를 프로필 완성 게이팅에서 제외할지 여부. 현재는 "관리자도 연락처는
+동일하게 필요하다"는 판단으로 예외를 두지 않았다(`AppNavigator` 주석 참고).
+그 판단을 유지한다면 최소한 **관리자 최초 생성 시 프로필을 함께 채우는 절차**가
+있어야 같은 일이 반복되지 않는다.
+
+### 관련
+- 가입 승인제: `supabase/migrations/20260822140000_signup_approval_gate.sql`
+- 승인 UI: `src/screens/AdminUserManagementScreen.js`
+- 승인 통지 부재: ISSUE-05
