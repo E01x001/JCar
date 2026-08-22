@@ -39,16 +39,29 @@ export const AuthProvider = ({ children }) => {
       try {
         const profile = await getMyProfile(authUser.id);
 
-        // 계정 정지/삭제대기 체크 — 30일 유예 중 계정도 로그인 차단(리뷰 반영)
-        if (profile?.status === 'suspended' || profile?.account_status === 'pending_deletion') {
+        // 계정 정지/승인대기/삭제대기 체크 — 30일 유예 중 계정도 로그인 차단(리뷰 반영)
+        //
+        // 승인 대기(pending)는 가입 승인제 때문에 생긴 상태다. 정지와 달리 "잘못한 것"이
+        // 아니므로 문구를 나눈다. 실제 권한 차단은 DB의 is_active_user()가 하고,
+        // 여기서는 안내와 함께 세션을 정리한다.
+        const isBlocked = profile?.status === 'suspended'
+          || profile?.status === 'pending'
+          || profile?.account_status === 'pending_deletion';
+
+        if (isBlocked) {
           const isPendingDeletion = profile?.account_status === 'pending_deletion';
+          const isAwaitingApproval = profile?.status === 'pending';
           await signOutUser();
           Toast.show({
-            type: 'error',
-            text1: isPendingDeletion ? '삭제 대기 중인 계정' : '계정 정지',
+            type: isAwaitingApproval ? 'info' : 'error',
+            text1: isPendingDeletion
+              ? '삭제 대기 중인 계정'
+              : isAwaitingApproval ? '가입 승인 대기 중' : '계정 정지',
             text2: isPendingDeletion
               ? '탈퇴 처리된 계정입니다. 복구를 원하시면 고객센터로 문의해주세요.'
-              : '귀하의 계정이 정지되었습니다. 관리자에게 문의하세요.',
+              : isAwaitingApproval
+                ? '관리자 승인 후 이용할 수 있습니다. 승인되면 다시 로그인해주세요.'
+                : '귀하의 계정이 정지되었습니다. 관리자에게 문의하세요.',
             position: 'top',
             visibilityTime: 5000,
           });

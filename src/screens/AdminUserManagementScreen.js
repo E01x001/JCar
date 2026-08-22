@@ -47,7 +47,10 @@ const AdminUserManagementScreen = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) { throw error; }
-      const usersData = data.map(rowToApp);
+      // 승인 대기를 맨 위로. 방치하면 정상 사용자가 못 들어온 채로 남는다.
+      const usersData = data
+        .map(rowToApp)
+        .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1));
       setUsers(usersData);
       setFilteredUsers(usersData);
     } catch (error) {
@@ -85,8 +88,12 @@ const AdminUserManagementScreen = () => {
       return;
     }
 
-    const newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
-    const actionText = newStatus === 'suspended' ? '정지' : '활성화';
+    // status는 세 가지다: active / pending(가입 승인 대기) / suspended.
+    // 스위치는 "이용 가능한가"만 나타내므로 active가 아니면 전부 켜는 쪽으로 간다.
+    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+    const actionText = newStatus === 'suspended'
+      ? '정지'
+      : currentStatus === 'pending' ? '승인' : '활성화';
 
     Alert.alert(
       `계정 ${actionText} 확인`,
@@ -114,7 +121,9 @@ const AdminUserManagementScreen = () => {
                 .from('admin_activity_log')
                 .insert({
                   admin_id: currentUser?.uid,
-                  action: newStatus === 'suspended' ? 'suspend_user' : 'activate_user',
+                  action: newStatus === 'suspended'
+                    ? 'suspend_user'
+                    : currentStatus === 'pending' ? 'approve_signup' : 'activate_user',
                   target_user_id: userId,
                   target_user_name: userName,
                   previous_status: currentStatus || 'active',
@@ -148,6 +157,7 @@ const AdminUserManagementScreen = () => {
     const isAdmin = item.role === 'admin';
     const isUpdating = updatingUserId === item.id;
     const isSuspended = item.status === 'suspended';
+    const isPending = item.status === 'pending';
 
     return (
       <Card elevated style={styles.userCard}>
@@ -167,8 +177,8 @@ const AdminUserManagementScreen = () => {
           </Text>
           <Badge
             variant="chip"
-            status={isSuspended ? 'rejected' : 'approved'}
-            label={isSuspended ? '정지됨' : '활성'}
+            status={isSuspended ? 'rejected' : isPending ? 'pending' : 'approved'}
+            label={isSuspended ? '정지됨' : isPending ? '승인 대기' : '활성'}
             style={styles.statusChip}
           />
         </View>
@@ -178,7 +188,7 @@ const AdminUserManagementScreen = () => {
             <ActivityIndicator size="small" color={theme.colors.primary.main} />
           ) : (
             <Switch
-              value={!isSuspended}
+              value={item.status === 'active'}
               onValueChange={() => handleToggleUserStatus(item.id, item.status, item.name)}
               trackColor={{ false: theme.colors.danger.main, true: theme.colors.success.main }}
               thumbColor={theme.colors.neutral.white}

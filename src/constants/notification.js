@@ -18,6 +18,9 @@ export const NOTIFICATION_TYPE = {
   ALTERNATIVE_SLOTS_SUGGESTED: 'alternative_slots_suggested',
   VEHICLE_APPROVED: 'vehicle_approved',
   VEHICLE_REJECTED: 'vehicle_rejected',
+  SIGNUP_PENDING: 'signup_pending',
+  SIGNUP_BLOCKED: 'signup_blocked',
+  SIGNUP_SPIKE: 'signup_spike',
 };
 
 /** MaterialIcons 이름 */
@@ -28,6 +31,9 @@ const ICONS = {
   [NOTIFICATION_TYPE.ALTERNATIVE_SLOTS_SUGGESTED]: 'schedule',
   [NOTIFICATION_TYPE.VEHICLE_APPROVED]: 'directions-car',
   [NOTIFICATION_TYPE.VEHICLE_REJECTED]: 'no-crash',
+  [NOTIFICATION_TYPE.SIGNUP_PENDING]: 'person-add',
+  [NOTIFICATION_TYPE.SIGNUP_BLOCKED]: 'shield',
+  [NOTIFICATION_TYPE.SIGNUP_SPIKE]: 'trending-up',
 };
 
 /** 색 톤 — theme.colors의 어떤 갈래를 쓸지 */
@@ -38,6 +44,9 @@ const TONES = {
   [NOTIFICATION_TYPE.ALTERNATIVE_SLOTS_SUGGESTED]: 'warning',
   [NOTIFICATION_TYPE.VEHICLE_APPROVED]: 'success',
   [NOTIFICATION_TYPE.VEHICLE_REJECTED]: 'error',
+  [NOTIFICATION_TYPE.SIGNUP_PENDING]: 'warning',
+  [NOTIFICATION_TYPE.SIGNUP_BLOCKED]: 'error',
+  [NOTIFICATION_TYPE.SIGNUP_SPIKE]: 'warning',
 };
 
 export const DEFAULT_ICON = 'notifications';
