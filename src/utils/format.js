@@ -83,3 +83,28 @@ export const formatRelativeTime = (date, now = Date.now()) => {
 
   return formatDate(d);
 };
+
+/**
+ * 접수 후 얼마나 지났는지 — 관리자 화면의 "무엇이 급한가" 신호.
+ *
+ * formatRelativeTime과 다르다. 저쪽은 "언제 있었나"(3일 전)를 말하고,
+ * 이쪽은 "얼마나 방치됐나"(3일 대기)를 말한다. 같은 값이지만 읽는 사람의
+ * 질문이 다르고, 관리자 목록은 후자를 묻는다.
+ *
+ * 하루 미만은 대기로 치지 않는다 — 당일 접수를 재촉으로 표시하면
+ * 정작 오래된 건이 묻힌다. 그 경우 null을 돌려주고 화면은 아무것도 그리지 않는다.
+ *
+ * @param {Date|number|string} date - 접수 시각
+ * @param {Date|number} [now=Date.now()] - 기준 시각(테스트 주입용)
+ * @returns {string|null} '2일 대기' 또는 null
+ */
+export const formatWaiting = (date, now = Date.now()) => {
+  if (!date) { return null; }
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) { return null; }
+
+  const diffMs = (now instanceof Date ? now.getTime() : now) - d.getTime();
+  const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  if (days < 1) { return null; }
+  return `${days}일 대기`;
+};

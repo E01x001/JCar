@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'IBM Plex Sans KR', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+    a { color: #2B4593; } a:hover { color: #1A2B5C; }
+    * { box-sizing: border-box; }
+    .num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #F8F9FA; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 20px 22px 0; display: flex; align-items: center; justify-content: space-between">
+    <div style="font-size: 15px; font-weight: 600; color: #6C757D; letter-spacing: 0.02em">사용자</div>
+    <div style="display: flex; gap: 6px">
+      <div style="width: 34px; height: 34px; border-radius: 17px; background: #FFFFFF; border: 1px solid #E9ECEF; display: flex; align-items: center; justify-content: center">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6C757D" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 3.5 3.5"/></svg>
+      </div>
+      <div style="width: 34px; height: 34px; border-radius: 17px; background: #FFFFFF; border: 1px solid #E9ECEF; display: flex; align-items: center; justify-content: center">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6C757D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12M6 12h12"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 12px 22px 20px">
+    <div style="display: flex; align-items: flex-end; gap: 10px">
+      <div class="num" style="font-size: 64px; font-weight: 700; color: #212529; line-height: 0.86">1</div>
+      <div style="padding-bottom: 6px; display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 16px; font-weight: 700; color: #212529">명이 승인을 기다립니다</div>
+        <div style="font-size: 13px; color: #6C757D">승인 전에는 아무것도 할 수 없습니다</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1; padding: 0 22px; display: flex; flex-direction: column; gap: 18px; overflow: hidden">
+
+    <!-- 승인 대기 — 결정이 필요한 것만 위로 떼어낸다 -->
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 12px; font-weight: 600; color: #6C757D; letter-spacing: 0.04em">승인 대기</div>
+
+      <div style="background: #FFFFFF; border-radius: 18px; display: flex; overflow: hidden; box-shadow: 0 3px 18px rgba(26,43,92,0.08)">
+        <div style="width: 4px; background: #C77700; flex-shrink: 0"></div>
+        <div style="flex-grow: 1; min-width: 0; padding: 16px 18px 16px 16px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; align-items: center; gap: 13px">
+            <div style="width: 42px; height: 42px; border-radius: 21px; background: #F1F3F5; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #6C757D">이</div>
+            <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+              <div style="font-size: 16px; font-weight: 700; color: #212529">이유신</div>
+              <div style="font-size: 12px; color: #6C757D">jyjeong09876@gmail.com</div>
+            </div>
+            <div class="num" style="font-size: 11px; font-weight: 600; color: #C77700; flex-shrink: 0">1일 대기</div>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <div style="flex: 1; height: 44px; border-radius: 14px; background: #2B4593; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #FFFFFF">승인</div>
+            <div style="flex: 1; height: 44px; border-radius: 14px; background: #FCE9EB; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #B02A37">차단</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이용 중 — 결정이 끝난 사람들. 조용한 목록 -->
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <div style="font-size: 12px; font-weight: 600; color: #6C757D; letter-spacing: 0.04em">이용 중</div>
+        <div class="num" style="font-size: 12px; color: #ADB5BD">4명</div>
+      </div>
+
+      <div style="background: #FFFFFF; border-radius: 18px; box-shadow: 0 3px 18px rgba(26,43,92,0.08); overflow: hidden">
+
+        <div style="padding: 14px 18px; display: flex; align-items: center; gap: 13px; border-bottom: 1px solid #E9ECEF">
+          <div style="width: 38px; height: 38px; border-radius: 19px; background: #F1F3F5; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #6C757D">동</div>
+          <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <div style="font-size: 15px; font-weight: 600; color: #212529">동유진</div>
+            <div class="num" style="font-size: 12px; color: #6C757D">010-5555-5555</div>
+          </div>
+          <div style="width: 46px; height: 27px; border-radius: 14px; background: #2B4593; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; padding: 2px">
+            <div style="width: 23px; height: 23px; border-radius: 12px; background: #FFFFFF"></div>
+          </div>
+        </div>
+
+        <div style="padding: 14px 18px; display: flex; align-items: center; gap: 13px; border-bottom: 1px solid #E9ECEF">
+          <div style="width: 38px; height: 38px; border-radius: 19px; background: #2B4593; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #FFFFFF">진</div>
+          <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <div style="display: flex; align-items: center; gap: 7px">
+              <div style="font-size: 15px; font-weight: 600; color: #212529">진용</div>
+              <div style="font-size: 10px; font-weight: 600; color: #2B4593; background: #EEF1FA; border-radius: 5px; padding: 2px 6px">관리자</div>
+            </div>
+            <div style="font-size: 12px; color: #6C757D">jinyong04@naver.com</div>
+          </div>
+          <div style="width: 46px; height: 27px; border-radius: 14px; background: #DEE2E6; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; padding: 2px">
+            <div style="width: 23px; height: 23px; border-radius: 12px; background: #FFFFFF"></div>
+          </div>
+        </div>
+
+        <div style="padding: 14px 18px; display: flex; align-items: center; gap: 13px">
+          <div style="width: 38px; height: 38px; border-radius: 19px; background: #F1F3F5; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #6C757D">김</div>
+          <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <div style="font-size: 15px; font-weight: 600; color: #212529">김서현</div>
+            <div class="num" style="font-size: 12px; color: #6C757D">010-2211-8890</div>
+          </div>
+          <div style="width: 46px; height: 27px; border-radius: 14px; background: #2B4593; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; padding: 2px">
+            <div style="width: 23px; height: 23px; border-radius: 12px; background: #FFFFFF"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 차단됨 — 접어둔다. 21명이 목록을 잡아먹을 이유가 없다 -->
+    <div style="background: transparent; border: 1px solid #E1E5EA; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; gap: 10px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ADB5BD" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="m6.5 6.5 11 11"/></svg>
+      <div style="flex-grow: 1; font-size: 13px; font-weight: 500; color: #6C757D">차단된 계정 <span class="num" style="font-weight: 700; color: #212529">21</span></div>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ADB5BD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6 15 12l-5.5 6"/></svg>
+    </div>
+
+  </div>
+
+  <div style="background: #FFFFFF; border-top: 1px solid #E9ECEF; display: flex; padding: 10px 0 24px; margin-top: 14px">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#ADB5BD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 13.5 6.2 8a2 2 0 0 1 1.9-1.4h7.8A2 2 0 0 1 17.8 8l1.7 5.5"/><path d="M4.5 13.5h15v4h-15z"/><circle cx="8" cy="17.5" r="1.2"/><circle cx="16" cy="17.5" r="1.2"/></svg>
+      <div style="font-size: 10px; font-weight: 500; color: #ADB5BD">차량</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <div style="position: relative; display: flex">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#ADB5BD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7 7 0 0 1-7 7H8l-4 2.5.9-3.6A7 7 0 0 1 13 5.5a7 7 0 0 1 7 7z"/></svg>
+        <div style="position: absolute; top: -3px; right: -6px; min-width: 15px; height: 15px; border-radius: 8px; background: #2B4593; display: flex; align-items: center; justify-content: center; padding: 0 4px">
+          <div class="num" style="font-size: 10px; font-weight: 700; color: #FFFFFF">1</div>
+        </div>
+      </div>
+      <div style="font-size: 10px; font-weight: 500; color: #ADB5BD">상담</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#ADB5BD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>
+      <div style="font-size: 10px; font-weight: 500; color: #ADB5BD">일정</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <div style="position: relative; display: flex">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2B4593" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.2"/><path d="M15 14.2c2.6-.5 5.5 1 5.5 4.8"/></svg>
+        <div style="position: absolute; top: -3px; right: -6px; min-width: 15px; height: 15px; border-radius: 8px; background: #2B4593; display: flex; align-items: center; justify-content: center; padding: 0 4px">
+          <div class="num" style="font-size: 10px; font-weight: 700; color: #FFFFFF">1</div>
+        </div>
+      </div>
+      <div style="font-size: 10px; font-weight: 700; color: #212529">사용자</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#ADB5BD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5 6.5v5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9v-5z"/><path d="M9.5 12.2l1.8 1.8 3.4-3.6"/></svg>
+      <div style="font-size: 10px; font-weight: 500; color: #ADB5BD">관리자</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

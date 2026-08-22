@@ -171,3 +171,12 @@ package.json.rn-backup
 dist-verify/
 
 .vercel
+
+# 관리자 UI 작업 중 만든 임시 점검 파일
+_ui.json
+_ui_email
+_ui_pw
+_web.log
+design/_extract/
+design/admin-ui/*.html
+!design/admin-ui/*.dc.html

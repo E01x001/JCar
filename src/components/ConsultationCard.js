@@ -10,14 +10,12 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import PropTypes from 'prop-types';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
-import { formatPhone } from '../utils/format';
+import { formatPhone, formatWaiting } from '../utils/format';
 import { updateConsultationStatus, completeConsultation, updateAdminMemo, updateSuggestedSlots } from '../services/consultation/consultationService';
 import { useToast } from '../hooks/useToast';
 import { CONSULTATION_STATUS } from '../constants';
 import { AuthContext } from '../context/AuthContext';
-import Card from './Card';
-import Badge from './Badge';
-import Button from './Button';
+import SpineCard from './admin/SpineCard';
 import CompleteDealModal from './modals/CompleteDealModal';
 import RejectConsultationModal from './modals/RejectConsultationModal';
 import AdminMemoModal from './modals/AdminMemoModal';
@@ -70,6 +68,7 @@ const ConsultationCard = ({
     preferredTime,
     type,
     adminMemo = '',
+    createdAt,
   } = consultation;
 
   // null 방어: 매퍼가 정규화하지만, 매퍼를 거치지 않고 들어오는 경로도 있다.
@@ -80,6 +79,32 @@ const ConsultationCard = ({
 
   // Task 61: Use optimistic status if available, otherwise use actual status
   const displayStatus = optimisticStatus || consultationStatus;
+
+  // 접수 후 경과 — 하루 미만이면 null이라 아무것도 그리지 않는다
+  const waiting = formatWaiting(createdAt);
+
+  const STATUS_LABEL = {
+    pending: '대기중',
+    'on-hold': '보류',
+    approved: '승인됨',
+    confirmed: '승인됨',
+    meeting: '상담중',
+    rejected: '거절됨',
+    completed: '완료',
+    archived: '보관됨',
+    cancelled: '취소됨',
+  };
+  const CHIP_FOR = {
+    pending: 'pending',
+    'on-hold': 'pending',
+    approved: 'approved',
+    confirmed: 'approved',
+    meeting: 'approved',
+    rejected: 'rejected',
+    completed: 'completed',
+  };
+  const statusLabel = STATUS_LABEL[displayStatus] || displayStatus;
+  const statusTone = theme.colors.statusChip[CHIP_FOR[displayStatus] || 'neutral'].fg;
 
   /**
    * Handle status update with loading state and error handling
@@ -257,10 +282,14 @@ const ConsultationCard = ({
     }
   };
 
-  // Render action buttons based on consultationStatus
-  // Task 61: Use displayStatus to show optimistic UI updates
+  /**
+   * 액션 — 주 동작 하나만 채우고 나머지는 아이콘으로 뺀다.
+   *
+   * 예전에는 채결·보류·거절 셋이 flex:1에 좌우 margin까지 붙어 같은 무게로
+   * 나란히 있었다. 폭 계산이 어긋나 카드 밖으로 넘쳤고("거절"이 잘렸다),
+   * 무엇을 눌러야 하는지도 알 수 없었다. gap 기반 배치로 바꾸고 위계를 준다.
+   */
   const renderActionButtons = () => {
-    // Show loading indicator if updating (during server transaction)
     if (isUpdating) {
       return (
         <View style={[styles.loadingContainer, { marginTop: theme.spacing.md }]}>
@@ -281,58 +310,74 @@ const ConsultationCard = ({
       );
     }
 
-    if (displayStatus === CONSULTATION_STATUS.PENDING) {
-      return (
-        <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
-          <Button
-            variant="success"
-            title="채결"
-            onPress={handleCompleteButtonPress}
-            disabled={isUpdating}
-            style={{ flex: 1, marginRight: theme.spacing.xs }}
-          />
-          <Button
-            variant="secondary"
-            title="보류"
+    const isPending = displayStatus === CONSULTATION_STATUS.PENDING;
+    const isOnHold = displayStatus === CONSULTATION_STATUS.ON_HOLD;
+    if (!isPending && !isOnHold) { return null; }
+
+    return (
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          onPress={handleCompleteButtonPress}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="채결"
+          style={[styles.primaryAction, { backgroundColor: theme.colors.primary.main }]}
+        >
+          <Text style={[styles.primaryActionText, { color: theme.colors.text.white }]}>채결</Text>
+        </TouchableOpacity>
+
+        {/* 보류는 pending에서만 의미가 있다 — 이미 보류 중이면 숨긴다 */}
+        {isPending ? (
+          <TouchableOpacity
             onPress={() => handleStatusUpdate(CONSULTATION_STATUS.ON_HOLD)}
-            disabled={isUpdating}
-            style={{ flex: 1, marginHorizontal: theme.spacing.xs }}
-          />
-          <Button
-            variant="danger"
-            title="거절"
-            onPress={handleRejectButtonPress}
-            disabled={isUpdating}
-            style={{ flex: 1, marginLeft: theme.spacing.xs }}
-          />
-        </View>
-      );
-    }
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="보류"
+            style={[styles.iconAction, { borderColor: theme.colors.border.subtle }]}
+          >
+            <MaterialIcons name="schedule" size={19} color={theme.colors.text.secondary} />
+          </TouchableOpacity>
+        ) : null}
 
-    if (displayStatus === CONSULTATION_STATUS.ON_HOLD) {
-      return (
-        <View style={[styles.buttonRow, { marginTop: theme.spacing.md }]}>
-          <Button
-            variant="success"
-            title="채결"
-            onPress={handleCompleteButtonPress}
-            disabled={isUpdating}
-            style={{ flex: 1, marginRight: theme.spacing.xs }}
+        <TouchableOpacity
+          onPress={handleMemoButtonPress}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={adminMemo ? '관리자 메모 보기' : '관리자 메모 추가'}
+          style={[styles.iconAction, { borderColor: theme.colors.border.subtle }]}
+        >
+          <MaterialIcons
+            name={adminMemo ? 'note' : 'note-add'}
+            size={19}
+            color={adminMemo ? theme.colors.primary.main : theme.colors.text.secondary}
           />
-          <Button
-            variant="danger"
-            title="거절"
-            onPress={handleRejectButtonPress}
-            disabled={isUpdating}
-            style={{ flex: 1, marginLeft: theme.spacing.xs }}
-          />
-        </View>
-      );
-    }
+        </TouchableOpacity>
 
-    // No buttons for 'confirmed', 'rejected', 'completed'
-    // Task 61: When optimistic status is 'completed', hide action buttons immediately
-    return null;
+        <TouchableOpacity
+          onPress={handleSuggestTimesButtonPress}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="대체 일정 제안"
+          style={[styles.iconAction, { borderColor: theme.colors.border.subtle }]}
+        >
+          <MaterialIcons
+            name="event-repeat"
+            size={19}
+            color={alternativeSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.secondary}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleRejectButtonPress}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="거절"
+          style={[styles.iconAction, { backgroundColor: theme.colors.statusChip.rejected.bg }]}
+        >
+          <MaterialIcons name="close" size={19} color={theme.colors.danger.main} />
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   const handleCardPress = () => {
@@ -343,104 +388,56 @@ const ConsultationCard = ({
 
   return (
     <>
-      <TouchableOpacity
-        onPress={handleCardPress}
-        activeOpacity={onNavigateToVehicle ? 0.7 : 1}
-        disabled={!onNavigateToVehicle}
+      <SpineCard
+        status={displayStatus}
+        onPress={onNavigateToVehicle && vehicleId ? handleCardPress : undefined}
+        style={[{ marginBottom: theme.spacing.sm }, style]}
       >
-        <Card elevated style={[{ marginBottom: theme.spacing.sm }, style]}>
-          {/* Header: Badge + User Name + Memo Icon */}
-          <View style={styles.header}>
-            <Badge variant="chip" status={displayStatus} />
-            <Text
-              style={[
-                styles.userName,
-                {
-                  fontSize: theme.typography.fontSize.body,
-                  fontWeight: theme.typography.fontWeight.semiBold,
-                  color: theme.colors.text.primary,
-                  flex: 1,
-                },
-              ]}
-            >
-              {userName}
+        {/* 이름 · 유형 · 차량 / 오른쪽에 일정과 대기 기간 */}
+        <View style={styles.topRow}>
+          <View style={styles.identity}>
+            <View style={styles.nameRow}>
+              <Text
+                style={[styles.userName, { color: theme.colors.text.primary }]}
+                numberOfLines={1}
+              >
+                {userName}
+              </Text>
+              {type ? (
+                <View style={[styles.typeTag, { backgroundColor: theme.colors.tag.neutral.bg }]}>
+                  <Text style={[styles.typeTagText, { color: theme.colors.tag.neutral.fg }]}>
+                    {type === 'sell' ? '판매' : '구매'}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <Text style={[styles.vehicleName, { color: theme.colors.text.secondary }]} numberOfLines={1}>
+              {vehicleName}
             </Text>
-            {/* Admin Memo Icon Button */}
-            <TouchableOpacity
-              onPress={handleMemoButtonPress}
-              disabled={isUpdating}
-              activeOpacity={0.6}
-              style={{
-                padding: theme.spacing.xs,
-                marginLeft: theme.spacing.sm,
-              }}
-            >
-              <MaterialIcons
-                name={adminMemo ? 'note' : 'note-add'}
-                size={24}
-                color={adminMemo ? theme.colors.primary.main : theme.colors.text.tertiary}
-              />
-            </TouchableOpacity>
-
-            {/* Suggest Alternative Times Icon Button */}
-            <TouchableOpacity
-              onPress={handleSuggestTimesButtonPress}
-              disabled={isUpdating}
-              activeOpacity={0.6}
-              style={{
-                padding: theme.spacing.xs,
-              }}
-            >
-              <MaterialIcons
-                name={alternativeSlots.length > 0 ? 'schedule' : 'schedule-send'}
-                size={24}
-                color={alternativeSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.tertiary}
-              />
-            </TouchableOpacity>
           </View>
 
-          {/* Consultation Details */}
-          <Text
-            style={[
-              styles.infoText,
-              {
-                fontSize: theme.typography.fontSize.bodySmall,
-                color: theme.colors.text.secondary,
-                marginTop: theme.spacing.xs,
-              },
-            ]}
-          >
-            전화번호: {formatPhone(userPhone)}
-          </Text>
+          <View style={styles.meta}>
+            <Text style={[styles.schedule, { color: theme.colors.text.primary }]}>
+              {preferredDate} {preferredTime}
+            </Text>
+            {/* 대기 기간이 있으면 그것을, 없으면 상태를 말한다.
+                "무엇이 급한가"가 목록을 훑는 유일한 이유다. */}
+            {waiting && displayStatus === CONSULTATION_STATUS.PENDING ? (
+              <Text style={[styles.waiting, { color: theme.colors.statusChip.pending.fg }]}>
+                {waiting}
+              </Text>
+            ) : (
+              <Text style={[styles.waiting, { color: statusTone }]}>{statusLabel}</Text>
+            )}
+          </View>
+        </View>
 
-          <Text
-            style={[
-              styles.infoText,
-              {
-                fontSize: theme.typography.fontSize.bodySmall,
-                color: theme.colors.text.secondary,
-              },
-            ]}
-          >
-            차량명: {vehicleName}
-          </Text>
+        <Text style={[styles.phone, { color: theme.colors.text.secondary }]}>
+          {formatPhone(userPhone)}
+        </Text>
 
-          <Text
-            style={[
-              styles.infoText,
-              {
-                fontSize: theme.typography.fontSize.bodySmall,
-                color: theme.colors.text.secondary,
-              },
-            ]}
-          >
-            상담 일정: {preferredDate} {preferredTime}
-          </Text>
-
-          {/* Action Buttons */}
-          {renderActionButtons()}
-        </Card>
-      </TouchableOpacity>
+        {renderActionButtons()}
+      </SpineCard>
 
       {/* Complete Deal Modal */}
       <CompleteDealModal
@@ -481,16 +478,39 @@ const ConsultationCard = ({
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
+  topRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  identity: { flex: 1, minWidth: 0, gap: 5 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  userName: { fontSize: 17, fontWeight: '700', flexShrink: 1 },
+  typeTag: { borderRadius: 5, paddingVertical: 2, paddingHorizontal: 6 },
+  typeTagText: { fontSize: 11, fontWeight: '600' },
+  vehicleName: { fontSize: 13 },
+  meta: { alignItems: 'flex-end', gap: 3 },
+  schedule: { fontSize: 14, fontWeight: '700' },
+  waiting: { fontSize: 11, fontWeight: '600' },
+  phone: { fontSize: 13, marginTop: 10 },
+
+  // 액션 — margin이 아니라 gap으로 띄운다. margin은 flex:1과 합쳐지면
+  // 폭 계산이 어긋나 카드 밖으로 넘친다(예전 버그).
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
+  primaryAction: {
+    flex: 1,
+    height: 46,
+    borderRadius: 14,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
   },
-  userName: {},
-  infoText: {},
-  buttonRow: {
-    flexDirection: 'row',
+  primaryActionText: { fontSize: 14, fontWeight: '600' },
+  iconAction: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',

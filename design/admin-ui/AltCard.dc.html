@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'IBM Plex Sans KR', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+    a { color: #2B4593; } a:hover { color: #16265C; }
+    * { box-sizing: border-box; }
+    .serif { font-family: 'Gowun Batang', 'Apple SD Gothic Neo', serif; }
+    .num { font-variant-numeric: tabular-nums; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #FFFDF9; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 24px 26px 0; display: flex; align-items: center; justify-content: space-between">
+    <div class="serif" style="font-size: 22px; font-weight: 700; color: #2A2622; letter-spacing: -0.01em">상담</div>
+    <div class="num" style="font-size: 13px; color: #9C9288">1 / 2</div>
+  </div>
+
+  <!-- 한 번에 하나 — 카드 한 장이 곧 결정 하나 -->
+  <div style="flex: 1; padding: 26px; display: flex; flex-direction: column; justify-content: center">
+
+    <div style="background: #FFFFFF; border-radius: 24px; border: 1px solid #EFE7DA; padding: 28px 26px; display: flex; flex-direction: column; gap: 22px; box-shadow: 0 12px 40px rgba(42,38,34,0.06)">
+
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div style="width: 7px; height: 7px; border-radius: 4px; background: #D9862B"></div>
+        <div style="font-size: 12px; font-weight: 600; color: #D9862B; letter-spacing: 0.04em">2일째 답을 기다리는 중</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div class="serif" style="font-size: 30px; font-weight: 700; color: #2A2622; line-height: 1.2; letter-spacing: -0.02em">동유진 님이<br>차를 팔고 싶어 합니다</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px 0; border-top: 1px solid #F2EBE0; border-bottom: 1px solid #F2EBE0">
+        <div style="display: flex; align-items: baseline; gap: 14px">
+          <div style="font-size: 12px; color: #9C9288; width: 44px; flex-shrink: 0">차량</div>
+          <div style="font-size: 15px; font-weight: 600; color: #2A2622">더 뉴 아이오닉5</div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 14px">
+          <div style="font-size: 12px; color: #9C9288; width: 44px; flex-shrink: 0">일정</div>
+          <div class="num" style="font-size: 15px; font-weight: 600; color: #2A2622">8월 24일 오후 6시</div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 14px">
+          <div style="font-size: 12px; color: #9C9288; width: 44px; flex-shrink: 0">연락처</div>
+          <div class="num" style="font-size: 15px; font-weight: 600; color: #2A2622">010-5555-5555</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 52px; border-radius: 16px; background: #2A2622; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: #FFFDF9">채결하기</div>
+        <div style="display: flex; gap: 10px">
+          <div style="flex: 1; height: 48px; border-radius: 16px; border: 1px solid #E5DCCC; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #6B635A">일정 변경</div>
+          <div style="flex: 1; height: 48px; border-radius: 16px; border: 1px solid #E5DCCC; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #B5524A">거절</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 다음 카드가 뒤에 겹쳐 있음을 암시 -->
+    <div style="margin: -12px 16px 0; height: 24px; background: #FFFFFF; border: 1px solid #EFE7DA; border-top: none; border-radius: 0 0 20px 20px; opacity: 0.6"></div>
+    <div style="margin: -6px 30px 0; height: 18px; background: #FFFFFF; border: 1px solid #EFE7DA; border-top: none; border-radius: 0 0 18px 18px; opacity: 0.35"></div>
+
+    <div style="text-align: center; margin-top: 22px; font-size: 12px; color: #9C9288">넘기면 다음 상담으로</div>
+
+  </div>
+
+  <div style="background: #FFFFFF; border-top: 1px solid #F2EBE0; display: flex; padding: 10px 0 24px">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C3B8A8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 13.5 6.2 8a2 2 0 0 1 1.9-1.4h7.8A2 2 0 0 1 17.8 8l1.7 5.5"/><path d="M4.5 13.5h15v4h-15z"/><circle cx="8" cy="17.5" r="1.2"/><circle cx="16" cy="17.5" r="1.2"/></svg>
+      <div style="font-size: 10px; color: #C3B8A8">차량</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2A2622" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7 7 0 0 1-7 7H8l-4 2.5.9-3.6A7 7 0 0 1 13 5.5a7 7 0 0 1 7 7z"/></svg>
+      <div style="font-size: 10px; font-weight: 600; color: #2A2622">상담</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C3B8A8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>
+      <div style="font-size: 10px; color: #C3B8A8">일정</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C3B8A8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.2"/><path d="M15 14.2c2.6-.5 5.5 1 5.5 4.8"/></svg>
+      <div style="font-size: 10px; color: #C3B8A8">사용자</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C3B8A8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5 6.5v5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9v-5z"/><path d="M9.5 12.2l1.8 1.8 3.4-3.6"/></svg>
+      <div style="font-size: 10px; color: #C3B8A8">관리자</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

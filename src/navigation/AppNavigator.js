@@ -123,7 +123,14 @@ const AdminTabs = () => (
     })}
   >
     <Tab.Screen name="AdminVehicles" component={AdminVehiclesListScreen} options={{ title: '차량 관리' }} />
-    <Tab.Screen name="Consultations" component={AdminConsultationScreen} options={{ title: '상담 관리' }} />
+    {/* headerShown: false — 화면이 AdminHeader를 직접 그린다.
+        내비 헤더를 같이 두면 제목이 두 줄로 겹친다(상담 신청 화면에서 겪은 것과 같은 문제).
+        title은 탭바 라벨로 여전히 쓰인다. */}
+    <Tab.Screen
+      name="Consultations"
+      component={AdminConsultationScreen}
+      options={{ title: '상담 관리', headerShown: false }}
+    />
     <Tab.Screen name="AdminSchedule" component={AdminScheduleScreen} options={{ title: '일정' }} />
     <Tab.Screen name="UserManagement" component={AdminUserManagementScreen} options={{ title: '사용자 관리' }} />
     <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자' }} />

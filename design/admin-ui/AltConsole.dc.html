@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'IBM Plex Sans KR', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+    a { color: #7FA8FF; } a:hover { color: #A9C4FF; }
+    * { box-sizing: border-box; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #14161C; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 18px 18px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #23262F">
+    <div style="display: flex; align-items: baseline; gap: 9px">
+      <div style="font-size: 15px; font-weight: 700; color: #F2F3F5">상담</div>
+      <div class="mono" style="font-size: 12px; color: #6E7480">2건</div>
+    </div>
+    <div class="mono" style="font-size: 11px; color: #6E7480">08-24 00:52</div>
+  </div>
+
+  <!-- 상태 요약 — 한 줄 계기판 -->
+  <div style="padding: 14px 18px; display: flex; gap: 18px; border-bottom: 1px solid #23262F">
+    <div style="display: flex; flex-direction: column; gap: 3px">
+      <div class="mono" style="font-size: 22px; font-weight: 600; color: #FFC24D">1</div>
+      <div style="font-size: 10px; color: #6E7480; letter-spacing: 0.05em">대기</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 3px">
+      <div class="mono" style="font-size: 22px; font-weight: 600; color: #4ADE80">1</div>
+      <div style="font-size: 10px; color: #6E7480; letter-spacing: 0.05em">승인</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 3px">
+      <div class="mono" style="font-size: 22px; font-weight: 600; color: #6E7480">0</div>
+      <div style="font-size: 10px; color: #6E7480; letter-spacing: 0.05em">완료</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-end">
+      <div class="mono" style="font-size: 22px; font-weight: 600; color: #F2F3F5">2d</div>
+      <div style="font-size: 10px; color: #6E7480; letter-spacing: 0.05em">최장 대기</div>
+    </div>
+  </div>
+
+  <!-- 표 머리 -->
+  <div style="padding: 9px 18px; display: flex; gap: 10px; border-bottom: 1px solid #23262F; background: #191C23">
+    <div style="width: 8px; flex-shrink: 0"></div>
+    <div style="flex-grow: 1; font-size: 10px; color: #6E7480; letter-spacing: 0.06em">신청자 / 차량</div>
+    <div style="width: 86px; text-align: right; font-size: 10px; color: #6E7480; letter-spacing: 0.06em">희망일정</div>
+  </div>
+
+  <!-- 행 — 밀도 우선. 한 화면에 많이 -->
+  <div style="flex: 1; overflow: hidden">
+
+    <div style="padding: 13px 18px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #1E212A; background: #1A1D25">
+      <div style="width: 8px; height: 8px; border-radius: 4px; background: #FFC24D; flex-shrink: 0"></div>
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+        <div style="display: flex; align-items: center; gap: 7px">
+          <div style="font-size: 14px; font-weight: 600; color: #F2F3F5">동유진</div>
+          <div style="font-size: 10px; color: #6E7480; border: 1px solid #2E323C; border-radius: 4px; padding: 1px 5px">판매</div>
+        </div>
+        <div style="font-size: 12px; color: #8B919C">더 뉴 아이오닉5</div>
+      </div>
+      <div style="width: 86px; text-align: right; display: flex; flex-direction: column; gap: 3px">
+        <div class="mono" style="font-size: 12px; color: #F2F3F5">08-24 18:00</div>
+        <div class="mono" style="font-size: 10px; color: #FFC24D">+2d</div>
+      </div>
+    </div>
+
+    <div style="padding: 0 18px 13px; display: flex; gap: 7px; border-bottom: 1px solid #1E212A; background: #1A1D25">
+      <div style="width: 18px; flex-shrink: 0"></div>
+      <div style="flex: 1; height: 36px; border-radius: 9px; background: #F2F3F5; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #14161C">채결</div>
+      <div style="flex: 1; height: 36px; border-radius: 9px; border: 1px solid #2E323C; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #B4B9C4">보류</div>
+      <div style="flex: 1; height: 36px; border-radius: 9px; border: 1px solid #4A2A30; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #F87171">거절</div>
+    </div>
+
+    <div style="padding: 13px 18px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #1E212A">
+      <div style="width: 8px; height: 8px; border-radius: 4px; background: #4ADE80; flex-shrink: 0"></div>
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+        <div style="display: flex; align-items: center; gap: 7px">
+          <div style="font-size: 14px; font-weight: 600; color: #F2F3F5">김서현</div>
+          <div style="font-size: 10px; color: #6E7480; border: 1px solid #2E323C; border-radius: 4px; padding: 1px 5px">구매</div>
+        </div>
+        <div style="font-size: 12px; color: #8B919C">팰리세이드</div>
+      </div>
+      <div style="width: 86px; text-align: right">
+        <div class="mono" style="font-size: 12px; color: #F2F3F5">08-26 14:30</div>
+      </div>
+    </div>
+
+    <div style="padding: 13px 18px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #1E212A; opacity: 0.5">
+      <div style="width: 8px; height: 8px; border-radius: 4px; background: #6E7480; flex-shrink: 0"></div>
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 14px; font-weight: 600; color: #F2F3F5">박도현</div>
+        <div style="font-size: 12px; color: #8B919C">팰리세이드</div>
+      </div>
+      <div style="width: 86px; text-align: right">
+        <div class="mono" style="font-size: 12px; color: #8B919C">08-21 11:00</div>
+      </div>
+    </div>
+
+    <div style="padding: 13px 18px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #1E212A; opacity: 0.5">
+      <div style="width: 8px; height: 8px; border-radius: 4px; background: #6E7480; flex-shrink: 0"></div>
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 14px; font-weight: 600; color: #F2F3F5">최민아</div>
+        <div style="font-size: 12px; color: #8B919C">더 뉴 아이오닉5</div>
+      </div>
+      <div style="width: 86px; text-align: right">
+        <div class="mono" style="font-size: 12px; color: #8B919C">08-20 09:30</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background: #191C23; border-top: 1px solid #23262F; display: flex; padding: 10px 0 24px">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6E7480" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 13.5 6.2 8a2 2 0 0 1 1.9-1.4h7.8A2 2 0 0 1 17.8 8l1.7 5.5"/><path d="M4.5 13.5h15v4h-15z"/><circle cx="8" cy="17.5" r="1.2"/><circle cx="16" cy="17.5" r="1.2"/></svg>
+      <div style="font-size: 10px; color: #6E7480">차량</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F2F3F5" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7 7 0 0 1-7 7H8l-4 2.5.9-3.6A7 7 0 0 1 13 5.5a7 7 0 0 1 7 7z"/></svg>
+      <div style="font-size: 10px; font-weight: 600; color: #F2F3F5">상담</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6E7480" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>
+      <div style="font-size: 10px; color: #6E7480">일정</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6E7480" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.2"/><path d="M15 14.2c2.6-.5 5.5 1 5.5 4.8"/></svg>
+      <div style="font-size: 10px; color: #6E7480">사용자</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6E7480" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5 6.5v5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9v-5z"/><path d="M9.5 12.2l1.8 1.8 3.4-3.6"/></svg>
+      <div style="font-size: 10px; color: #6E7480">관리자</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
