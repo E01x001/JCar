@@ -136,7 +136,11 @@ const AdminTabs = () => (
       options={{ title: '상담 관리', headerShown: false }}
     />
     <Tab.Screen name="AdminSchedule" component={AdminScheduleScreen} options={{ title: '일정' }} />
-    <Tab.Screen name="UserManagement" component={AdminUserManagementScreen} options={{ title: '사용자 관리' }} />
+    <Tab.Screen
+      name="UserManagement"
+      component={AdminUserManagementScreen}
+      options={{ title: '사용자 관리', headerShown: false }}
+    />
     <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자' }} />
   </Tab.Navigator>
 );
