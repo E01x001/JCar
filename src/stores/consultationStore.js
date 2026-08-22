@@ -20,26 +20,41 @@ import {logger} from '../utils/logger';
 import {supabase} from '../lib/supabase';
 import {consultationRowToApp} from '../lib/mappers';
 
+// 상담 행에 차량 썸네일을 얹는다.
+// consultation_requests에는 vehicle_name만 있고 이미지가 없어, 목록의 썸네일 자리가
+// 늘 비어 있었다. FK(consultation_requests.vehicle_id → vehicles.id)로 임베드해 가져온다.
+// 차량이 RLS로 안 보이면 임베드가 null이 되고, 화면은 플레이스홀더로 떨어진다.
+const withVehicleThumb = (row) => {
+  const app = consultationRowToApp(row);
+  const urls = row?.vehicles?.image_urls;
+  return {
+    ...app,
+    vehicleImageUrl: Array.isArray(urls) ? (urls[0] ?? null) : urls ?? null,
+  };
+};
+
+const CONSULTATION_SELECT = '*, vehicles(image_urls)';
+
 // consultation_requests 재조회 헬퍼 (RLS: 본인/판매자/관리자 범위만 반환)
 const fetchUserConsultations = async (userId) => {
   const {data, error} = await supabase
       .from('consultation_requests')
-      .select('*')
+      .select(CONSULTATION_SELECT)
       .eq('user_id', userId)
       .order('created_at', {ascending: false})
       .limit(200);
   if (error) { throw error; }
-  return data.map(consultationRowToApp);
+  return data.map(withVehicleThumb);
 };
 
 const fetchAllConsultations = async () => {
   const {data, error} = await supabase
       .from('consultation_requests')
-      .select('*')
+      .select(CONSULTATION_SELECT)
       .order('created_at', {ascending: false})
       .limit(500);
   if (error) { throw error; }
-  return data.map(consultationRowToApp);
+  return data.map(withVehicleThumb);
 };
 
 // consultation_requests 테이블용 realtime refetch 구독

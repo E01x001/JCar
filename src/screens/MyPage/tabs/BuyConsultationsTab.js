@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
-import Card from '../../../components/Card';
 import Badge from '../../../components/Badge';
 import EmptyState from '../../../components/EmptyState';
+import MyPageListRow from '../../../components/MyPageListRow';
 
 const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
   const theme = useTheme();
@@ -30,24 +30,16 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
     return <Badge variant="chip" status="pending" label="대기중" />;
   };
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => onNavigateToConsultation(item.id)} activeOpacity={0.8}>
-      <Card elevated style={{ marginBottom: theme.spacing.sm }}>
-        <View style={styles.consultRow}>
-          <View style={[styles.thumb, { backgroundColor: theme.colors.background.tertiary }]} />
-          <View style={styles.consultInfo}>
-            <Text style={[styles.consultName, { color: theme.colors.text.primary }]} numberOfLines={1}>
-              {item?.vehicleName ?? '차량명 없음'}
-            </Text>
-            <Text style={[styles.consultDate, { color: theme.colors.text.secondary }]} numberOfLines={1}>
-              {[item?.preferredDate, item?.preferredTime].filter(Boolean).join(' · ') || '일정 미정'}
-            </Text>
-          </View>
-          {getStatusBadge(item.consultationStatus)}
-        </View>
+  const renderFooter = (item) => {
+    const showRejection = item.consultationStatus === 'rejected' && item.rejectionReason;
+    const showAlternatives = item.consultationStatus === 'rejected'
+      && item.alternativeSlots && item.alternativeSlots.length > 0;
+    if (!showRejection && !showAlternatives) { return null; }
 
+    return (
+      <>
         {/* Show rejection reason preview if rejected */}
-        {item.consultationStatus === 'rejected' && item.rejectionReason && (
+        {showRejection && (
           <Text style={[styles.rejectionPreview, {
             fontSize: theme.typography.fontSize.bodySmall,
             color: theme.colors.status.rejected,
@@ -58,7 +50,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
         )}
 
         {/* Show alternative slots preview if available */}
-        {item.consultationStatus === 'rejected' && item.alternativeSlots && item.alternativeSlots.length > 0 && (
+        {showAlternatives && (
           <Text style={[styles.alternativePreview, {
             fontSize: theme.typography.fontSize.bodySmall,
             color: theme.colors.text.tertiary,
@@ -67,8 +59,19 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
             대체 일정 {item.alternativeSlots.length}개 제안됨
           </Text>
         )}
-      </Card>
-    </TouchableOpacity>
+      </>
+    );
+  };
+
+  const renderItem = ({ item }) => (
+    <MyPageListRow
+      imageUrl={item.vehicleImageUrl}
+      title={item?.vehicleName ?? '차량명 없음'}
+      subtitle={[item?.preferredDate, item?.preferredTime].filter(Boolean).join(' · ') || '일정 미정'}
+      right={getStatusBadge(item.consultationStatus)}
+      footer={renderFooter(item)}
+      onPress={() => onNavigateToConsultation(item.id)}
+    />
   );
 
   return (
@@ -76,10 +79,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
       data={buyConsultations}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{
-        padding: theme.spacing.md,
-        flexGrow: 1,
-      }}
+      contentContainerStyle={styles.content}
       ListEmptyComponent={
         <View style={styles.emptyWrap}>
           <EmptyState
@@ -94,24 +94,17 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
 };
 
 const styles = StyleSheet.create({
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 8,
+    flexGrow: 1,
+  },
   emptyWrap: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 22,
   },
-  consultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-  },
-  thumb: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
-  },
-  consultInfo: { flex: 1, minWidth: 0 },
-  consultName: { fontSize: 15, fontWeight: '800' },
-  consultDate: { fontSize: 12, marginTop: 3 },
   rejectionPreview: {
     fontStyle: 'italic',
   },

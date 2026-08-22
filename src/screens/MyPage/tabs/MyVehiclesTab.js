@@ -1,13 +1,9 @@
 import React from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
 import EmptyState from '../../../components/EmptyState';
+import MyPageListRow from '../../../components/MyPageListRow';
 import { PRICE_HIDDEN_LABEL } from '../../../utils/vehiclePrice';
-
-const resolveImage = (imageUrl) => {
-  if (Array.isArray(imageUrl)) { return imageUrl[0] || null; }
-  return imageUrl || null;
-};
 
 // 차종 → 태그 색(시안)
 const tagPalette = (type, theme) => {
@@ -32,49 +28,32 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
     );
   }
 
-  const renderItem = ({ item, index }) => {
-    const isLast = index === vehicles.length - 1;
-    const image = resolveImage(item.imageUrl);
+  const renderItem = ({ item }) => {
     const pal = tagPalette(item.vehicleType, theme);
     const meta = [item.manufacturer, item.year, item.mileage ? `${item.mileage}` : null]
       .filter(Boolean)
       .join(' · ');
 
     return (
-      <TouchableOpacity
-        onPress={() => onNavigateToVehicle(item.id)}
-        activeOpacity={0.7}
-        style={[
-          styles.row,
-          !isLast && { borderBottomWidth: 1, borderBottomColor: '#ECEEF1' },
-        ]}
-      >
-        {image ? (
-          <Image source={{ uri: image }} style={[styles.thumb, styles.thumbBg]} resizeMode="contain" />
-        ) : (
-          <View style={[styles.thumb, { backgroundColor: theme.colors.background.tertiary }]} />
-        )}
-
-        <View style={styles.info}>
-          <View style={styles.nameRow}>
-            <Text style={[styles.name, { color: theme.colors.text.primary }]} numberOfLines={1}>
-              {item.vehicleName ?? '차량'}
-            </Text>
-            {item.vehicleType ? (
-              <View style={[styles.tag, { backgroundColor: pal.bg }]}>
-                <Text style={[styles.tagText, { color: pal.fg }]}>{item.vehicleType}</Text>
-              </View>
-            ) : null}
+      <MyPageListRow
+        imageUrl={item.imageUrl}
+        title={item.vehicleName ?? '차량'}
+        titleAccessory={item.vehicleType ? (
+          <View style={[styles.tag, { backgroundColor: pal.bg }]}>
+            <Text style={[styles.tagText, { color: pal.fg }]}>{item.vehicleType}</Text>
           </View>
-          <Text style={[styles.meta, { color: theme.colors.text.tertiary }]} numberOfLines={1}>
-            {meta || '-'}
-          </Text>
-        </View>
-
-        <View style={styles.priceWrap}>
-          <Text style={[styles.priceHidden, { color: theme.colors.text.tertiary }]}>{PRICE_HIDDEN_LABEL}</Text>
-        </View>
-      </TouchableOpacity>
+        ) : null}
+        subtitle={meta || '-'}
+        right={(
+          <View style={styles.priceWrap}>
+            {/* 가격은 관리자 전용 — 일반 사용자에게는 절대 노출하지 않는다 */}
+            <Text style={[styles.priceHidden, { color: theme.colors.text.tertiary }]}>
+              {PRICE_HIDDEN_LABEL}
+            </Text>
+          </View>
+        )}
+        onPress={() => onNavigateToVehicle(item.id)}
+      />
     );
   };
 
@@ -83,7 +62,6 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
       data={vehicles}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
-      style={[styles.container, { backgroundColor: theme.colors.background.secondary }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     />
@@ -96,33 +74,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 22,
   },
-  container: {
-    marginHorizontal: 22,
-    marginTop: 14,
-    borderRadius: 20,
-  },
   content: {
     paddingHorizontal: 20,
-    paddingVertical: 4,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 18,
-  },
-  thumb: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
-  },
-  thumbBg: { backgroundColor: '#EEF1F5' },
-  info: { flex: 1, minWidth: 0 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  name: { fontSize: 16, fontWeight: '800', flexShrink: 1 },
   tag: { paddingVertical: 3, paddingHorizontal: 7, borderRadius: 6 },
   tagText: { fontSize: 10, fontWeight: '700' },
-  meta: { fontSize: 12, marginTop: 3 },
   priceWrap: { alignItems: 'flex-end', maxWidth: 90 },
   priceHidden: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
 });
