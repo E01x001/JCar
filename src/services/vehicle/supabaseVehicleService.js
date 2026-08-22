@@ -73,6 +73,30 @@ export const fetchVehiclePricing = async (vehicleId) => {
 };
 
 /**
+ * 가격 일괄 조회 — 관리자 목록용.
+ *
+ * fetchVehiclePricing은 한 대씩 가져온다. 목록에서 그대로 쓰면 차량 수만큼
+ * 요청이 나가고, 실제로는 그마저 안 하고 있어서 목록의 "가격:" 자리가 값 없이
+ * 라벨만 남아 있었다. 한 번에 가져와 id로 찾아 쓴다.
+ *
+ * 비관리자는 RLS가 빈 결과를 준다 — 호출해도 아무것도 새지 않는다.
+ *
+ * @returns {Promise<Object>} { [vehicleId]: { price, purchasePrice } }
+ */
+export const fetchAllVehiclePricing = async () => {
+  const { data, error } = await supabase
+    .from('vehicle_pricing')
+    .select('vehicle_id, price, purchase_price');
+  if (error) { throw error; }
+
+  const map = {};
+  for (const row of data ?? []) {
+    map[row.vehicle_id] = { price: row.price, purchasePrice: row.purchase_price };
+  }
+  return map;
+};
+
+/**
  * 차량 등록 — 공개 정보 + 판매자 PII(비공개 테이블) 저장.
  * @param {Object} vehicle - camelCase 차량 공개 필드 (sellerId 필수)
  * @param {Object} contact - { sellerName, sellerPhone, sellerEmail, ownerName, regiNumber, vin }
@@ -160,6 +184,7 @@ export default {
   fetchAllVehicles,
   fetchVehicleById,
   fetchVehiclePricing,
+  fetchAllVehiclePricing,
   insertVehicle,
   updateVehicle,
   deleteVehicle,
