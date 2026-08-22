@@ -179,6 +179,15 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         return;
       }
 
+      // 응답의 **키 이름만** 남긴다(값은 남기지 않는다 — 차량번호·VIN이 섞여 있다).
+      // 상세 화면의 연비·연료탱크·좌석·와이퍼·배터리가 전부 비어 있는데,
+      // 저장 코드는 FUELECO·FUELTANK·SEATS·WIPER·BATTERYLIST[0].MODEL을 읽는다.
+      // 그 이름이 실제 응답에 없다는 뜻이므로, 다음 조회 때 진짜 이름을 확인한다.
+      logger.debug('CarZen 응답 키:', Object.keys(result.data || {}).join(','));
+      if (Array.isArray(result.data?.BATTERYLIST) && result.data.BATTERYLIST[0]) {
+        logger.debug('CarZen BATTERYLIST[0] 키:', Object.keys(result.data.BATTERYLIST[0]).join(','));
+      }
+
       setVehicleData(result.data);
       lookup.finish(); // 응답 도착 → 100%로 마무리
 
@@ -279,7 +288,12 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         engineOilLiter: toText(vehicleData.EOILLITER),
         wiperInfo: toText(vehicleData.WIPER),
         seats: toText(vehicleData.SEATS),
-        battery: Array.isArray(vehicleData.BATTERYLIST) && vehicleData.BATTERYLIST.length > 0 ? vehicleData.BATTERYLIST[0].MODEL : 'Unknown',
+        // BATTERYLIST[0].MODEL이 없으면 이 표현식은 undefined가 되고,
+        // appToRow가 undefined 키를 건너뛰어 컬럼이 조용히 NULL로 남는다.
+        // 실제로 등록된 두 대 모두 battery가 NULL이다 — 'Unknown' 폴백이
+        // 걸렸다면 문자열이 들어갔어야 하므로, MODEL이라는 키가 없다는 뜻이다.
+        // 값을 못 찾으면 null을 **명시**해 조용한 누락과 구분한다.
+        battery: toText(vehicleData.BATTERYLIST?.[0]?.MODEL),
         fuelEco: toText(vehicleData.FUELECO),
         fuelTank: toText(vehicleData.FUELTANK),
         vehicleType,

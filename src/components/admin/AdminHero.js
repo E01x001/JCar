@@ -47,9 +47,16 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 20,
   },
-  // 64px / lineHeight 55 — 숫자 아래 여백을 없애 문장과 밑선을 맞춘다
-  value: { fontSize: 64, fontWeight: '700', lineHeight: 55 },
-  text: { paddingBottom: 6, gap: 2, flexShrink: 1 },
+  // lineHeight는 fontSize보다 커야 한다. 작게 주면 안드로이드가 글자를
+  // 줄 높이에 맞춰 **잘라낸다**(숫자 위아래가 깎여 보였다).
+  // 밑선 맞춤은 lineHeight를 조이는 대신 컨테이너 padding으로 한다.
+  value: {
+    fontSize: 64,
+    fontWeight: '700',
+    lineHeight: 72,
+    includeFontPadding: false,
+  },
+  text: { paddingBottom: 14, gap: 2, flexShrink: 1 },
   title: { fontSize: 16, fontWeight: '700' },
   subtitle: { fontSize: 13 },
 });
