@@ -234,7 +234,13 @@ const VehicleRegistrationScreen = ({ navigation }) => {
     setSaving(true);
     try {
       // Default to the CarZen catalog image when the user adds no photos.
-      let imageUrls = [`https://www.cartory.net/cars/${vehicleData.CARURL}`];
+      // 실사진만 image_urls에 담는다. 예전에는 사진이 없으면 카탈로그 이미지를
+      // 여기에 채워 넣어서, 모든 차량이 항상 "사진 있음"이 됐다 —
+      // 그 결과 사진 없는 차량이라는 상태가 존재할 수 없었다.
+      let imageUrls = [];
+      const catalogImageUrl = vehicleData.CARURL
+        ? `https://www.cartory.net/cars/${vehicleData.CARURL}`
+        : null;
 
       // Task 127: upload each selected image, tracking overall progress.
       if (images.length > 0) {
@@ -282,7 +288,8 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         fuelType: vehicleData.FUEL,
         cc: toInt(vehicleData.CC),
         transmission: vehicleData.MISSION,
-        imageUrls, // Task 127: full gallery (단일 imageUrl은 매퍼가 파생)
+        imageUrls, // 실사진만 (단일 imageUrl은 매퍼가 파생)
+        catalogImageUrl,
         frontTire: toText(vehicleData.FRONTTIRE),
         rearTire: toText(vehicleData.REARTIRE),
         engineOilLiter: toText(vehicleData.EOILLITER),
@@ -323,7 +330,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
       addOptimisticVehicle({
         ...vehicleDataToSave,
         vehicleId: regiNumber,
-        imageUrl: imageUrls[0],
+        imageUrl: imageUrls[0] ?? catalogImageUrl,
         createdAt: Date.now(),
       }, tempId);
 
@@ -379,6 +386,13 @@ const VehicleRegistrationScreen = ({ navigation }) => {
   };
   const goToStep3 = () => {
     if (!isValidVehicleType(vehicleType)) { toast.showWarning('입력 오류', '차량 종류를 선택해주세요.'); return; }
+    // 실사진 1장 이상이 노출 조건이다. 여기서 막지 않으면 등록은 되지만
+    // 다른 사용자에게 보이지 않는 차량이 생기고, 판매자는 이유를 모른다.
+    // (진짜 경계는 RLS다 — 이건 안내를 위한 것이다.)
+    if (images.length === 0) {
+      toast.showWarning('사진 필요', '실제 차량 사진을 1장 이상 추가해주세요. 사진이 없으면 매물이 노출되지 않습니다.');
+      return;
+    }
     setStep(3);
   };
   const closeSuccess = (route) => {
@@ -468,7 +482,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
           <>
             <Card elevated style={styles.card}>
               <Text style={[styles.cardTitle, { color: c.text.primary }]}>차량 사진 추가</Text>
-              <Text style={[styles.cardDesc, { color: c.text.secondary }]}>실제 차량 사진을 추가하면 구매자 신뢰도가 높아져요. 최대 {MAX_IMAGES}장.</Text>
+              <Text style={[styles.cardDesc, { color: c.text.secondary }]}>실제 차량 사진이 1장 이상 있어야 매물이 노출됩니다. 최대 {MAX_IMAGES}장.</Text>
 
               <Text style={[styles.fieldLabel, { color: c.text.primary }]}>차량 종류</Text>
               <View style={styles.chipWrap}>
