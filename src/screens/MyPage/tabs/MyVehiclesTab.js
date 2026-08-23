@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../../../theme/ThemeProvider';
 import EmptyState from '../../../components/EmptyState';
 import MyPageListRow from '../../../components/MyPageListRow';
@@ -13,7 +14,7 @@ const tagPalette = (type, theme) => {
   return theme.colors.tag.neutral;
 };
 
-const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
+const MyVehiclesTab = ({ vehicles, onNavigateToVehicle, onManagePhotos }) => {
   const theme = useTheme();
 
   if (!vehicles || vehicles.length === 0) {
@@ -30,6 +31,9 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
 
   const renderItem = ({ item }) => {
     const pal = tagPalette(item.vehicleType, theme);
+    // 실사진이 없으면 다른 사용자에게 노출되지 않는다. 판매자가 그 사실과
+    // 해결 방법을 여기서 바로 알아야 한다 — 모르면 등록이 실패한 줄 안다.
+    const noPhoto = !Array.isArray(item.imageUrls) || item.imageUrls.length === 0;
     const meta = [item.manufacturer, item.year, item.mileage ? `${item.mileage}` : null]
       .filter(Boolean)
       .join(' · ');
@@ -52,6 +56,20 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle }) => {
             </Text>
           </View>
         )}
+        footer={noPhoto ? (
+          <TouchableOpacity
+            onPress={() => onManagePhotos?.(item.id)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            style={[styles.noPhoto, { backgroundColor: theme.colors.statusChip.pending.bg }]}
+          >
+            <Icon name="visibility-off" size={15} color={theme.colors.statusChip.pending.fg} />
+            <Text style={[styles.noPhotoText, { color: theme.colors.statusChip.pending.fg }]}>
+              사진이 없어 노출되지 않음 · 사진 추가
+            </Text>
+            <Icon name="chevron-right" size={16} color={theme.colors.statusChip.pending.fg} />
+          </TouchableOpacity>
+        ) : null}
         onPress={() => onNavigateToVehicle(item.id)}
       />
     );
@@ -83,6 +101,16 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 10, fontWeight: '700' },
   priceWrap: { alignItems: 'flex-end', maxWidth: 90 },
   priceHidden: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
+  noPhoto: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 12,
+  },
+  noPhotoText: { flex: 1, fontSize: 12, fontWeight: '600' },
 });
 
 export default MyVehiclesTab;

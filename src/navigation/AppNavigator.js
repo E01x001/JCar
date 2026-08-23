@@ -32,6 +32,7 @@ import AdminScheduleScreen from '../screens/AdminScheduleScreen';
 import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
 import AdminOwnedVehicleDetailScreen from '../screens/AdminOwnedVehicleDetailScreen';
 import AdminOwnershipHistoryScreen from '../screens/AdminOwnershipHistoryScreen';
+import VehiclePhotosScreen from '../screens/VehiclePhotosScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -225,6 +226,11 @@ const AppNavigator = ({ navigationRef }) => {
               name="ConsultationRequest"
               component={ConsultationRequestScreen}
               options={{ headerShown: true, title: '상담 신청' }}
+            />
+            <Stack.Screen
+              name="VehiclePhotos"
+              component={VehiclePhotosScreen}
+              options={{ headerShown: true, title: '차량 사진' }}
             />
             <Stack.Screen
               name="MyVehicles"

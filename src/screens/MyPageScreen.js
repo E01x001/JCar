@@ -74,7 +74,13 @@ const MyPageScreen = ({ navigation }) => {
       case 'sell':
         return <SellConsultationsTab consultations={consultations} onNavigateToConsultation={handleNavigateToConsultationDetail} />;
       case 'vehicles':
-        return <MyVehiclesTab vehicles={vehicles} onNavigateToVehicle={handleNavigateToVehicleDetail} />;
+        return (
+          <MyVehiclesTab
+            vehicles={vehicles}
+            onNavigateToVehicle={handleNavigateToVehicleDetail}
+            onManagePhotos={(vehicleId) => navigation.navigate('VehiclePhotos', { vehicleId })}
+          />
+        );
       default:
         return null;
     }
