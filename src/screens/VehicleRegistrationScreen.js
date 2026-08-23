@@ -48,7 +48,8 @@ const VehicleRegistrationScreen = ({ navigation }) => {
   const [ownerName, setOwnerName] = useState('');
   const [vehicleType, setVehicleType] = useState(''); // ✅ 초기값 "" (선택 안 한 상태)
   const [loading, setLoading] = useState(false);
-  const [vehicleData, setVehicleData] = useState(null);
+  // 프록시가 정규화해서 준 값. CarZen/국토부 중 어느 쪽인지 화면은 모른다.
+  const [vehicle, setVehicle] = useState(null);
   const [images, setImages] = useState([]); // Task 127: multiple images [{ uri, size }]
   const [uploadProgress, setUploadProgress] = useState(0); // Track upload progress (0-100)
   const [isUploading, setIsUploading] = useState(false); // Upload state flag
@@ -63,7 +64,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
   const resetForm = () => {
     setRegiNumber('');
     setOwnerName('');
-    setVehicleData(null);
+    setVehicle(null);
     setImages([]);
     setVehicleType('');
     setBizRights(false);
@@ -171,7 +172,8 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         body: { regiNumber, ownerName },
       });
 
-      logger.debug('API 응답:', result);
+      // 응답 전체를 로그에 남기지 않는다 — 차량번호·VIN이 섞여 있다.
+      logger.debug('차량 조회 결과:', result?.success ? `ok (${result.provider})` : 'fail');
 
       if (fnError || !result?.success) {
         lookup.cancel();
@@ -179,16 +181,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         return;
       }
 
-      // 응답의 **키 이름만** 남긴다(값은 남기지 않는다 — 차량번호·VIN이 섞여 있다).
-      // 상세 화면의 연비·연료탱크·좌석·와이퍼·배터리가 전부 비어 있는데,
-      // 저장 코드는 FUELECO·FUELTANK·SEATS·WIPER·BATTERYLIST[0].MODEL을 읽는다.
-      // 그 이름이 실제 응답에 없다는 뜻이므로, 다음 조회 때 진짜 이름을 확인한다.
-      logger.debug('CarZen 응답 키:', Object.keys(result.data || {}).join(','));
-      if (Array.isArray(result.data?.BATTERYLIST) && result.data.BATTERYLIST[0]) {
-        logger.debug('CarZen BATTERYLIST[0] 키:', Object.keys(result.data.BATTERYLIST[0]).join(','));
-      }
-
-      setVehicleData(result.data);
+      setVehicle(result.vehicle);
       lookup.finish(); // 응답 도착 → 100%로 마무리
 
     } catch (error) {
@@ -218,7 +211,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
       return;
     }
 
-    if (!vehicleData) {
+    if (!vehicle) {
       toast.showWarning('오류', '조회된 차량 정보가 없습니다.');
       return;
     }
@@ -238,9 +231,6 @@ const VehicleRegistrationScreen = ({ navigation }) => {
       // 여기에 채워 넣어서, 모든 차량이 항상 "사진 있음"이 됐다 —
       // 그 결과 사진 없는 차량이라는 상태가 존재할 수 없었다.
       let imageUrls = [];
-      const catalogImageUrl = vehicleData.CARURL
-        ? `https://www.cartory.net/cars/${vehicleData.CARURL}`
-        : null;
 
       // Task 127: upload each selected image, tracking overall progress.
       if (images.length > 0) {
@@ -270,39 +260,30 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         }
       }
 
-      const toInt = (v) => {
-        const n = parseInt(v, 10);
-        return Number.isNaN(n) ? null : n;
-      };
-      const toText = (v) => (v == null ? null : String(v));
-
-      // Prepare vehicle data (DB 스키마: price 컬럼 없음 — 가격은 관리자가
-      // vehicle_pricing에 별도 설정. CarZen PRICE는 저장하지 않는다.)
+      // 타입 변환·null 정규화는 프록시(get-vehicle-info)가 끝내서 준다.
+      // 여기서 다시 손대면 조회처가 바뀔 때 같은 코드를 두 군데 고쳐야 한다.
+      //
+      // DB 스키마: price 컬럼 없음 — 가격은 관리자가 vehicle_pricing에 별도 설정.
       const vehicleDataToSave = {
         vehicleNo: regiNumber, // DB vehicle_no (Firestore 시절 vehicleId)
-        vehicleName: vehicleData.CARNAME,
-        subModel: vehicleData.SUBMODEL,
-        manufacturer: vehicleData.CARVENDER,
-        year: toInt(vehicleData.CARYEAR),
-        driveType: vehicleData.DRIVE,
-        fuelType: vehicleData.FUEL,
-        cc: toInt(vehicleData.CC),
-        transmission: vehicleData.MISSION,
+        vehicleName: vehicle.vehicleName,
+        subModel: vehicle.subModel,
+        manufacturer: vehicle.manufacturer,
+        year: vehicle.year,
+        driveType: vehicle.driveType,
+        fuelType: vehicle.fuelType,
+        cc: vehicle.cc,
+        transmission: vehicle.transmission,
         imageUrls, // 실사진만 (단일 imageUrl은 매퍼가 파생)
-        catalogImageUrl,
-        frontTire: toText(vehicleData.FRONTTIRE),
-        rearTire: toText(vehicleData.REARTIRE),
-        engineOilLiter: toText(vehicleData.EOILLITER),
-        wiperInfo: toText(vehicleData.WIPER),
-        seats: toText(vehicleData.SEATS),
-        // BATTERYLIST[0].MODEL이 없으면 이 표현식은 undefined가 되고,
-        // appToRow가 undefined 키를 건너뛰어 컬럼이 조용히 NULL로 남는다.
-        // 실제로 등록된 두 대 모두 battery가 NULL이다 — 'Unknown' 폴백이
-        // 걸렸다면 문자열이 들어갔어야 하므로, MODEL이라는 키가 없다는 뜻이다.
-        // 값을 못 찾으면 null을 **명시**해 조용한 누락과 구분한다.
-        battery: toText(vehicleData.BATTERYLIST?.[0]?.MODEL),
-        fuelEco: toText(vehicleData.FUELECO),
-        fuelTank: toText(vehicleData.FUELTANK),
+        catalogImageUrl: vehicle.catalogImageUrl,
+        frontTire: vehicle.frontTire,
+        rearTire: vehicle.rearTire,
+        engineOilLiter: vehicle.engineOilLiter,
+        wiperInfo: vehicle.wiperInfo,
+        seats: vehicle.seats,
+        battery: vehicle.battery,
+        fuelEco: vehicle.fuelEco,
+        fuelTank: vehicle.fuelTank,
         vehicleType,
         businessRightsIncluded: bizApplicable ? bizRights : false,
         licenseInfo: (bizApplicable && bizRights) ? licenseInfo.trim() : '',
@@ -323,14 +304,14 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         sellerEmail: sellerEmail || 'Unknown',
         ownerName,
         regiNumber,
-        vin: vehicleData.VIN || null,
+        vin: vehicle.vin,
       };
 
       // Optimistic update: Add immediately to store (화면 표시용 별칭 포함)
       addOptimisticVehicle({
         ...vehicleDataToSave,
         vehicleId: regiNumber,
-        imageUrl: imageUrls[0] ?? catalogImageUrl,
+        imageUrl: imageUrls[0] ?? vehicle.catalogImageUrl,
         createdAt: Date.now(),
       }, tempId);
 
@@ -338,7 +319,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
       invalidateUserVehiclesCache(user.uid);
 
       // 등록 완료 모달 표시 (시안 플로우). 폼은 모달 액션에서 resetForm으로 정리.
-      setDoneName(vehicleData.CARNAME);
+      setDoneName(vehicle.vehicleName);
       setShowSuccess(true);
 
       // Supabase write (non-blocking) — 공개 행 + PII 행. PII 실패 시 공개 행 롤백은
@@ -381,7 +362,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
   const STEP_LABEL = { 1: '차량 정보 조회', 2: '사진 추가', 3: '영업 권리 확인' };
 
   const goToStep2 = () => {
-    if (!vehicleData) { toast.showWarning('알림', '먼저 차량 정보를 조회해주세요.'); return; }
+    if (!vehicle) { toast.showWarning('알림', '먼저 차량 정보를 조회해주세요.'); return; }
     setStep(2);
   };
   const goToStep3 = () => {
@@ -444,22 +425,22 @@ const VehicleRegistrationScreen = ({ navigation }) => {
               />
             </Card>
 
-            {vehicleData ? (
+            {vehicle ? (
               <Card elevated style={styles.card}>
                 <Text style={[styles.cardTitle, { color: c.text.primary }]}>차량 정보 미리보기</Text>
                 <Image
-                  source={{ uri: `https://www.cartory.net/cars/${vehicleData.CARURL}` }}
+                  source={{ uri: vehicle.catalogImageUrl }}
                   style={[styles.previewImage, { backgroundColor: '#EEF1F5' }]}
                   resizeMode="contain"
                 />
                 {[
                   ['차량번호', regiNumber],
                   ['소유자명', ownerName],
-                  ['차량명', vehicleData.CARNAME],
-                  ['제조사', vehicleData.CARVENDER],
-                  ['연식', vehicleData.CARYEAR],
-                  ['연료', vehicleData.FUEL],
-                  ['변속기 · 배기량', `${vehicleData.MISSION || '-'} · ${vehicleData.CC ? `${vehicleData.CC} cc` : '-'}`],
+                  ['차량명', vehicle.vehicleName],
+                  ['제조사', vehicle.manufacturer],
+                  ['연식', vehicle.year],
+                  ['연료', vehicle.fuelType],
+                  ['변속기 · 배기량', `${vehicle.transmission || '-'} · ${vehicle.cc ? `${vehicle.cc} cc` : '-'}`],
                 ].map(([k, v]) => (
                   <View key={k} style={[styles.kvRow, { borderBottomColor: c.border.light }]}>
                     <Text style={[styles.kvKey, { color: c.text.tertiary }]}>{k}</Text>
@@ -564,7 +545,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
             <Card elevated style={styles.card}>
               <Text style={[styles.cardTitle, { color: c.text.primary }]}>등록 요약</Text>
               {[
-                ['차량', vehicleData ? `${vehicleData.CARNAME} · ${vehicleData.CARVENDER}` : '-'],
+                ['차량', vehicle ? `${vehicle.vehicleName} · ${vehicle.manufacturer}` : '-'],
                 ['차량 종류', vehicleType || '-'],
                 ['사진', `${images.length}장 첨부`],
                 ['영업 권리', (bizApplicable && bizRights) ? '포함 (영업 권리 함께 판매)' : '미포함 (차량만 판매)'],
