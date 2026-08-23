@@ -315,68 +315,87 @@ const ConsultationCard = ({
     if (!isPending && !isOnHold) { return null; }
 
     return (
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          onPress={handleCompleteButtonPress}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="채결"
-          style={[styles.primaryAction, { backgroundColor: theme.colors.primary.main }]}
-        >
-          <Text style={[styles.primaryActionText, { color: theme.colors.text.white }]}>채결</Text>
-        </TouchableOpacity>
-
-        {/* 보류는 pending에서만 의미가 있다 — 이미 보류 중이면 숨긴다 */}
-        {isPending ? (
+      <>
+        {/* 결정 두 개는 글자로 — 아이콘만 두면 무엇을 누르는지 알 수 없다.
+            거절은 사유를 적어 보내는 동작이라 특히 숨기면 안 된다(모달이 열린다). */}
+        <View style={styles.decisionRow}>
           <TouchableOpacity
-            onPress={() => handleStatusUpdate(CONSULTATION_STATUS.ON_HOLD)}
+            onPress={handleCompleteButtonPress}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            style={[styles.decision, { backgroundColor: theme.colors.primary.main }]}
+          >
+            <Text style={[styles.decisionText, { color: theme.colors.text.white }]}>채결</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleRejectButtonPress}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityHint="거절 사유를 입력해 신청자에게 보냅니다"
+            style={[styles.decision, { backgroundColor: theme.colors.statusChip.rejected.bg }]}
+          >
+            <Text style={[styles.decisionText, { color: theme.colors.statusChip.rejected.fg }]}>
+              거절
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 보조 도구 — 결정이 아니라 부가 작업이라 아이콘 + 라벨로 작게 */}
+        <View style={styles.toolRow}>
+          {isPending ? (
+            <TouchableOpacity
+              onPress={() => handleStatusUpdate(CONSULTATION_STATUS.ON_HOLD)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              style={styles.tool}
+            >
+              <MaterialIcons name="pause-circle-outline" size={17} color={theme.colors.text.secondary} />
+              <Text style={[styles.toolText, { color: theme.colors.text.secondary }]}>보류</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <TouchableOpacity
+            onPress={handleMemoButtonPress}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="보류"
-            style={[styles.iconAction, { borderColor: theme.colors.border.subtle }]}
+            style={styles.tool}
           >
-            <MaterialIcons name="schedule" size={19} color={theme.colors.text.secondary} />
+            <MaterialIcons
+              name={adminMemo ? 'note' : 'note-add'}
+              size={17}
+              color={adminMemo ? theme.colors.primary.main : theme.colors.text.secondary}
+            />
+            <Text
+              style={[styles.toolText, {
+                color: adminMemo ? theme.colors.primary.main : theme.colors.text.secondary,
+              }]}
+            >
+              메모
+            </Text>
           </TouchableOpacity>
-        ) : null}
 
-        <TouchableOpacity
-          onPress={handleMemoButtonPress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={adminMemo ? '관리자 메모 보기' : '관리자 메모 추가'}
-          style={[styles.iconAction, { borderColor: theme.colors.border.subtle }]}
-        >
-          <MaterialIcons
-            name={adminMemo ? 'note' : 'note-add'}
-            size={19}
-            color={adminMemo ? theme.colors.primary.main : theme.colors.text.secondary}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleSuggestTimesButtonPress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="대체 일정 제안"
-          style={[styles.iconAction, { borderColor: theme.colors.border.subtle }]}
-        >
-          <MaterialIcons
-            name="event-repeat"
-            size={19}
-            color={alternativeSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.secondary}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleRejectButtonPress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="거절"
-          style={[styles.iconAction, { backgroundColor: theme.colors.statusChip.rejected.bg }]}
-        >
-          <MaterialIcons name="close" size={19} color={theme.colors.danger.main} />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={handleSuggestTimesButtonPress}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            style={styles.tool}
+          >
+            <MaterialIcons
+              name="event-repeat"
+              size={17}
+              color={alternativeSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.secondary}
+            />
+            <Text
+              style={[styles.toolText, {
+                color: alternativeSlots.length > 0 ? theme.colors.primary.main : theme.colors.text.secondary,
+              }]}
+            >
+              일정 제안{alternativeSlots.length > 0 ? ` ${alternativeSlots.length}` : ''}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </>
     );
   };
 
@@ -490,26 +509,15 @@ const styles = StyleSheet.create({
   waiting: { fontSize: 11, fontWeight: '600' },
   phone: { fontSize: 13, marginTop: 10 },
 
-  // 액션 — margin이 아니라 gap으로 띄운다. margin은 flex:1과 합쳐지면
-  // 폭 계산이 어긋나 카드 밖으로 넘친다(예전 버그).
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
-  primaryAction: {
-    flex: 1,
-    height: 46,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryActionText: { fontSize: 14, fontWeight: '600' },
-  iconAction: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  // margin이 아니라 gap으로 띄운다. margin은 flex:1과 합쳐지면 폭 계산이
+  // 어긋나 카드 밖으로 넘친다(예전 버그).
+  decisionRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  decision: { flex: 1, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  decisionText: { fontSize: 14, fontWeight: '600' },
+
+  toolRow: { flexDirection: 'row', gap: 18, marginTop: 12, paddingLeft: 2 },
+  tool: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  toolText: { fontSize: 12, fontWeight: '600' },
 
   loadingContainer: {
     flexDirection: 'row',

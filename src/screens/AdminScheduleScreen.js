@@ -24,6 +24,7 @@ import { formatPhone } from '../utils/format';
 import AdminHeader from '../components/admin/AdminHeader';
 import SpineCard from '../components/admin/SpineCard';
 import StateScreen from '../components/StateScreen';
+import RejectConsultationModal from '../components/modals/RejectConsultationModal';
 
 LocaleConfig.locales.ko = {
   monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
@@ -53,6 +54,7 @@ const AdminScheduleScreen = () => {
   const [consultations, setConsultations] = useState([]);
   const [selectedDate, setSelectedDate] = useState(toKey(new Date()));
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState(null);
 
   useEffect(() => {
     if (!user) { return () => {}; }
@@ -150,11 +152,23 @@ const AdminScheduleScreen = () => {
     }
   };
 
-  const confirmReject = (id) => {
-    Alert.alert('거절 확인', '정말 거절하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      { text: '거절', style: 'destructive', onPress: () => updateStatus(id, 'rejected') },
-    ]);
+  /**
+   * 거절은 사유를 받아 신청자에게 보낸다.
+   * 예전에는 이 화면만 사유 없이 Alert로 끝냈다 — 상담관리에서 거절하면 사유가
+   * 가고 일정에서 거절하면 안 가는 상태였다. 같은 결정을 두 경로가 다르게
+   * 처리할 이유가 없다.
+   */
+  const confirmReject = (id) => setRejectTarget(id);
+
+  const submitReject = async (rejectionReason) => {
+    try {
+      await updateConsultationStatus(rejectTarget, 'rejected', null, '', rejectionReason);
+      setRejectTarget(null);
+      Alert.alert('완료', '상담 요청이 거절되었습니다.');
+    } catch (error) {
+      Alert.alert('오류', '거절 처리 중 문제가 발생했습니다.');
+      logger.error('AdminScheduleScreen: reject failed', error);
+    }
   };
 
   const onRefresh = () => {
@@ -389,6 +403,12 @@ const AdminScheduleScreen = () => {
           />
         )}
       </ScrollView>
+
+      <RejectConsultationModal
+        isVisible={rejectTarget !== null}
+        onClose={() => setRejectTarget(null)}
+        onSubmit={submitReject}
+      />
     </SafeAreaView>
   );
 };
