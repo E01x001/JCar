@@ -23,6 +23,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
 import Card from '../components/Card';
+import OwnershipTransferRow from '../components/OwnershipTransferRow';
 import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
 import Button from '../components/Button';
@@ -250,6 +251,16 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
           theme={theme}
         />
       </Card>
+
+      {/* 명의이전 진행 — 체결된 거래에만 붙는다.
+          실제 이전은 관리자가 오프라인으로 처리하고, 신청자는 어디까지
+          갔는지 여기서 확인한다(예전에는 관리자만 조회할 수 있어 알 방법이
+          없었다). 신청자에게는 상태만 보이고 버튼은 없다. */}
+      {consultation.consultationStatus === 'completed' && (
+        <Card style={{ marginBottom: theme.spacing.md }}>
+          <OwnershipTransferRow consultationId={consultation.id} isAdmin={false} />
+        </Card>
+      )}
 
       {/* Rejection Reason Card (only for rejected status) */}
       {consultation.consultationStatus === 'rejected' && consultation.rejectionReason && (
