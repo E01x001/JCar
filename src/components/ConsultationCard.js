@@ -11,12 +11,13 @@ import PropTypes from 'prop-types';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatPhone, formatWaiting } from '../utils/format';
-import { updateConsultationStatus, completeConsultation, updateAdminMemo, updateSuggestedSlots } from '../services/consultation/consultationService';
+import { updateConsultationStatus, settleConsultation, closeConsultationUnsettled, updateAdminMemo, updateSuggestedSlots } from '../services/consultation/consultationService';
 import { useToast } from '../hooks/useToast';
 import { CONSULTATION_STATUS } from '../constants';
 import { AuthContext } from '../context/AuthContext';
 import SpineCard from './admin/SpineCard';
-import CompleteDealModal from './modals/CompleteDealModal';
+import SettleConsultationModal from './modals/SettleConsultationModal';
+import OwnershipTransferRow from './OwnershipTransferRow';
 import RejectConsultationModal from './modals/RejectConsultationModal';
 import AdminMemoModal from './modals/AdminMemoModal';
 import SuggestAlternativeTimesModal from './modals/SuggestAlternativeTimesModal';
@@ -46,7 +47,7 @@ const ConsultationCard = ({
 }) => {
   const theme = useTheme();
   const toast = useToast();
-  const { user } = useContext(AuthContext);
+  const { user, role } = useContext(AuthContext);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isRejectModalVisible, setIsRejectModalVisible] = useState(false);
@@ -136,62 +137,56 @@ const ConsultationCard = ({
   };
 
   /**
-   * Handle complete deal submission from modal
-   * Task 61: Implements optimistic UI with rollback on failure
-   * @param {Object} formData - { dealAmount, adminNotes, addToOwnedVehicles, transferOwnership }
+   * 체결 — 상담을 끝내고 명의이전 트랙을 연다.
+   *
+   * 예전에는 모달이 transferOwnership·vehicleId·sellerId·buyerId까지 넘겨줬는데
+   * 받는 쪽에서 전부 버렸다. 모달은 "소유권을 이전합니다"라고 말하고 확인까지
+   * 받는데 실제로는 아무 일도 일어나지 않았다. 이제 RPC가 이전 트랙을 만들고,
+   * 소유권은 관리자가 "이전 완료"로 표시할 때 움직인다.
    */
-  const handleCompleteDeal = async (formData) => {
-    // Task 61: Save original state for potential rollback
+  const handleSettle = async ({ dealAmount, adminNotes }) => {
     setOriginalConsultation(consultation);
-
-    // Task 61: Optimistic UI update - immediately show 'completed' status
     setOptimisticStatus(CONSULTATION_STATUS.COMPLETED);
     setIsModalVisible(false);
-
-    // Show optimistic success feedback
     toast.showInfo('거래를 처리하는 중입니다...');
-
     setIsUpdating(true);
+
     try {
-      await completeConsultation({
-        docId: id,
-        dealAmount: formData.dealAmount,
-        adminNotes: formData.adminNotes,
-        completedBy: user?.uid || null,
-        isSell: formData.addToOwnedVehicles, // Use transaction for sell-type with checkbox checked
-      });
-
-      // Task 61: Server confirmation successful - clear optimistic state
+      await settleConsultation({ consultationId: id, dealAmount, adminNotes });
       setOptimisticStatus(null);
-      setOriginalConsultation(null);
-      toast.showSuccess('거래가 완료되었습니다.');
-
-      // Notify parent to refresh data
-      if (onUpdateSuccess) {
-        onUpdateSuccess();
-      }
+      toast.showSuccess('체결되었습니다', '명의이전을 마치면 완료로 표시해주세요.');
+      if (onUpdateSuccess) { onUpdateSuccess(); }
     } catch (error) {
-      // Task 61: Rollback optimistic UI update on failure
-      logger.error('거래완료 처리 실패:', error);
       setOptimisticStatus(null);
-      setOriginalConsultation(null);
-
-      toast.showError('거래완료 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
-
-      // Refresh data from server to ensure consistency
-      if (onUpdateSuccess) {
-        onUpdateSuccess();
-      }
-
-      throw error; // Re-throw for modal to handle
+      logger.error('체결 처리 실패:', error);
+      toast.showError('오류', '체결 처리 중 문제가 발생했습니다.');
+      throw error;
     } finally {
       setIsUpdating(false);
     }
   };
 
-  /**
-   * Handle reject button - opens rejection modal
-   */
+  /** 미체결 — 상담만 닫는다. 사유는 받지 않는다. */
+  const handleCloseUnsettled = async () => {
+    setOptimisticStatus('archived');
+    setIsModalVisible(false);
+    setIsUpdating(true);
+
+    try {
+      await closeConsultationUnsettled(id);
+      setOptimisticStatus(null);
+      toast.showSuccess('상담을 종료했습니다', '거래로 이어지지 않은 것으로 기록됩니다.');
+      if (onUpdateSuccess) { onUpdateSuccess(); }
+    } catch (error) {
+      setOptimisticStatus(null);
+      logger.error('미체결 처리 실패:', error);
+      toast.showError('오류', '처리 중 문제가 발생했습니다.');
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleRejectButtonPress = () => {
     setIsRejectModalVisible(true);
   };
@@ -310,35 +305,59 @@ const ConsultationCard = ({
       );
     }
 
+    // 상태마다 남은 결정이 다르다.
+    //   pending  — 아직 받을지 말지. 승인 / 거절
+    //   진행 중  — 상담을 했고 이제 결과를 남긴다. 상담 종료(체결/미체결)
+    // 예전에는 approved에 아무 버튼도 없어서 **체결까지 갈 수가 없었다** —
+    // 예약과 수락은 되는데 계약이 안 되던 원인이 이것이다.
     const isPending = displayStatus === CONSULTATION_STATUS.PENDING;
-    const isOnHold = displayStatus === CONSULTATION_STATUS.ON_HOLD;
-    if (!isPending && !isOnHold) { return null; }
+    const isRunning = [
+      CONSULTATION_STATUS.APPROVED,
+      CONSULTATION_STATUS.CONFIRMED,
+      CONSULTATION_STATUS.ON_HOLD,
+      'meeting',
+    ].includes(displayStatus);
+    if (!isPending && !isRunning) { return null; }
 
     return (
       <>
         {/* 결정 두 개는 글자로 — 아이콘만 두면 무엇을 누르는지 알 수 없다.
             거절은 사유를 적어 보내는 동작이라 특히 숨기면 안 된다(모달이 열린다). */}
         <View style={styles.decisionRow}>
-          <TouchableOpacity
-            onPress={handleCompleteButtonPress}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            style={[styles.decision, { backgroundColor: theme.colors.primary.main }]}
-          >
-            <Text style={[styles.decisionText, { color: theme.colors.text.white }]}>채결</Text>
-          </TouchableOpacity>
+          {isPending ? (
+            <>
+              <TouchableOpacity
+                onPress={() => handleStatusUpdate(CONSULTATION_STATUS.APPROVED)}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                style={[styles.decision, { backgroundColor: theme.colors.primary.main }]}
+              >
+                <Text style={[styles.decisionText, { color: theme.colors.text.white }]}>승인</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={handleRejectButtonPress}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityHint="거절 사유를 입력해 신청자에게 보냅니다"
-            style={[styles.decision, { backgroundColor: theme.colors.statusChip.rejected.bg }]}
-          >
-            <Text style={[styles.decisionText, { color: theme.colors.statusChip.rejected.fg }]}>
-              거절
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleRejectButtonPress}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityHint="거절 사유를 입력해 신청자에게 보냅니다"
+                style={[styles.decision, { backgroundColor: theme.colors.statusChip.rejected.bg }]}
+              >
+                <Text style={[styles.decisionText, { color: theme.colors.statusChip.rejected.fg }]}>
+                  거절
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+              onPress={handleCompleteButtonPress}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityHint="체결 또는 미체결을 선택해 상담을 마칩니다"
+              style={[styles.decision, { backgroundColor: theme.colors.primary.main }]}
+            >
+              <Text style={[styles.decisionText, { color: theme.colors.text.white }]}>상담 종료</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* 보조 도구 — 결정이 아니라 부가 작업이라 아이콘 + 라벨로 작게 */}
@@ -456,15 +475,21 @@ const ConsultationCard = ({
         </Text>
 
         {renderActionButtons()}
+
+        {/* 체결된 상담에는 명의이전 트랙이 딸려 있다. 실제 이전은 관리자가
+            오프라인으로 처리하고 여기서 진행 상태를 표시한다. */}
+        {displayStatus === CONSULTATION_STATUS.COMPLETED ? (
+          <OwnershipTransferRow consultationId={id} isAdmin={role === 'admin'} />
+        ) : null}
       </SpineCard>
 
-      {/* Complete Deal Modal */}
-      <CompleteDealModal
+      <SettleConsultationModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        onSubmit={handleCompleteDeal}
-        consultationId={id}
+        onSettle={handleSettle}
+        onCloseUnsettled={handleCloseUnsettled}
         isSellType={type === 'sell'}
+        vehicleName={vehicleName}
       />
 
       {/* Reject Consultation Modal */}

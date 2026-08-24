@@ -368,3 +368,42 @@ export const getAllOwnershipTransfers = async (limitCount = 50) => {
     return [];
   }
 };
+
+/**
+ * 명의이전 진행 상태 변경.
+ *
+ * 실제 명의이전은 관리자가 오프라인(등록원부)으로 처리한다. 앱은 그 진행을
+ * 기록·표시만 하고, **'completed'로 넘길 때만** 앱 쪽 소유권이 움직인다
+ * (RPC advance_ownership_transfer 안에서 한 트랜잭션으로 처리된다).
+ *
+ * @param {string} transferId - ownership_transfers.id
+ * @param {'pending'|'in_progress'|'completed'} status
+ */
+export const advanceOwnershipTransfer = async (transferId, status) => {
+  const { error } = await supabase.rpc('advance_ownership_transfer', {
+    p_transfer_id: transferId,
+    p_status: status,
+  });
+  if (error) {
+    logger.error('명의이전 상태 변경 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 상담에 딸린 명의이전 1건.
+ *
+ * RLS가 당사자(판매자·구매자)와 관리자에게만 열어준다 — 신청자도 자기 거래의
+ * 진행 상태를 볼 수 있어야 하기 때문이다.
+ *
+ * @returns {Promise<Object|null>}
+ */
+export const getTransferByConsultation = async (consultationId) => {
+  const { data, error } = await supabase
+    .from('ownership_transfers')
+    .select('*')
+    .eq('consultation_id', consultationId)
+    .maybeSingle();
+  if (error) { throw error; }
+  return data ? rowToApp(data) : null;
+};

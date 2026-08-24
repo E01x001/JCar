@@ -231,41 +231,47 @@ export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
 };
 
 /**
- * 거래 완료 처리.
- * - 구매(buy): 단순 상태 업데이트
- * - 판매(sell): RPC complete_sell_consultation — 상담 completed + 매입기록 +
- *   차량 in_stock + 매입가(vehicle_pricing)를 한 트랜잭션으로. 멱등(consultation_id UNIQUE).
+ * 체결 — 상담을 끝내고 명의이전 트랙을 연다.
+ *
+ * 소유권·재고·매입가는 여기서 움직이지 않는다. 실제 명의이전은 관리자가
+ * 오프라인으로 처리하고, 앱은 그 진행을 기록·표시만 한다.
+ * 소유권이 실제로 바뀌는 시점은 advanceOwnershipTransfer('completed')다.
+ *
+ * @returns {Promise<string>} 생성된 ownership_transfers.id
  */
-export const completeConsultation = async ({ docId, dealAmount, adminNotes = '', completedBy, isSell = false }) => {
+export const settleConsultation = async ({ consultationId, dealAmount, adminNotes = '' }) => {
   try {
-    if (!isSell) {
-      const updateData = {
-        consultation_status: 'completed',
-        completed_at: new Date().toISOString(),
-        deal_amount: Number(dealAmount),
-        completed_by: completedBy,
-      };
-      if (adminNotes) { updateData.admin_notes = adminNotes; }
-
-      const { error } = await supabase
-        .from('consultation_requests')
-        .update(updateData)
-        .eq('id', docId);
-      if (error) { throw error; }
-      return { success: true };
-    }
-
-    const { error } = await supabase.rpc('complete_sell_consultation', {
-      p_consultation_id: docId,
+    const { data, error } = await supabase.rpc('settle_consultation', {
+      p_consultation_id: consultationId,
       p_deal_amount: Number(dealAmount),
       p_admin_notes: adminNotes || null,
     });
     if (error) { throw error; }
-    return { success: true };
+    return data;
   } catch (error) {
-    logger.error('거래완료 처리 오류:', error);
+    logger.error('체결 처리 오류:', error);
     reportCrashlyticsError(error);
-    logCrashlyticsMessage('completeConsultation failed');
+    logCrashlyticsMessage('settleConsultation failed');
+    throw error;
+  }
+};
+
+/**
+ * 미체결 — 상담만 닫는다.
+ *
+ * 상담 전 거절(rejected)과 다르다. 상담까지 하고 성사되지 않은 경우이고,
+ * 사유는 받지 않는다(클릭 한 번으로 끝나는 편이 실제로 쓰인다).
+ */
+export const closeConsultationUnsettled = async (consultationId) => {
+  try {
+    const { error } = await supabase.rpc('close_consultation_unsettled', {
+      p_consultation_id: consultationId,
+    });
+    if (error) { throw error; }
+  } catch (error) {
+    logger.error('미체결 처리 오류:', error);
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('closeConsultationUnsettled failed');
     throw error;
   }
 };
