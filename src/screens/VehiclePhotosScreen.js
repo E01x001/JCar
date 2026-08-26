@@ -123,8 +123,10 @@ const VehiclePhotosScreen = ({ route, navigation }) => {
       );
       navigation.goBack();
     } catch (error) {
+      // 원인을 뭉개지 않는다. 업로드는 용량·형식·권한 등 실패 이유가 여럿이고,
+      // "저장하지 못했습니다"만 보여주면 사용자도 우리도 다음 수를 알 수 없다.
       logger.error('사진 저장 실패:', error);
-      toast.showError('오류', '사진을 저장하지 못했습니다.');
+      toast.showError('저장 실패', error?.message || '사진을 저장하지 못했습니다.');
     } finally {
       setSaving(false);
     }

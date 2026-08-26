@@ -20,6 +20,28 @@ const extFromUri = (uri) => {
 const randomName = (uri) =>
   `vehicle_${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${extFromUri(uri)}`;
 
+/**
+ * 업로드할 Content-Type을 **우리가 정한다.**
+ *
+ * 버킷이 image/jpeg·png·webp만 받는데(20260818113000), RN의 fetch(file://)가
+ * 돌려주는 blob.type은 환경에 따라 'application/octet-stream'이거나 빈 문자열이다.
+ * 그 값을 그대로 넘기면 스토리지가 415 invalid_mime_type으로 거부한다 —
+ * 실제로 사진 업로드가 이 경로로 실패했다.
+ *
+ * blob.type은 image/*일 때만 신뢰하고, 아니면 확장자에서 정한다.
+ */
+const MIME_BY_EXT = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+};
+
+const resolveContentType = (uri, blobType) => {
+  if (typeof blobType === 'string' && blobType.startsWith('image/')) { return blobType; }
+  return MIME_BY_EXT[extFromUri(uri)] ?? 'image/jpeg';
+};
+
 /** 업로드 경로 — 스토리지 정책이 요구하는 {uid}/ 접두사를 붙인다 */
 const buildPath = async (uri) => {
   const { data, error } = await supabase.auth.getUser();
@@ -44,11 +66,18 @@ export const uploadImage = async (uri) => {
     // ArrayBuffer를 우선 사용하고, 미지원 환경에서만 Blob으로 폴백한다.
     const blob = await response.blob();
     const body = typeof blob.arrayBuffer === 'function' ? await blob.arrayBuffer() : blob;
+
+    // 0바이트가 올라가면 스토리지는 성공으로 답하고 깨진 이미지만 남는다.
+    // 여기서 끊어야 원인이 드러난다.
+    const size = body?.byteLength ?? blob?.size ?? 0;
+    if (!size) { throw new Error('이미지를 읽지 못했습니다. 다시 선택해주세요.'); }
+
     const path = await buildPath(uri);
+    const contentType = resolveContentType(uri, blob.type);
 
     const { error } = await supabase.storage
       .from(BUCKET)
-      .upload(path, body, { contentType: blob.type || 'image/jpeg', upsert: false });
+      .upload(path, body, { contentType, upsert: false });
     if (error) { throw error; }
 
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
