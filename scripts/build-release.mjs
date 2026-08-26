@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+/**
+ * 릴리스 AAB 빌드 — OTA 채널을 명시적으로 박고, 박혔는지 검증한다.
+ *
+ * 왜 스크립트가 필요한가:
+ *   OTA 채널은 prebuild 시점에 AndroidManifest.xml로 들어가고, 그 뒤로는
+ *   **OTA로 바꿀 수 없다.** 채널이 틀린 AAB를 올리면 업데이트가 엉뚱한 쪽으로
+ *   가거나 아무것도 안 오는데, 둘 다 조용히 실패해서 알아채기 어렵다.
+ *   그래서 채널을 인자로 강제하고, 빌드 후 매니페스트를 직접 읽어 확인한다.
+ *
+ * 사용:
+ *   node scripts/build-release.mjs --channel preview      # 내부 테스트용
+ *   node scripts/build-release.mjs --channel production   # 운영 배포용
+ *   node scripts/build-release.mjs --channel preview --skip-prebuild
+ *
+ * 빌드만 한다. 업로드는 scripts/publish-internal.mjs가 맡는다.
+ */
+import { spawnSync } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const MANIFEST = resolve(ROOT, 'android/app/src/main/AndroidManifest.xml');
+const AAB = resolve(ROOT, 'android/app/build/outputs/bundle/release/app-release.aab');
+
+const VALID_CHANNELS = ['preview', 'production'];
+
+const arg = (name) => {
+  const i = process.argv.indexOf(`--${name}`);
+  return i === -1 ? null : process.argv[i + 1];
+};
+const flag = (name) => process.argv.includes(`--${name}`);
+
+const die = (message) => {
+  console.error(`\n오류: ${message}\n`);
+  process.exit(1);
+};
+
+const run = (cmd, args, env = {}) => {
+  const r = spawnSync(cmd, args, {
+    cwd: ROOT,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+    env: { ...process.env, ...env },
+  });
+  if (r.status !== 0) { die(`${cmd} 실패 (exit ${r.status})`); }
+};
+
+const channel = arg('channel');
+if (!VALID_CHANNELS.includes(channel)) {
+  die(
+    `--channel 을 지정하세요: ${VALID_CHANNELS.join(' | ')}\n` +
+    '  preview    내부 테스트 트랙용. eas update --branch preview 를 받는다.\n' +
+    '  production 운영 트랙용. eas update --branch production 을 받는다.\n\n' +
+    '기본값을 두지 않는 이유: 채널은 바이너리에 박혀 OTA로 못 바꾼다.',
+  );
+}
+
+console.log(`\n채널: ${channel}\n`);
+
+if (!flag('skip-prebuild')) {
+  console.log('prebuild — 네이티브 프로젝트를 app.config.js로부터 다시 만든다');
+  run('npx', ['expo', 'prebuild', '--platform', 'android', '--no-install'], {
+    EXPO_UPDATE_CHANNEL: channel,
+  });
+}
+
+// prebuild 결과를 믿지 않고 직접 읽는다. 채널이 어긋나면 여기서 멈춘다 —
+// 잘못된 AAB를 올린 뒤에 알게 되면 되돌리는 데 릴리스가 한 번 더 든다.
+if (!existsSync(MANIFEST)) { die('AndroidManifest.xml 을 찾을 수 없습니다. prebuild가 실패했습니다.'); }
+const manifest = readFileSync(MANIFEST, 'utf8');
+
+const headers = /UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY"\s+android:value="([^"]+)"/.exec(manifest);
+const enabled = /updates\.ENABLED"\s+android:value="([^"]+)"/.exec(manifest);
+const url = /EXPO_UPDATE_URL"\s+android:value="([^"]+)"/.exec(manifest);
+
+if (enabled?.[1] !== 'true') { die('매니페스트에서 expo-updates가 비활성입니다.'); }
+if (!url) { die('매니페스트에 EXPO_UPDATE_URL이 없습니다.'); }
+if (!headers) { die('매니페스트에 업데이트 채널이 없습니다. EAS Build를 쓰지 않으므로 채널은 app.config.js가 넣어야 합니다.'); }
+
+// android:value 안에서 따옴표는 &quot; 로 이스케이프돼 있다
+const baked = /expo-channel-name"?:"?([\w-]+)/.exec(headers[1].replace(/&quot;/g, '"'))?.[1];
+if (baked !== channel) {
+  die(`매니페스트의 채널이 다릅니다. 요청=${channel} 실제=${baked ?? '(없음)'}`);
+}
+
+console.log(`\n확인 — 채널 ${baked} · updates 활성 · ${url[1]}\n`);
+
+console.log('gradle bundleRelease');
+run(process.platform === 'win32' ? 'gradlew.bat' : './gradlew', ['-p', 'android', 'bundleRelease']);
+
+if (!existsSync(AAB)) { die('AAB가 생성되지 않았습니다.'); }
+const mb = (readFileSync(AAB).length / 1024 / 1024).toFixed(1);
+console.log(`\n완료 — ${AAB} (${mb} MB, 채널 ${channel})`);
+console.log('업로드: node scripts/publish-internal.mjs --notes "..."\n');

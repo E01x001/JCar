@@ -10,17 +10,48 @@
 
 const IS_DEV = process.env.APP_VARIANT === 'development';
 
+// OTA 업데이트 채널. **네이티브 바이너리에 박히므로 빌드 시점에 정해진다** —
+// 나중에 OTA로는 못 바꾼다. 그래서 빌드 스크립트(scripts/build-release.mjs)가
+// 명시적으로 넘기게 하고, 빌드 후 AndroidManifest에 제대로 들어갔는지 검증한다.
+//
+// 기본값이 production인 이유: 실수로 채널이 빠졌을 때
+//   운영 빌드에 preview가 박히면 → 실사용자가 검증 안 된 업데이트를 받는다 (위험)
+//   내부 빌드에 production이 박히면 → 테스터가 운영 업데이트를 받는다 (불편)
+// 둘 중 덜 위험한 쪽으로 기운다.
+const UPDATE_CHANNEL = process.env.EXPO_UPDATE_CHANNEL || 'production';
+
 export default {
   expo: {
     name: 'J-Car',
     slug: 'jcar',
-    version: '1.0.16',
+    version: '1.0.17',
     orientation: 'portrait',
     icon: './src/assets/icon.png',
     userInterfaceStyle: 'light',
     // 딥링크 스킴 — 이메일 인증/비밀번호 재설정 후 앱으로 복귀하는 경로
     scheme: 'jcar',
     newArchEnabled: true,
+
+    // ── OTA 업데이트 (EAS Update) ──────────────────────────────────────
+    // JS/에셋 변경은 스토어 심사 없이 내보낸다. 네이티브가 바뀌면(모듈 추가,
+    // 권한, app.config의 네이티브 필드) OTA로 못 보내고 스토어 빌드가 필요하다.
+    //
+    // runtimeVersion 'fingerprint': 네이티브 프로젝트 지문으로 런타임을 정한다.
+    // 'appVersion'을 쓰면 version을 올릴 때마다 런타임이 갈라져서, JS만 고치고
+    // version을 올리면 기존 설치본에 업데이트가 **닿지 않는다.** 지문은 네이티브가
+    // 바뀔 때만 달라지므로 그 사고가 구조적으로 막힌다.
+    runtimeVersion: { policy: 'fingerprint' },
+
+    updates: {
+      url: 'https://u.expo.dev/de9da75a-473d-4d05-9108-42a36bc8221d',
+      // EAS Build가 아니라 로컬 gradle로 빌드하므로 채널이 자동으로 안 박힌다.
+      // 이 헤더가 없으면 업데이트를 받아올 채널을 몰라 **조용히 아무것도 안 온다.**
+      requestHeaders: { 'expo-channel-name': UPDATE_CHANNEL },
+      // 앱 시작 시 확인하되, 받아오는 동안 기다리지 않는다(최대 5초).
+      // 실패해도 기존 번들로 그냥 뜬다 — 업데이트 때문에 앱이 안 켜지면 안 된다.
+      checkAutomatically: 'ON_LOAD',
+      fallbackToCacheTimeout: 5000,
+    },
 
     splash: {
       image: './src/assets/logo.png',
@@ -34,7 +65,7 @@ export default {
       package: IS_DEV ? 'com.jcarnew.dev' : 'com.jcarnew',
       // 사이드로드(GitHub Releases APK)로 배포된 마지막 빌드가 1.0.1/101이었다.
       // 버전이 뒤로 가지 않도록 그 위에서 이어간다. Play 업로드마다 1씩 올릴 것.
-      versionCode: 116,
+      versionCode: 117,
       googleServicesFile: './google-services.json',
       // 의존성이 끌고 온 미사용 권한 — Play 심사에서 용도 소명을 요구하므로 제거한다.
       // 앱에 오디오 녹음도, 다른 앱 위에 그리는 오버레이도 없다(화면 내 모달만 쓴다).
@@ -125,7 +156,7 @@ export default {
 
     extra: {
       eas: {
-        // eas init 실행 시 프로젝트 ID가 채워진다
+        projectId: 'de9da75a-473d-4d05-9108-42a36bc8221d',
       },
     },
   },

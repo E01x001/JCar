@@ -10,7 +10,11 @@
     "web": "expo start --web",
     "prebuild": "expo prebuild",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:preview": "node scripts/build-release.mjs --channel preview",
+    "build:production": "node scripts/build-release.mjs --channel production",
+    "update:preview": "eas update --branch preview",
+    "update:production": "eas update --branch production"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -37,6 +41,7 @@
     "expo-image-picker": "~57.0.10",
     "expo-splash-screen": "~57.0.6",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.17",
     "jest-expo": "~57.0.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
