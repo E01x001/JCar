@@ -85,15 +85,28 @@ if (baked !== channel) {
   die(`매니페스트의 채널이 다릅니다. 요청=${channel} 실제=${baked ?? '(없음)'}`);
 }
 
-console.log(`\n확인 — 채널 ${baked} · updates 활성 · ${url[1]}\n`);
+// 런타임 버전 — 업데이트가 이 빌드에 배달될지 정하는 값.
+// strings.xml에 들어가며, eas update 때 계산되는 값과 정확히 같아야 한다.
+const STRINGS = resolve(ROOT, 'android/app/src/main/res/values/strings.xml');
+const runtime = /name="expo_runtime_version">([^<]+)</.exec(readFileSync(STRINGS, 'utf8'))?.[1];
+if (!runtime) { die('strings.xml에 expo_runtime_version이 없습니다.'); }
+if (runtime.startsWith('file:')) {
+  die(
+    `런타임 버전이 자동 계산 방식(${runtime})입니다. app.config.js에서 `
+    + 'runtimeVersion을 명시적인 문자열로 두세요 — 자동 계산은 빌드와 '
+    + 'eas update 사이에서 값이 갈려 업데이트가 조용히 배달되지 않았습니다.',
+  );
+}
 
-console.log('gradle bundleRelease');
+console.log(`\n확인 — 채널 ${baked} · 런타임 ${runtime} · updates 활성 · ${url[1]}\n`);
 // 래퍼는 android/ 안에 있다. cwd가 프로젝트 루트라 경로를 붙여야 한다 —
 // 이름만 주면 윈도우에서 "실행할 수 있는 프로그램이 아닙니다"로 죽는다.
 const gradlew = resolve(ROOT, 'android', process.platform === 'win32' ? 'gradlew.bat' : 'gradlew');
-run(`"${gradlew}"`, ['-p', 'android', 'bundleRelease']);
+// gradle에도 같은 채널을 넘긴다. prebuild에만 주면 빌드 중 app.config를
+// 다시 해석하는 단계에서 값이 갈린다.
+run(`"${gradlew}"`, ['-p', 'android', 'bundleRelease'], { EXPO_UPDATE_CHANNEL: channel });
 
 if (!existsSync(AAB)) { die('AAB가 생성되지 않았습니다.'); }
 const mb = (readFileSync(AAB).length / 1024 / 1024).toFixed(1);
-console.log(`\n완료 — ${AAB} (${mb} MB, 채널 ${channel})`);
+console.log(`\n완료 — ${AAB} (${mb} MB, 채널 ${channel}, 런타임 ${runtime})`);
 console.log('업로드: node scripts/publish-internal.mjs --notes "..."\n');

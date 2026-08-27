@@ -24,7 +24,7 @@ export default {
   expo: {
     name: 'J-Car',
     slug: 'jcar',
-    version: '1.0.17',
+    version: '1.0.18',
     orientation: 'portrait',
     icon: './src/assets/icon.png',
     userInterfaceStyle: 'light',
@@ -36,11 +36,21 @@ export default {
     // JS/에셋 변경은 스토어 심사 없이 내보낸다. 네이티브가 바뀌면(모듈 추가,
     // 권한, app.config의 네이티브 필드) OTA로 못 보내고 스토어 빌드가 필요하다.
     //
-    // runtimeVersion 'fingerprint': 네이티브 프로젝트 지문으로 런타임을 정한다.
-    // 'appVersion'을 쓰면 version을 올릴 때마다 런타임이 갈라져서, JS만 고치고
-    // version을 올리면 기존 설치본에 업데이트가 **닿지 않는다.** 지문은 네이티브가
-    // 바뀔 때만 달라지므로 그 사고가 구조적으로 막힌다.
-    runtimeVersion: { policy: 'fingerprint' },
+    // runtimeVersion — 업데이트가 어떤 빌드에 배달될지 정하는 값.
+    // 빌드에 박힌 값과 `eas update` 때 계산된 값이 **정확히 같아야** 배달된다.
+    //
+    // 'fingerprint' 정책을 먼저 썼다가 접었다. 지문은 app.config가 해석된 결과에
+    // 의존하는데, 우리는 채널을 환경변수로 주입하므로 같은 코드에서도
+    // 채널에 따라 지문이 갈렸다(preview c1d8ba… / production df877b…).
+    // 게다가 빌드 시점 지문(e4d38f3f…)을 나중에 재현할 수 없었고,
+    // EXPO_UPDATES_FINGERPRINT_OVERRIDE는 eas update에서 무시된다.
+    // 자동 계산이 어긋나면 **오류 없이 업데이트가 안 오는** 형태로 나타나므로,
+    // 눈에 보이고 손으로 통제되는 값이 낫다.
+    //
+    // 규칙: 네이티브가 바뀌면(모듈 추가·권한·plugins·SDK) 이 값을 올린다.
+    //       올리지 않으면 새 JS가 옛 네이티브 바이너리로 배달될 수 있다.
+    //       docs/OTA_UPDATES.md 참고.
+    runtimeVersion: '2',
 
     updates: {
       url: 'https://u.expo.dev/de9da75a-473d-4d05-9108-42a36bc8221d',
@@ -65,7 +75,7 @@ export default {
       package: IS_DEV ? 'com.jcarnew.dev' : 'com.jcarnew',
       // 사이드로드(GitHub Releases APK)로 배포된 마지막 빌드가 1.0.1/101이었다.
       // 버전이 뒤로 가지 않도록 그 위에서 이어간다. Play 업로드마다 1씩 올릴 것.
-      versionCode: 117,
+      versionCode: 118,
       googleServicesFile: './google-services.json',
       // 의존성이 끌고 온 미사용 권한 — Play 심사에서 용도 소명을 요구하므로 제거한다.
       // 앱에 오디오 녹음도, 다른 앱 위에 그리는 오버레이도 없다(화면 내 모달만 쓴다).
