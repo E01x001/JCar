@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ScrollView, Alert, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BuildInfo from '../components/admin/BuildInfo';
 import { TabView, TabBar } from 'react-native-tab-view';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { signOutUser } from '../services/auth/supabaseAuthService';
@@ -245,6 +246,9 @@ const AdminPageScreen = ({ navigation }) => {
             title="회원탈퇴"
             onPress={handleDeleteAccount}
           />
+
+          {/* 지금 돌고 있는 빌드/OTA를 확인할 수 있게 — OTA는 조용히 실패한다 */}
+          <BuildInfo />
 
           {/* Dev-only Test Buttons */}
           {__DEV__ && (
