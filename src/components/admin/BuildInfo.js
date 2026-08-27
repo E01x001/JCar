@@ -38,6 +38,12 @@ const BuildInfo = () => {
     ],
   ];
 
+  // 언제 발행된 JS인지. "업데이트했는데 안 바뀐다"는 신고를 받았을 때
+  // 기기가 실제로 어느 시점 번들을 들고 있는지 이 값이 답한다.
+  if (Updates.createdAt) {
+    rows.push(['발행 시각', new Date(Updates.createdAt).toLocaleString('ko-KR')]);
+  }
+
   return (
     <View style={[styles.wrap, { borderTopColor: theme.colors.border.light }]}>
       <Text style={[styles.title, { color: theme.colors.text.secondary }]}>빌드 정보</Text>
