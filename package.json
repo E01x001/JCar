@@ -13,8 +13,9 @@
     "lint": "eslint .",
     "build:preview": "node scripts/build-release.mjs --channel preview",
     "build:production": "node scripts/build-release.mjs --channel production",
-    "update:preview": "eas update --branch preview",
-    "update:production": "eas update --branch production"
+    "update:preview": "node scripts/native-drift.mjs check && eas update --branch preview",
+    "update:production": "node scripts/native-drift.mjs check && eas update --branch production",
+    "check:native": "node scripts/native-drift.mjs check"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

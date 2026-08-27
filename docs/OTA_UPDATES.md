@@ -69,6 +69,27 @@ env 없음(production으로 해석)  → df877b…
 `scripts/build-release.mjs`가 빌드 전에 `strings.xml`을 읽어 런타임을 확인하고,
 `file:`로 시작하면(자동 계산 방식) 멈춘다.
 
+### 안 올렸을 때를 자동으로 막는다
+
+명시값의 약점은 **사람이 잊는다**는 것이다. 잊으면 없는 네이티브를 호출하는 JS가
+OTA로 배달되고, 스토어 심사도 없어서 전 기기가 죽는다. 그래서 강제한다.
+
+빌드가 끝나면 `native-fingerprint.json`에 그 빌드의 네이티브 지문을 기록하고,
+`npm run update:*`은 발행 전에 다시 계산해 비교한다. 다르면 멈춘다.
+
+```
+네이티브 변경 없음 — 런타임 2. OTA로 보낼 수 있습니다.     ← 통과
+네이티브 입력이 바뀌었습니다. 이 변경은 OTA로 보낼 수 없습니다.  ← 차단
+런타임이 기록과 다릅니다 (기록 2 → 현재 3).                ← 차단(빌드 먼저)
+```
+
+지문에서 `android/`는 뺀다. CNG 프로젝트라 그건 app.config와 node_modules에서
+**생성되는 결과물**이지 입력이 아니고, 거기엔 채널이 박혀 있어 채널만 바꿔도
+네이티브가 바뀐 것처럼 보이는 오탐이 난다. 같은 이유로 `EXPO_UPDATE_CHANNEL`을
+지운 상태에서 계산한다.
+
+`native-fingerprint.json`은 **커밋한다.** 어느 빌드가 나가 있는지가 기록이다.
+
 ---
 
 ## 채널이 박히는 자리 (Taxitogether와 다른 점)
@@ -114,6 +135,7 @@ updates: { requestHeaders: { 'expo-channel-name': UPDATE_CHANNEL } }
 ```bash
 npm test && npm run lint          # 게이트를 건너뛰지 않는다. 심사가 없다는 뜻은
                                   # 잘못 나가도 막아줄 사람이 없다는 뜻이다.
+npm run check:native              # (update:* 가 자동으로 먼저 돌린다)
 npm run update:preview            # 내부 테스터에게 먼저
 # 기기에서 확인한 뒤
 npm run update:production         # 운영으로

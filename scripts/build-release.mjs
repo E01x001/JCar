@@ -109,4 +109,8 @@ run(`"${gradlew}"`, ['-p', 'android', 'bundleRelease'], { EXPO_UPDATE_CHANNEL: c
 if (!existsSync(AAB)) { die('AAB가 생성되지 않았습니다.'); }
 const mb = (readFileSync(AAB).length / 1024 / 1024).toFixed(1);
 console.log(`\n완료 — ${AAB} (${mb} MB, 채널 ${channel}, 런타임 ${runtime})`);
+// 이 빌드가 담고 있는 네이티브 상태를 기록한다. 이후 OTA 발행 전에
+// 이 값과 비교해, 네이티브가 바뀌었는데 런타임을 안 올린 경우를 막는다.
+run('node', ['scripts/native-drift.mjs', 'record']);
+
 console.log('업로드: node scripts/publish-internal.mjs --notes "..."\n');
