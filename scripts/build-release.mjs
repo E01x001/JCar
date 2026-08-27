@@ -88,7 +88,10 @@ if (baked !== channel) {
 console.log(`\n확인 — 채널 ${baked} · updates 활성 · ${url[1]}\n`);
 
 console.log('gradle bundleRelease');
-run(process.platform === 'win32' ? 'gradlew.bat' : './gradlew', ['-p', 'android', 'bundleRelease']);
+// 래퍼는 android/ 안에 있다. cwd가 프로젝트 루트라 경로를 붙여야 한다 —
+// 이름만 주면 윈도우에서 "실행할 수 있는 프로그램이 아닙니다"로 죽는다.
+const gradlew = resolve(ROOT, 'android', process.platform === 'win32' ? 'gradlew.bat' : 'gradlew');
+run(`"${gradlew}"`, ['-p', 'android', 'bundleRelease']);
 
 if (!existsSync(AAB)) { die('AAB가 생성되지 않았습니다.'); }
 const mb = (readFileSync(AAB).length / 1024 / 1024).toFixed(1);
