@@ -57,7 +57,7 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice = true, style }) =
       <View style={[styles.clip, { borderRadius: theme.borderRadius.card }]}>
       <View style={styles.imageWrap}>
         {image ? (
-          <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
+          <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: theme.colors.background.tertiary }]}>
             <Text style={{ color: theme.colors.text.tertiary, fontSize: 12 }}>차량 이미지</Text>

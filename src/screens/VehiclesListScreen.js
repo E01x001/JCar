@@ -117,7 +117,7 @@ const VehiclesListScreen = ({ navigation }) => {
     return (
       <TouchableOpacity onPress={() => goDetail(item.id)} activeOpacity={0.75} style={styles.popRow}>
         {image ? (
-          <Image source={{ uri: image }} style={[styles.popThumb, styles.popThumbBg]} resizeMode="contain" />
+          <Image source={{ uri: image }} style={[styles.popThumb, styles.popThumbBg]} resizeMode="cover" />
         ) : (
           <View style={[styles.popThumb, { backgroundColor: theme.colors.background.tertiary }]} />
         )}

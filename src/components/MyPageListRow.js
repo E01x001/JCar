@@ -42,7 +42,7 @@ const MyPageListRow = ({
       <Card elevated style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.row}>
           {image ? (
-            <Image source={{ uri: image }} style={[styles.thumb, styles.thumbBg]} resizeMode="contain" />
+            <Image source={{ uri: image }} style={[styles.thumb, styles.thumbBg]} resizeMode="cover" />
           ) : (
             <View style={[styles.thumb, styles.thumbBg, styles.thumbEmpty]}>
               <Icon name="directions-car" size={26} color="#A9B4C7" />
