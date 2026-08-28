@@ -9,17 +9,11 @@ import React from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 import { useTheme } from '../theme/ThemeProvider';
+import { pickVehicleImage } from '../utils/vehicleImage';
 import { formatPrice } from '../utils/format';
 import { PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 import { DEAL_STAGE, DEAL_STAGE_LABELS } from '../constants/vehicle';
 
-/**
- * 차량 이미지 URL 정규화 — imageUrl은 배열 또는 문자열일 수 있음(firestore.js 참조).
- */
-const resolveImage = (imageUrl) => {
-  if (Array.isArray(imageUrl)) { return imageUrl[0] || null; }
-  return imageUrl || null;
-};
 
 /**
  * VehicleCard Component
@@ -35,8 +29,9 @@ const resolveImage = (imageUrl) => {
  */
 const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice = true, style }) => {
   const theme = useTheme();
-  const { vehicleName, manufacturer, year, price, imageUrl, carType, dealStage } = vehicle || {};
-  const image = resolveImage(imageUrl);
+  const { vehicleName, manufacturer, year, price, carType, dealStage } = vehicle || {};
+  // 실사진이면 채우고, 카탈로그(흰 배경 PNG)면 잘리지 않게 넣는다
+  const picked = pickVehicleImage(vehicle);
   // 미매입(매입예정) vs 재고(즉시거래) 구분 배지
   const inStock = dealStage === DEAL_STAGE.IN_STOCK;
   const stageLabel = DEAL_STAGE_LABELS[dealStage];
@@ -56,8 +51,8 @@ const VehicleCard = ({ vehicle, onPress, statusDot, hidePrice = true, style }) =
           (같은 View에 overflow:hidden+shadow를 주면 iOS에서 그림자가 잘려 모서리가 이상해짐) */}
       <View style={[styles.clip, { borderRadius: theme.borderRadius.card }]}>
       <View style={styles.imageWrap}>
-        {image ? (
-          <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+        {picked ? (
+          <Image source={{ uri: picked.uri }} style={styles.image} resizeMode={picked.resizeMode} />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: theme.colors.background.tertiary }]}>
             <Text style={{ color: theme.colors.text.tertiary, fontSize: 12 }}>차량 이미지</Text>

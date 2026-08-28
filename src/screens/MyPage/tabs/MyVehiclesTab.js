@@ -5,6 +5,7 @@ import { useTheme } from '../../../theme/ThemeProvider';
 import EmptyState from '../../../components/EmptyState';
 import MyPageListRow from '../../../components/MyPageListRow';
 import { PRICE_HIDDEN_LABEL } from '../../../utils/vehiclePrice';
+import { pickVehicleImage } from '../../../utils/vehicleImage';
 
 // 차종 → 태그 색(시안)
 const tagPalette = (type, theme) => {
@@ -34,13 +35,16 @@ const MyVehiclesTab = ({ vehicles, onNavigateToVehicle, onManagePhotos }) => {
     // 실사진이 없으면 다른 사용자에게 노출되지 않는다. 판매자가 그 사실과
     // 해결 방법을 여기서 바로 알아야 한다 — 모르면 등록이 실패한 줄 안다.
     const noPhoto = !Array.isArray(item.imageUrls) || item.imageUrls.length === 0;
+    // 실사진이 없으면 카탈로그 이미지로 대신 보여준다(방식도 함께 정해진다)
+    const picked = pickVehicleImage(item);
     const meta = [item.manufacturer, item.year, item.mileage ? `${item.mileage}` : null]
       .filter(Boolean)
       .join(' · ');
 
     return (
       <MyPageListRow
-        imageUrl={item.imageUrl}
+        imageUrl={picked?.uri}
+        imageResizeMode={picked?.resizeMode}
         title={item.vehicleName ?? '차량'}
         titleAccessory={item.vehicleType ? (
           <View style={[styles.tag, { backgroundColor: pal.bg }]}>

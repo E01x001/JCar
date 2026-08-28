@@ -8,6 +8,7 @@ import {
   getActiveFilterCount,
 } from '../services/vehicleFilterService';
 import { useTheme } from '../theme/ThemeProvider';
+import { pickVehicleImage } from '../utils/vehicleImage';
 import { AuthContext } from '../context/AuthContext';
 import SkeletonLoader from '../components/SkeletonLoader';
 import StateScreen from '../components/StateScreen';
@@ -26,11 +27,6 @@ const RECENT_LIMIT = 10;
 const createdSeconds = (v) =>
   v?.createdAt?.seconds ?? v?.createdAt?._seconds ??
   (typeof v?.createdAt === 'number' ? v.createdAt / 1000 : 0);
-
-const resolveImage = (imageUrl) => {
-  if (Array.isArray(imageUrl)) { return imageUrl[0] || null; }
-  return imageUrl || null;
-};
 
 const VehiclesListScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -113,11 +109,12 @@ const VehiclesListScreen = ({ navigation }) => {
 
   // 인기 차량 컴팩트 행
   const renderPopularRow = ({ item }) => {
-    const image = resolveImage(item.imageUrl);
+    // 실사진이면 채우고, 카탈로그(흰 배경 PNG)면 잘리지 않게 넣는다
+    const picked = pickVehicleImage(item);
     return (
       <TouchableOpacity onPress={() => goDetail(item.id)} activeOpacity={0.75} style={styles.popRow}>
-        {image ? (
-          <Image source={{ uri: image }} style={[styles.popThumb, styles.popThumbBg]} resizeMode="cover" />
+        {picked ? (
+          <Image source={{ uri: picked.uri }} style={[styles.popThumb, styles.popThumbBg]} resizeMode={picked.resizeMode} />
         ) : (
           <View style={[styles.popThumb, { backgroundColor: theme.colors.background.tertiary }]} />
         )}

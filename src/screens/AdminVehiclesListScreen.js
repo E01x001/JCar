@@ -20,6 +20,7 @@ import { deleteVehicleAdmin } from '../services/vehicle/vehicleService';
 import { fetchAllVehiclePricing } from '../services/vehicle/supabaseVehicleService';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
+import { pickVehicleImage } from '../utils/vehicleImage';
 import AdminHeader from '../components/admin/AdminHeader';
 import AdminHero from '../components/admin/AdminHero';
 import SegmentFilter from '../components/admin/SegmentFilter';
@@ -125,7 +126,9 @@ const AdminVehiclesListScreen = ({ navigation }) => {
 
   const renderVehicle = ({ item }) => {
     const isDeleting = deletingVehicleId === item.id;
-    const image = Array.isArray(item.imageUrl) ? item.imageUrl[0] : item.imageUrl;
+    // 실사진이면 채우고, 카탈로그(흰 배경 PNG)면 잘리지 않게 넣는다.
+    // 관리자 목록에는 실사진 없는 차량도 보이므로 이 분기가 실제로 쓰인다.
+    const picked = pickVehicleImage(item);
     const purchasePrice = pricing[item.id]?.purchasePrice;
     const chipKey = item.status === LISTED ? 'approved' : item.status === 'rejected' ? 'rejected' : 'pending';
     const chip = theme.colors.statusChip[chipKey];
@@ -140,9 +143,9 @@ const AdminVehiclesListScreen = ({ navigation }) => {
           style={[styles.card, { backgroundColor: theme.colors.background.card }]}
         >
           {/* 이미지 — 없으면 자리만 만들지 않고 아래 행 형태로 떨어진다 */}
-          {image ? (
+          {picked ? (
             <View style={[styles.cover, { backgroundColor: theme.colors.background.tertiary }]}>
-              <Image source={{ uri: image }} style={styles.coverImage} resizeMode="cover" />
+              <Image source={{ uri: picked.uri }} style={styles.coverImage} resizeMode={picked.resizeMode} />
               <View style={[styles.coverBadge, { backgroundColor: chip.bg }]}>
                 <Text style={[styles.coverBadgeText, { color: chip.fg }]}>{statusLabel}</Text>
               </View>
@@ -160,7 +163,7 @@ const AdminVehiclesListScreen = ({ navigation }) => {
                 </Text>
               </View>
 
-              {!image ? (
+              {!picked ? (
                 <View style={[styles.chip, { backgroundColor: chip.bg }]}>
                   <Text style={[styles.chipText, { color: chip.fg }]}>{statusLabel}</Text>
                 </View>

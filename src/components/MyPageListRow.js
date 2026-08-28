@@ -32,7 +32,7 @@ const resolveImage = (imageUrl) => {
 };
 
 const MyPageListRow = ({
-  imageUrl, title, titleAccessory, subtitle, right, footer, onPress,
+  imageUrl, imageResizeMode = 'cover', title, titleAccessory, subtitle, right, footer, onPress,
 }) => {
   const theme = useTheme();
   const image = resolveImage(imageUrl);
@@ -42,7 +42,7 @@ const MyPageListRow = ({
       <Card elevated style={{ marginBottom: theme.spacing.sm }}>
         <View style={styles.row}>
           {image ? (
-            <Image source={{ uri: image }} style={[styles.thumb, styles.thumbBg]} resizeMode="cover" />
+            <Image source={{ uri: image }} style={[styles.thumb, styles.thumbBg]} resizeMode={imageResizeMode} />
           ) : (
             <View style={[styles.thumb, styles.thumbBg, styles.thumbEmpty]}>
               <Icon name="directions-car" size={26} color="#A9B4C7" />
@@ -80,6 +80,8 @@ const MyPageListRow = ({
 
 MyPageListRow.propTypes = {
   imageUrl: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
+  /** 실사진은 cover, 카탈로그 이미지는 contain — utils/vehicleImage가 정한다 */
+  imageResizeMode: PropTypes.oneOf(['cover', 'contain']),
   title: PropTypes.string,
   titleAccessory: PropTypes.node,
   subtitle: PropTypes.string,
