@@ -26,7 +26,7 @@ const VEHICLE_TYPE_OPTIONS = ['승용차', '택시', '렌터카', '화물차', '
 // 영업 권리 거래 가치가 있는 차종(시안: 화물차·택시·렌터카)
 const BIZ_RIGHTS_TYPES = ['화물차', '택시', '렌터카'];
 import { supabase } from '../lib/supabase';
-import { insertVehicle } from '../services/vehicle/supabaseVehicleService';
+import { insertVehicle, recordNewCarPrice } from '../services/vehicle/supabaseVehicleService';
 import { uploadImage } from '../services/storage/imageService';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
@@ -263,7 +263,8 @@ const VehicleRegistrationScreen = ({ navigation }) => {
       // 타입 변환·null 정규화는 프록시(get-vehicle-info)가 끝내서 준다.
       // 여기서 다시 손대면 조회처가 바뀔 때 같은 코드를 두 군데 고쳐야 한다.
       //
-      // DB 스키마: price 컬럼 없음 — 가격은 관리자가 vehicle_pricing에 별도 설정.
+      // DB 스키마: price 컬럼 없음 — 가격은 전부 vehicle_pricing(관리자 전용)에 있다.
+      // 조회처가 준 신차가격(newCarPrice)도 여기 섞지 않고 아래에서 따로 보낸다.
       const vehicleDataToSave = {
         vehicleNo: regiNumber, // DB vehicle_no (Firestore 시절 vehicleId)
         vehicleName: vehicle.vehicleName,
@@ -282,6 +283,8 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         wiperInfo: vehicle.wiperInfo,
         seats: vehicle.seats,
         battery: vehicle.battery,
+        batteries: vehicle.batteries,
+        catalogUid: vehicle.catalogUid,
         fuelEco: vehicle.fuelEco,
         fuelTank: vehicle.fuelTank,
         vehicleType,
@@ -328,6 +331,15 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         optimisticFn: null, // Already done above
         serverFn: async () => {
           const { id } = await insertVehicle(vehicleDataToSave, privateContactData);
+
+          // 신차가격은 관리자 전용 테이블로 따로 간다(vehicle_pricing).
+          // 참고값이라 실패해도 등록은 그대로 둔다 — 관리자가 직접 넣을 수 있다.
+          try {
+            await recordNewCarPrice(id, vehicle.newCarPrice);
+          } catch (priceError) {
+            logger.error('신차가격 기록 실패(등록은 유지):', priceError);
+          }
+
           return id;
         },
         onSuccess: (realId) => {

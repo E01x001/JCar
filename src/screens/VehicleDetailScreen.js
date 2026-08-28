@@ -9,6 +9,7 @@ import { canViewVehiclePrice, PRICE_HIDDEN_LABEL } from '../utils/vehiclePrice';
 import { DEAL_STAGE_LABELS, DEAL_STAGE_BADGE_STATUS } from '../constants/vehicle';
 import { formatPrice } from '../utils/format';
 import { useTheme } from '../theme/ThemeProvider';
+import { formatWiper, formatBatteries } from '../utils/vehicleSpec';
 import { spacing } from '../theme/spacing';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
@@ -98,12 +99,16 @@ const VehicleDetailScreen = ({ route, navigation }) => {
     ['좌석 수', vehicle.seats ? `${vehicle.seats}석` : null],
   ]);
 
+  // 배터리는 한 줄이 아니라 **호환 목록**이다(조회처가 브랜드별로 여럿 개를 준다).
+  // 예전엔 첫 모델명 하나만 남기고 나머지를 버렸다.
+  const batteryList = formatBatteries(vehicle.batteries);
+
   const partRows = cleanRows([
     ['앞 타이어', vehicle.frontTire],
     ['뒤 타이어', vehicle.rearTire],
     ['엔진 오일 용량', vehicle.engineOilLiter ? `${vehicle.engineOilLiter} L` : null],
-    ['와이퍼 정보', vehicle.wiperInfo],
-    ['배터리 모델', vehicle.battery],
+    ['와이퍼 규격', formatWiper(vehicle.wiperInfo)],
+    ['호환 배터리', batteryList.length > 0 ? batteryList.join('\n') : vehicle.battery],
     ['연료 탱크', vehicle.fuelTank ? `${vehicle.fuelTank} L` : null],
   ]);
 
@@ -229,10 +234,11 @@ const styles = StyleSheet.create({
   // 섹션
   sectionTitle: { fontSize: typography.fontSize.bodyLarge, fontWeight: '800', letterSpacing: -0.2, marginTop: 24, marginBottom: 10 },
   infoGroup: { borderRadius: 14, paddingHorizontal: 16 },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 13 },
+  // 호환 배터리는 여러 줄이 된다 — 위쪽 정렬에 값 칸을 넓게 준다.
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 13 },
   infoRowBorder: { borderBottomWidth: 1, borderBottomColor: '#ECEEF1' },
-  infoLabel: { fontSize: 14, flex: 1 },
-  infoValue: { fontSize: 14, fontWeight: '700', textAlign: 'right', flex: 1, marginLeft: 12 },
+  infoLabel: { fontSize: 14, lineHeight: 20, flex: 1 },
+  infoValue: { fontSize: 14, lineHeight: 20, fontWeight: '700', textAlign: 'right', flex: 2, marginLeft: 12 },
   // 하단 바
   bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.screenX, paddingTop: 12, borderTopWidth: 1 },
   soldMsg: { fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 8 },

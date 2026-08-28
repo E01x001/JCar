@@ -65,11 +65,16 @@ export const fetchVehicleById = async (id) => {
 export const fetchVehiclePricing = async (vehicleId) => {
   const { data, error } = await supabase
     .from('vehicle_pricing')
-    .select('vehicle_id, price, purchase_price')
+    .select('vehicle_id, price, purchase_price, new_car_price')
     .eq('vehicle_id', vehicleId)
     .maybeSingle();
   if (error) { throw error; }
-  return data ? { vehicleId: data.vehicle_id, price: data.price, purchasePrice: data.purchase_price } : null;
+  return data ? {
+    vehicleId: data.vehicle_id,
+    price: data.price,
+    purchasePrice: data.purchase_price,
+    newCarPrice: data.new_car_price,
+  } : null;
 };
 
 /**
@@ -86,14 +91,39 @@ export const fetchVehiclePricing = async (vehicleId) => {
 export const fetchAllVehiclePricing = async () => {
   const { data, error } = await supabase
     .from('vehicle_pricing')
-    .select('vehicle_id, price, purchase_price');
+    .select('vehicle_id, price, purchase_price, new_car_price');
   if (error) { throw error; }
 
   const map = {};
   for (const row of data ?? []) {
-    map[row.vehicle_id] = { price: row.price, purchasePrice: row.purchase_price };
+    map[row.vehicle_id] = {
+      price: row.price,
+      purchasePrice: row.purchase_price,
+      newCarPrice: row.new_car_price,
+    };
   }
   return map;
+};
+
+/**
+ * 등록 직후 신차가격을 남긴다 — 조회처(CarZen PRICE)가 준 참고값.
+ *
+ * vehicle_pricing은 관리자 전용이라 등록하는 사용자가 직접 쓸 수 없다. 그렇다고
+ * 조회 시점에 쓸 수도 없다(차량 행이 아직 없다). 그래서 SECURITY DEFINER 함수로
+ * **판매자가, 값이 아직 없을 때, 신차가격 한 칸만** 쓰는 통로를 낸다.
+ *
+ * 실패해도 등록을 되돌리지 않는다. 없어도 되는 참고값 하나 때문에 차량 등록
+ * 전체를 무르는 건 균형이 안 맞는다 — 관리자가 나중에 직접 넣을 수 있다.
+ */
+export const recordNewCarPrice = async (vehicleId, newCarPrice) => {
+  if (!vehicleId || !newCarPrice) { return { success: false }; }
+
+  const { error } = await supabase.rpc('record_new_car_price', {
+    p_vehicle_id: vehicleId,
+    p_price: newCarPrice,
+  });
+  if (error) { throw error; }
+  return { success: true };
 };
 
 /**
@@ -185,6 +215,7 @@ export default {
   fetchVehicleById,
   fetchVehiclePricing,
   fetchAllVehiclePricing,
+  recordNewCarPrice,
   insertVehicle,
   updateVehicle,
   deleteVehicle,

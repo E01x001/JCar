@@ -8,6 +8,15 @@
 // 건너뛰어 컬럼이 조용히 비고, "조회처에 값이 없었다"와 "코드가 흘렸다"를
 // 구분할 수 없게 된다(실제로 battery가 그렇게 비어 있었다).
 
+/** 호환 배터리 한 종. CarZen BATTERYLIST[] 한 항목에 대응한다. */
+export interface BatteryOption {
+  /** 로케트 · 델코 · 아트라스 · 솔라이트 · 엑스프로 */
+  brand: string | null;
+  model: string | null;
+  /** 일반 · DIN · AGM · 보조배터리 */
+  type: string | null;
+}
+
 export interface NormalizedVehicle {
   /** 차명 */
   vehicleName: string | null;
@@ -16,6 +25,9 @@ export interface NormalizedVehicle {
   manufacturer: string | null;
   /** 연식 */
   year: number | null;
+
+  /** 조회처의 모델 식별자(CarZen UID). 조회처를 바꿀 때 대조 기준이 된다. */
+  catalogUid: string | null;
 
   fuelType: string | null;
   transmission: string | null;
@@ -32,8 +44,18 @@ export interface NormalizedVehicle {
   fuelEco: string | null;
   fuelTank: string | null;
   engineOilLiter: string | null;
+  /** 원문 그대로. "D:600;P:400;R:전용" 형태 — 표시할 때 푼다. */
   wiperInfo: string | null;
+  /** 호환 배터리 첫 모델명. batteries의 파생값이며 하위호환으로 남긴다. */
   battery: string | null;
+  /** 호환 배터리 전체 목록. 없으면 빈 배열이 아니라 null이다. */
+  batteries: BatteryOption[] | null;
+
+  /**
+   * 신차가격(원). **관리자에게만 보이는 값이다** —
+   * vehicle_pricing에 저장하며 일반 사용자 화면에는 어떤 경로로도 내보내지 않는다.
+   */
+  newCarPrice: number | null;
 
   /** 차대번호. 비공개 테이블에만 저장한다. */
   vin: string | null;

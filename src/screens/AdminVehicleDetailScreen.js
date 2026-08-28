@@ -6,6 +6,7 @@ import { rowToApp } from '../lib/mappers';
 import { fetchVehicleById, fetchVehiclePricing } from '../services/vehicle/supabaseVehicleService';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatPrice, formatPhone } from '../utils/format';
+import { formatWiper, formatBatteries } from '../utils/vehicleSpec';
 import { useTheme } from '../theme/ThemeProvider';
 import Card from '../components/Card';
 import Tag from '../components/Tag';
@@ -36,7 +37,13 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
           } catch (pricingError) {
             logger.error('가격 조회 오류:', pricingError);
           }
-          setVehicle({ ...vehicleData, price: pricing?.price ?? null });
+          setVehicle({
+            ...vehicleData,
+            price: pricing?.price ?? null,
+            // 신차가격은 조회처가 준 참고값이다. vehicle_pricing에 있으므로
+            // 관리자에게만 온다 — 일반 사용자 화면으로는 어떤 경로로도 가지 않는다.
+            newCarPrice: pricing?.newCarPrice ?? null,
+          });
         }
 
         // 판매자 PII는 vehicle_private_contact (owner/admin 전용 RLS)
@@ -100,6 +107,8 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
     );
   }
 
+  const batteryList = formatBatteries(vehicle.batteries);
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
       <ScrollView
@@ -157,14 +166,18 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
             { label: '배기량', value: vehicle.cc ? `${vehicle.cc} cc` : '-' },
             { label: '연비', value: vehicle.fuelEco ? `${vehicle.fuelEco} km/L` : '-' },
             { label: '연료탱크 용량', value: vehicle.fuelTank ? `${vehicle.fuelTank} L` : '-' },
+            { label: '좌석 수', value: vehicle.seats ? `${vehicle.seats}석` : '-' },
+            { label: '전산코드', value: vehicle.catalogUid || '-' },
+            // 아래 두 줄은 가격이다 — 이 화면이 관리자 전용이라 여기에만 있다.
+            { label: '신차가격', value: vehicle.newCarPrice ? formatPrice(vehicle.newCarPrice) : '-' },
             { label: '가격', value: formatPrice(vehicle.price) },
-          ].map((item, index) => (
+          ].map((item, index, rows) => (
             <View
               key={index}
               style={[styles.infoRow, {
-                marginBottom: index < 8 ? theme.spacing.xs : 0,
-                paddingBottom: index < 8 ? theme.spacing.xs : 0,
-                borderBottomWidth: index < 8 ? 1 : 0,
+                marginBottom: index < rows.length - 1 ? theme.spacing.xs : 0,
+                paddingBottom: index < rows.length - 1 ? theme.spacing.xs : 0,
+                borderBottomWidth: index < rows.length - 1 ? 1 : 0,
                 borderBottomColor: theme.colors.border.light,
               }]}
             >
@@ -195,15 +208,16 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
             { label: '앞 타이어', value: vehicle.frontTire || '-' },
             { label: '뒤 타이어', value: vehicle.rearTire || '-' },
             { label: '엔진 오일 용량', value: vehicle.engineOilLiter ? `${vehicle.engineOilLiter} L` : '-' },
-            { label: '와이퍼 정보', value: vehicle.wiperInfo || '-' },
-            { label: '배터리 모델', value: vehicle.battery || '-' },
-          ].map((item, index) => (
+            { label: '와이퍼 규격', value: formatWiper(vehicle.wiperInfo) || '-' },
+            // 조회처는 브랜드별 호환 배터리를 여럿 준다. 예전엔 첫 모델명만 남겼다.
+            { label: '호환 배터리', value: batteryList.length > 0 ? batteryList.join('\n') : (vehicle.battery || '-') },
+          ].map((item, index, rows) => (
             <View
               key={index}
               style={[styles.infoRow, {
-                marginBottom: index < 4 ? theme.spacing.xs : 0,
-                paddingBottom: index < 4 ? theme.spacing.xs : 0,
-                borderBottomWidth: index < 4 ? 1 : 0,
+                marginBottom: index < rows.length - 1 ? theme.spacing.xs : 0,
+                paddingBottom: index < rows.length - 1 ? theme.spacing.xs : 0,
+                borderBottomWidth: index < rows.length - 1 ? 1 : 0,
                 borderBottomColor: theme.colors.border.light,
               }]}
             >
@@ -299,16 +313,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  // 호환 배터리는 여러 줄이 된다 — 위쪽 정렬에 값 칸을 넓게 준다.
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   infoLabel: {
     flex: 1,
+    lineHeight: 20,
   },
   infoValue: {
-    flex: 1,
+    flex: 2,
+    lineHeight: 20,
     textAlign: 'right',
   },
   actionRow: {
