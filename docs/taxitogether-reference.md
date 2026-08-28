@@ -3,7 +3,7 @@
 > 형제 프로젝트 `C:\Texitogether`(Expo + Supabase, 마이그레이션 66개)를 분석해
 > **JCar 푸시 알림 재구축의 설계 근거**와 **함께 도입할 가치가 있는 구조**를 정리한다.
 >
-> 배경: [supabase-migration-status.md](supabase-migration-status.md) — 이전 후 푸시 트리거 6종이 죽어 있음(🔴)
+> 배경: Supabase 이전 직후 푸시 트리거 6종이 죽어 있던 상태에서 작성됐다(이후 해결).
 >
 > **전제 차이**: Taxitogether는 **Expo**(Expo Push API), JCar은 **RN CLI + FCM 직접**.
 > 아래 추천 항목은 전부 **Supabase 서버 쪽**이라 이 차이의 영향을 받지 않는다.
@@ -120,7 +120,7 @@ JCar은 여기에 RLS(본인 행만 select/update read 플래그) 추가 필요.
 ### 🥇 purge-deleted-accounts + pg_cron — JCar 미구현 과제 직결
 원본: `supabase/migrations/20260801000003_schedule_purge.sql` + `supabase/functions/purge-deleted-accounts/`
 
-[supabase-migration-status.md](supabase-migration-status.md)의 **"영구삭제 스케줄러 없음"**을 정확히 푸는 레퍼런스.
+당시 미해결이던 **"영구삭제 스케줄러 없음"**을 푸는 레퍼런스(이후 pg_cron으로 해결).
 
 설계 요점:
 - **SQL로 못 하는 일(auth 사용자 삭제)은 Edge Function이, pg_cron은 HTTP 호출만** 한다

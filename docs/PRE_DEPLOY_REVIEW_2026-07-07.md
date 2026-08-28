@@ -2,7 +2,7 @@
 
 > 4개 영역(인증/네비, 서비스/DB, 클라우드 함수/보안규칙, UI/가격게이팅)을 코드 수준으로 병렬 감사한 결과.
 > 각 항목은 직접 코드 확인으로 검증됨. 범례: 🔴 출시 차단 · 🟡 출시 전 권장 · 🟢 후속.
-> 관련 문서: [REVIEW_FINDINGS_2026-06-20.md](REVIEW_FINDINGS_2026-06-20.md) · [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) · [supabase-migration-readiness.md](supabase-migration-readiness.md)
+> 관련 문서: [REVIEW_FINDINGS_2026-06-20.md](REVIEW_FINDINGS_2026-06-20.md) · [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
 
 ---
 

@@ -1,134 +1,83 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# JCar
 
-# Getting Started
+중고차 거래·상담 플랫폼. **Expo(SDK 57)** 한 코드베이스로 **Android와 웹**을 함께 낸다.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+- 운영 웹: <https://jcar-platform.vercel.app>
+- Android 패키지: `com.jcarnew` (Play 내부 테스트)
 
-## Step 0: Environment Configuration
+## 구성
 
-### Setting up Environment Variables
+| | |
+|---|---|
+| 앱 | Expo SDK 57 · React Native 0.86 · React 19 |
+| 백엔드 | Supabase — Postgres/RLS · Auth · Storage · Edge Functions · Realtime |
+| 푸시·텔레메트리 | Firebase — FCM · Crashlytics · Analytics **만** (의도된 하이브리드) |
+| 상태 | Context(Auth·Loading·Theme) + zustand(vehicle·consultation) |
 
-This project uses `react-native-config` to manage sensitive configuration and API keys securely.
+네이티브 프로젝트(`android/`)는 `app.config.js`로부터 **생성된다**(CNG).
+직접 고치면 다음 `expo prebuild`에서 사라진다.
 
-1. **Copy the example environment file:**
-   ```sh
-   cp .env.example .env
-   ```
+## 시작하기
 
-2. **Fill in your actual API keys in `.env`:**
-   ```sh
-   # Open .env in your text editor and replace placeholder values
-   CARZEN_API_KEY=your_actual_api_key_here
-   ```
-
-3. **Important Security Notes:**
-   - **Never commit `.env` to version control** - it's already in `.gitignore`
-   - Keep your API keys private and secure
-   - If you accidentally expose an API key, revoke it immediately and generate a new one
-   - Use `.env.example` as a template for team members
-
-4. **Required API Keys:**
-   - **CARZEN_API_KEY**: Required for vehicle information lookup
-     - Get your API key from [CarZen API Portal](https://datahub-dev.scraping.co.kr)
-     - Used in `VehicleRegistrationScreen` for vehicle data retrieval
-
-### Verifying Environment Setup
-
-After configuration, verify that your environment variables are loaded:
-```sh
-# The app will fail to fetch vehicle information if CARZEN_API_KEY is missing
-npm start
-npm run android
+```bash
+npm install
+npm start          # Expo 개발 서버
+npm run web        # 웹으로 실행
+npm run android    # 네이티브 개발 빌드 (Android Studio 필요)
 ```
 
-## Step 1: Start Metro
+Node 18 이상, Java 17 이상이 필요하다.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+**자격증명은 저장소에 없다.** `google-services.json`, `.native-secrets/`,
+`.supabase-access-token`, `play-service-account.json` 등은 전부 gitignore 대상이다.
+외부 API 키(CarZen 등)는 클라이언트가 아니라 **Supabase Edge Function의 시크릿**에 있다 —
+앱 번들에 키가 들어가지 않는다.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 검사
 
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```bash
+npm test           # Jest (jest-expo)
+npm run lint       # ESLint
 ```
 
-## Step 2: Build and run your app
+husky pre-commit이 `eslint --fix`와 관련 테스트를 돌린다.
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+## 배포
 
-### Android
+**변경이 JS뿐인지 네이티브까지인지 먼저 판단한다.** 틀리면 조용히 실패한다.
 
-```sh
-# Using npm
-npm run android
+```bash
+# JS만 바뀐 경우 — 스토어 심사 없이 즉시
+npm run update:preview -- --message "무엇을 고쳤는지"
 
-# OR using Yarn
-yarn android
+# 네이티브가 바뀐 경우 — version/versionCode를 올린 뒤
+npm run build:preview
+node scripts/publish-internal.mjs --notes "..."
 ```
 
-### iOS
+자세한 건 [docs/OTA_UPDATES.md](docs/OTA_UPDATES.md)와
+[docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md).
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+웹은 `main`에 푸시하면 Vercel이 자동 배포한다.
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## 지켜야 하는 것
 
-```sh
-bundle install
-```
+**차량 가격은 관리자에게만 보인다.** 가격은 `vehicle_pricing` 테이블에 있고 RLS가
+관리자에게만 연다. 일반 사용자 화면에는 어떤 경로로도 가격을 렌더링하지 않고
+"상담 후 안내"를 보여준다. 이건 컴포넌트가 아니라 **DB가 강제한다.**
 
-Then, and every time you update your native dependencies, run:
+**실사진 1장 이상이 없으면 매물이 노출되지 않는다.** 이것도 RLS 조건이다.
 
-```sh
-bundle exec pod install
-```
+**차량·거래 기록은 삭제하지 않는다.** 회원 탈퇴 시 사람은 지우되 기록은 남긴다
+([docs/ACCOUNT_DELETION.md](docs/ACCOUNT_DELETION.md)).
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## 문서
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+| | |
+|---|---|
+| [CLAUDE.md](CLAUDE.md) | 아키텍처·규약·작업 지침 (에이전트 자동 로드) |
+| [docs/OTA_UPDATES.md](docs/OTA_UPDATES.md) | OTA vs 스토어 빌드, 채널, 롤백 |
+| [docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md) | 릴리스 빌드·서명·Play 업로드 |
+| [docs/DEAL_LIFECYCLE.md](docs/DEAL_LIFECYCLE.md) | 등록 → 상담 → 체결 → 명의이전 |
+| [docs/ACCOUNT_DELETION.md](docs/ACCOUNT_DELETION.md) | 탈퇴·익명화 정책 |
+| [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) | 미해결 이슈 — **작업 전 확인** |
