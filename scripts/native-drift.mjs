@@ -25,7 +25,7 @@
  *   node scripts/native-drift.mjs record   # 빌드가 끝난 뒤 (build-release.mjs가 호출)
  *   node scripts/native-drift.mjs check    # eas update 전 (npm run update:* 가 호출)
  */
-import { createFingerprintAsync } from '@expo/fingerprint';
+import { createFingerprintAsync, SourceSkips } from '@expo/fingerprint';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,10 +51,24 @@ const readRuntimeVersion = () => {
 const fingerprint = async () => {
   // 채널이 지문에 섞이지 않게 지운 상태로 계산한다
   delete process.env.EXPO_UPDATE_CHANNEL;
+
   const fp = await createFingerprintAsync(ROOT, {
     platforms: ['android'],
-    // android/ 는 생성물이라 입력에서 뺀다(위 주석 참고)
-    ignorePaths: ['android/**'],
+    // android/ 는 생성물이라 입력에서 뺀다(위 주석 참고).
+    // 디렉터리 소스 자체를 지우려면 'android'와 'android/**' 둘 다 필요하다.
+    ignorePaths: ['android', 'android/**'],
+    sourceSkips:
+      // npm scripts는 기본 지문 소스지만, 여기서는 잡음이다. postinstall 같은
+      // 훅이 네이티브에 영향을 줄 수 있어 Expo가 포함하는 것인데, 우리는
+      // 릴리스 명령을 스크립트로 관리하므로 명령을 고칠 때마다 오탐이 난다.
+      // 오탐이 반복되면 경고를 무시하게 되고, 그러면 가드가 없는 것만 못하다.
+      SourceSkips.PackageJsonScriptsAll
+      // 런타임 버전은 별도로 비교한다(기록에 함께 남긴다).
+      // 여기 포함하면 "런타임을 올렸다"와 "네이티브가 바뀌었다"가 한 신호로
+      // 뭉개져서, 무엇 때문에 막혔는지 알 수 없게 된다.
+      | SourceSkips.ExpoConfigRuntimeVersionIfString
+      // version/versionCode는 스토어 빌드마다 바뀌지만 네이티브 코드가 아니다.
+      | SourceSkips.ExpoConfigVersions,
   });
   return fp.hash;
 };

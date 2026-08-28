@@ -136,9 +136,10 @@ updates: { requestHeaders: { 'expo-channel-name': UPDATE_CHANNEL } }
 npm test && npm run lint          # 게이트를 건너뛰지 않는다. 심사가 없다는 뜻은
                                   # 잘못 나가도 막아줄 사람이 없다는 뜻이다.
 npm run check:native              # (update:* 가 자동으로 먼저 돌린다)
-npm run update:preview            # 내부 테스터에게 먼저
+# 메시지는 필수다 — 나중에 어느 업데이트였는지 찾는 유일한 단서다
+npm run update:preview -- --message "무엇을 고쳤는지"      # 내부 테스터에게 먼저
 # 기기에서 확인한 뒤
-npm run update:production         # 운영으로
+npm run update:production -- --message "무엇을 고쳤는지"   # 운영으로
 ```
 
 `version`/`versionCode`는 **올리지 않는다.** 올리면 스토어 버전과 어긋난다.
@@ -160,13 +161,25 @@ node scripts/publish-internal.mjs --notes "..."         # 내부 테스트 업�
 ## 롤백
 
 ```bash
-eas update:list --branch production        # 이전 업데이트 확인
-eas update:republish --group <GROUP_ID>    # 그 버전을 다시 내보낸다
+eas update:list --branch preview                    # 그룹 ID 확인
+eas update:rollback <GROUP_ID> --platform android --message "..."
 ```
 
-`update:republish`가 실질적인 롤백이다. 이미 받은 기기는 다음 실행 때 되돌아간다.
-**앱을 켜 봐야 적용되므로 즉시 전원 회수는 불가능하다** — OTA의 한계다.
-심각하면 롤백 + 스토어 빌드를 함께 준비한다.
+`update:rollback`은 **그 그룹 직전의 업데이트를 다시 발행**한다. 직전 것이 없으면
+스토어 빌드에 들어 있던 **내장 번들로 되돌린다**. 되돌린 뒤에도 정상 업데이트를
+발행하면 다시 앞으로 나아간다 — 막다른 길이 아니다.
+
+리허설로 실제 기기에서 확인했다(2026-08-28):
+
+```
+OTA · 71628115  →  [rollback]  →  내장 번들  →  [update]  →  OTA · 01a0462d
+```
+
+되돌리기도 **앱을 켜야 적용된다** — 즉시 전원 회수는 불가능하다. OTA의 한계다.
+심각하면 롤백과 스토어 빌드를 함께 준비한다.
+
+빌드 정보 화면(관리자 탭 하단)에서 "실행 중인 JS"가 `내장 번들`인지
+`OTA · <id>`인지로 어느 쪽이 도는지 확인할 수 있다.
 
 ---
 

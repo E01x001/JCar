@@ -13,8 +13,8 @@
     "lint": "eslint .",
     "build:preview": "node scripts/build-release.mjs --channel preview",
     "build:production": "node scripts/build-release.mjs --channel production",
-    "update:preview": "node scripts/native-drift.mjs check && eas update --branch preview",
-    "update:production": "node scripts/native-drift.mjs check && eas update --branch production",
+    "update:preview": "node scripts/native-drift.mjs check && eas update --branch preview --environment preview",
+    "update:production": "node scripts/native-drift.mjs check && eas update --branch production --environment production",
     "check:native": "node scripts/native-drift.mjs check"
   },
   "dependencies": {
