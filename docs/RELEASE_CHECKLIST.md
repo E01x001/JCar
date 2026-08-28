@@ -1,5 +1,17 @@
 # JCar 릴리스 체크리스트 & 배포 런북
 
+> ⚠️ **이 문서의 빌드·배포 절차는 낡았다 (2026-06, Firestore 시절).**
+> 그 뒤로 Supabase 이전 · Expo(CNG) 전환 · OTA 도입이 있었다. 아래에서
+> `android/app/build.gradle`의 versionCode를 고치라거나 react-native-config를
+> 언급하는 부분은 지금 구조와 맞지 않는다 — `android/`는 생성물이고 버전은
+> `app.config.js`에서 관리한다.
+>
+> 현재 절차는 이쪽을 본다:
+> - **OTA vs 스토어 빌드 판단, 배포·롤백** → `docs/OTA_UPDATES.md`
+> - **릴리스 빌드·서명·Play 업로드** → `docs/ANDROID_RELEASE.md`
+>
+> 보안 점검 항목과 PII 마이그레이션 이력은 여전히 참고 가치가 있어 남겨둔다.
+
 > 마지막 감사: 2026-06. 보안 작업(권한상승/자가승인/Storage/PII 규칙 + cascade 정리)은
 > 코드 커밋 + 백엔드(규칙/함수) 배포 완료. **남은 것은 앱 빌드 출시 + #125 PII 마이그레이션.**
 

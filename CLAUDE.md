@@ -32,6 +32,38 @@ npm run prebuild   # expo prebuild — regenerate native projects (CNG)
 Native projects are **generated** from `app.config.js`. Edit the config, not `android/` by hand —
 `prebuild` will overwrite manual changes. `ios/` is intentionally absent (Android-first).
 
+### Android 릴리스 — OTA인가 스토어 빌드인가
+
+**변경 하나마다 이 판단을 먼저 한다.** 틀리면 조용히 실패한다(업데이트가 안 오거나,
+적용된 뒤 죽는다). 자세한 내용은 `docs/OTA_UPDATES.md`.
+
+| 바뀐 것 | 배포 |
+|---|---|
+| JS·화면·로직·문구·에셋 | **OTA** — 스토어 심사 없이 즉시 |
+| 네이티브 모듈·권한·`app.config`의 네이티브 필드·SDK | 스토어 빌드 |
+
+```bash
+# JS만 바뀐 경우 — version/versionCode는 올리지 않는다
+npm run update:preview -- --message "무엇을 고쳤는지"     # 내부 테스트
+npm run update:production -- --message "..."             # 운영
+
+# 네이티브가 바뀐 경우 — app.config.js의 version/versionCode를 올린 뒤
+npm run build:preview                                     # 채널·런타임 검증 + AAB
+node scripts/publish-internal.mjs --notes "..."           # Play 내부 테스트 업로드
+```
+
+지켜야 하는 것 셋:
+
+- **네이티브가 바뀌면 `app.config.js`의 `runtimeVersion`을 올린다.** 안 올리면 없는
+  네이티브를 호출하는 JS가 기존 설치본에 배달된다. `npm run update:*`이 발행 전에
+  네이티브 지문을 비교해 자동으로 막지만(`scripts/native-drift.mjs`), 규칙 자체는 안다.
+- **채널은 바이너리에 박힌다.** `preview`(내부 테스트) / `production`(운영)이 서로 다르므로
+  Play의 "승격"을 쓸 수 없다 — 운영은 `npm run build:production`으로 따로 빌드한다.
+- **JS만 고칠 때 `versionCode`를 올리지 않는다.** 올리면 스토어 버전과 어긋난다.
+
+지금 무엇이 돌고 있는지는 앱의 **관리자 → 관리자 탭 하단 "빌드 정보"**에서 본다
+(앱 버전 · 채널 · 런타임 · 내장 번들인지 OTA인지).
+
 ### Testing and Quality
 ```bash
 npm test          # Jest (jest-expo preset)

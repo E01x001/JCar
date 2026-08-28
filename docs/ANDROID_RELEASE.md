@@ -4,7 +4,22 @@
 > `app.config.js`와 `plugins/`에서 관리한다. `android/`를 직접 고치면 다음
 > `expo prebuild`에서 사라진다.
 
+> **먼저 확인**: 이 변경이 정말 스토어 빌드를 요구하는가?
+> JS만 바뀐 것이라면 OTA로 보낸다 — `docs/OTA_UPDATES.md`.
+
 ## 빌드
+
+```bash
+npm run build:preview     # 내부 테스트용 (채널·런타임 검증 포함)
+npm run build:production  # 운영용
+```
+
+두 스크립트 모두 `scripts/build-release.mjs`를 거친다. prebuild 후
+AndroidManifest를 직접 읽어 **OTA 채널·런타임·updates 활성**이 의도대로 박혔는지
+확인하고, 어긋나면 빌드를 멈춘다. 채널이 틀린 AAB는 조용히 실패하고, 올린 뒤에
+알게 되면 릴리스가 한 번 더 든다.
+
+수동으로 하려면(권장하지 않음 — 위 검증이 빠진다):
 
 ```bash
 npx expo prebuild --platform android   # app.config.js → android/ 재생성
