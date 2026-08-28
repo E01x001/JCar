@@ -7,6 +7,7 @@
  *  - 경로를 {uid}/ 아래로 묶는다. 스토리지 정책이 본인 폴더만 쓰기/삭제를 허용하므로
  *    이 접두사가 없으면 업로드 자체가 거부된다.
  */
+import { File } from 'expo-file-system';
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 
@@ -37,9 +38,36 @@ const MIME_BY_EXT = {
   webp: 'image/webp',
 };
 
-const resolveContentType = (uri, blobType) => {
-  if (typeof blobType === 'string' && blobType.startsWith('image/')) { return blobType; }
-  return MIME_BY_EXT[extFromUri(uri)] ?? 'image/jpeg';
+const resolveContentType = (uri) => MIME_BY_EXT[extFromUri(uri)] ?? 'image/jpeg';
+
+/**
+ * 파일 바이트를 읽는다. **Blob으로 넘기면 안 된다.**
+ *
+ * supabase-js storage는 body가 Blob이면 FormData로 감싸는데, 그 경로에서는
+ * 우리가 지정한 contentType을 헤더에 싣지 않는다:
+ *
+ *   if (fileBody instanceof Blob) { body = new FormData(); ... }   // content-type 없음
+ *   else { headers['content-type'] = options.contentType; }        // 여기서만 실린다
+ *
+ * 그래서 서버는 기본값 text/plain으로 받고, 버킷이 image/*만 허용하므로
+ * 415 invalid_mime_type으로 거부한다. 실제로 사진 업로드가 이 경로로 실패했다.
+ *
+ * RN의 Blob에는 arrayBuffer()가 없어 예전 폴백이 Blob을 그대로 넘기고 있었다.
+ * (웹 Blob에는 있어서 웹에서만 통했다 — 그래서 못 잡았다.)
+ * expo-file-system의 File.arrayBuffer()가 바이트를 직접 준다.
+ */
+const readBytes = async (uri) => {
+  try {
+    return await new File(uri).arrayBuffer();
+  } catch {
+    // 웹 등 File을 못 쓰는 환경. 여기서는 Blob에 arrayBuffer()가 있다.
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    if (typeof blob.arrayBuffer !== 'function') {
+      throw new Error('이미지를 읽지 못했습니다. 다시 선택해주세요.');
+    }
+    return blob.arrayBuffer();
+  }
 };
 
 /** 업로드 경로 — 스토리지 정책이 요구하는 {uid}/ 접두사를 붙인다 */
@@ -61,19 +89,14 @@ const pathFromPublicUrl = (url) => {
  */
 export const uploadImage = async (uri) => {
   try {
-    const response = await fetch(uri);
-    // RN에서 Blob 직접 업로드는 0바이트 업로드 사례가 알려져 있어(supabase-js#RN)
-    // ArrayBuffer를 우선 사용하고, 미지원 환경에서만 Blob으로 폴백한다.
-    const blob = await response.blob();
-    const body = typeof blob.arrayBuffer === 'function' ? await blob.arrayBuffer() : blob;
+    const body = await readBytes(uri);
 
     // 0바이트가 올라가면 스토리지는 성공으로 답하고 깨진 이미지만 남는다.
     // 여기서 끊어야 원인이 드러난다.
-    const size = body?.byteLength ?? blob?.size ?? 0;
-    if (!size) { throw new Error('이미지를 읽지 못했습니다. 다시 선택해주세요.'); }
+    if (!body?.byteLength) { throw new Error('이미지를 읽지 못했습니다. 다시 선택해주세요.'); }
 
     const path = await buildPath(uri);
-    const contentType = resolveContentType(uri, blob.type);
+    const contentType = resolveContentType(uri);
 
     const { error } = await supabase.storage
       .from(BUCKET)
