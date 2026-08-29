@@ -79,5 +79,6 @@ node scripts/publish-internal.mjs --notes "..."
 | [docs/OTA_UPDATES.md](docs/OTA_UPDATES.md) | OTA vs 스토어 빌드, 채널, 롤백 |
 | [docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md) | 릴리스 빌드·서명·Play 업로드 |
 | [docs/DEAL_LIFECYCLE.md](docs/DEAL_LIFECYCLE.md) | 등록 → 상담 → 체결 → 명의이전 |
+| [docs/VEHICLE_LOOKUP.md](docs/VEHICLE_LOOKUP.md) | 차량 조회 API — 필드 대응, 조회처 교체 |
 | [docs/ACCOUNT_DELETION.md](docs/ACCOUNT_DELETION.md) | 탈퇴·익명화 정책 |
 | [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) | 미해결 이슈 — **작업 전 확인** |

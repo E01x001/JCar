@@ -262,7 +262,8 @@ Supabase Auth with role-based access control:
 - **Auth**: login/logout, Google OAuth, role-based access
 - **Postgres + RLS**: vehicles, consultation requests, profiles, `vehicle_pricing` (admin-only)
 - **Storage**: vehicle image uploads
-- **Edge Functions**: push dispatch, account deletion cascade, CarZen proxy
+- **Edge Functions**: push dispatch, account deletion cascade, vehicle lookup proxy
+  (`get-vehicle-info` — 조회처는 env로 교체 가능. `docs/VEHICLE_LOOKUP.md`)
 - **Realtime**: `postgres_changes` subscriptions behind `subscribe*` helpers in services
 
 Migrations live in `supabase/migrations/`. Never hand-edit applied migrations —
@@ -448,8 +449,10 @@ vehicles
   id, model, manufacturer, year, image_url, seller_id, status, created_at 등
 
 vehicle_pricing
-  vehicle_id, price — 관리자 전용. RLS로 일반 사용자 접근이 차단된다.
-  가격을 vehicles에 두지 않은 이유가 이것이다.
+  vehicle_id, price, purchase_price, new_car_price — 관리자 전용.
+  RLS로 일반 사용자 접근이 차단된다. 가격을 vehicles에 두지 않은 이유가 이것이다.
+  new_car_price는 조회처가 준 신차가격이며, 등록자는 record_new_car_price()로
+  그 한 칸만 쓸 수 있다(docs/VEHICLE_LOOKUP.md).
 
 consultation_requests
   user_id, vehicle_id, preferred_date, preferred_time, type(buy|sell),

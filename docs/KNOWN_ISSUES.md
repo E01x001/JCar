@@ -234,3 +234,48 @@ on conflict (email) do nothing;
 - 가입 승인제: `supabase/migrations/20260822140000_signup_approval_gate.sql`
 - 승인 UI: `src/screens/AdminUserManagementScreen.js`
 - 승인 통지 부재: ISSUE-05
+
+---
+
+## [ISSUE-07] 차량 조회가 상위 조회처 오류로 실패한다 🔴
+
+**발견**: 2026-08-28 · **상태**: 미해결 · **영향**: 차량 등록 전체(1단계에서 막힌다)
+
+### 증상
+`get-vehicle-info` 호출이 저장된 두 차량 모두에 대해 같은 응답을 준다.
+
+```
+자동차등록원부 발급 중 오류가 발생하였습니다.
+```
+
+### 확인된 사실
+- **우리 쪽 검증은 통과한다.** 차량번호 형식 검사를 지나 CarZen까지 도달했고,
+  CarZen이 자기 `errMsg`로 답한 것이다.
+- **소유자명 불일치가 아니다.** 명세상 그 경우는 `errCode 6112 "소유자 정보가
+  맞지 않습니다"`가 온다. `vehicle_private_contact.owner_name`에 저장된 실제
+  소유자명으로 다시 조회해도 같은 오류가 났다.
+- CarZen은 스크래핑 기반이고, 명세 7항이 "외부 시스템 기반이라 간헐적인 지연이나
+  실패가 발생할 수 있다"고 적고 있다.
+
+### 의심 지점 (미검증)
+1. 상위(자동차민원 대국민포털) 일시 장애 — 그렇다면 시간이 해결한다
+2. **개발계(Dev) 주소를 쓰고 있다.** 운영계는 `api.mydatahub.co.kr`이며,
+   개발계가 제한적으로 동작할 가능성이 있다 (`docs/VEHICLE_LOOKUP.md` 참고)
+3. 인증 토큰 만료 — 다만 그 경우 `STATUS 403`이 와야 한다
+
+### 다음 단계
+- 실제 차량으로 앱에서 등록을 시도해 재현 여부 확인
+- 지속되면 운영계 주소로 전환하고 재시도
+- 그래도 실패하면 기술지원 접수: <https://dataapi.co.kr/company/techqna/write.do>
+
+### 곁가지 — 확인이 남은 것
+저장된 두 차량은 `fuel_eco` · `fuel_tank` · `seats` · `battery` · `wiper_info`가
+모두 비어 있다. 명세와 대조한 결과 **우리가 읽는 키 이름은 전부 맞다.** 따라서
+조회처가 그 차량들에 대해 값을 안 준 것으로 보이지만, 두 차량 다 정규화 계층
+이전(2026-08-23 `de2413c`)에 등록된 것이라 **현재 코드로 성공한 등록이 아직
+한 건도 없다.** 조회가 되는 순간 등록 한 번이면 Edge Function 로그에 실제 키
+목록이 찍히고 확정된다.
+
+### 관련
+- `docs/VEHICLE_LOOKUP.md` — 필드 대응표, 오류 구분, 운영 전환
+- `supabase/functions/get-vehicle-info/providers/carzen.ts`
