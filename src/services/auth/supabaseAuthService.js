@@ -7,6 +7,7 @@
  * - 이메일 인증: Supabase 기본 확인 메일 발송(기존 UI-only였던 2단계가 실제 동작).
  * - 에러 메시지는 여기서 한글로 매핑해 화면은 문자열만 노출한다.
  */
+import { Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
 // 구글 로그인은 네이티브/웹 구현이 완전히 달라 플랫폼별 모듈로 분리했다
 import { signInWithGoogle, signOutGoogle, googleErrorMessage } from './googleAuth';
@@ -89,12 +90,84 @@ export const resendConfirmationEmail = async (email) => {
   }
 };
 
-/** 비밀번호 재설정 메일 */
+/**
+ * 재설정 링크가 돌아올 주소.
+ *
+ * **항상 웹 주소를 쓴다.** 앱에서 요청하고 메일은 PC에서 여는 일이 흔한데,
+ * `jcar://`로 보내면 그 경우가 통째로 깨진다. 웹은 어디서 열어도 열린다.
+ * 안드로이드 App Links로 앱에 되돌리려면 assetlinks.json과 네이티브 설정이
+ * 필요하므로, 그건 별도 작업이다(그때까지 앱 사용자는 브라우저에서 바꾼 뒤
+ * 새 비밀번호로 로그인한다).
+ *
+ * 웹에서는 실행 중인 오리진을 쓴다 — 로컬 개발에서도 동작해야 하고,
+ * Supabase 허용목록에 localhost가 이미 들어 있다.
+ */
+const PRODUCTION_WEB_URL = 'https://jcar-platform.vercel.app';
+
+const recoveryRedirectTo = () => (
+  Platform.OS === 'web' && typeof window !== 'undefined'
+    ? window.location.origin
+    : PRODUCTION_WEB_URL
+);
+
+/**
+ * 비밀번호 재설정 메일.
+ *
+ * 미등록 이메일이어도 Supabase는 성공으로 응답한다(계정 존재 여부 비노출).
+ * 호출부는 그 성질에 기대고 있으므로 여기서 분기를 만들지 않는다.
+ */
 export const sendPasswordReset = async (email) => {
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: recoveryRedirectTo(),
+  });
   if (error) {
     logger.error('resetPasswordForEmail 오류:', error);
     throw error;
+  }
+};
+
+/**
+ * 비밀번호 변경.
+ *
+ * 두 곳에서 쓴다. 보안 성질이 다르므로 인자로 가른다:
+ *
+ *   재설정(복구 세션)  currentPassword 없음.
+ *       메일 링크로 이메일 통제권을 이미 증명했다. 옛 비밀번호는 모르는 게 정상.
+ *
+ *   변경(로그인 상태)  currentPassword 필수.
+ *       세션이 열린 기기를 주운 사람이 비밀번호를 바꿔 계정을 가져가는 것을 막는다.
+ *       Supabase는 updateUser에 옛 비밀번호를 요구하지 않으므로, 같은 자격으로
+ *       한 번 더 로그인해 직접 확인한다.
+ *
+ * 성공하면 **다른 기기의 세션을 전부 끊는다.** 비밀번호를 바꾸는 이유 자체가
+ * 계정을 남이 쥐고 있어서인 경우가 많은데, 그 세션이 살아 있으면 바꾼 의미가 없다.
+ * 현재 기기는 유지한다(방금 본인임을 증명했다).
+ */
+export const updateMyPassword = async (newPassword, { currentPassword, email } = {}) => {
+  if (currentPassword) {
+    if (!email) { throw new Error('현재 비밀번호를 확인할 수 없습니다.'); }
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+    // 실패해도 기존 세션은 그대로다 — 로그인 시도 실패가 세션을 지우지는 않는다
+    if (reauthError) { throw reauthError; }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) {
+    logger.error('updateUser(password) 오류:', error);
+    throw error;
+  }
+
+  // 다른 세션 정리는 실패해도 비밀번호 변경 자체를 무르지 않는다.
+  // 다만 조용히 넘기지는 않는다 — "다 끊었다"고 안내하면 안 되기 때문이다.
+  try {
+    await supabase.auth.signOut({ scope: 'others' });
+    return { success: true, othersRevoked: true };
+  } catch (revokeError) {
+    logger.error('다른 세션 종료 실패:', revokeError);
+    return { success: true, othersRevoked: false };
   }
 };
 
@@ -153,6 +226,7 @@ export const saveMyFcmToken = async (userId, token) => {
 
 export default {
   mapAuthError,
+  updateMyPassword,
   completeProfile,
   signIn,
   signInWithGoogle,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { isValidPassword, PASSWORD_RULE_TEXT } from '../utils/password';
 import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { typography } from '../theme/typography';
@@ -24,7 +25,7 @@ const RegisterScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const isValidPassword = (v) => /^(?=.*[a-z])(?=.*\d).{8,}$/.test(v);
+
   const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   const handleNext = async () => {
@@ -36,7 +37,7 @@ const RegisterScreen = ({ navigation }) => {
     if (!email) { newErrors.email = '이메일을 입력해주세요.'; }
     else if (!isValidEmail(email)) { newErrors.email = '올바른 이메일 형식이 아닙니다.'; }
     if (!password) { newErrors.password = '비밀번호를 입력해주세요.'; }
-    else if (!isValidPassword(password)) { newErrors.password = '8자 이상이며 소문자와 숫자를 포함해야 합니다.'; }
+    else if (!isValidPassword(password)) { newErrors.password = `${PASSWORD_RULE_TEXT}해야 합니다.`; }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);

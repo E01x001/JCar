@@ -6,7 +6,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { logger } from '../utils/logger';
 import Toast from 'react-native-toast-message';
-import { supabase } from '../lib/supabase';
+import { supabase, hadRecoveryLinkOnLoad } from '../lib/supabase';
 import { getMyProfile, signOutUser, saveMyFcmToken } from '../services/auth/supabaseAuthService';
 import { saveFcmToken } from '../services/notification/fcmService';
 import { recordInstallSignal } from '../services/notification/installSignalService';
@@ -23,6 +23,16 @@ export const AuthProvider = ({ children }) => {
   const [sellerEmail, setSellerEmail] = useState(null);
   const [profileCompleted, setProfileCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // 비밀번호 재설정 링크로 들어온 세션인가.
+  //
+  // Supabase의 복구 링크는 **정식 세션을 만든다.** 그대로 두면 재설정 링크가
+  // 사실상 로그인 링크가 되어, 메일함을 본 사람이 비밀번호를 모른 채 앱을 쓴다.
+  // 이 값이 true인 동안 AppNavigator는 재설정 화면 말고는 아무것도 렌더하지 않는다.
+  //
+  // 초기값을 URL에서 읽는 이유는 lib/supabase.js의 주석에 있다 — 이벤트가
+  // 구독보다 먼저 지나갈 수 있어서, 둘 중 하나만 잡혀도 게이트가 서야 한다.
+  const [recoveryMode, setRecoveryMode] = useState(hadRecoveryLinkOnLoad);
 
   useEffect(() => {
     // 세션 변화 처리 공통 로직
@@ -100,7 +110,15 @@ export const AuthProvider = ({ children }) => {
     // 초기 세션 복원 + 변경 구독
     supabase.auth.getSession().then(({ data }) => applySession(data.session));
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      // 웹은 detectSessionInUrl이 URL 조각을 소비하면서 이 이벤트를 낸다.
+      // 로그아웃되면 복구 상태도 함께 내려간다 — 세션이 없으면 재설정할 대상도 없다.
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryMode(true);
+      } else if (event === 'SIGNED_OUT') {
+        setRecoveryMode(false);
+      }
+
       // onAuthStateChange 콜백 안에서 다른 supabase 호출 시 데드락 방지를 위해
       // 비동기 작업은 마이크로태스크로 분리 (Supabase 문서 권장)
       setTimeout(() => applySession(session), 0);
@@ -146,7 +164,11 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, role, sellerName, sellerPhone, sellerEmail, profileCompleted, refreshProfile, loading }}
+      value={{
+        user, role, sellerName, sellerPhone, sellerEmail, profileCompleted,
+        refreshProfile, loading,
+        recoveryMode, exitRecoveryMode: () => setRecoveryMode(false),
+      }}
     >
       {children}
     </AuthContext.Provider>

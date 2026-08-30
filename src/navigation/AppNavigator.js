@@ -13,6 +13,8 @@ import ProfileCompletionScreen from '../screens/ProfileCompletionScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen'; // 잊어버린 비밀번호 화면 추가
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import VehiclesListScreen from '../screens/VehiclesListScreen';
 import VehicleBrowseScreen from '../screens/VehicleBrowseScreen';
 import VehicleRegistrationScreen from '../screens/VehicleRegistrationScreen';
@@ -151,7 +153,7 @@ const AdminTabs = () => (
 );
 
 const AppNavigator = ({ navigationRef }) => {
-  const { user, role, profileCompleted, loading } = useContext(AuthContext);
+  const { user, role, profileCompleted, loading, recoveryMode } = useContext(AuthContext);
   const [onboarded, setOnboarded] = useState(null); // null=확인 중
 
   useEffect(() => {
@@ -167,6 +169,21 @@ const AppNavigator = ({ navigationRef }) => {
 
   // 비로그인 + 미온보딩이면 온보딩부터, 아니면 로그인부터
   const initialRouteName = user ? undefined : (onboarded ? 'Login' : 'Onboarding');
+
+  // 비밀번호 재설정 링크로 들어온 세션은 앱을 쓸 수 없다.
+  //
+  // Supabase 복구 링크는 정식 세션을 만든다. 게이트가 없으면 그 링크가 곧
+  // 로그인 링크가 되어, 메일함을 본 사람이 비밀번호를 모른 채 앱에 들어온다.
+  // 프로필 완성 게이트보다 앞에 둔다 — 복구 세션은 프로필도 손대면 안 된다.
+  if (user && recoveryMode) {
+    return (
+      <NavigationContainer ref={navigationRef}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
 
   // 로그인했지만 이름·전화가 없으면 완성 화면으로 강제한다.
   // 관리자는 대시보드에서 생성되는 경우가 있어 예외를 두지 않는다(연락처는 동일하게 필요).
@@ -212,6 +229,11 @@ const AppNavigator = ({ navigationRef }) => {
               component={AdminOwnershipHistoryScreen}
               options={{ headerShown: true, title: '소유권 이전 기록' }}
             />
+            <Stack.Screen
+              name="ChangePassword"
+              component={ChangePasswordScreen}
+              options={{ headerShown: true, title: '비밀번호 변경' }}
+            />
           </>
         )}
         {user && role !== 'admin' && (
@@ -246,6 +268,11 @@ const AppNavigator = ({ navigationRef }) => {
               name="NotificationCenter"
               component={NotificationCenterScreen}
               options={{ headerShown: true, title: '알림' }}
+            />
+            <Stack.Screen
+              name="ChangePassword"
+              component={ChangePasswordScreen}
+              options={{ headerShown: true, title: '비밀번호 변경' }}
             />
           </>
         )}

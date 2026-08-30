@@ -27,6 +27,11 @@ const TABS = [
 
 const MyPageScreen = ({ navigation }) => {
   const { user, sellerName, sellerPhone } = useContext(AuthContext);
+
+  // 이메일/비밀번호 자격이 있는 계정인가. 구글로만 가입했으면 identities에
+  // google만 들어 있고, 그런 계정은 비밀번호 자체가 없다.
+  const hasPassword = !user?.identities
+    || user.identities.some((identity) => identity.provider === 'email');
   const theme = useTheme();
   const toast = useToast();
 
@@ -208,6 +213,19 @@ const MyPageScreen = ({ navigation }) => {
 
         {/* 액션 */}
         <View style={[styles.actions, { backgroundColor: theme.colors.background.secondary }]}>
+          {/* 구글로만 가입한 계정에는 바꿀 비밀번호가 없다 — 항목 자체를 숨긴다 */}
+          {hasPassword && (
+            <Pressable
+              onPress={() => navigation.navigate('ChangePassword')}
+              style={({ pressed }) => [
+                styles.linkBtn,
+                { backgroundColor: pressed ? theme.colors.background.secondary : 'transparent' },
+              ]}
+              hitSlop={8}
+            >
+              <Text style={[styles.linkText, { color: theme.colors.text.secondary }]}>비밀번호 변경</Text>
+            </Pressable>
+          )}
           <Pressable
             onPress={handleLogout}
             style={({ pressed }) => [
@@ -276,6 +294,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutText: { fontSize: 15, fontWeight: '700' },
+  linkBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: 4 },
+  linkText: { fontSize: 14, fontWeight: '600' },
   withdrawBtn: { alignItems: 'center', paddingVertical: 10, marginTop: 4 },
   withdrawText: { fontSize: 13 },
 });
