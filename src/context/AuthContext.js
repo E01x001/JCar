@@ -26,9 +26,45 @@ export const AuthContext = createContext(null);
  */
 const RECOVERY_PENDING_KEY = '@jcar/auth-recovery-pending';
 
-const markRecoveryPending = () => AsyncStorage.setItem(RECOVERY_PENDING_KEY, '1');
+/**
+ * 게이트 표시의 수명.
+ *
+ * 표시에 만료가 없으면 **재설정을 포기한 사람이 그 기기에 영구히 갇힌다.**
+ * 링크를 눌러 재설정 화면까지 갔다가 비밀번호를 정하지 않고 창을 닫으면,
+ * 세션과 표시가 함께 남아 이후 모든 방문이 재설정 화면으로 간다. 로그아웃
+ * 버튼이 그 화면 안에 있으니 빠져나올 길이 아주 없진 않지만, 그걸 알아채기를
+ * 기대할 수는 없다(2026-09-01 실제로 이 상태에 빠졌다).
+ *
+ * 복구 링크 자체가 1시간이면 만료되므로 표시도 그 이상 살아 있을 이유가 없다.
+ */
+const RECOVERY_PENDING_TTL_MS = 60 * 60 * 1000;
+
+const markRecoveryPending = () => (
+  AsyncStorage.setItem(RECOVERY_PENDING_KEY, String(Date.now()))
+);
 const clearRecoveryPending = () => AsyncStorage.removeItem(RECOVERY_PENDING_KEY);
-const isRecoveryPending = async () => (await AsyncStorage.getItem(RECOVERY_PENDING_KEY)) === '1';
+
+/**
+ * 복구 표시의 상태. 'none' | 'valid' | 'expired'
+ *
+ * 'expired'를 따로 두는 이유는 처리가 다르기 때문이다. 표시만 지우고 넘어가면
+ * **복구 링크가 만든 세션이 그대로 살아남아** 애초에 막으려던 상황이 된다 —
+ * 메일함을 본 사람이 비밀번호를 모른 채 로그인 상태가 되는 것. 그래서 만료된
+ * 경우에는 세션도 함께 끊는다.
+ *
+ * 예전 형식('1')은 만료로 본다. 만료 없이 저장된 값이라 언제 찍힌 것인지 알 수
+ * 없고, 그 표시를 남긴 사람은 이미 갇혀 있다.
+ */
+const readRecoveryPending = async () => {
+  const raw = await AsyncStorage.getItem(RECOVERY_PENDING_KEY);
+  if (!raw) { return 'none'; }
+
+  const markedAt = Number(raw);
+  if (Number.isFinite(markedAt) && Date.now() - markedAt < RECOVERY_PENDING_TTL_MS) {
+    return 'valid';
+  }
+  return 'expired';
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -148,9 +184,25 @@ export const AuthProvider = ({ children }) => {
           // 이번 적재가 링크로 시작됐고 세션도 생겼다 — 새로고침을 견디도록 남긴다
           await markRecoveryPending();
           if (!cancelled) { setRecoveryMode(true); }
-        } else if (await isRecoveryPending()) {
-          // 링크로 시작된 세션이 새로고침을 넘어 살아남은 경우
-          if (!cancelled) { setRecoveryMode(true); }
+        } else {
+          const pending = await readRecoveryPending();
+          if (pending === 'valid') {
+            // 링크로 시작된 세션이 새로고침을 넘어 살아남은 경우
+            if (!cancelled) { setRecoveryMode(true); }
+          } else if (pending === 'expired') {
+            // 재설정을 끝내지 않고 떠난 세션이다. 표시만 지우면 그 세션으로
+            // 그냥 로그인된다 — 그래서 세션도 끊고 로그인 화면으로 보낸다.
+            logger.warn('AuthContext: 만료된 복구 세션 — 로그아웃한다');
+            await clearRecoveryPending();
+            await supabase.auth.signOut();
+            if (!cancelled) {
+              setRecoveryMode(false);
+              // SIGNED_OUT 이벤트가 오겠지만 그걸 기다리지 않는다 —
+              // 안 오면 loading이 내려가지 않아 흰 화면이 남는다.
+              await applySession(null);
+            }
+            return;
+          }
         }
       } catch (error) {
         // 저장소를 못 읽었다고 로그인 자체를 막지는 않는다. 다만 이 경우
