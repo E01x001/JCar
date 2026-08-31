@@ -111,17 +111,25 @@ const recoveryRedirectTo = () => (
 );
 
 /**
- * 비밀번호 재설정 메일.
+ * 비밀번호 찾기.
  *
- * 미등록 이메일이어도 Supabase는 성공으로 응답한다(계정 존재 여부 비노출).
- * 호출부는 그 성질에 기대고 있으므로 여기서 분기를 만들지 않는다.
+ * Edge Function(`forgot-password`)에 맡긴다. 직접 `resetPasswordForEmail`을
+ * 부르지 않는 이유는 **계정 종류에 따라 보낼 메일이 다르기 때문**이다:
+ * 구글로만 가입한 사람에게 재설정 링크를 보내면 구글 계정에 더 약한 비밀번호가
+ * 하나 붙는다. 그런 계정에는 "구글로 로그인하세요" 안내만 나간다.
+ *
+ * 그 판단은 **서버 안에서만** 이뤄진다. 여기로 돌아오는 응답은 계정이 없든,
+ * 비밀번호가 있든, 구글 전용이든 전부 같다 — 다르면 로그인하지 않은 사람이
+ * 임의의 이메일로 계정 존재 여부를 알아낼 수 있다(계정 열거).
+ *
+ * 그래서 호출부는 성공/실패만 알 뿐 무엇이 발송됐는지 알 수 없고, 알 필요도 없다.
  */
 export const sendPasswordReset = async (email) => {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: recoveryRedirectTo(),
+  const { error } = await supabase.functions.invoke('forgot-password', {
+    body: { email, redirectTo: recoveryRedirectTo() },
   });
   if (error) {
-    logger.error('resetPasswordForEmail 오류:', error);
+    logger.error('forgot-password 호출 오류:', error);
     throw error;
   }
 };
@@ -169,6 +177,26 @@ export const updateMyPassword = async (newPassword, { currentPassword, email } =
     logger.error('다른 세션 종료 실패:', revokeError);
     return { success: true, othersRevoked: false };
   }
+};
+
+/**
+ * 내 계정에 비밀번호가 설정돼 있는가.
+ *
+ * 클라이언트만으로는 알 수 없다. 구글로 가입한 사람이 재설정으로 비밀번호를
+ * 만들어도 `identities`는 `["google"]` 그대로이고 `app_metadata.providers`도
+ * 그대로다(2026-08-31 실계정 확인). 그래서 서버에 직접 묻는다 —
+ * `has_password()`는 불리언 하나만 돌려주는 SECURITY DEFINER 함수다.
+ *
+ * 실패하면 `true`로 본다. 있는 항목을 잠깐 보여주는 쪽이, 비밀번호가 있는
+ * 사람에게서 바꿀 수단을 빼앗는 쪽보다 낫다.
+ */
+export const hasPassword = async () => {
+  const { data, error } = await supabase.rpc('has_password');
+  if (error) {
+    logger.error('has_password 조회 실패:', error);
+    return true;
+  }
+  return data !== false;
 };
 
 /** 로그아웃 */

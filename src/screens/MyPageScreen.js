@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Alert, Dimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView } from 'react-native-tab-view';
-import { signOutUser } from '../services/auth/supabaseAuthService';
+import { signOutUser, hasPassword } from '../services/auth/supabaseAuthService';
 import { deleteUserAccount } from '../services/auth/accountService';
 import { supabase } from '../lib/supabase';
 import { reportCrashlyticsError, logCrashlyticsMessage } from '../services/notification/notificationService';
@@ -28,10 +28,12 @@ const TABS = [
 const MyPageScreen = ({ navigation }) => {
   const { user, sellerName, sellerPhone } = useContext(AuthContext);
 
-  // 이메일/비밀번호 자격이 있는 계정인가. 구글로만 가입했으면 identities에
-  // google만 들어 있고, 그런 계정은 비밀번호 자체가 없다.
-  const hasPassword = !user?.identities
-    || user.identities.some((identity) => identity.provider === 'email');
+  // 비밀번호가 있는 계정인가 — 서버에 묻는다.
+  //
+  // 예전에는 `identities`에 email이 있는지로 판단했는데 틀렸다. 구글로 가입한
+  // 사람이 비밀번호 재설정으로 비밀번호를 만들어도 identities는 ["google"]
+  // 그대로다. 그 판정은 비밀번호가 있는 사용자에게서 변경 수단을 숨겼다.
+  const [canChangePassword, setCanChangePassword] = useState(false);
   const theme = useTheme();
   const toast = useToast();
 
@@ -57,6 +59,17 @@ const MyPageScreen = ({ navigation }) => {
       unsubscribeFromVehicles();
       unsubscribeFromConsultations();
     };
+  }, [user]);
+
+  // 마운트 시 한 번만 묻는다. false -> true로 바뀌는 유일한 경로는 재설정
+  // 게이트이고, 거기서 빠져나올 때 네비게이터가 다시 그려지므로 이걸로 충분하다.
+  useEffect(() => {
+    if (!user) { return () => {}; }
+    let cancelled = false;
+    hasPassword()
+      .then((result) => { if (!cancelled) { setCanChangePassword(result); } })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, [user]);
 
   // 통계 카운트
@@ -214,7 +227,7 @@ const MyPageScreen = ({ navigation }) => {
         {/* 액션 */}
         <View style={[styles.actions, { backgroundColor: theme.colors.background.secondary }]}>
           {/* 구글로만 가입한 계정에는 바꿀 비밀번호가 없다 — 항목 자체를 숨긴다 */}
-          {hasPassword && (
+          {canChangePassword && (
             <Pressable
               onPress={() => navigation.navigate('ChangePassword')}
               style={({ pressed }) => [
