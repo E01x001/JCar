@@ -135,6 +135,49 @@ export const sendPasswordReset = async (email) => {
 };
 
 /**
+ * 재설정 링크의 토큰으로 새 비밀번호를 정한다.
+ *
+ * **이 앱은 재설정 과정에서 세션을 쥐지 않는다.** 검증·변경·전 세션 해제가
+ * Edge Function 안에서 한 번에 끝나고, 여기로는 성공 여부만 돌아온다.
+ * 그래서 성공해도 로그인 상태가 되지 않는다 — 새 비밀번호로 다시 로그인해야
+ * 하고, 그게 의도다(그 세션의 amr은 어차피 password가 아니다).
+ *
+ * 토큰은 1회용이라 실패하면 링크를 다시 받아야 한다. 오류 코드를 그대로
+ * 올려보내 화면이 그 사실을 안내할 수 있게 한다.
+ *
+ * @returns {Promise<{ sessionsRevoked: boolean }>}
+ * @throws {Error & { code?: string }} code: invalid_link | weak_password | rate_limited
+ */
+export const resetPasswordWithToken = async (tokenHash, newPassword) => {
+  const { data, error } = await supabase.functions.invoke('reset-password', {
+    body: { token_hash: tokenHash, password: newPassword },
+  });
+
+  // 함수가 4xx를 주면 invoke는 error를 던지지만 본문은 버린다. 우리 문구가
+  // 그 본문에 있으므로 직접 읽는다.
+  if (error) {
+    let payload = null;
+    try {
+      payload = await error.context?.json?.();
+    } catch {
+      payload = null;
+    }
+    const failure = new Error(payload?.error || '비밀번호를 변경하지 못했습니다.');
+    failure.code = payload?.code || 'unknown';
+    logger.error('reset-password 실패:', failure.code);
+    throw failure;
+  }
+
+  if (!data?.ok) {
+    const failure = new Error(data?.error || '비밀번호를 변경하지 못했습니다.');
+    failure.code = data?.code || 'unknown';
+    throw failure;
+  }
+
+  return { sessionsRevoked: data.sessionsRevoked !== false };
+};
+
+/**
  * 비밀번호 변경.
  *
  * 두 곳에서 쓴다. 보안 성질이 다르므로 인자로 가른다:

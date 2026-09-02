@@ -14,6 +14,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen'; // 잊어버린 비밀번호 화면 추가
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import { getResetToken } from '../lib/resetLink';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import VehiclesListScreen from '../screens/VehiclesListScreen';
 import VehicleBrowseScreen from '../screens/VehicleBrowseScreen';
@@ -153,8 +154,10 @@ const AdminTabs = () => (
 );
 
 const AppNavigator = ({ navigationRef }) => {
-  const { user, role, profileCompleted, loading, recoveryMode } = useContext(AuthContext);
+  const { user, role, profileCompleted, loading } = useContext(AuthContext);
   const [onboarded, setOnboarded] = useState(null); // null=확인 중
+  // URL에서 한 번만 읽는다. 화면을 떠날 때 null로 만들어 폼이 되살아나지 않게 한다.
+  const [resetToken, setResetToken] = useState(getResetToken);
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDED_KEY)
@@ -170,16 +173,23 @@ const AppNavigator = ({ navigationRef }) => {
   // 비로그인 + 미온보딩이면 온보딩부터, 아니면 로그인부터
   const initialRouteName = user ? undefined : (onboarded ? 'Login' : 'Onboarding');
 
-  // 비밀번호 재설정 링크로 들어온 세션은 앱을 쓸 수 없다.
+  // 재설정 링크로 들어왔다면 그 화면만 띄운다.
   //
-  // Supabase 복구 링크는 정식 세션을 만든다. 게이트가 없으면 그 링크가 곧
-  // 로그인 링크가 되어, 메일함을 본 사람이 비밀번호를 모른 채 앱에 들어온다.
-  // 프로필 완성 게이트보다 앞에 둔다 — 복구 세션은 프로필도 손대면 안 된다.
-  if (user && recoveryMode) {
+  // 예전에는 "복구 세션인가"를 판단해 가두는 게이트였다. 지금은 세션이 아니라
+  // **URL이 토큰을 들고 왔는가**만 본다 — 이 화면은 로그인된 화면이 아니고,
+  // 띄운다고 해서 아무 권한도 생기지 않는다. 그래서 user 여부와 무관하다.
+  if (resetToken) {
     return (
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+          <Stack.Screen name="ResetPassword">
+            {() => (
+              <ResetPasswordScreen
+                tokenHash={resetToken}
+                onLeave={() => setResetToken(null)}
+              />
+            )}
+          </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
     );
