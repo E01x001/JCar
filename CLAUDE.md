@@ -263,8 +263,16 @@ Supabase Auth with role-based access control:
 - **Postgres + RLS**: vehicles, consultation requests, profiles, `vehicle_pricing` (admin-only)
 - **Storage**: vehicle image uploads
 - **Edge Functions**: push dispatch, account deletion cascade, vehicle lookup proxy
-  (`get-vehicle-info` — 조회처는 env로 교체 가능. `docs/VEHICLE_LOOKUP.md`)
+  (`get-vehicle-info` — 조회처는 env로 교체 가능. `docs/VEHICLE_LOOKUP.md`),
+  비밀번호 찾기·재설정 (`forgot-password` / `reset-password` — `docs/PASSWORD_RECOVERY.md`)
 - **Realtime**: `postgres_changes` subscriptions behind `subscribe*` helpers in services
+
+**비밀번호 재설정은 브라우저에 세션을 만들지 않는다.** Supabase 기본 복구 링크는
+정식 세션을 넘기는데, 그러면 재설정 링크가 로그인 링크가 된다. 메일 템플릿이
+`{{ .TokenHash }}`를 쿼리로 실어 우리 페이지로 보내고, 검증·변경·전 세션 해제가
+Edge Function 안에서 끝난다. **화면 단 게이트로 막으려 하지 말 것** — 그 방식은
+화면만 가리고 API 호출은 막지 못한다(RLS는 복구 세션을 구분하지 않는다).
+`docs/PASSWORD_RECOVERY.md`에 왜 그렇게 됐는지 적혀 있다.
 
 Migrations live in `supabase/migrations/`. Never hand-edit applied migrations —
 add a new one. Secrets (service_role, API keys) belong in Vault or function env,
@@ -367,7 +375,7 @@ android/를 직접 수정하면 다음 prebuild에서 덮어써진다.
 전화번호: 형식 검증 + UNIQUE 중복 방지만 있고 실제 소유 인증은 없다
 (docs/KNOWN_ISSUES.md ISSUE-03)
 
-이메일 인증: 현재 비활성 (ISSUE-02) · 비밀번호 재설정: 미구현 (ISSUE-01)
+이메일 인증: 현재 비활성 (ISSUE-02) · 비밀번호 재설정: 구현 완료, 발신 도메인 대기 (ISSUE-01)
 
 2. 차량 등록 (VehicleRegistrationScreen.js)
 
@@ -489,7 +497,6 @@ Expo SDK 57 이전 + 웹 빌드 · Vercel 배포
 
 웹 구글 로그인 — Google OAuth client secret 필요 (ISSUE-04)
 
-비밀번호 재설정 화면 재구현 (ISSUE-01)
 
 이메일 인증 재활성화 (ISSUE-02) · 전화번호 소유 인증 (ISSUE-03)
 
