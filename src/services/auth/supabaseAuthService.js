@@ -7,7 +7,6 @@
  * - 이메일 인증: Supabase 기본 확인 메일 발송(기존 UI-only였던 2단계가 실제 동작).
  * - 에러 메시지는 여기서 한글로 매핑해 화면은 문자열만 노출한다.
  */
-import { Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
 // 구글 로그인은 네이티브/웹 구현이 완전히 달라 플랫폼별 모듈로 분리했다
 import { signInWithGoogle, signOutGoogle, googleErrorMessage } from './googleAuth';
@@ -91,26 +90,6 @@ export const resendConfirmationEmail = async (email) => {
 };
 
 /**
- * 재설정 링크가 돌아올 주소.
- *
- * **항상 웹 주소를 쓴다.** 앱에서 요청하고 메일은 PC에서 여는 일이 흔한데,
- * `jcar://`로 보내면 그 경우가 통째로 깨진다. 웹은 어디서 열어도 열린다.
- * 안드로이드 App Links로 앱에 되돌리려면 assetlinks.json과 네이티브 설정이
- * 필요하므로, 그건 별도 작업이다(그때까지 앱 사용자는 브라우저에서 바꾼 뒤
- * 새 비밀번호로 로그인한다).
- *
- * 웹에서는 실행 중인 오리진을 쓴다 — 로컬 개발에서도 동작해야 하고,
- * Supabase 허용목록에 localhost가 이미 들어 있다.
- */
-const PRODUCTION_WEB_URL = 'https://jcar-platform.vercel.app';
-
-const recoveryRedirectTo = () => (
-  Platform.OS === 'web' && typeof window !== 'undefined'
-    ? window.location.origin
-    : PRODUCTION_WEB_URL
-);
-
-/**
  * 비밀번호 찾기.
  *
  * Edge Function(`forgot-password`)에 맡긴다. 직접 `resetPasswordForEmail`을
@@ -126,7 +105,7 @@ const recoveryRedirectTo = () => (
  */
 export const sendPasswordReset = async (email) => {
   const { error } = await supabase.functions.invoke('forgot-password', {
-    body: { email, redirectTo: recoveryRedirectTo() },
+    body: { email },
   });
   if (error) {
     logger.error('forgot-password 호출 오류:', error);

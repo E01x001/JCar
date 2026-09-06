@@ -51,36 +51,6 @@ const settle = async (startedAt: number) => {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * 링크가 돌아올 주소는 **클라이언트가 정하게 두지 않는다.**
- *
- * 요청 본문의 redirectTo를 그대로 쓰면, 공격자가 남의 이메일로 재설정을 요청하며
- * 자기 서버 주소를 넣어 복구 토큰을 가로챌 수 있다(오픈 리다이렉트). Supabase도
- * 자체 허용목록을 갖고 있지만, 그 목록에 localhost가 들어 있는 한 우리 쪽에서도
- * 한 번 걸러야 한다.
- */
-const ALLOWED_REDIRECTS = [
-  "https://jcar-platform.vercel.app",
-  "http://localhost",
-];
-
-const safeRedirect = (requested: unknown, fallback: string) => {
-  const value = typeof requested === "string" ? requested.trim() : "";
-  if (!value) { return fallback; }
-
-  const ok = ALLOWED_REDIRECTS.some((prefix) =>
-    value === prefix || value.startsWith(`${prefix}/`) ||
-    // localhost는 포트가 붙는다
-    (prefix === "http://localhost" && /^http:\/\/localhost(:\d+)?(\/|$)/.test(value))
-  );
-
-  if (!ok) {
-    console.error("허용되지 않은 redirectTo — 무시했다:", value);
-    return fallback;
-  }
-  return value;
-};
-
 /** 구글 전용 계정에 보내는 안내 메일. 재설정 링크를 담지 않는다. */
 const noticeHtml = (signInUrl: string) => `
 <h2 style="font-size:20px;margin:0 0 16px">구글로 로그인해주세요</h2>
@@ -137,11 +107,9 @@ Deno.serve(async (req) => {
   const startedAt = Date.now();
 
   let email = "";
-  let requestedRedirect: unknown = null;
   try {
     const body = await req.json();
     email = String(body?.email ?? "").trim().toLowerCase();
-    requestedRedirect = body?.redirectTo ?? null;
   } catch {
     return settle(startedAt);
   }
@@ -154,7 +122,6 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const siteUrl = Deno.env.get("SITE_URL") ?? "https://jcar-platform.vercel.app";
-  const redirectTo = safeRedirect(requestedRedirect, siteUrl);
 
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
@@ -175,10 +142,11 @@ Deno.serve(async (req) => {
 
     if (target.has_password) {
       // 평범한 재설정. Supabase가 우리 한글 템플릿으로 메일을 보낸다.
-      const { error: resetError } = await admin.auth.resetPasswordForEmail(
-        email,
-        { redirectTo },
-      );
+      //
+      // redirectTo를 넘기지 않는다. 템플릿이 {{ .ConfirmationURL }} 대신
+      // {{ .SiteURL }}/reset?token_hash=...를 쓰므로 그 값은 링크에 반영되지
+      // 않는다. 넘기면 효과 없는 값을 검증하는 코드만 남는다.
+      const { error: resetError } = await admin.auth.resetPasswordForEmail(email);
       if (resetError) { console.error("재설정 메일 발송 실패:", resetError); }
       return settle(startedAt);
     }

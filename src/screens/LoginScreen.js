@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Image, StatusBar, KeyboardAvoidingView, Platform,
+  StyleSheet, Image, StatusBar, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from '@expo/vector-icons/FontAwesome';
@@ -68,6 +68,19 @@ const LoginScreen = ({ navigation }) => {
           style={styles.kav}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
+          {/*
+            키보드가 올라오면 화면이 줄어든다(안드로이드 adjustResize). 스크롤이
+            없으면 줄어든 높이에 로고와 카드를 우겨넣게 되어 입력칸이 키보드
+            뒤로 밀린다. 스크롤을 두면 눌린 칸까지 올라올 수 있다.
+
+            flexGrow: 1 + space-between이라 키보드가 없을 때의 배치는 그대로다.
+          */}
+          <ScrollView
+            contentContainerStyle={styles.scrollBody}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
           {/* Hero — logo + tagline */}
           <View style={styles.hero}>
             <Image
@@ -144,6 +157,7 @@ const LoginScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
@@ -156,7 +170,8 @@ const styles = StyleSheet.create({
     // 배경색은 theme.colors.primary.dark로 인라인 지정(토큰화)
   },
   safe: { flex: 1 },
-  kav: { flex: 1, justifyContent: 'space-between' },
+  kav: { flex: 1 },
+  scrollBody: { flexGrow: 1, justifyContent: 'space-between' },
 
   // Decorative circles
   circleTopRight: {
