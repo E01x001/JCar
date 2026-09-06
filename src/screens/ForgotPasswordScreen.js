@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
+} from 'react-native';
 import { typography } from '../theme/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
@@ -53,7 +55,19 @@ const ForgotPasswordScreen = ({ navigation }) => {
       </View>
 
       <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.body}>
+        {/*
+          키보드가 뜨면 창이 줄어든다(안드로이드 adjustResize). 스크롤이 없으면
+          줄어든 높이 안에서만 배치돼 하단 버튼이 잘린다. KeyboardAvoidingView의
+          behavior는 안드로이드에서 undefined라 거들지 않는다.
+
+          flexGrow: 1 + center라 키보드가 없을 때의 가운데 정렬은 그대로다.
+        */}
+        <ScrollView
+          contentContainerStyle={styles.body}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
           <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
           <Text style={[styles.title, { color: colors.text.primary }]}>비밀번호를 잊으셨나요?</Text>
           <Text style={[styles.desc, { color: colors.text.secondary }]}>
@@ -79,7 +93,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
             fullWidth
             style={styles.cta}
           />
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -94,7 +108,7 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 32, justifyContent: 'center' },
   headerTitle: { fontSize: typography.fontSize.screenTitle, fontWeight: '700' },
   kav: { flex: 1 },
-  body: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.screenX, paddingBottom: 60 },
+  body: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.screenX, paddingBottom: 60 },
   logo: { width: 150, height: 48, alignSelf: 'center', marginBottom: 24 },
   title: { fontSize: typography.fontSize.heroTitle, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
   desc: { fontSize: 14, lineHeight: 22, textAlign: 'center', marginTop: 12, marginBottom: 28 },

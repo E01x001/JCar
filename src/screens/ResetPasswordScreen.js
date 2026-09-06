@@ -18,6 +18,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography } from '../theme/typography';
@@ -51,6 +52,54 @@ const DoneNotice = ({ colors, sessionsRevoked, onLeave }) => (
         : '새 비밀번호로 다시 로그인해주세요.'}
     </Text>
     <Button variant="primary" title="로그인하기" onPress={onLeave} fullWidth />
+  </View>
+);
+
+/** 새 비밀번호 입력 폼. 토큰이 살아 있는 동안의 기본 화면. */
+const ResetForm = ({
+  colors, password, confirm, errors, isSubmitting,
+  onChangePassword, onChangeConfirm, onSubmit, onLeave,
+}) => (
+  <View style={styles.body}>
+    <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+    <Text style={[styles.title, { color: colors.text.primary }]}>새 비밀번호를 정해주세요</Text>
+    <Text style={[styles.desc, { color: colors.text.secondary }]}>
+      {PASSWORD_RULE_TEXT}해야 합니다
+    </Text>
+
+    <InputField
+      label="새 비밀번호"
+      value={password}
+      onChangeText={onChangePassword}
+      placeholder="8자 이상 입력 (소문자+숫자 포함)"
+      secureTextEntry
+      autoCapitalize="none"
+      error={errors.password}
+    />
+
+    <InputField
+      label="새 비밀번호 확인"
+      value={confirm}
+      onChangeText={onChangeConfirm}
+      placeholder="한 번 더 입력"
+      secureTextEntry
+      autoCapitalize="none"
+      error={errors.confirm}
+    />
+
+    <Button
+      variant="primary"
+      title={isSubmitting ? '변경 중...' : '비밀번호 변경'}
+      onPress={onSubmit}
+      loading={isSubmitting}
+      disabled={isSubmitting}
+      fullWidth
+      style={styles.cta}
+    />
+
+    <TouchableOpacity onPress={onLeave} disabled={isSubmitting} style={styles.cancel} hitSlop={8}>
+      <Text style={[styles.cancelText, { color: colors.text.secondary }]}>나중에 하기</Text>
+    </TouchableOpacity>
   </View>
 );
 
@@ -97,50 +146,6 @@ const ResetPasswordScreen = ({ tokenHash, onLeave }) => {
     }
   };
 
-  const renderForm = () => (
-    <View style={styles.body}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
-      <Text style={[styles.title, { color: colors.text.primary }]}>새 비밀번호를 정해주세요</Text>
-      <Text style={[styles.desc, { color: colors.text.secondary }]}>
-        {PASSWORD_RULE_TEXT}해야 합니다
-      </Text>
-
-      <InputField
-        label="새 비밀번호"
-        value={password}
-        onChangeText={(t) => { setPassword(t); clearError('password'); }}
-        placeholder="8자 이상 입력 (소문자+숫자 포함)"
-        secureTextEntry
-        autoCapitalize="none"
-        error={errors.password}
-      />
-
-      <InputField
-        label="새 비밀번호 확인"
-        value={confirm}
-        onChangeText={(t) => { setConfirm(t); clearError('confirm'); }}
-        placeholder="한 번 더 입력"
-        secureTextEntry
-        autoCapitalize="none"
-        error={errors.confirm}
-      />
-
-      <Button
-        variant="primary"
-        title={isSubmitting ? '변경 중...' : '비밀번호 변경'}
-        onPress={handleSubmit}
-        loading={isSubmitting}
-        disabled={isSubmitting}
-        fullWidth
-        style={styles.cta}
-      />
-
-      <TouchableOpacity onPress={onLeave} disabled={isSubmitting} style={styles.cancel} hitSlop={8}>
-        <Text style={[styles.cancelText, { color: colors.text.secondary }]}>나중에 하기</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   const renderBody = () => {
     if (deadLink) {
       return <DeadLinkNotice colors={colors} message={deadLink} onLeave={onLeave} />;
@@ -148,7 +153,19 @@ const ResetPasswordScreen = ({ tokenHash, onLeave }) => {
     if (done) {
       return <DoneNotice colors={colors} sessionsRevoked={done.sessionsRevoked} onLeave={onLeave} />;
     }
-    return renderForm();
+    return (
+      <ResetForm
+        colors={colors}
+        password={password}
+        confirm={confirm}
+        errors={errors}
+        isSubmitting={isSubmitting}
+        onChangePassword={(t) => { setPassword(t); clearError('password'); }}
+        onChangeConfirm={(t) => { setConfirm(t); clearError('confirm'); }}
+        onSubmit={handleSubmit}
+        onLeave={onLeave}
+      />
+    );
   };
 
   return (
@@ -160,7 +177,19 @@ const ResetPasswordScreen = ({ tokenHash, onLeave }) => {
       </View>
 
       <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {renderBody()}
+        {/*
+          키보드가 뜨면 창이 줄어든다(안드로이드 adjustResize). 스크롤이 없으면
+          줄어든 높이 안에서만 배치돼 하단 버튼이 잘린다. KeyboardAvoidingView의
+          behavior는 안드로이드에서 undefined라 거들지 않는다.
+        */}
+        <ScrollView
+          contentContainerStyle={styles.scrollBody}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {renderBody()}
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -175,7 +204,8 @@ const styles = StyleSheet.create({
   spacer: { width: 40, height: 32 },
   headerTitle: { fontSize: typography.fontSize.screenTitle, fontWeight: '700' },
   kav: { flex: 1 },
-  body: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.screenX, paddingBottom: 60 },
+  scrollBody: { flexGrow: 1, justifyContent: 'center' },
+  body: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.screenX, paddingBottom: 60 },
   logo: { width: 150, height: 48, alignSelf: 'center', marginBottom: 24 },
   title: { fontSize: typography.fontSize.heroTitle, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
   desc: { fontSize: 14, lineHeight: 22, textAlign: 'center', marginTop: 12, marginBottom: 28 },
