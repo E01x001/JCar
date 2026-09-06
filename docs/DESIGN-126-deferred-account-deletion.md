@@ -1,10 +1,15 @@
 # Design — Deferred Account Deletion (Task 126)
 
-> **구현 상태 (2026-06):** P1·P2·P3 코드 완료(커밋됨), **functions 배포 대기**.
-> - P1 `cascadeDeleteUser` 파괴→숨김 + `recoverDeletedUser` un-hide + `vehicleFilterService` 필터 — done
-> - P2 `scheduledPermanentDelete`(onSchedule 매일 03:00 KST) 신설 — done (배포 시 Cloud Scheduler 활성화)
-> - P3 MyPage 카피 정확화 — done
-> - **남은 것**: `firebase deploy --only functions` (cascadeDeleteUser 갱신 + 신규 스케줄 함수). 그리고 *자가 복구 UI 없음* — Auth disabled 상태라 사용자가 직접 복구 불가 → **관리자 경유 복구**(recoverDeletedUser를 admin이 호출)가 실제 경로(카피의 "고객센터 문의"와 일치). 자가복구를 원하면 별도 작업.
+> ⚠️ **이 문서는 Firebase 시절 설계다 (2026-06). 실제 구현은 다르다.**
+>
+> 여기 적힌 `cascadeDeleteUser` · `scheduledPermanentDelete` · Cloud Scheduler는
+> Supabase 이전(2026-08)으로 전부 없어졌다. **`firebase deploy --only functions`를
+> 하지 말 것** — 배포할 함수가 존재하지 않는다.
+>
+> 실제 구조는 Edge Function + pg_cron이며 `docs/ACCOUNT_DELETION.md`에 있다.
+> 아래 설계의 **결론**(탈퇴 시점에는 숨기기만 하고 30일 뒤에 파기한다,
+> 복구는 관리자 경유)은 그대로 살아 있고, 그 결론에 이른 근거를 남기려고
+> 이 문서를 보존한다.
 
 > 목표: "30일 복구 가능" 약속과 실제 동작을 일치시킨다. 탈퇴 시점에는 **아무것도
 > 파괴하지 않고**(숨김만), 30일 마감일에 **스케줄 함수가** 실제로 파괴한다.

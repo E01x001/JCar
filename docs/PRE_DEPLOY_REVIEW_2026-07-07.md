@@ -2,6 +2,11 @@
 
 > 4개 영역(인증/네비, 서비스/DB, 클라우드 함수/보안규칙, UI/가격게이팅)을 코드 수준으로 병렬 감사한 결과.
 > 각 항목은 직접 코드 확인으로 검증됨. 범례: 🔴 출시 차단 · 🟡 출시 전 권장 · 🟢 후속.
+>
+> ⚠️ **시점 기록이다 (Firestore 시절).** 여기서 인용하는 `firestore.rules` ·
+> `functions/`는 Supabase 이전 후 저장소에서 삭제됐다(2026-09-06). 파일 경로와
+> 줄 번호는 당시 상태를 가리킨다. 지적된 문제 자체는 대부분 이전 과정에서
+> 구조적으로 해소됐다 — 특히 C1(가격 노출)은 `vehicle_pricing` + RLS로 갈렸다.
 > 관련 문서: [REVIEW_FINDINGS_2026-06-20.md](REVIEW_FINDINGS_2026-06-20.md) · [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
 
 ---
