@@ -77,7 +77,7 @@ const LoginScreen = ({ navigation }) => {
             안 들어갈 만큼 화면이 작으면 그때 스크롤이 생긴다.
           */}
           <ScrollView
-            contentContainerStyle={styles.scrollBody}
+            contentContainerStyle={[styles.scrollBody, keyboardVisible && styles.scrollBodyCompact]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             bounces={false}
@@ -89,11 +89,9 @@ const LoginScreen = ({ navigation }) => {
               hero가 flex:1로 남는 공간을 흡수하므로, 줄어든 만큼 hero만 줄고
               **카드는 그대로 아래로 밀려 키보드에 가린다.**
 
-              ScrollView를 씌우는 것만으로는 해결되지 않았다(2026-09-06 시도).
-              hero가 flex:1이면 내용 높이가 언제나 뷰포트와 같아져 넘치는 것이
-              없고, 넘치지 않으면 스크롤도 생기지 않는다.
-
-              그래서 상단을 직접 접는다. 로고만 남기고 문구는 숨긴다.
+              hero를 접는 것만으로는 부족했다 — 진짜 원인은 space-between이
+              카드를 화면 바닥에 붙이는 것이었다(scrollBodyCompact 주석 참고).
+              둘 다 필요하다: 접어서 자리를 만들고, 가운데로 모아 바닥을 뜬다.
             */}
             <View style={[styles.hero, keyboardVisible && styles.heroCompact]}>
               <Image
@@ -194,7 +192,19 @@ const styles = StyleSheet.create({
   },
   safe: { flex: 1 },
   kav: { flex: 1 },
+  // 키보드가 없을 때: 위아래로 벌려 hero는 위, 카드는 아래 (디자인 의도)
   scrollBody: { flexGrow: 1, justifyContent: 'space-between' },
+
+  // 키보드가 떴을 때: **가운데로 모은다.**
+  //
+  // space-between은 자식을 양 끝에 붙인다 — 즉 카드를 화면 맨 아래,
+  // 정확히 키보드가 올라오는 자리에 고정한다. hero를 아무리 접어도 카드는
+  // 여전히 바닥에 붙어 있어서 가려졌다(2026-09-07 확인).
+  //
+  // flexGrow:1 + center가 표준 조합이다. 내용이 화면보다 작으면 늘어나 가운데
+  // 정렬되고, 크면 flexGrow가 아무 일도 하지 않아(내용을 줄이지는 못한다)
+  // 그대로 스크롤이 생긴다. 두 경우가 한 스타일로 처리된다.
+  scrollBodyCompact: { justifyContent: 'center' },
 
   // Decorative circles
   circleTopRight: {
