@@ -10,6 +10,7 @@ import { ThemeProvider } from './theme/ThemeProvider';
 import AppNavigator from './navigation/AppNavigator';
 import ErrorBoundary from './components/ErrorBoundary';
 import { requestNotificationPermission } from './services/notification/fcmService';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { toastConfig } from './config/toastConfig';
 
 const App = () => {
@@ -139,15 +140,25 @@ const App = () => {
 
   return (
     <>
-      <ErrorBoundary>
-        <ThemeProvider>
-          <LoadingProvider>
-            <AuthProvider>
-              <AppNavigator navigationRef={navigationRef} />
-            </AuthProvider>
-          </LoadingProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
+      {/*
+        KeyboardProvider — 키보드 높이·애니메이션을 네이티브에서 실시간으로
+        받아온다. 이게 있어야 KeyboardAwareScrollView가 동작한다.
+
+        직접 만들었던 방식(adjustResize + ScrollView + 레이아웃 전환)은 키보드가
+        "떴다/안 떴다" 두 상태만 알 수 있어서, 얼마나 밀어야 하는지를 추측해야
+        했고 세 번 고쳐도 안 맞았다. 이건 실제 높이를 프레임 단위로 받는다.
+      */}
+      <KeyboardProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <LoadingProvider>
+              <AuthProvider>
+                <AppNavigator navigationRef={navigationRef} />
+              </AuthProvider>
+            </LoadingProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </KeyboardProvider>
       <Toast config={toastConfig} />
     </>
   );

@@ -15,8 +15,17 @@
  */
 import React from 'react';
 import {
-  Modal, View, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,
+  Modal, View, TouchableOpacity, StyleSheet,
 } from 'react-native';
+/**
+ * react-native-keyboard-controller의 KeyboardAvoidingView.
+ *
+ * RN 기본 것과 달리 안드로이드에서도 실제 키보드 높이를 받아 움직인다.
+ * 기본 것은 behavior='height'가 Modal 안에서 헛도는 경우가 있다 — RN Modal은
+ * 별도 Dialog 창이라 액티비티의 windowSoftInputMode(adjustResize)가 그대로
+ * 적용되지 않기 때문이다.
+ */
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import PropTypes from 'prop-types';
 
 /** 통일된 스크림 색 — 기존 두 값(검정 0.75 / 네이비 0.55) 중 디자인 시안 쪽을 택했다 */
@@ -62,7 +71,7 @@ const BaseModal = ({
 
         {avoidKeyboard ? (
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior="padding"
             style={styles.kav}
           >
             {body}

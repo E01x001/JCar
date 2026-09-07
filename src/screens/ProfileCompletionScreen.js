@@ -11,6 +11,7 @@
  */
 import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { logger } from '../utils/logger';
@@ -60,7 +61,7 @@ const ProfileCompletionScreen = () => {
   return (
     <SafeAreaView style={[styles.wrapper, { backgroundColor: c.background.card }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={[styles.badge, { backgroundColor: c.tag.accent.bg }]}>
             <Icon name="badge" size={34} color={c.primary.main} />
           </View>
@@ -96,7 +97,7 @@ const ProfileCompletionScreen = () => {
             fullWidth
             style={styles.cta}
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

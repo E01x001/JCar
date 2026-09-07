@@ -3,6 +3,7 @@ import { isValidPassword, PASSWORD_RULE_TEXT } from '../utils/password';
 import { logger } from '../utils/logger';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { typography } from '../theme/typography';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { signUp, resendConfirmationEmail, mapAuthError } from '../services/auth/supabaseAuthService';
@@ -97,7 +98,7 @@ const RegisterScreen = ({ navigation }) => {
       </View>
 
       {step === 1 ? (
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Text style={[styles.intro, { color: c.text.secondary }]}>
             J-Car 계정을 만들고 안전한 중고차 거래를 시작하세요
           </Text>
@@ -144,7 +145,7 @@ const RegisterScreen = ({ navigation }) => {
             fullWidth
             style={styles.cta}
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       ) : (
         <View style={styles.verifyBody}>
           <View style={styles.verifyCenter}>

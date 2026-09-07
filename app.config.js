@@ -24,7 +24,7 @@ export default {
   expo: {
     name: 'J-Car',
     slug: 'jcar',
-    version: '1.0.18',
+    version: '1.1.0',
     orientation: 'portrait',
     icon: './src/assets/icon.png',
     userInterfaceStyle: 'light',
@@ -50,7 +50,7 @@ export default {
     // 규칙: 네이티브가 바뀌면(모듈 추가·권한·plugins·SDK) 이 값을 올린다.
     //       올리지 않으면 새 JS가 옛 네이티브 바이너리로 배달될 수 있다.
     //       docs/OTA_UPDATES.md 참고.
-    runtimeVersion: '2',
+    runtimeVersion: '3',
 
     updates: {
       url: 'https://u.expo.dev/de9da75a-473d-4d05-9108-42a36bc8221d',
@@ -75,7 +75,7 @@ export default {
       package: IS_DEV ? 'com.jcarnew.dev' : 'com.jcarnew',
       // 사이드로드(GitHub Releases APK)로 배포된 마지막 빌드가 1.0.1/101이었다.
       // 버전이 뒤로 가지 않도록 그 위에서 이어간다. Play 업로드마다 1씩 올릴 것.
-      versionCode: 118,
+      versionCode: 119,
       googleServicesFile: './google-services.json',
       // 의존성이 끌고 온 미사용 권한 — Play 심사에서 용도 소명을 요구하므로 제거한다.
       // 앱에 오디오 녹음도, 다른 앱 위에 그리는 오버레이도 없다(화면 내 모달만 쓴다).

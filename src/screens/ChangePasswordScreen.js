@@ -12,9 +12,8 @@
  * 않는다(마이페이지에서 항목 자체가 보이지 않는다).
  */
 import React, { useContext, useState } from 'react';
-import {
-  View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing } from '../theme/spacing';
 import { useTheme } from '../theme/ThemeProvider';
@@ -84,8 +83,17 @@ const ChangePasswordScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background.card }]} edges={['bottom']}>
-      <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        {/*
+          KeyboardAwareScrollView — 포커스된 입력칸을 키보드 위로 정확히 밀어
+          올린다. 키보드 높이를 네이티브에서 프레임 단위로 받으므로 기기·키보드가
+          무엇이든 실제 높이에 맞춘다.
+        */}
+        <KeyboardAwareScrollView
+          contentContainerStyle={styles.body}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bottomOffset={24}
+        >
           <Text style={[styles.desc, { color: colors.text.secondary }]}>
             본인 확인을 위해 현재 비밀번호를 함께 입력해주세요.{'\n'}
             변경하면 다른 기기의 로그인은 모두 해제됩니다.
@@ -132,8 +140,7 @@ const ChangePasswordScreen = ({ navigation }) => {
             fullWidth
             style={styles.cta}
           />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

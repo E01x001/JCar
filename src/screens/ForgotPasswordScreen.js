@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
-  View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
+  View, Text, Image, TouchableOpacity, StyleSheet,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { typography } from '../theme/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
@@ -54,18 +55,17 @@ const ForgotPasswordScreen = ({ navigation }) => {
         <View style={styles.backBtn} />
       </View>
 
-      <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/*
-          키보드가 뜨면 창이 줄어든다(안드로이드 adjustResize). 스크롤이 없으면
-          줄어든 높이 안에서만 배치돼 하단 버튼이 잘린다. KeyboardAvoidingView의
-          behavior는 안드로이드에서 undefined라 거들지 않는다.
-
-          flexGrow: 1 + center라 키보드가 없을 때의 가운데 정렬은 그대로다.
+          KeyboardAwareScrollView — 포커스된 입력칸을 키보드 위로 정확히 밀어
+          올린다. 키보드 높이를 네이티브에서 프레임 단위로 받으므로 기기·키보드가
+          무엇이든 실제 높이에 맞춘다. 직접 만들던 방식(adjustResize + ScrollView)은
+          "떴다/안 떴다"만 알 수 있어 얼마나 밀지는 추측이었다.
         */}
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bottomOffset={24}
           bounces={false}
         >
           <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
@@ -93,8 +93,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
             fullWidth
             style={styles.cta}
           />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Switch, Modal, Pressable, Alert } from 'react-native';
 import { typography } from '../theme/typography';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
@@ -419,7 +420,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         <Text style={[styles.progressLabel, { color: c.text.tertiary }]}>{step} / 3 · {STEP_LABEL[step]}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* STEP 1 — 차량 정보 조회 */}
         {step === 1 && (
           <>
@@ -584,7 +585,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
             </View>
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* 차량 정보 조회 진행 오버레이 */}
       <ApiProgressOverlay

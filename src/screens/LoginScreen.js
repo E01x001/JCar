@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Image, StatusBar, KeyboardAvoidingView, Platform, ScrollView,
+  StyleSheet, Image, StatusBar,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from '@expo/vector-icons/FontAwesome';
 import { signIn, signInWithGoogle, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useToast } from '../hooks/useToast';
-import { useKeyboardVisible } from '../hooks/useKeyboardVisible';
 import { useTheme } from '../theme/ThemeProvider';
 import { typography } from '../theme/typography';
 
@@ -21,9 +21,6 @@ const LoginScreen = ({ navigation }) => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused]   = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  // 키보드가 뜨면 상단을 접는다 — 아래 hero 주석에 이유가 있다.
-  const keyboardVisible = useKeyboardVisible();
 
   const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -68,48 +65,36 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.circleBottomLeft} />
 
       <SafeAreaView style={styles.safe} edges={['top']}>
-        <KeyboardAvoidingView
+        {/*
+          KeyboardAwareScrollView — 포커스된 입력칸을 키보드 위로 정확히 밀어
+          올린다. 키보드 높이를 네이티브에서 프레임 단위로 받으므로, 기기·키보드·
+          삼성 패스 같은 상단 바가 무엇이든 실제 높이에 맞춘다.
+
+          직접 만들던 방식(adjustResize + ScrollView + 레이아웃 전환)을 걷어냈다.
+          그건 "키보드가 떴다"만 알 수 있어서 얼마나 밀지는 추측이었고, 세 번
+          고쳐도 맞지 않았다. bottomOffset은 입력칸과 키보드 사이 여유다.
+        */}
+        <KeyboardAwareScrollView
           style={styles.kav}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          contentContainerStyle={styles.scrollBody}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bottomOffset={24}
+          bounces={false}
         >
-          {/*
-            ScrollView는 **작은 화면을 위한 보험**이다. hero를 접고도 카드가
-            안 들어갈 만큼 화면이 작으면 그때 스크롤이 생긴다.
-          */}
-          <ScrollView
-            contentContainerStyle={[styles.scrollBody, keyboardVisible && styles.scrollBodyCompact]}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            {/*
-              Hero — 키보드가 뜨면 접는다.
-
-              안드로이드는 adjustResize라 키보드와 함께 창이 줄어든다. 그런데
-              hero가 flex:1로 남는 공간을 흡수하므로, 줄어든 만큼 hero만 줄고
-              **카드는 그대로 아래로 밀려 키보드에 가린다.**
-
-              hero를 접는 것만으로는 부족했다 — 진짜 원인은 space-between이
-              카드를 화면 바닥에 붙이는 것이었다(scrollBodyCompact 주석 참고).
-              둘 다 필요하다: 접어서 자리를 만들고, 가운데로 모아 바닥을 뜬다.
-            */}
-            <View style={[styles.hero, keyboardVisible && styles.heroCompact]}>
-              <Image
+          <View style={styles.hero}>
+            <Image
                 source={require('../assets/logo.png')}
-                style={[styles.logo, keyboardVisible && styles.logoCompact]}
+                style={styles.logo}
                 tintColor="#fff"
                 resizeMode="contain"
-              />
-              {!keyboardVisible && (
-                <>
-                  <Text style={styles.tagline}>{'믿을 수 있는\n중고차 거래의 시작'}</Text>
-                  <Text style={styles.subTagline}>차량 인증 · 상담 예약 · 안전한 거래</Text>
-                </>
-              )}
-            </View>
+            />
+            <Text style={styles.tagline}>{'믿을 수 있는\n중고차 거래의 시작'}</Text>
+            <Text style={styles.subTagline}>차량 인증 · 상담 예약 · 안전한 거래</Text>
+          </View>
 
-            {/* Glass card */}
-            <View style={styles.card}>
+          {/* Glass card */}
+          <View style={styles.card}>
             <TextInput
               style={[styles.input, emailFocused && styles.inputFocused]}
               value={email}
@@ -171,9 +156,8 @@ const LoginScreen = ({ navigation }) => {
                 <Text style={styles.linkText}>회원가입</Text>
               </TouchableOpacity>
             </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </View>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
     </View>
   );
@@ -192,19 +176,9 @@ const styles = StyleSheet.create({
   },
   safe: { flex: 1 },
   kav: { flex: 1 },
-  // 키보드가 없을 때: 위아래로 벌려 hero는 위, 카드는 아래 (디자인 의도)
+  // hero는 위, 카드는 아래 (디자인 의도). 키보드가 뜨면
+  // KeyboardAwareScrollView가 포커스된 칸을 알아서 밀어 올린다.
   scrollBody: { flexGrow: 1, justifyContent: 'space-between' },
-
-  // 키보드가 떴을 때: **가운데로 모은다.**
-  //
-  // space-between은 자식을 양 끝에 붙인다 — 즉 카드를 화면 맨 아래,
-  // 정확히 키보드가 올라오는 자리에 고정한다. hero를 아무리 접어도 카드는
-  // 여전히 바닥에 붙어 있어서 가려졌다(2026-09-07 확인).
-  //
-  // flexGrow:1 + center가 표준 조합이다. 내용이 화면보다 작으면 늘어나 가운데
-  // 정렬되고, 크면 flexGrow가 아무 일도 하지 않아(내용을 줄이지는 못한다)
-  // 그대로 스크롤이 생긴다. 두 경우가 한 스타일로 처리된다.
-  scrollBodyCompact: { justifyContent: 'center' },
 
   // Decorative circles
   circleTopRight: {
@@ -227,16 +201,16 @@ const styles = StyleSheet.create({
   },
 
   // Hero
+  //
+  // flex:1을 쓰지 않는다. 스크롤 컨테이너 안에서 남는 공간을 흡수하면 내용
+  // 높이가 언제나 뷰포트와 같아져 **스크롤 자체가 불가능해진다.**
+  // 위아래 배치는 scrollBody의 space-between이 맡는다.
   hero: {
-    flex: 1,
     paddingHorizontal: 32,
     paddingTop: 60,
     justifyContent: 'flex-start',
   },
-  // 키보드가 떴을 때: 남는 공간을 흡수하지 않고 로고만 작게 남긴다
-  heroCompact: { flex: 0, paddingTop: 16, paddingBottom: 8 },
   logo: { width: 158, height: 50 },
-  logoCompact: { width: 110, height: 34 },
   tagline: {
     color: '#fff',
     fontSize: 27,
