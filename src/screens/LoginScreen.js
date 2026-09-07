@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from '@expo/vector-icons/FontAwesome';
 import { signIn, signInWithGoogle, mapAuthError } from '../services/auth/supabaseAuthService';
 import { useToast } from '../hooks/useToast';
+import { useKeyboardVisible } from '../hooks/useKeyboardVisible';
 import { useTheme } from '../theme/ThemeProvider';
 import { typography } from '../theme/typography';
 
@@ -20,6 +21,9 @@ const LoginScreen = ({ navigation }) => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused]   = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // 키보드가 뜨면 상단을 접는다 — 아래 hero 주석에 이유가 있다.
+  const keyboardVisible = useKeyboardVisible();
 
   const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -69,11 +73,8 @@ const LoginScreen = ({ navigation }) => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           {/*
-            키보드가 올라오면 화면이 줄어든다(안드로이드 adjustResize). 스크롤이
-            없으면 줄어든 높이에 로고와 카드를 우겨넣게 되어 입력칸이 키보드
-            뒤로 밀린다. 스크롤을 두면 눌린 칸까지 올라올 수 있다.
-
-            flexGrow: 1 + space-between이라 키보드가 없을 때의 배치는 그대로다.
+            ScrollView는 **작은 화면을 위한 보험**이다. hero를 접고도 카드가
+            안 들어갈 만큼 화면이 작으면 그때 스크롤이 생긴다.
           */}
           <ScrollView
             contentContainerStyle={styles.scrollBody}
@@ -81,20 +82,36 @@ const LoginScreen = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
             bounces={false}
           >
-          {/* Hero — logo + tagline */}
-          <View style={styles.hero}>
-            <Image
-              source={require('../assets/logo.png')}
-              style={styles.logo}
-              tintColor="#fff"
-              resizeMode="contain"
-            />
-            <Text style={styles.tagline}>{'믿을 수 있는\n중고차 거래의 시작'}</Text>
-            <Text style={styles.subTagline}>차량 인증 · 상담 예약 · 안전한 거래</Text>
-          </View>
+            {/*
+              Hero — 키보드가 뜨면 접는다.
 
-          {/* Glass card */}
-          <View style={styles.card}>
+              안드로이드는 adjustResize라 키보드와 함께 창이 줄어든다. 그런데
+              hero가 flex:1로 남는 공간을 흡수하므로, 줄어든 만큼 hero만 줄고
+              **카드는 그대로 아래로 밀려 키보드에 가린다.**
+
+              ScrollView를 씌우는 것만으로는 해결되지 않았다(2026-09-06 시도).
+              hero가 flex:1이면 내용 높이가 언제나 뷰포트와 같아져 넘치는 것이
+              없고, 넘치지 않으면 스크롤도 생기지 않는다.
+
+              그래서 상단을 직접 접는다. 로고만 남기고 문구는 숨긴다.
+            */}
+            <View style={[styles.hero, keyboardVisible && styles.heroCompact]}>
+              <Image
+                source={require('../assets/logo.png')}
+                style={[styles.logo, keyboardVisible && styles.logoCompact]}
+                tintColor="#fff"
+                resizeMode="contain"
+              />
+              {!keyboardVisible && (
+                <>
+                  <Text style={styles.tagline}>{'믿을 수 있는\n중고차 거래의 시작'}</Text>
+                  <Text style={styles.subTagline}>차량 인증 · 상담 예약 · 안전한 거래</Text>
+                </>
+              )}
+            </View>
+
+            {/* Glass card */}
+            <View style={styles.card}>
             <TextInput
               style={[styles.input, emailFocused && styles.inputFocused]}
               value={email}
@@ -156,7 +173,7 @@ const LoginScreen = ({ navigation }) => {
                 <Text style={styles.linkText}>회원가입</Text>
               </TouchableOpacity>
             </View>
-          </View>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -168,6 +185,12 @@ const styles = StyleSheet.create({
   bg: {
     flex: 1,
     // 배경색은 theme.colors.primary.dark로 인라인 지정(토큰화)
+    //
+    // overflow: hidden — 아래 장식 원들이 화면 밖으로 삐져나가게 배치돼 있는데
+    // (right: -50 / left: -40), 웹에서는 그게 **문서를 넓혀** 오른쪽에 흰 띠가
+    // 생겼다(뷰포트 502 / 문서 553, 2026-09-07 측정). 잘라내는 것이 원래 의도한
+    // 모습이기도 하다.
+    overflow: 'hidden',
   },
   safe: { flex: 1 },
   kav: { flex: 1 },
@@ -200,7 +223,10 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     justifyContent: 'flex-start',
   },
+  // 키보드가 떴을 때: 남는 공간을 흡수하지 않고 로고만 작게 남긴다
+  heroCompact: { flex: 0, paddingTop: 16, paddingBottom: 8 },
   logo: { width: 158, height: 50 },
+  logoCompact: { width: 110, height: 34 },
   tagline: {
     color: '#fff',
     fontSize: 27,
