@@ -162,6 +162,9 @@ export default {
           ios: { useFrameworks: 'static' },
         },
       ],
+      // Gradle JVM 메모리 — 기본값으로는 릴리스 빌드의 KSP가 Metaspace를
+      // 넘겨 터진다. expo-build-properties에는 이 값을 지정하는 옵션이 없다.
+      './plugins/withGradleMemory',
     ],
 
     extra: {
