@@ -181,7 +181,10 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
             { label: '전산코드', value: vehicle.catalogUid || '-' },
             // 아래 두 줄은 가격이다 — 이 화면이 관리자 전용이라 여기에만 있다.
             { label: '신차가격', value: vehicle.newCarPrice ? formatPrice(vehicle.newCarPrice) : '-' },
-            { label: '가격', value: formatPrice(vehicle.price) },
+            // 가격은 관리자가 정하는 값이라 비어 있으면 '미정'이다. 신차가격은
+            // 조회처가 안 준 것이라 '-'로 둔다 — 비어 있는 이유가 다르다.
+            // formatPrice(null)은 null을 그대로 돌려줘 빈칸이 됐었다.
+            { label: '가격', value: vehicle.price != null ? formatPrice(vehicle.price) : '가격 미정' },
           ].map((item, index, rows) => (
             <View
               key={index}

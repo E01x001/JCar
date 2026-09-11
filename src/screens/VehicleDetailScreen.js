@@ -73,6 +73,10 @@ const VehicleDetailScreen = ({ route, navigation }) => {
   const isAdmin = role === 'admin';
   // 가격 게이팅은 SSOT(utils/vehiclePrice) 경유 — 정책 변경 시 한 곳만 수정
   const showPrice = canViewVehiclePrice(vehicle, { role });
+  // 관리자에게만 쓰인다(showPrice). 가격을 아직 정하지 않았으면 '가격 미정' —
+  // canViewVehiclePrice는 가격 유무와 무관하게 관리자면 참이라, formatPrice(null)이
+  // null을 그대로 돌려줘 가격 자리가 빈칸이 됐었다.
+  const priceText = vehicle?.price != null ? formatPrice(vehicle.price) : '가격 미정';
 
   // 상태 칩(판매됨/거래단계/판매중)
   const stageLabel = DEAL_STAGE_LABELS[vehicle.dealStage];
@@ -148,7 +152,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
 
           {/* 가격 — 관리자만 실가격, 그 외엔 상담 안내 배너 */}
           {showPrice ? (
-            <Text style={[styles.priceHero, { color: c.primary.main }]}>{formatPrice(vehicle.price)}</Text>
+            <Text style={[styles.priceHero, { color: c.primary.main }]}>{priceText}</Text>
           ) : (
             <View style={[styles.priceBanner, { backgroundColor: c.statusChip.completed.bg }]}>
               <View style={[styles.wonBadge, { backgroundColor: c.background.card }]}>
@@ -186,7 +190,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
         <View style={styles.bottomRow}>
           <View style={styles.bottomLeft}>
             <Text style={[styles.bottomLeftSm, { color: c.text.tertiary }]}>가격</Text>
-            <Text style={[styles.bottomLeftMd, { color: c.text.secondary }]}>{showPrice ? formatPrice(vehicle.price) : '상담 안내'}</Text>
+            <Text style={[styles.bottomLeftMd, { color: c.text.secondary }]}>{showPrice ? priceText : '상담 안내'}</Text>
           </View>
           <Button
             variant="primary"
