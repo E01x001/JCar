@@ -54,10 +54,35 @@ edits.insert → bundles.upload → tracks.update(internal) → edits.commit
 
 ---
 
+## `import-legacy-vehicles.mjs` — 옛 Firestore 차량 이식 (1회성, 2026-09-12 완료)
+
+옛 Firebase 프로젝트(`jcarnew-696b6`)의 차량 문서를 Supabase로 옮겼다.
+**기본은 dry-run**(읽기만)이고 `--apply`를 줘야 쓴다.
+
+```bash
+node scripts/import-legacy-vehicles.mjs --data <원본.json> --owner <email>          # dry-run
+node scripts/import-legacy-vehicles.mjs --data <원본.json> --owner <email> --apply  # 반영
+```
+
+원본 파일은 저장소에 없다 — 차량 소유자명·차량번호·차대번호가 들어 있어서
+이식 후 지웠다. 결정 사항과 이유는 스크립트 머리 주석에 있다. 요약하면:
+
+- 옛 `price`는 **신차가격**이었다(2005년식 모닝이 920만 원) → `vehicle_pricing.new_car_price`
+- 중복은 **차대번호로만** 가린다. 영업용 번호판은 차가 바뀌어도 이어진다
+- 상태는 일반 등록과 같다(approved · listed). 실사진이 없어 올리기 전엔 노출되지 않는다
+- 이미 있는 차는 새로 넣지 않고 빈 칸만 `coalesce`로 채운다 → **다시 돌려도 안전**
+- 전체가 DO 블록 하나 → 전부 성공하거나 전부 취소
+
+결과: 17건 중 12대 추가 · 1대 빈 칸 채우기 · 4건 제외(빈 문서 · 중복 2 · 번호판 승계 1).
+
+---
+
 ## `migrateConsultationStatus.js` — 실행하지 말 것 (Firestore 시절 유물)
 
 `firebase-admin`으로 **Firestore에 접속하는** 1회성 마이그레이션이다.
-2026-08 Supabase 이전으로 그 데이터베이스는 더 이상 없다. 돌려도 접속에서 실패한다.
+앱은 2026-08 Supabase 이전 후 Firestore를 쓰지 않지만, **옛 Firestore
+데이터베이스는 데이터와 함께 남아 있다**(2026-09-12 확인). 키가 있으면 접속에
+성공하고, 돌리면 옛 상담 데이터를 **실제로 고친다.** 돌리지 말 것.
 
 당시 무엇을 했는지 기록으로만 남긴다: `status` → `consultationStatus` 이름 변경,
 `approved` → `confirmed` 값 매핑, 정산 관련 필드 추가.

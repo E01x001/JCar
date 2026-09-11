@@ -271,13 +271,16 @@ on conflict (email) do nothing;
   한도를 소모한다 — 에이전트·스크립트·curl로 호출하지 않는다(CLAUDE.md)
 - 지속되면 기술지원 접수: <https://dataapi.co.kr/company/techqna/write.do>
 
-### 곁가지 — 확인이 남은 것
-저장된 두 차량은 `fuel_eco` · `fuel_tank` · `seats` · `battery` · `wiper_info`가
-모두 비어 있다. 명세와 대조한 결과 **우리가 읽는 키 이름은 전부 맞다.** 따라서
-조회처가 그 차량들에 대해 값을 안 준 것으로 보이지만, 두 차량 다 정규화 계층
-이전(2026-08-23 `de2413c`)에 등록된 것이라 **현재 코드로 성공한 등록이 아직
-한 건도 없다.** 조회가 되는 순간 등록 한 번이면 Edge Function 로그에 실제 키
-목록이 찍히고 확정된다.
+### 곁가지 — ~~확인이 남은 것~~ 확인됨 (2026-09-12)
+
+"저장된 차량의 `fuel_eco` · `fuel_tank` · `seats` · `battery` · `wiper_info`가
+비어 있는 것이 조회처가 안 준 탓인가"는 **아니다.** 옛 Firebase(`jcarnew-696b6`)에
+2025년 옛 프록시로 등록된 차량 16건이 남아 있었는데, **16건 모두 이 다섯 칸이
+채워져 있었다.** CarZen은 이 값들을 준다. Supabase의 두 대가 비어 있던 건 정규화
+계층 이전(`de2413c`)에 등록돼 저장되지 않았기 때문이다.
+
+그 옛 데이터를 이식하면서(`scripts/import-legacy-vehicles.mjs`) 같은 차인
+팰리세이드의 빈 칸도 채웠다 — CarZen을 다시 부르지 않고.
 
 ### 관련
 - `docs/VEHICLE_LOOKUP.md` — 필드 대응표, 오류 구분, 조회 주소
