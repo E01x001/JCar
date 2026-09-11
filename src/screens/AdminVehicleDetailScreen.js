@@ -109,6 +109,16 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
 
   const batteryList = formatBatteries(vehicle.batteries);
 
+  // 실사진이 없으면(승인 전 차량 등) 조회처 카탈로그 이미지로 대신한다.
+  // 이전에는 사진이 없는 차량이 "이미지 없음"으로만 보였다 — 조회처가 준
+  // 이미지(CARURL)가 있는데도.
+  const realPhotos = vehicle.imageUrls?.length
+    ? vehicle.imageUrls
+    : (vehicle.imageUrl ? [vehicle.imageUrl] : []);
+  const carouselImages = realPhotos.length
+    ? realPhotos
+    : (vehicle.catalogImageUrl ? [vehicle.catalogImageUrl] : []);
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background.secondary }]} edges={['bottom']}>
       <ScrollView
@@ -121,7 +131,8 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
       >
         {/* Vehicle Images (Task 127: carousel) */}
         <ImageCarousel
-          images={vehicle.imageUrls || (vehicle.imageUrl ? [vehicle.imageUrl] : [])}
+          images={carouselImages}
+          resizeMode={realPhotos.length ? 'cover' : 'contain'}
           style={{ marginBottom: theme.spacing.md }}
         />
 
@@ -250,13 +261,19 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
             { label: '이름', value: (contact?.sellerName) ?? vehicle.sellerName },
             { label: '전화번호', value: formatPhone((contact?.sellerPhone) ?? vehicle.sellerPhone) },
             { label: '이메일', value: (contact?.sellerEmail) ?? vehicle.sellerEmail },
-          ].map((item, index) => (
+            // 조회에 쓴 값과 조회처가 준 차대번호. vehicle_private_contact에 있고
+            // (owner/admin 전용 RLS) 이미 불러오고 있었지만 화면에 그리지 않았다.
+            // 소유자는 등록자와 다를 수 있다 — 명의이전 검토에 필요한 값이다.
+            { label: '소유자명', value: contact?.ownerName || '-' },
+            { label: '차량번호', value: contact?.regiNumber || '-' },
+            { label: '차대번호', value: contact?.vin || '-' },
+          ].map((item, index, list) => (
             <View
               key={index}
               style={[styles.infoRow, {
-                marginBottom: index < 2 ? theme.spacing.xs : 0,
-                paddingBottom: index < 2 ? theme.spacing.xs : 0,
-                borderBottomWidth: index < 2 ? 1 : 0,
+                marginBottom: index < list.length - 1 ? theme.spacing.xs : 0,
+                paddingBottom: index < list.length - 1 ? theme.spacing.xs : 0,
+                borderBottomWidth: index < list.length - 1 ? 1 : 0,
                 borderBottomColor: theme.colors.border.light,
               }]}
             >

@@ -263,7 +263,8 @@ Supabase Auth with role-based access control:
 - **Postgres + RLS**: vehicles, consultation requests, profiles, `vehicle_pricing` (admin-only)
 - **Storage**: vehicle image uploads
 - **Edge Functions**: push dispatch, account deletion cascade, vehicle lookup proxy
-  (`get-vehicle-info` — 조회처는 env로 교체 가능. `docs/VEHICLE_LOOKUP.md`),
+  (`get-vehicle-info` — 조회처는 env로 교체 가능. `docs/VEHICLE_LOOKUP.md`.
+  **무료 사용 한도가 있는 외부 API라 임의 호출 금지** — 아래 지침),
   비밀번호 찾기·재설정 (`forgot-password` / `reset-password` — `docs/PASSWORD_RECOVERY.md`)
 - **Realtime**: `postgres_changes` subscriptions behind `subscribe*` helpers in services
 
@@ -321,6 +322,23 @@ that Metro substitutes automatically.
 
 **고치기 전에 재는 수단을 먼저 찾는다.** DevTools, 실제 응답 덤프, DB 조회 —
 5분 재는 것이 반나절 헛수고보다 싸다.
+
+### 차량 조회 API(CarZen)는 절대 임의로 호출하지 않는다
+
+쓰는 주소는 **개발계(Dev)** `https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry`
+이고, **무료 사용 한도가 있다.** 요청 한 번이 한도를 소모한다.
+
+- **에이전트는 이 API에 요청을 보내지 않는다.** 테스트·디버깅·측정·수정 확인·스모크
+  테스트 어떤 이유로도. curl·스크립트·`functions.invoke('get-vehicle-info')`·앱 조작
+  모두 해당한다. Edge Function을 거쳐도 결국 CarZen이 호출된다.
+- **위의 "추측하지 말고 측정한다"의 예외다.** 이 API는 측정도 호출로 하지 않는다.
+  코드 · 명세 · Edge Function 로그 · DB에 저장된 값으로만 판단한다.
+- **실제 조회는 사용자가 앱의 차량 등록으로만 한다.** 확인에 실제 호출이 꼭 필요하면
+  멈추고 사용자에게 요청한다.
+- **운영계(Prod `api.mydatahub.co.kr`)로 바꾸지 않는다.** 전환은 사용자가 결정한다
+  (2026-09-12 Dev 유지로 결정).
+- 코드로 한도를 태우는 구조도 만들지 않는다 — 자동 재시도, 폴링, 미리 불러오기,
+  이 API를 치는 테스트, 중복 탭으로 두 번 나가는 요청.
 
 ### File Naming Conventions
 - Screens: `*Screen.js` (PascalCase + Screen suffix)

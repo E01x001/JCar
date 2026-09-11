@@ -14,7 +14,7 @@ import { useTheme } from '../theme/ThemeProvider';
 const { width } = Dimensions.get('window');
 const DEFAULT_HEIGHT = ((width - 32) * 9) / 16;
 
-const CarouselImage = ({ uri }) => {
+const CarouselImage = ({ uri, resizeMode = 'cover' }) => {
   const theme = useTheme();
   const [failed, setFailed] = useState(false);
 
@@ -27,13 +27,17 @@ const CarouselImage = ({ uri }) => {
   }
 
   return (
-    <Image source={{ uri }} style={styles.image} resizeMode="cover" onError={() => setFailed(true)} />
+    <Image source={{ uri }} style={styles.image} resizeMode={resizeMode} onError={() => setFailed(true)} />
   );
 };
 
-CarouselImage.propTypes = { uri: PropTypes.string };
+CarouselImage.propTypes = { uri: PropTypes.string, resizeMode: PropTypes.oneOf(['cover', 'contain']) };
 
-const ImageCarousel = ({ images = [], height = DEFAULT_HEIGHT, style }) => {
+/**
+ * resizeMode — 실사진은 cover로 채우고, 조회처 카탈로그 이미지(흰 배경 PNG)는
+ * contain으로 둔다. cover로 채우면 카탈로그 차량이 잘린다(vehicleImage.js와 같은 규칙).
+ */
+const ImageCarousel = ({ images = [], height = DEFAULT_HEIGHT, style, resizeMode = 'cover' }) => {
   const theme = useTheme();
   const [page, setPage] = useState(0);
   // 실제 렌더 폭을 측정해 페이지 계산에 쓴다.
@@ -70,7 +74,7 @@ const ImageCarousel = ({ images = [], height = DEFAULT_HEIGHT, style }) => {
       >
         {list.map((uri, i) => (
           <View key={`${i}-${uri}`} style={[styles.page, { width: pageWidth }]}>
-            <CarouselImage uri={uri} />
+            <CarouselImage resizeMode={resizeMode} uri={uri} />
           </View>
         ))}
       </ScrollView>
@@ -121,6 +125,7 @@ const styles = StyleSheet.create({
 
 ImageCarousel.propTypes = {
   images: PropTypes.arrayOf(PropTypes.string),
+  resizeMode: PropTypes.oneOf(['cover', 'contain']),
   height: PropTypes.number,
   style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };

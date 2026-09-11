@@ -262,14 +262,14 @@ on conflict (email) do nothing;
 
 ### 의심 지점 (미검증)
 1. 상위(자동차민원 대국민포털) 일시 장애 — 그렇다면 시간이 해결한다
-2. **개발계(Dev) 주소를 쓰고 있다.** 운영계는 `api.mydatahub.co.kr`이며,
-   개발계가 제한적으로 동작할 가능성이 있다 (`docs/VEHICLE_LOOKUP.md` 참고)
+2. **개발계(Dev) 주소를 쓰고 있다.** 개발계가 제한적으로 동작할 가능성은 남아
+   있지만, 2026-09-12 사용자 결정으로 **개발계를 유지한다**(운영계로 바꾸지 않는다).
 3. 인증 토큰 만료 — 다만 그 경우 `STATUS 403`이 와야 한다
 
 ### 다음 단계
-- 실제 차량으로 앱에서 등록을 시도해 재현 여부 확인
-- 지속되면 운영계 주소로 전환하고 재시도
-- 그래도 실패하면 기술지원 접수: <https://dataapi.co.kr/company/techqna/write.do>
+- **재현 확인은 사용자가 앱에서 실제 등록으로만 한다.** 조회 한 번이 무료 사용
+  한도를 소모한다 — 에이전트·스크립트·curl로 호출하지 않는다(CLAUDE.md)
+- 지속되면 기술지원 접수: <https://dataapi.co.kr/company/techqna/write.do>
 
 ### 곁가지 — 확인이 남은 것
 저장된 두 차량은 `fuel_eco` · `fuel_tank` · `seats` · `battery` · `wiper_info`가
@@ -280,7 +280,7 @@ on conflict (email) do nothing;
 목록이 찍히고 확정된다.
 
 ### 관련
-- `docs/VEHICLE_LOOKUP.md` — 필드 대응표, 오류 구분, 운영 전환
+- `docs/VEHICLE_LOOKUP.md` — 필드 대응표, 오류 구분, 조회 주소
 - `supabase/functions/get-vehicle-info/providers/carzen.ts`
 
 ---

@@ -26,28 +26,44 @@ VEHICLE_INFO_PROVIDER=molit    (국토교통부, 미구현)
 
 CarZen `CarAllInfoInquiry` 명세 기준. **왼쪽이 원본 키, 오른쪽이 저장 위치다.**
 
-| 원본 | 정규화 | 저장 |
-|---|---|---|
-| `CARNAME` | `vehicleName` | `vehicles.vehicle_name` |
-| `SUBMODEL` | `subModel` | `vehicles.sub_model` |
-| `CARVENDER` | `manufacturer` | `vehicles.manufacturer` |
-| `CARYEAR` | `year` | `vehicles.year` |
-| `UID` | `catalogUid` | `vehicles.catalog_uid` |
-| `FUEL` | `fuelType` | `vehicles.fuel_type` |
-| `MISSION` | `transmission` | `vehicles.transmission` |
-| `CC` | `cc` | `vehicles.cc` |
-| `DRIVE` | `driveType` | `vehicles.drive_type` |
-| `SEATS` | `seats` | `vehicles.seats` |
-| `FRONTTIRE` / `REARTIRE` | `frontTire` / `rearTire` | `vehicles.front_tire` / `rear_tire` |
-| `FUELECO` | `fuelEco` | `vehicles.fuel_eco` |
-| `FUELTANK` | `fuelTank` | `vehicles.fuel_tank` |
-| `EOILLITER` | `engineOilLiter` | `vehicles.engine_oil_liter` |
-| `WIPER` | `wiperInfo` | `vehicles.wiper_info` |
-| `BATTERYLIST[]` | `batteries` | `vehicles.batteries` (jsonb) |
-| `BATTERYLIST[0].MODEL` | `battery` | `vehicles.battery` (하위호환) |
-| **`PRICE`** | `newCarPrice` | **`vehicle_pricing.new_car_price`** — 관리자 전용 |
-| `VIN` | `vin` | `vehicle_private_contact.vin` — 비공개 |
-| `CARURL` | `catalogImageUrl` | `vehicles.catalog_image_url` |
+| 원본 | 정규화 | 저장 | 화면 |
+|---|---|---|---|
+| `CARNAME` | `vehicleName` | `vehicles.vehicle_name` | 목록 · 상세 · 등록 확인 · 상담 |
+| `SUBMODEL` | `subModel` | `vehicles.sub_model` | 상세(사용자·관리자) |
+| `CARVENDER` | `manufacturer` | `vehicles.manufacturer` | 목록 · 상세 · 등록 확인 |
+| `CARYEAR` | `year` | `vehicles.year` | 목록 · 상세 · 등록 확인 |
+| `UID` | `catalogUid` | `vehicles.catalog_uid` | 관리자 상세만 (전산코드) |
+| `FUEL` | `fuelType` | `vehicles.fuel_type` | 상세 · 등록 확인 |
+| `MISSION` | `transmission` | `vehicles.transmission` | 상세 · 등록 확인 |
+| `CC` | `cc` | `vehicles.cc` | 상세 · 등록 확인 |
+| `DRIVE` | `driveType` | `vehicles.drive_type` | 상세 |
+| `SEATS` | `seats` | `vehicles.seats` | 상세 |
+| `FRONTTIRE` / `REARTIRE` | `frontTire` / `rearTire` | `vehicles.front_tire` / `rear_tire` | 상세 |
+| `FUELECO` | `fuelEco` | `vehicles.fuel_eco` | 상세 |
+| `FUELTANK` | `fuelTank` | `vehicles.fuel_tank` | 상세 |
+| `EOILLITER` | `engineOilLiter` | `vehicles.engine_oil_liter` | 상세 |
+| `WIPER` | `wiperInfo` | `vehicles.wiper_info` | 상세 (`formatWiper`로 풀어서) |
+| `BATTERYLIST[]` | `batteries` | `vehicles.batteries` (jsonb) | 상세 (`formatBatteries`) |
+| `BATTERYLIST[0].MODEL` | `battery` | `vehicles.battery` (하위호환) | 목록이 비었을 때 '호환 배터리' 대체값 |
+| **`PRICE`** | `newCarPrice` | **`vehicle_pricing.new_car_price`** — 관리자 전용 | **관리자 상세만** |
+| `VIN` | `vin` | `vehicle_private_contact.vin` — 비공개 | **관리자 상세만** (등록자 정보) |
+| `CARURL` | `catalogImageUrl` | `vehicles.catalog_image_url` | 목록 카드 · 등록 확인 · 관리자 상세 (실사진이 없을 때) |
+
+"상세"는 사용자 상세(`VehicleDetailScreen`)와 관리자 상세(`AdminVehicleDetailScreen`)
+둘 다를 뜻한다. 값이 없으면 사용자 화면은 그 줄을 숨기고 관리자 화면은 `-`를 보인다.
+
+**화면 대조 (2026-09-12)** — 명세의 데이터 필드 20개가 전부 화면까지 닿는 것을
+확인했다. 경로는 `select('*')` → `rowToApp`(일반 snake→camel 변환)이라 컬럼이
+중간에 빠지는 곳이 없다. 이때 드러나 고친 것 둘:
+
+- `VIN`은 관리자 화면이 `vehicle_private_contact`를 **불러오면서도 그리지 않았다.**
+  소유자명·차량번호와 함께 등록자 정보에 추가했다.
+- `CARURL`은 관리자 상세에서 실사진이 없는 차량(승인 전)에 쓰이지 않아 "이미지
+  없음"으로만 보였다. 카탈로그 이미지로 대신한다(`contain` — 흰 배경 PNG라
+  `cover`면 잘린다).
+
+`PRICE`는 등록 화면이 조회 결과로 받지만 **그리지 않고** `record_new_car_price`로만
+보낸다 — 가격은 관리자 전용이라는 규칙이 등록 경로에서도 지켜진다.
 
 `STATUS` · `RESPONSE` · `RESULT` · `ERRMSG`는 성공 판정에만 쓰고 저장하지 않는다.
 
@@ -109,16 +125,21 @@ export class MolitProvider implements VehicleProvider {
 
 ---
 
-## 운영 전환 전에 할 것
-
-**지금은 개발계(Dev) 주소를 쓴다.**
+## 조회 주소 — 개발계를 쓴다 (전환하지 않는다)
 
 ```
-Dev   https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry   ← 현재
-Prod  https://api.mydatahub.co.kr/assist/common/carzen/CarAllInfoInquiry
+Dev   https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry   ← 사용 중
+Prod  https://api.mydatahub.co.kr/assist/common/carzen/CarAllInfoInquiry          ← 쓰지 않는다
 ```
 
-바꿀 곳은 `providers/carzen.ts`의 `CARZEN_URL` 한 줄이다. 명세상 인증 헤더는
+**개발계는 무료 사용 한도가 있다.** 조회 한 번이 한도를 소모하므로:
+
+- **에이전트·스크립트·curl로 절대 호출하지 않는다** (CLAUDE.md 지침). 실제 조회는
+  사용자가 앱의 차량 등록으로만 한다.
+- 운영계로의 전환은 사용자가 결정한다. 2026-09-12 개발계 유지로 결정됐다.
+  (이전 판의 이 문서는 "운영 전환 전에 할 것"을 적어 전환을 권했다 — 그 권고는 철회.)
+
+주소는 `providers/carzen.ts`의 `CARZEN_URL` 한 줄에 있다. 명세상 인증 헤더는
 `Authorization: Token {발급토큰}` 형식이며, 우리는 시크릿 값을 그대로 넣는다 —
 시크릿에 `Token ` 접두사가 포함돼 있어야 한다.
 

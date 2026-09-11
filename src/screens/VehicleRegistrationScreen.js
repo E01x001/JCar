@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { logger } from '../utils/logger';
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Switch, Modal, Pressable, Alert } from 'react-native';
 import { typography } from '../theme/typography';
@@ -372,6 +372,23 @@ const VehicleRegistrationScreen = ({ navigation }) => {
     }
   };
 
+  // 조회 버튼의 중복 탭 방지.
+  //
+  // disabled={loading}만으로는 부족하다 — setLoading은 다음 렌더에 반영되므로,
+  // 한 프레임 안의 두 번 탭은 둘 다 loading=false를 보고 요청을 두 번 보낸다.
+  // 조회 한 번이 CarZen 무료 사용 한도를 소모하므로(CLAUDE.md), 렌더와 무관한
+  // ref로 동기적으로 막는다.
+  const lookupInFlight = useRef(false);
+  const handleLookupPress = async () => {
+    if (lookupInFlight.current) { return; }
+    lookupInFlight.current = true;
+    try {
+      await fetchVehicleInfo();
+    } finally {
+      lookupInFlight.current = false;
+    }
+  };
+
   const STEP_LABEL = { 1: '차량 정보 조회', 2: '사진 추가', 3: '영업 권리 확인' };
 
   const goToStep2 = () => {
@@ -430,7 +447,7 @@ const VehicleRegistrationScreen = ({ navigation }) => {
               <Button
                 variant="secondary"
                 title={loading ? '조회 중...' : '차량 정보 조회'}
-                onPress={fetchVehicleInfo}
+                onPress={handleLookupPress}
                 loading={loading}
                 disabled={loading}
                 fullWidth

@@ -15,7 +15,9 @@ import type {
 } from "../types.ts";
 import { VehicleNotFoundError } from "../types.ts";
 
-// 개발계. 운영 전환 시 api.mydatahub.co.kr로 바꾼다(명세 2항).
+// 개발계(Dev)를 쓴다 — 무료 사용 한도가 있다. 운영계(api.mydatahub.co.kr)로
+// 바꾸지 않는다(2026-09-12 사용자 결정). 테스트·디버깅 목적으로 이 주소를
+// 호출하지 않는다 — 요청마다 한도를 소모한다(CLAUDE.md).
 const CARZEN_URL =
   "https://datahub-dev.scraping.co.kr/assist/common/carzen/CarAllInfoInquiry";
 
