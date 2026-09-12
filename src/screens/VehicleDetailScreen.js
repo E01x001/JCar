@@ -15,6 +15,7 @@ import Button from '../components/Button';
 import Badge from '../components/Badge';
 import Tag from '../components/Tag';
 import ImageCarousel from '../components/ImageCarousel';
+import { realPhotosOf } from '../utils/vehicleImage';
 import { typography } from '../theme/typography';
 
 // 빈 값/Unknown 행은 표시하지 않는다(데이터 없는 항목 깔끔히 숨김).
@@ -74,9 +75,10 @@ const VehicleDetailScreen = ({ route, navigation }) => {
   // 목록 카드는 pickVehicleImage가 이미 그렇게 하는데 상세만 실사진 배열을 그대로
   // 써서, 사진을 아직 안 올린 차는 "이미지 없음"으로 보였다(옛 데이터에서 옮겨온
   // 차량이 그렇다). 카탈로그는 흰 배경 PNG라 cover로 채우면 잘리므로 contain.
-  const realPhotos = vehicle.imageUrls?.length
-    ? vehicle.imageUrls
-    : (vehicle.imageUrl ? [vehicle.imageUrl] : []);
+  //
+  // 배열에 카탈로그 주소가 복제돼 있을 수 있어 realPhotosOf로 거른다 — 그냥
+  // imageUrls를 쓰면 카탈로그 이미지를 cover로 잘라 그리게 된다.
+  const realPhotos = realPhotosOf(vehicle);
   const images = realPhotos.length
     ? realPhotos
     : (vehicle.catalogImageUrl ? [vehicle.catalogImageUrl] : []);

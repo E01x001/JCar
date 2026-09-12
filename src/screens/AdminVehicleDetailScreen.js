@@ -14,6 +14,7 @@ import Badge from '../components/Badge';
 import Button from '../components/Button';
 import StateScreen from '../components/StateScreen';
 import ImageCarousel from '../components/ImageCarousel';
+import { realPhotosOf } from '../utils/vehicleImage';
 import { setVehicleHidden } from '../services/vehicle/vehicleApprovalService';
 
 const { width } = Dimensions.get('window');
@@ -112,9 +113,9 @@ const AdminVehicleDetailScreen = ({ route, navigation }) => {
   // 실사진이 없으면(승인 전 차량 등) 조회처 카탈로그 이미지로 대신한다.
   // 이전에는 사진이 없는 차량이 "이미지 없음"으로만 보였다 — 조회처가 준
   // 이미지(CARURL)가 있는데도.
-  const realPhotos = vehicle.imageUrls?.length
-    ? vehicle.imageUrls
-    : (vehicle.imageUrl ? [vehicle.imageUrl] : []);
+  //
+  // 배열에 카탈로그 주소가 복제돼 있을 수 있어 realPhotosOf로 거른다.
+  const realPhotos = realPhotosOf(vehicle);
   const carouselImages = realPhotos.length
     ? realPhotos
     : (vehicle.catalogImageUrl ? [vehicle.catalogImageUrl] : []);
