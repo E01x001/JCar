@@ -9,7 +9,7 @@
  * 여기서 다루는 것은 **판매자가 직접 찍은 사진(image_urls)** 뿐이다.
  * 모델 참고 이미지(catalog_image_url)는 노출 판단에 쓰지 않으므로 건드리지 않는다.
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
@@ -20,7 +20,7 @@ import { logger } from '../utils/logger';
 import { useTheme } from '../theme/ThemeProvider';
 import { useToast } from '../hooks/useToast';
 import { fetchVehicleById, updateVehicle } from '../services/vehicle/supabaseVehicleService';
-import { uploadImage } from '../services/storage/imageService';
+import { uploadImage, deleteMultipleImages } from '../services/storage/imageService';
 import { prepareImageForUpload, prepareImagesForUpload, pickMultipleFromGallery } from '../utils/imageHelpers';
 import Button from '../components/Button';
 import StateScreen from '../components/StateScreen';
@@ -40,6 +40,10 @@ const VehiclePhotosScreen = ({ route, navigation }) => {
   // 저장할 때만 로컬을 업로드하고, 순서는 사용자가 본 그대로 유지한다.
   const [items, setItems] = useState([]);
 
+  // 저장할 때 "무엇이 빠졌는지"를 알려면 처음 상태를 기억해야 한다.
+  // 화면에서 뺀 사진은 배열에서만 사라질 뿐 스토리지에는 그대로 남아 있었다.
+  const initialUrlsRef = useRef([]);
+
   useEffect(() => {
     let disposed = false;
     (async () => {
@@ -47,7 +51,8 @@ const VehiclePhotosScreen = ({ route, navigation }) => {
         const v = await fetchVehicleById(vehicleId);
         if (disposed) { return; }
         setVehicle(v);
-        setItems((v?.imageUrls ?? []).map((url) => ({ kind: 'remote', url })));
+        initialUrlsRef.current = v?.imageUrls ?? [];
+        setItems(initialUrlsRef.current.map((url) => ({ kind: 'remote', url })));
       } catch (error) {
         logger.error('차량 조회 실패:', error);
         toast.showError('오류', '차량 정보를 불러오지 못했습니다.');
@@ -106,16 +111,54 @@ const VehiclePhotosScreen = ({ route, navigation }) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /**
+   * 대표 사진 지정 — 고른 사진을 맨 앞으로 옮긴다.
+   *
+   * 화면들이 image_urls[0]을 대표로 쓰므로(pickVehicleImage) 순서가 곧 대표다.
+   * 대표를 가리키는 컬럼을 따로 두지 않는 이유: 그 값이 지워진 사진을 가리키는
+   * 경우를 매번 챙겨야 하고, 배열 하나면 그런 어긋남이 생기지 않는다.
+   */
+  const setCoverAt = (index) => {
+    if (index === 0) { return; }
+    setItems((prev) => {
+      const next = [...prev];
+      const [picked] = next.splice(index, 1);
+      return [picked, ...next];
+    });
+  };
+
   const save = async () => {
     setSaving(true);
+    // 이번에 올린 것. 중간에 실패하면 이것들이 고아로 남으므로 지운다.
+    const uploaded = [];
     try {
       // 로컬로 고른 것만 업로드한다. 이미 올라간 URL을 다시 올리지 않는다.
       const urls = [];
       for (const item of items) {
-        urls.push(item.kind === 'remote' ? item.url : await uploadImage(item.uri));
+        if (item.kind === 'remote') {
+          urls.push(item.url);
+          continue;
+        }
+        const url = await uploadImage(item.uri);
+        uploaded.push(url);
+        urls.push(url);
       }
 
       await updateVehicle(vehicleId, { imageUrls: urls });
+
+      // 빠진 사진의 실제 파일을 지운다. **DB를 먼저 바꾸고 파일을 지운다** —
+      // 순서가 반대면 삭제는 됐는데 저장이 실패했을 때 없는 파일을 가리키는
+      // 행이 남는다. 카탈로그 이미지(외부 주소)는 경로를 못 뽑아 그냥 넘어간다.
+      const removed = initialUrlsRef.current.filter((url) => !urls.includes(url));
+      if (removed.length > 0) {
+        try {
+          await deleteMultipleImages(removed);
+        } catch (cleanupError) {
+          // 정리 실패로 저장을 무르지 않는다 — 사용자가 뺀 것은 이미 반영됐다.
+          logger.error('삭제된 사진 정리 실패:', cleanupError);
+        }
+      }
+      initialUrlsRef.current = urls;
 
       toast.showSuccess(
         '저장 완료',
@@ -123,6 +166,15 @@ const VehiclePhotosScreen = ({ route, navigation }) => {
       );
       navigation.goBack();
     } catch (error) {
+      // 업로드 도중 끊기면 이미 올라간 파일이 아무도 안 쓰는 채로 남는다.
+      if (uploaded.length > 0) {
+        try {
+          await deleteMultipleImages(uploaded);
+        } catch (cleanupError) {
+          logger.error('중단된 업로드 정리 실패:', cleanupError);
+        }
+      }
+
       // 원인을 뭉개지 않는다. 업로드는 용량·형식·권한 등 실패 이유가 여럿이고,
       // "저장하지 못했습니다"만 보여주면 사용자도 우리도 다음 수를 알 수 없다.
       logger.error('사진 저장 실패:', error);
@@ -176,18 +228,28 @@ const VehiclePhotosScreen = ({ route, navigation }) => {
           </View>
         ) : (
           <Text style={[styles.hint, { color: theme.colors.text.secondary }]}>
-            첫 번째 사진이 목록의 대표 이미지가 됩니다. 최대 {MAX_IMAGES}장.
+            사진을 누르면 대표로 지정됩니다. 대표 사진이 목록에 보입니다. 최대 {MAX_IMAGES}장.
           </Text>
         )}
 
         <View style={styles.grid}>
           {items.map((item, index) => (
             <View key={item.kind === 'remote' ? item.url : `${item.uri}-${index}`} style={styles.tile}>
-              <Image
-                source={{ uri: item.kind === 'remote' ? item.url : item.uri }}
-                style={styles.thumb}
-                resizeMode="cover"
-              />
+              <TouchableOpacity
+                onPress={() => setCoverAt(index)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  index === 0 ? '현재 대표 사진' : `${index + 1}번째 사진을 대표로 지정`
+                }
+                style={styles.thumbTouch}
+              >
+                <Image
+                  source={{ uri: item.kind === 'remote' ? item.url : item.uri }}
+                  style={styles.thumb}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
               {index === 0 ? (
                 <View style={[styles.coverTag, { backgroundColor: theme.colors.primary.main }]}>
                   <Text style={[styles.coverTagText, { color: theme.colors.text.white }]}>대표</Text>
@@ -253,6 +315,7 @@ const styles = StyleSheet.create({
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tile: { width: 104, height: 104, borderRadius: 14, overflow: 'hidden' },
+  thumbTouch: { width: '100%', height: '100%' },
   thumb: { width: '100%', height: '100%', backgroundColor: '#EEF1F5' },
   coverTag: {
     position: 'absolute',

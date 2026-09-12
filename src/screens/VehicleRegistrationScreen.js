@@ -28,7 +28,7 @@ const VEHICLE_TYPE_OPTIONS = ['승용차', '택시', '렌터카', '화물차', '
 const BIZ_RIGHTS_TYPES = ['화물차', '택시', '렌터카'];
 import { supabase } from '../lib/supabase';
 import { insertVehicle, recordNewCarPrice } from '../services/vehicle/supabaseVehicleService';
-import { uploadImage } from '../services/storage/imageService';
+import { uploadImage, deleteMultipleImages } from '../services/storage/imageService';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { isValidVehicleType, DEAL_STAGE } from '../constants';
@@ -153,6 +153,21 @@ const VehicleRegistrationScreen = ({ navigation }) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /**
+   * 대표 사진 지정 — 고른 사진을 맨 앞으로 옮긴다.
+   *
+   * 목록과 상세가 image_urls[0]을 대표로 쓴다(pickVehicleImage). 사진을 올리지
+   * 않으면 대표도 없고, 그때는 조회처 카탈로그 이미지가 대신 쓰인다.
+   */
+  const setCoverImageAt = (index) => {
+    if (index === 0) { return; }
+    setImages((prev) => {
+      const next = [...prev];
+      const [picked] = next.splice(index, 1);
+      return [picked, ...next];
+    });
+  };
+
   const fetchVehicleInfo = async () => {
     if (!regiNumber || !ownerName) {
       toast.showWarning('입력 오류', '차량번호와 소유자명을 입력하세요.');
@@ -238,8 +253,10 @@ const VehicleRegistrationScreen = ({ navigation }) => {
         setIsUploading(true);
         setUploadProgress(0);
 
+        // 중간에 실패하면 이미 올라간 파일이 고아로 남는다. catch에서 지우려고
+        // try 밖에 둔다.
+        const uploaded = [];
         try {
-          const uploaded = [];
           for (let i = 0; i < images.length; i++) {
             // Supabase Storage 업로드(파일명은 서비스에서 충돌 없는 이름 생성).
             // 장별 세부 진행률은 없어 장 수 기준으로 표시.
@@ -251,6 +268,16 @@ const VehicleRegistrationScreen = ({ navigation }) => {
           logger.debug(`✅ Uploaded ${uploaded.length} images`);
         } catch (uploadError) {
           logger.error('❌ Image upload failed:', uploadError);
+
+          // 등록이 중단됐으므로 이 사진들을 가리킬 차량 행이 없다 — 지운다.
+          if (uploaded.length > 0) {
+            try {
+              await deleteMultipleImages(uploaded);
+            } catch (cleanupError) {
+              logger.error('중단된 업로드 정리 실패:', cleanupError);
+            }
+          }
+
           toast.showError('오류', '이미지 업로드 중 오류가 발생했습니다.');
           setIsUploading(false);
           setSaving(false);
@@ -512,16 +539,35 @@ const VehicleRegistrationScreen = ({ navigation }) => {
               </TouchableOpacity>
 
               {images.length > 0 && (
-                <View style={styles.thumbGrid}>
-                  {images.map((img, index) => (
-                    <View key={`${index}-${img.uri}`} style={styles.thumbWrapper}>
-                      <Image source={{ uri: img.uri }} style={styles.thumb} />
-                      <TouchableOpacity style={styles.thumbRemove} onPress={() => removeImageAt(index)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                        <Icon name="close" size={14} color="#fff" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
+                <>
+                  <Text style={[styles.thumbHint, { color: c.text.secondary }]}>
+                    사진을 누르면 대표로 지정됩니다. 대표 사진이 목록에 보입니다.
+                  </Text>
+                  <View style={styles.thumbGrid}>
+                    {images.map((img, index) => (
+                      <View key={`${index}-${img.uri}`} style={styles.thumbWrapper}>
+                        <TouchableOpacity
+                          onPress={() => setCoverImageAt(index)}
+                          activeOpacity={0.8}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            index === 0 ? '현재 대표 사진' : `${index + 1}번째 사진을 대표로 지정`
+                          }
+                        >
+                          <Image source={{ uri: img.uri }} style={styles.thumb} />
+                        </TouchableOpacity>
+                        {index === 0 && (
+                          <View style={[styles.thumbCover, { backgroundColor: c.primary.main }]}>
+                            <Text style={styles.thumbCoverText}>대표</Text>
+                          </View>
+                        )}
+                        <TouchableOpacity style={styles.thumbRemove} onPress={() => removeImageAt(index)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                          <Icon name="close" size={14} color="#fff" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </>
               )}
             </Card>
 
@@ -670,9 +716,12 @@ const styles = StyleSheet.create({
   // 사진 타일/썸네일
   imageTile: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderStyle: 'dashed', paddingVertical: 16 },
   imageTileText: { fontSize: 14, fontWeight: '700' },
-  thumbGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
+  thumbHint: { fontSize: 12, lineHeight: 18, marginTop: 12 },
+  thumbGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 },
   thumbWrapper: { position: 'relative' },
   thumb: { width: 76, height: 76, borderRadius: 12, resizeMode: 'cover' },
+  thumbCover: { position: 'absolute', left: 5, bottom: 5, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  thumbCoverText: { fontSize: 10, fontWeight: '700', color: '#fff' },
   thumbRemove: { position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: 11, backgroundColor: '#DC3545', alignItems: 'center', justifyContent: 'center' },
   // 영업 권리 토글
   toggleCard: { flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, borderRadius: 14 },

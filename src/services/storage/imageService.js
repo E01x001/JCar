@@ -135,8 +135,12 @@ export const uploadMultipleImages = async (uris) => {
 
 /**
  * 공개 URL로 이미지 삭제
- * 참고: 클라이언트 삭제는 Storage RLS 정책이 허용해야 동작(현재 정책상 실패 가능)
- * — 정리 작업은 서버(Edge Function)에서 수행하는 것이 정석.
+ *
+ * 정책(vehicle_images_delete)이 **본인 폴더와 관리자**의 삭제를 허용하므로
+ * 클라이언트에서 지울 수 있다. 경로는 {uid}/로 묶여 있어 남의 파일은 못 지운다.
+ *
+ * 카탈로그 이미지(cartory.net 등 우리 스토리지가 아닌 주소)는 경로를 못 뽑으므로
+ * 던지지 않고 {success:false}로 돌아온다 — 지울 대상이 아니라 없는 일이다.
  */
 export const deleteImage = async (imageUrl) => {
   try {
