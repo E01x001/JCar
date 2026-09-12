@@ -69,7 +69,17 @@ const VehicleDetailScreen = ({ route, navigation }) => {
     );
   }
 
-  const images = vehicle.imageUrls || (vehicle.imageUrl ? [vehicle.imageUrl] : []);
+  // 실사진이 없으면 조회처 카탈로그 이미지로 대신한다.
+  //
+  // 목록 카드는 pickVehicleImage가 이미 그렇게 하는데 상세만 실사진 배열을 그대로
+  // 써서, 사진을 아직 안 올린 차는 "이미지 없음"으로 보였다(옛 데이터에서 옮겨온
+  // 차량이 그렇다). 카탈로그는 흰 배경 PNG라 cover로 채우면 잘리므로 contain.
+  const realPhotos = vehicle.imageUrls?.length
+    ? vehicle.imageUrls
+    : (vehicle.imageUrl ? [vehicle.imageUrl] : []);
+  const images = realPhotos.length
+    ? realPhotos
+    : (vehicle.catalogImageUrl ? [vehicle.catalogImageUrl] : []);
   const isAdmin = role === 'admin';
   // 가격 게이팅은 SSOT(utils/vehiclePrice) 경유 — 정책 변경 시 한 곳만 수정
   const showPrice = canViewVehiclePrice(vehicle, { role });
@@ -132,7 +142,11 @@ const VehicleDetailScreen = ({ route, navigation }) => {
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
         {/* 이미지 영역 */}
         <View style={styles.imageArea}>
-          <ImageCarousel images={images} style={styles.carousel} />
+          <ImageCarousel
+            images={images}
+            resizeMode={realPhotos.length ? 'cover' : 'contain'}
+            style={styles.carousel}
+          />
           {vehicle.vehicleType ? (
             <Tag variant="accent" label={vehicle.vehicleType} style={[styles.imageTag, { top: insets.top + 10 }]} />
           ) : null}
