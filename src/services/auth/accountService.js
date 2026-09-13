@@ -106,24 +106,9 @@ export const updateEmail = async (newEmail) => {
   }
 };
 
-/**
- * Update password
- */
-export const updatePassword = async (newPassword) => {
-  try {
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) { throw error; }
-    return { success: true };
-  } catch (error) {
-    logger.error('Error updating password:', error);
-    throw error;
-  }
-};
-
 export default {
   updateUserProfile,
   deleteUserAccount,
   getUserProfile,
   updateEmail,
-  updatePassword,
 };
