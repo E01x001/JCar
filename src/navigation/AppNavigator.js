@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -66,8 +67,8 @@ const navigationStyles = {
       backgroundColor: '#fff',
       borderTopWidth: 1,
       borderTopColor: '#F1F3F5',
-      height: 62,
-      paddingBottom: 8,
+      // height + paddingBottom are applied per-device via getTabBarStyle(insets)
+      // so the bar fits each device's bottom safe area and never clips labels.
       paddingTop: 6,
       elevation: 0,
       shadowColor: '#1A2B5C',
@@ -80,12 +81,27 @@ const navigationStyles = {
     tabBarLabelStyle: {
       fontSize: 11,
       fontWeight: '700',
+      lineHeight: 14,
       marginTop: 2,
+      includeFontPadding: false,
     },
   },
 };
 
-const UserTabs = () => (
+// Tab bar height adapts per device: a fixed content height (icon + pinned-
+// lineHeight label) plus the device's bottom safe-area inset (iPhone home
+// indicator, Android gesture bar, mobile-web browser chrome). Never hard-code a
+// total height — that overrides RN's device-aware sizing and clips labels.
+const TAB_BAR_CONTENT_HEIGHT = 58;
+const getTabBarStyle = (insets) => ({
+  ...navigationStyles.tabBar.tabBarStyle,
+  height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+  paddingBottom: 8 + insets.bottom,
+});
+
+const UserTabs = () => {
+  const insets = useSafeAreaInsets();
+  return (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       tabBarIcon: ({ color, size }) => {
@@ -100,6 +116,7 @@ const UserTabs = () => (
       // 시안: 탭 화면은 상단 네비 헤더 없이 화면 자체 헤더/콘텐츠 사용
       headerShown: false,
       ...navigationStyles.tabBar,
+      tabBarStyle: getTabBarStyle(insets),
     })}
   >
     <Tab.Screen name="Vehicles" component={VehiclesListScreen} options={{ title: '홈' }} />
@@ -108,9 +125,12 @@ const UserTabs = () => (
     <Tab.Screen name="Consultations" component={UserConsultationsScreen} options={{ title: '상담' }} />
     <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '마이' }} />
   </Tab.Navigator>
-);
+  );
+};
 
-const AdminTabs = () => (
+const AdminTabs = () => {
+  const insets = useSafeAreaInsets();
+  return (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       tabBarIcon: ({ color, size }) => {
@@ -124,6 +144,7 @@ const AdminTabs = () => (
       },
       ...navigationStyles.header,
       ...navigationStyles.tabBar,
+      tabBarStyle: getTabBarStyle(insets),
     })}
   >
     <Tab.Screen
@@ -151,7 +172,8 @@ const AdminTabs = () => (
     />
     <Tab.Screen name="AdminPage" component={AdminPageScreen} options={{ title: '관리자' }} />
   </Tab.Navigator>
-);
+  );
+};
 
 const AppNavigator = ({ navigationRef }) => {
   const { user, role, profileCompleted, loading } = useContext(AuthContext);
