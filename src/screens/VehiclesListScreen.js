@@ -139,7 +139,7 @@ const VehiclesListScreen = ({ navigation }) => {
         <View style={styles.greetingTextWrap}>
           <Text style={[styles.greetingHello, { color: theme.colors.text.secondary }]}>안녕하세요</Text>
           <Text style={[styles.greetingName, { color: theme.colors.text.primary }]}>
-            {sellerName ? `${sellerName}님 👋` : '반가워요 👋'}
+            {sellerName ? `${sellerName}님` : '반가워요'}
           </Text>
         </View>
         <View style={styles.greetingActions}>
