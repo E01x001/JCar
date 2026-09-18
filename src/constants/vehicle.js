@@ -67,7 +67,9 @@ export const DEAL_STAGE_BADGE_STATUS = {
 /**
  * Vehicle Types (Korean classification)
  *
- * Valid vehicle type categories from external CarZen API:
+ * 등록 화면에서 사용자가 직접 고르는 차종 선택지다. CarZen 조회처는 차종
+ * 분류를 돌려주지 않으므로(get-vehicle-info의 NormalizedVehicle에 차종 필드
+ * 없음) 조회로 자동 채워지지 않는다 — 반드시 사용자가 선택한다.
  * - 승용차: Passenger car
  * - 택시: Taxi
  * - 렌터카: Rental car
