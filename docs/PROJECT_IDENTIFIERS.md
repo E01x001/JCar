@@ -14,7 +14,8 @@
 | 앱 이름 / slug | `J-Car` / `jcar` | `app.config.js` |
 | **Firebase/GCP 프로젝트 (현재)** | **`jcar-3e090`** (프로젝트 번호 `135120379076`) | `google-services.json`, 서비스계정 |
 | Firebase Storage 버킷 | `jcar-3e090.firebasestorage.app` | `google-services.json` |
-| **Supabase 프로젝트 (DB/Auth/Storage/Edge)** | `thorgkxpbhsttgskhepu` | `…thorgkxpbhsttgskhepu.supabase.co` |
+| **Supabase 프로젝트 (DB/Auth/Storage/Edge)** | `thorgkxpbhsttgskhepu` | **`src/lib/supabase.js:16`** (앱이 실제로 붙는 URL) |
+| ⚠️ 다른 Supabase 프로젝트 — **앱은 안 씀** | `nqenvrfatfirzemievwe` | Supabase 대시보드에 존재하나 코드가 참조 안 함 |
 | Expo/EAS 프로젝트 id | `de9da75a-473d-4d05-9108-42a36bc8221d` | `app.config.js` extra.eas / updates.url |
 | OTA update URL | `https://u.expo.dev/de9da75a-…` | `app.config.js` |
 | 웹 배포 (Vercel) | `jcar-platform.vercel.app` | CLAUDE.md |
@@ -44,6 +45,8 @@
 - OAuth 클라이언트 ID 앞자리 `135120379076` = **프로젝트 번호**(= jcar-3e090). 어떤 OAuth 클라이언트가 어느 프로젝트 소속인지는 **이 번호로 판별**한다. (`google-services.json`의 `project_number`와 일치.)
 - **DB/Auth는 Supabase지만, 구글 로그인 OAuth 클라이언트는 Firebase(jcar-3e090) 것을 재사용**하는 게 정상 구성이다. Supabase 프로젝트 안에 OAuth 클라이언트가 따로 있는 게 아니다.
 - `jcarnew-696b6`은 현재 `google-services.json`·`app.config.js` **어디에도 없다** → 지금 빌드/런타임에 쓰이지 않는다.
+- ⚠️ **Supabase 프로젝트가 두 개 보인다: `thorgkxpbhsttgskhepu`(앱이 쓰는 것) vs `nqenvrfatfirzemievwe`(안 씀).** 앱 코드는 `src/lib/supabase.js:16`의 `thorgkxpbhsttgskhepu`에만 붙는다. **Auth/Google provider·RLS·마이그레이션 등 대시보드 설정은 반드시 `thorgkxpbhsttgskhepu`에서** 해야 한다. `nqenvrfatfirzemievwe`에 설정하면(예: 구글 secret) 잘 돼 보여도 **앱엔 아무 효과가 없다** — 실제로 웹 구글 로그인이 이 이유로 안 됐다. Supabase 대시보드에서 프로젝트를 고를 때 ref(`thorgkxpbhsttgskhepu`)를 반드시 확인할 것.
+- 참고: 그 함정 프로젝트(`nqenvrfatfirzemievwe`)의 Google provider에는 별개 클라이언트 `4742567728-…`가 등록돼 있었다 — 앱이 쓰는 `135120379076-e5bq…`(jcar-3e090)와 다른 것이니 혼동 말 것.
 
 ## 관련 문서
 - 웹 구글 로그인 secret 등록 절차 → `docs/KNOWN_ISSUES.md` (ISSUE-04)
