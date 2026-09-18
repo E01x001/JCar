@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -84,6 +85,10 @@ const navigationStyles = {
       lineHeight: 14,
       marginTop: 2,
       includeFontPadding: false,
+      // 웹 전용: React Navigation이 라벨(단일 행)에 overflow:hidden을 걸고 박스를
+      // 글자보다 낮게(약 9px) 잡아 한글 밑부분이 잘린다(네이티브는 정상). 웹에서만
+      // overflow를 풀고 라인박스를 키워 글자가 온전히 보이게 한다. (측정으로 확인)
+      ...Platform.select({ web: { overflow: 'visible', lineHeight: 16 }, default: {} }),
     },
   },
 };
@@ -92,11 +97,15 @@ const navigationStyles = {
 // lineHeight label) plus the device's bottom safe-area inset (iPhone home
 // indicator, Android gesture bar, mobile-web browser chrome). Never hard-code a
 // total height — that overrides RN's device-aware sizing and clips labels.
-const TAB_BAR_CONTENT_HEIGHT = 58;
+// 네이티브는 하단 safe-area 인셋(홈 인디케이터/제스처 바)이 여백을 만들어 주지만
+// 웹은 insets.bottom=0이라 탭바가 창 바닥에 딱 붙는다. 웹에서만 콘텐츠 높이와
+// 하단 여백을 키워 라벨 아래 숨 쉴 공간을 준다. (네이티브 값 58/8은 그대로)
+const TAB_BAR_CONTENT_HEIGHT = Platform.OS === 'web' ? 70 : 58;
+const TAB_BAR_PADDING_BOTTOM = Platform.OS === 'web' ? 16 : 8;
 const getTabBarStyle = (insets) => ({
   ...navigationStyles.tabBar.tabBarStyle,
   height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
-  paddingBottom: 8 + insets.bottom,
+  paddingBottom: TAB_BAR_PADDING_BOTTOM + insets.bottom,
 });
 
 const UserTabs = () => {

@@ -1,6 +1,7 @@
 // Task 63.3: Migrated Messaging to v22 Modular API
 // Task 71: Deep linking for FCM push notifications
 import React, {useEffect, useRef} from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { logger } from './utils/logger';
 import { getMessaging, onMessage, getInitialNotification, onNotificationOpenedApp } from './services/notification/firebaseNative';
 import Toast from 'react-native-toast-message';
@@ -12,6 +13,19 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { requestNotificationPermission } from './services/notification/fcmService';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { toastConfig } from './config/toastConfig';
+
+/**
+ * 웹에서만 앱을 가운데 480px 폰 프레임으로 감싼다. 네이티브에서는 아무것도
+ * 감싸지 않고 children을 그대로 통과시킨다(불필요한 View 추가 방지).
+ */
+const AppFrame = ({ children }) => {
+  if (Platform.OS !== 'web') { return children; }
+  return (
+    <View style={styles.webPage}>
+      <View style={styles.webFrame}>{children}</View>
+    </View>
+  );
+};
 
 const App = () => {
   // logger.debug('🚀 App component rendering...');
@@ -153,7 +167,15 @@ const App = () => {
           <ThemeProvider>
             <LoadingProvider>
               <AuthProvider>
-                <AppNavigator navigationRef={navigationRef} />
+                {/*
+                  웹 폰 프레임 — 폰 우선 앱을 데스크톱 넓은 화면에서 전체 폭으로
+                  퍼뜨리지 않고, 가운데 480px 컬럼(폰 폭)으로 모은다. 콘텐츠·헤더·
+                  탭바가 모두 이 프레임 안에 들어와 일관되게 정렬된다.
+                  네이티브/모바일 웹(<480)에는 무영향 — 웹에서만, 화면이 넓을 때만 작동.
+                */}
+                <AppFrame>
+                  <AppNavigator navigationRef={navigationRef} />
+                </AppFrame>
               </AuthProvider>
             </LoadingProvider>
           </ThemeProvider>
@@ -163,5 +185,29 @@ const App = () => {
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  // 프레임 바깥 페이지 — 중립 배경 위에 프레임이 떠 있는 것처럼 보이게 한다
+  webPage: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#E9ECF1',
+  },
+  // 폰 폭 컬럼 — 화면이 480보다 좁으면(모바일 웹) width:100%가 이겨 무영향
+  webFrame: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 480,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        // 데스크톱에서 프레임을 살짝 띄워 앱 경계를 보여준다
+        boxShadow: '0 0 24px rgba(0,0,0,0.10)',
+      },
+      default: {},
+    }),
+  },
+});
 
 export default App;
