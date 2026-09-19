@@ -27,6 +27,7 @@ import {
  */
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import PropTypes from 'prop-types';
+import { webFrameColumn } from '../../theme/webFrame';
 
 /** 통일된 스크림 색 — 기존 두 값(검정 0.75 / 네이비 0.55) 중 디자인 시안 쪽을 택했다 */
 const SCRIM = 'rgba(15, 22, 38, 0.55)';
@@ -102,8 +103,10 @@ const styles = StyleSheet.create({
   overlaySheet: { justifyContent: 'flex-end' },
   scrim: { backgroundColor: SCRIM },
   kav: { width: '100%' },
-  centerInner: { width: '100%', alignItems: 'center', paddingHorizontal: 20 },
-  sheetInner: { width: '100%' },
+  // 웹: Modal은 프레임 밖(document.body)에 그려지므로, 앱과 같은 폭으로 맞춰야
+  // 데스크톱에서 모달만 창 전체로 퍼지지 않는다(theme/webFrame.js).
+  centerInner: { width: '100%', alignItems: 'center', paddingHorizontal: 20, ...webFrameColumn },
+  sheetInner: { width: '100%', ...webFrameColumn },
 });
 
 export default BaseModal;

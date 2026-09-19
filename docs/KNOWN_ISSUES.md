@@ -93,9 +93,26 @@ CLAUDE.md에 "Firebase Phone Auth" 서술이 남아 있으나 사실과 다르�
 
 ---
 
-## [ISSUE-04] 웹 구글 로그인 — OAuth secret 미설정 🟡
+## [ISSUE-04] 웹 구글 로그인 — OAuth secret 미설정 ✅ 해결
 
-**발견**: 2026-08-16 · **상태**: 보류(사용자 조치 대기) · **영향**: 웹에서 구글 로그인 불가
+**발견**: 2026-08-16 · **해결**: 2026-09-18 · **상태**: 해결됨 · **영향**: 없음(웹 구글 로그인 정상)
+
+> 해결 요약: 웹 클라이언트의 secret을 새로 발급해 Supabase Google provider에 등록했다.
+> 아래는 재발 시를 위한 기록이다. **secret 교체는 안드로이드에 영향이 없다** —
+> 네이티브는 `signInWithIdToken`이라 client ID만 쓰고 secret을 쓰지 않는다.
+>
+> 도중에 만난 두 번째 증상도 함께 남긴다. secret을 넣은 뒤에도 계정 선택까지는
+> 되고 로그인 화면으로 되돌아왔는데, 돌아온 URL이 이것이었다:
+>
+> ```
+> error_code=unexpected_failure&error_description=Unable+to+exchange+external+code
+> ```
+>
+> 리다이렉트 목적지 문제가 아니라(콜백 URI는 이미 등록돼 있었다) **Supabase에 들어
+> 있던 client ID/secret 짝이 그 클라이언트와 맞지 않아** Google이 토큰 교환을 거부한
+> 것이었다. Google은 secret을 다시 보여주지 않으므로, 의심되면 `+ Add secret`으로
+> 새로 발급해 교체하는 것이 가장 빠르다(순환 지원 — 다운타임 없음). 확인 후 옛 secret은
+> **사용 중지 → 삭제** 순서로 정리한다(활성 상태에서는 삭제가 막힌다).
 
 ### 증상
 배포된 웹에서 "Google로 계속하기"를 누르면 Supabase authorize 엔드포인트가 400을 반환한다.
@@ -116,13 +133,15 @@ Supabase가 구글과 직접 토큰 교환을 하며 **client secret이 필수**
 - 플랫폼 분리(`googleAuth.js` / `.web.js`)는 정상 동작 — 웹이 네이티브 SDK 경로를 타지 않는다
 - **네이티브 구글 로그인은 이 이슈와 무관하다**
 
-### 해제 절차
+### 해제 절차 (실제로 이렇게 해결했다)
 1. Google Cloud Console → API 및 서비스 → 사용자 인증 정보
-2. 웹 애플리케이션 클라이언트(`135120379076-e5bqh6...`)의 **클라이언트 보안 비밀번호** 확인
-   (없으면 생성)
-3. 같은 클라이언트의 **승인된 리디렉션 URI**에 추가:
-   `https://thorgkxpbhsttgskhepu.supabase.co/auth/v1/callback`
-4. Supabase 대시보드 → Authentication → Providers → Google에 secret 입력
+2. 웹 애플리케이션 클라이언트(`135120379076-e5bqh6...`)에서 **`+ Add secret`**으로
+   보안 비밀번호 새로 발급 후 전체 값 복사(앞뒤 공백 없이)
+3. 같은 클라이언트의 **승인된 리디렉션 URI**에
+   `https://thorgkxpbhsttgskhepu.supabase.co/auth/v1/callback`이 있는지 확인
+4. Supabase 대시보드(**반드시 `thorgkxpbhsttgskhepu`**) → Authentication → Providers
+   → Google에 client ID와 새 secret 입력
+5. 로그인 성공 확인 후 옛 secret을 **사용 중지 → 삭제**
 
 secret은 자격증명이므로 저장소·마이그레이션·클라이언트 코드에 두지 않는다. 대시보드에서만 입력한다.
 

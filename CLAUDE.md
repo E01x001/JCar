@@ -544,7 +544,7 @@ Expo SDK 57 이전 + 웹 빌드 · Vercel 배포
 
 향후 확장 예정 기능
 
-웹 구글 로그인 — Google OAuth client secret 필요 (ISSUE-04)
+(완료) 웹 구글 로그인 — Supabase Google provider에 client secret 등록으로 해결 (ISSUE-04)
 
 
 이메일 인증 재활성화 (ISSUE-02) · 전화번호 소유 인증 (ISSUE-03)

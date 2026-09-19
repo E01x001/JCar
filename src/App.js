@@ -13,13 +13,14 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { requestNotificationPermission } from './services/notification/fcmService';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { toastConfig } from './config/toastConfig';
+import { WEB_FRAME_MAX_WIDTH } from './theme/webFrame';
 
 /**
  * 웹에서만 앱을 가운데 480px 폰 프레임으로 감싼다. 네이티브에서는 아무것도
  * 감싸지 않고 children을 그대로 통과시킨다(불필요한 View 추가 방지).
  */
 const AppFrame = ({ children }) => {
-  if (Platform.OS !== 'web') { return children; }
+  if (Platform.OS !== 'web') { return <>{children}</>; }
   return (
     <View style={styles.webPage}>
       <View style={styles.webFrame}>{children}</View>
@@ -175,13 +176,17 @@ const App = () => {
                 */}
                 <AppFrame>
                   <AppNavigator navigationRef={navigationRef} />
+                  {/*
+                    Toast는 프레임 "안"에 둔다. 밖에 두면 웹에서 창 전체를 기준으로
+                    떠서, 480px로 모아둔 앱과 위치·폭이 어긋난다.
+                  */}
+                  <Toast config={toastConfig} />
                 </AppFrame>
               </AuthProvider>
             </LoadingProvider>
           </ThemeProvider>
         </ErrorBoundary>
       </KeyboardProvider>
-      <Toast config={toastConfig} />
     </>
   );
 };
@@ -197,7 +202,7 @@ const styles = StyleSheet.create({
   webFrame: {
     flex: 1,
     width: '100%',
-    maxWidth: 480,
+    maxWidth: WEB_FRAME_MAX_WIDTH,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     ...Platform.select({

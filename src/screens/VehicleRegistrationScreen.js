@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
 import { spacing } from '../theme/spacing';
+import { webFrameColumn } from '../theme/webFrame';
 import Card from '../components/Card';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
@@ -741,7 +742,8 @@ const styles = StyleSheet.create({
   progressBarFill: { height: '100%', borderRadius: 5 },
   // 완료 모달
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15,22,38,0.55)', justifyContent: 'center', paddingHorizontal: 32 },
-  modalCard: { borderRadius: 24, padding: 28, alignItems: 'center' },
+  // 웹: Modal은 480px 프레임 밖에 그려지므로 폭을 맞춘다(theme/webFrame.js)
+  modalCard: { borderRadius: 24, padding: 28, alignItems: 'center', width: '100%', ...webFrameColumn },
   checkCircle: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
   modalTitle: { fontSize: 20, fontWeight: '800', marginTop: 18 },
   modalDesc: { fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 8 },

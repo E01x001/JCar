@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import Icon from '@expo/vector-icons/MaterialIcons';
+import { webFrameColumn } from '../../theme/webFrame';
 
 // 가격 비공개 정책(일반 사용자): 가격 필터/정렬 자체를 노출하지 않는다.
 // 가격대 좁히기(이진탐색)로 실가격을 유추할 수 있기 때문 — utils/vehiclePrice.js 참고.
@@ -261,6 +262,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
+    // 웹: 앱은 480px 프레임인데 Modal은 프레임 밖에 그려진다 — 폭을 맞춘다.
+    width: '100%',
+    ...webFrameColumn,
   },
   header: {
     flexDirection: 'row',
