@@ -208,15 +208,51 @@ export const updateAdminMemo = async (consultationId, adminMemo) => {
 };
 
 /**
+ * 슬롯 하나를 저장 형태 {date:'YYYY-MM-DD', time:'HH:MM'}로 정규화한다.
+ *
+ * 왜 Date를 그대로 쓰지 않는가: JSON 직렬화가 Date를 UTC ISO 문자열로 바꾼다.
+ * 그러면 (a) 한국 시간이 9시간 밀려 날짜가 하루 어긋날 수 있고, (b) 읽는 쪽
+ * (사용자 상세 화면·재편집 모달·수락 RPC)은 모두 {date,time}을 기대하므로
+ * 화면에 빈 줄로 나온다. 실제로 그렇게 깨져 있었다.
+ *
+ * preferred_date(date)·preferred_time(time) 컬럼도 시간대 없는 벽시계 값이므로
+ * 같은 표현을 쓰는 것이 일관적이다.
+ */
+const normalizeSlot = (slot) => {
+  if (slot instanceof Date) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return {
+      date: `${slot.getFullYear()}-${pad(slot.getMonth() + 1)}-${pad(slot.getDate())}`,
+      time: `${pad(slot.getHours())}:${pad(slot.getMinutes())}`,
+    };
+  }
+  // 이미 {date,time}이면 그대로 둔다
+  if (slot && typeof slot.date === 'string' && typeof slot.time === 'string') {
+    return { date: slot.date, time: slot.time };
+  }
+  return null;
+};
+
+/**
  * 대체 시간 제안 저장 (관리자)
- * @param {Array<{date: string, time: string}>} suggestedSlots
+ *
+ * 상태를 ON_HOLD로 바꾸는 것은 부수효과가 아니라 **의미**다 —
+ * "관리자가 대안을 냈고 사용자 응답을 기다린다"는 뜻이며, 사용자 수락
+ * RPC(accept_alternative_slot)도 이 상태에서만 동작한다. 바꾸지 말 것.
+ *
+ * @param {Array<Date|{date: string, time: string}>} suggestedSlots
  */
 export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
   try {
+    const slots = (suggestedSlots || []).map(normalizeSlot).filter(Boolean);
+    if (slots.length === 0) {
+      throw new Error('저장할 대체 시간이 없습니다.');
+    }
+
     const { error } = await supabase
       .from('consultation_requests')
       .update({
-        alternative_slots: suggestedSlots,
+        alternative_slots: slots,
         consultation_status: CONSULTATION_STATUS.ON_HOLD,
       })
       .eq('id', consultationId);
@@ -226,6 +262,33 @@ export const updateSuggestedSlots = async (consultationId, suggestedSlots) => {
     logger.error('대체 시간 제안 오류:', error);
     reportCrashlyticsError(error);
     logCrashlyticsMessage('updateSuggestedSlots failed');
+    throw error;
+  }
+};
+
+/**
+ * 대체 일정 수락 (상담 신청자 본인)
+ *
+ * 날짜·시간을 보내지 않고 **제안 목록의 인덱스만** 보낸다. 서버(RPC)가 소유자·
+ * 상태·인덱스 범위를 검증하고 저장된 슬롯에서 값을 꺼내 확정하므로, 제안되지
+ * 않은 시간을 밀어넣을 수 없다. 테이블 직접 UPDATE는 가드가 계속 막는다.
+ *
+ * @param {string} consultationId
+ * @param {number} slotIndex - alternative_slots 배열의 0-기반 인덱스
+ * @returns {Promise<{preferredDate: string, preferredTime: string, consultationStatus: string}>}
+ */
+export const acceptAlternativeSlot = async (consultationId, slotIndex) => {
+  try {
+    const { data, error } = await supabase.rpc('accept_alternative_slot', {
+      p_consultation_id: consultationId,
+      p_slot_index: slotIndex,
+    });
+    if (error) { throw error; }
+    return data;
+  } catch (error) {
+    logger.error('대체 일정 수락 오류:', error);
+    reportCrashlyticsError(error);
+    logCrashlyticsMessage('acceptAlternativeSlot failed');
     throw error;
   }
 };

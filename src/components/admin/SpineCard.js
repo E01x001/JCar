@@ -8,6 +8,13 @@
  * 색은 statusChip의 **글자색(fg)** 을 쓴다. 점 색(dot)은 채도가 높아 4px 면으로
  * 칠하면 브랜드 네이비와 부딪힌다 — 앱의 Badge chip도 그 색을 6px 점에만 쓴다.
  *
+ * **onPress를 주는 카드 안에는 다른 터치 컨트롤을 두지 않는다.**
+ * ConsultationCard가 그렇게 해서 버그가 났다 — 카드 전체가 터치러블인데 안의
+ * 보조 버튼이 높이 17px로 작아, 손가락 탭이 빗나가면 부모가 그 탭을 받아
+ * 엉뚱한 화면으로 이동했다(안드로이드에서만 재현. 마우스는 정확해 웹은 멀쩡했다).
+ * 카드 안에 버튼이 필요하면 onPress를 넘기지 말고, 눌러야 하는 영역만
+ * 각각 감싸라. 터치 타깃 최소값은 theme/spacing.js의 TOUCH_TARGET_MIN.
+ *
  * @param {string} props.status - pending·approved·rejected·completed·cancelled 등
  * @param {Function} [props.onPress] - 없으면 눌리지 않는 카드로 그린다
  */

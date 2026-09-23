@@ -28,8 +28,14 @@ import Badge from '../components/Badge';
 import StateScreen from '../components/StateScreen';
 import Button from '../components/Button';
 import { formatDate, formatTime } from '../utils/format';
-import { cancelConsultation } from '../services/consultation/consultationService';
-import { canUserCancel } from '../constants/consultation';
+import { TOUCH_TARGET_MIN } from '../theme/spacing';
+import { cancelConsultation, acceptAlternativeSlot } from '../services/consultation/consultationService';
+import {
+  canUserCancel,
+  shouldShowAlternativeSlots,
+  canAcceptAlternativeSlot,
+  getAlternativeSlots,
+} from '../constants/consultation';
 
 /**
  * UserConsultationDetailScreen Component
@@ -49,6 +55,44 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  // 수락 중인 슬롯 인덱스 — 버튼별 로딩과 중복 탭 방지를 겸한다
+  const [accepting, setAccepting] = useState(null);
+
+  /**
+   * 대체 일정 수락 — 인덱스만 보낸다.
+   *
+   * 날짜·시간을 클라이언트가 보내지 않는 것이 핵심이다. 서버 RPC가 소유자·상태·
+   * 인덱스를 검증하고 저장된 슬롯에서 값을 꺼내므로, 제안되지 않은 시간을
+   * 넣을 수 없다. 화면 갱신은 이 화면의 realtime 구독이 처리한다.
+   */
+  const handleAcceptSlot = (index, slot) => {
+    Alert.alert(
+      '이 시간으로 확정할까요?',
+      `${slot.date} ${slot.time}\n\n확정하면 상담 일정이 이 시간으로 변경됩니다.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '확정',
+          onPress: async () => {
+            setAccepting(index);
+            try {
+              await acceptAlternativeSlot(consultation.id, index);
+              toast.showSuccess('일정 확정', `${slot.date} ${slot.time}으로 확정되었습니다.`);
+            } catch (error) {
+              logger.error('UserConsultationDetailScreen: accept slot failed', error);
+              reportCrashlyticsError(error);
+              logCrashlyticsMessage('acceptAlternativeSlot failed');
+              // 서버가 한국어 사유를 담아 던진다(이미 찬 시간, 상태 불일치 등) —
+              // 그대로 보여주는 것이 "알 수 없는 오류"보다 낫다.
+              toast.showError('확정 실패', error?.message || '일정을 확정할 수 없습니다.');
+            } finally {
+              setAccepting(null);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   useEffect(() => {
     if (!consultationId || !user) {
@@ -285,27 +329,54 @@ const UserConsultationDetailScreen = ({ route, navigation }) => {
         </Card>
       )}
 
-      {/* Alternative Slots Card (only for rejected status with suggestions) */}
-      {consultation.consultationStatus === 'rejected' && consultation.alternativeSlots && consultation.alternativeSlots.length > 0 && (
+      {/*
+        제안된 대체 일정.
+
+        표시 조건을 화면에서 상태 이름으로 나열하지 않는다 — 예전에 여기서
+        'rejected'만 검사해, 실제로 제안이 들어오는 'on-hold' 상담에는 제안이
+        한 번도 보이지 않았다. 규칙은 constants/consultation.js에만 둔다.
+      */}
+      {shouldShowAlternativeSlots(consultation) && (
         <Card style={{ marginBottom: theme.spacing.md }}>
           <Text style={[styles.sectionTitle, {
             fontSize: theme.typography.fontSize.h4,
             fontWeight: theme.typography.fontWeight.bold,
             color: theme.colors.text.primary,
-            marginBottom: theme.spacing.sm,
+            marginBottom: theme.spacing.xs,
           }]}>제안된 대체 일정</Text>
 
-          {consultation.alternativeSlots.map((slot, index) => (
-            <Text
-              key={index}
-              style={{
-                fontSize: theme.typography.fontSize.body,
-                color: theme.colors.text.secondary,
-                marginBottom: theme.spacing.xs,
-              }}
-            >
-              • {slot.date} {slot.time}
-            </Text>
+          <Text style={{
+            fontSize: theme.typography.fontSize.bodySmall,
+            color: theme.colors.text.secondary,
+            marginBottom: theme.spacing.sm,
+          }}>
+            {canAcceptAlternativeSlot(consultation)
+              ? '원하는 시간을 선택하면 그 시간으로 확정됩니다.'
+              : '관리자가 제안한 시간입니다.'}
+          </Text>
+
+          {getAlternativeSlots(consultation).map((slot, index) => (
+            <View key={`${slot.date}T${slot.time}`} style={styles.slotRow}>
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: theme.typography.fontSize.body,
+                  color: theme.colors.text.primary,
+                }}
+              >
+                {slot.date} {slot.time}
+              </Text>
+
+              {canAcceptAlternativeSlot(consultation) && (
+                <Button
+                  title="이 시간으로 확정"
+                  onPress={() => handleAcceptSlot(index, slot)}
+                  disabled={accepting !== null}
+                  loading={accepting === index}
+                  style={styles.slotAcceptBtn}
+                />
+              )}
+            </View>
           ))}
         </Card>
       )}
@@ -444,6 +515,18 @@ const InfoRow = ({ label, value, theme }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  // 제안 슬롯 한 줄 — 시간과 확정 버튼을 좌우로 둔다
+  slotRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  // 목록 안에 들어가는 버튼이라 가로를 내용만큼만 쓴다
+  slotAcceptBtn: {
+    paddingHorizontal: 14,
+    minHeight: TOUCH_TARGET_MIN,
   },
   loadingContainer: {
     flex: 1,

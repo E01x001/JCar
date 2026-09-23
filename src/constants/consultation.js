@@ -152,6 +152,39 @@ export const USER_CANCELLABLE_STATUSES = [
 export const canUserCancel = (status) => USER_CANCELLABLE_STATUSES.includes(status);
 
 /**
+ * 대체 일정(alternative_slots) 표시·수락 규칙 — 한 곳에서만 정한다.
+ *
+ * 이 규칙이 흩어져 있어서 기능이 통째로 죽어 있었다: 쓰는 쪽은 상태를
+ * ON_HOLD로 바꾸는데 읽는 쪽 세 군데가 모두 `status === 'rejected'`만 검사해
+ * 제안이 사용자 화면에 **한 번도 표시되지 않았다**. 상태 이름을 화면마다
+ * 나열하지 말고 아래 헬퍼를 쓸 것.
+ */
+export const ALTERNATIVE_SLOTS_VISIBLE_STATUSES = [
+  CONSULTATION_STATUS.ON_HOLD,  // 관리자가 대안을 내고 사용자 응답을 기다림
+  CONSULTATION_STATUS.REJECTED, // 거절하면서 대안을 함께 제시한 경우
+];
+
+/** 이 상담에 보여줄 대체 일정이 있는가 (배열 정규화까지 함께) */
+export const getAlternativeSlots = (consultation) =>
+  (Array.isArray(consultation?.alternativeSlots) ? consultation.alternativeSlots : [])
+    .filter((s) => s && typeof s.date === 'string' && typeof s.time === 'string');
+
+/** 대체 일정을 화면에 노출할까 */
+export const shouldShowAlternativeSlots = (consultation) =>
+  ALTERNATIVE_SLOTS_VISIBLE_STATUSES.includes(consultation?.consultationStatus)
+  && getAlternativeSlots(consultation).length > 0;
+
+/**
+ * 사용자가 지금 대체 일정을 **수락**할 수 있는가.
+ *
+ * 표시(위)보다 좁다 — 수락 RPC(accept_alternative_slot)가 ON_HOLD만 허용하므로
+ * 여기서도 ON_HOLD만 참이어야 한다. 넓히면 버튼을 눌러도 서버가 거부한다.
+ */
+export const canAcceptAlternativeSlot = (consultation) =>
+  consultation?.consultationStatus === CONSULTATION_STATUS.ON_HOLD
+  && getAlternativeSlots(consultation).length > 0;
+
+/**
  * Check if a status transition is valid
  *
  * @param {string} fromStatus - Current consultation status

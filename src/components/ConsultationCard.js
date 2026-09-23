@@ -10,6 +10,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import PropTypes from 'prop-types';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeProvider';
+import { TOUCH_TARGET_MIN } from '../theme/spacing';
 import { formatPhone, formatWaiting } from '../utils/format';
 import { updateConsultationStatus, settleConsultation, closeConsultationUnsettled, updateAdminMemo, updateSuggestedSlots } from '../services/consultation/consultationService';
 import { useToast } from '../hooks/useToast';
@@ -39,6 +40,30 @@ import SuggestAlternativeTimesModal from './modals/SuggestAlternativeTimesModal'
  * @param {Function} [props.onUpdateSuccess] - Callback after successful status update
  * @param {Object} [props.style] - Additional styles
  */
+/**
+ * 보조 도구 버튼의 터치 확장. minHeight로 이미 최소 타깃을 확보했고, 이건
+ * 좌우·상하로 조금 더 여유를 준다.
+ *
+ * RN 문서 주의사항: hitSlop은 **부모 뷰 경계를 넘지 못한다**. 그래서 hitSlop만
+ * 믿지 않고 styles.tool의 minHeight/padding으로 실제 크기를 먼저 키웠다.
+ */
+const TOOL_HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
+
+/**
+ * 정보 영역만 누를 수 있게 감싼다. onPress가 없으면 아무것도 감싸지 않는다.
+ * 모듈 최상위에 두어 렌더마다 컴포넌트 정체성이 바뀌지 않게 한다(자식 remount 방지).
+ */
+const PressableInfo = ({ onPress, children }) => (onPress ? (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.85} accessibilityRole="button">
+    {children}
+  </TouchableOpacity>
+) : <>{children}</>);
+
+PressableInfo.propTypes = {
+  onPress: PropTypes.func,
+  children: PropTypes.node,
+};
+
 const ConsultationCard = ({
   consultation,
   onNavigateToVehicle,
@@ -317,12 +342,20 @@ const ConsultationCard = ({
       CONSULTATION_STATUS.ON_HOLD,
       'meeting',
     ].includes(displayStatus);
-    if (!isPending && !isRunning) { return null; }
+
+    // 메모는 끝난 상담에도 남길 수 있어야 한다. 예전에는 종료 상태에서 이
+    // 함수가 곧바로 null을 반환해 **완료·거절 건에는 메모조차 달 수 없었다**
+    // (관리자는 DB 가드를 통과하므로 막을 이유가 없었다).
+    // 보류·일정 제안은 진행 중인 상담에만 의미가 있으므로 그대로 좁게 둔다.
+    const canDecide = isPending || isRunning;
+    // 이미 보류인 건을 다시 보류할 이유는 없다
+    const canHold = canDecide && displayStatus !== CONSULTATION_STATUS.ON_HOLD;
 
     return (
       <>
         {/* 결정 두 개는 글자로 — 아이콘만 두면 무엇을 누르는지 알 수 없다.
             거절은 사유를 적어 보내는 동작이라 특히 숨기면 안 된다(모달이 열린다). */}
+        {canDecide ? (
         <View style={styles.decisionRow}>
           {isPending ? (
             <>
@@ -359,14 +392,18 @@ const ConsultationCard = ({
             </TouchableOpacity>
           )}
         </View>
+        ) : null}
 
-        {/* 보조 도구 — 결정이 아니라 부가 작업이라 아이콘 + 라벨로 작게 */}
+        {/* 보조 도구 — 결정이 아니라 부가 작업이라 아이콘 + 라벨로 작게.
+            작게 그리더라도 터치 영역은 TOUCH_TARGET_MIN을 지킨다(theme/spacing.js). */}
         <View style={styles.toolRow}>
-          {isPending ? (
+          {canHold ? (
             <TouchableOpacity
               onPress={() => handleStatusUpdate(CONSULTATION_STATUS.ON_HOLD)}
               activeOpacity={0.7}
               accessibilityRole="button"
+              accessibilityLabel="이 상담을 보류로 변경"
+              hitSlop={TOOL_HIT_SLOP}
               style={styles.tool}
             >
               <MaterialIcons name="pause-circle-outline" size={17} color={theme.colors.text.secondary} />
@@ -378,6 +415,8 @@ const ConsultationCard = ({
             onPress={handleMemoButtonPress}
             activeOpacity={0.7}
             accessibilityRole="button"
+            accessibilityLabel={adminMemo ? '관리자 메모 수정' : '관리자 메모 작성'}
+            hitSlop={TOOL_HIT_SLOP}
             style={styles.tool}
           >
             <MaterialIcons
@@ -394,10 +433,13 @@ const ConsultationCard = ({
             </Text>
           </TouchableOpacity>
 
+          {canDecide ? (
           <TouchableOpacity
             onPress={handleSuggestTimesButtonPress}
             activeOpacity={0.7}
             accessibilityRole="button"
+            accessibilityLabel="대체 일정 제안"
+            hitSlop={TOOL_HIT_SLOP}
             style={styles.tool}
           >
             <MaterialIcons
@@ -413,6 +455,7 @@ const ConsultationCard = ({
               일정 제안{alternativeSlots.length > 0 ? ` ${alternativeSlots.length}` : ''}
             </Text>
           </TouchableOpacity>
+          ) : null}
         </View>
       </>
     );
@@ -426,11 +469,21 @@ const ConsultationCard = ({
 
   return (
     <>
+      {/*
+        카드 전체를 터치러블로 만들지 않는다.
+
+        예전에는 SpineCard에 onPress를 넘겨 카드 전체가 눌렸다. 그 안의 보조
+        버튼(보류·메모·일정 제안)은 높이를 지정하지 않아 실제 17px로 렌더됐고,
+        손가락 탭이 빗나가면 그 탭을 부모가 받아 **차량 상세로 이동**했다.
+        안드로이드에서만 재현된 이유가 이것이다 — 마우스는 픽셀 단위로 정확하다.
+        지금은 정보 영역만 누를 수 있고 액션 영역은 터치러블 밖에 있다.
+        (중첩 인터랙티브 요소는 스크린리더에도 혼란을 준다.)
+      */}
       <SpineCard
         status={displayStatus}
-        onPress={onNavigateToVehicle && vehicleId ? handleCardPress : undefined}
         style={[{ marginBottom: theme.spacing.sm }, style]}
       >
+        <PressableInfo onPress={onNavigateToVehicle && vehicleId ? handleCardPress : undefined}>
         {/* 이름 · 유형 · 차량 / 오른쪽에 일정과 대기 기간 */}
         <View style={styles.topRow}>
           <View style={styles.identity}>
@@ -473,6 +526,7 @@ const ConsultationCard = ({
         <Text style={[styles.phone, { color: theme.colors.text.secondary }]}>
           {formatPhone(userPhone)}
         </Text>
+        </PressableInfo>
 
         {renderActionButtons()}
 
@@ -540,8 +594,18 @@ const styles = StyleSheet.create({
   decision: { flex: 1, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   decisionText: { fontSize: 14, fontWeight: '600' },
 
-  toolRow: { flexDirection: 'row', gap: 18, marginTop: 12, paddingLeft: 2 },
-  tool: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  // gap을 18 → 8로 줄였다. 각 버튼이 자기 패딩으로 간격을 확보하므로, 예전
+  // 간격을 그대로 두면 버튼 사이가 과하게 벌어진다.
+  toolRow: { flexDirection: 'row', gap: 8, marginTop: 6, marginLeft: -8 },
+  // 아이콘(17px)만큼만 높던 것을 최소 터치 타깃까지 키운다. 시각적으로는
+  // 여전히 작아 보이지만(배경 없음) 실제로 누를 수 있는 영역이 생긴다.
+  tool: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    minHeight: TOUCH_TARGET_MIN,
+    paddingHorizontal: 8,
+  },
   toolText: { fontSize: 12, fontWeight: '600' },
 
   loadingContainer: {

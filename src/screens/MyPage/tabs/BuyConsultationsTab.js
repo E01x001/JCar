@@ -4,6 +4,7 @@ import { useTheme } from '../../../theme/ThemeProvider';
 import Badge from '../../../components/Badge';
 import EmptyState from '../../../components/EmptyState';
 import MyPageListRow from '../../../components/MyPageListRow';
+import { shouldShowAlternativeSlots, getAlternativeSlots } from '../../../constants/consultation';
 
 const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
   const theme = useTheme();
@@ -32,8 +33,9 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
 
   const renderFooter = (item) => {
     const showRejection = item.consultationStatus === 'rejected' && item.rejectionReason;
-    const showAlternatives = item.consultationStatus === 'rejected'
-      && item.alternativeSlots && item.alternativeSlots.length > 0;
+    // 상태 이름을 여기서 나열하지 않는다 — 'rejected'만 검사해 정작 제안이
+    // 들어오는 'on-hold' 상담에서 이 줄이 뜨지 않았다(constants가 규칙을 가진다).
+    const showAlternatives = shouldShowAlternativeSlots(item);
     if (!showRejection && !showAlternatives) { return null; }
 
     return (
@@ -56,7 +58,7 @@ const BuyConsultationsTab = ({ consultations, onNavigateToConsultation }) => {
             color: theme.colors.text.tertiary,
             marginTop: theme.spacing.xs,
           }]}>
-            대체 일정 {item.alternativeSlots.length}개 제안됨
+            대체 일정 {getAlternativeSlots(item).length}개 제안됨
           </Text>
         )}
       </>
